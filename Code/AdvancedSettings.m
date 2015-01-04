@@ -280,6 +280,7 @@ Angles(:,3) = SquareFileVals{3};
 g=euler2gmat(Angles(1,1),Angles(1,2),Angles(1,3));
 
 GenImage = genEBSDPatternHybrid(g,paramspat,eye(3),lattice,a1,b1,c1,axs);
+GenImage = custimfilt(GenImage, Settings.ImageFilter(1), Settings.ImageFilter(2),Settings.ImageFilter(3),Settings.ImageFilter(4));
 handles.GenImage=GenImage;
 handles.Image = Image;
 handles.Settings = Settings;
