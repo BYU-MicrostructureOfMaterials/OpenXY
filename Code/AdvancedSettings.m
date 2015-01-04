@@ -22,7 +22,7 @@ function varargout = AdvancedSettings(varargin)
 
 % Edit the above text to modify the response to help AdvancedSettings
 
-% Last Modified by GUIDE v2.5 22-Dec-2014 11:30:47
+% Last Modified by GUIDE v2.5 27-Dec-2014 10:48:06
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -1132,3 +1132,11 @@ function RefImageIndEdit_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on button press in skippointshelp.
+function skippointshelp_Callback(hObject, eventdata, handles)
+% hObject    handle to skippointshelp (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+SkipPointsHelp();

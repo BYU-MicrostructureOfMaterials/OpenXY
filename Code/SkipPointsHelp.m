@@ -52,6 +52,7 @@ function SkipPointsHelp_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to SkipPointsHelp (see VARARGIN)
 pic = imread('SkipPoints.jpg');
+pic = imresize(pic,0.6);
 % pic = imread('DSCN0416.JPG');
 imshow(pic)
 set(gca,'xcolor',get(gcf,'color'));

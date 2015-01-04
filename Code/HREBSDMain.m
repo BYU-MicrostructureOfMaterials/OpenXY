@@ -309,6 +309,7 @@ if Settings.DoParallel > 1
     % addpath cd
     pctRunOnAll javaaddpath(cd)
     
+    disp('Starting cross-correlation');
     N = length(ImageNamesList);
     ppm = ParforProgMon( 'Multi Core Progress', N );
     parfor(ImageInd = 1:N,NumberOfCores)

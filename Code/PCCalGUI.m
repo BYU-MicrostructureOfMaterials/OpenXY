@@ -112,9 +112,8 @@ colormap jet
 handles.Settings = Settings;
 handles.ScanParams = ScanParams;
 handles.VanPont = 0;
-handles.VanCalib = 0;
-handles.IQPlot = IQPlot;
 handles.calibrated = 0;
+handles.IQPlot = IQPlot;
 guidata(hObject, handles);
 %uiwait(handles.figure1)
 
@@ -210,7 +209,7 @@ if handles.VanPont
     end
     
     pctRunOnAll javaaddpath(cd)
-    ppm = ParforProgMon( 'Multi Core Progress', npoints );
+    ppm = ParforProgMon( 'Point Calibration', npoints );
     parfor i=1:npoints
         PCref = PCMinSinglePattern(Settings, ScanParams, Settings.CalibrationPointIndecies(i));
         CalibrationPointsPC(i,:) = PCref';
@@ -309,26 +308,20 @@ if handles.VanPont
     end
 
 
-    handles.VanCalib = 1;
-
+    handles.calibrated = 1;
     handles.Settings = Settings;
     guidata(hObject, handles);
     
     if get(handles.autorunbox,'Value')
-        Settings = handles.Settings;
-        save('Settings.mat','Settings');
-        delete(handles.figure1)
+        savenclose_Callback(handles.savenclose,eventdata,handles);
     end
-
+    
 else
     mboxhandle = msgbox('You need to select points to calibrate first');
     pause(1)
     close(mboxhandle)
     
 end
-
-handles.calibrated = 1;
-guidata(hObject, handles);
 
 
 % --- Executes on button press in selectpointsbutton.
@@ -489,7 +482,7 @@ NumRows = handles.ScanParams.NumRows;
 NumColsEven = handles.ScanParams.NumColsEven;
 NumColsOdd = handles.ScanParams.NumColsOdd;
 
-if handles.VanCalib
+if handles.calibrated
 
     cla(handles.axes2)
     
