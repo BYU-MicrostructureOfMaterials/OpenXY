@@ -75,7 +75,9 @@ destination = pwd;
 slashind = strfind(destination,'\');
 destination = destination(1:slashind(end));
 destination = [destination 'Unused Code'];
-addpath(destination);
+if exist(destination,'dir')
+    addpath(destination);
+end
 
 %Visuals
 axes(handles.background);
