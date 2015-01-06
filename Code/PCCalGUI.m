@@ -177,7 +177,23 @@ function figure1_CloseRequestFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: delete(hObject) closes the figure
-savenclose_Callback(handles.savenclose,eventdata,handles);
+try
+    dlg = 'Continue';
+    if handles.calibrated
+        dlg = questdlg('Please select an option:', 'Continue','Cancel','Continue');
+    end
+    switch dlg
+        case 'Continue'
+            savenclose_Callback(handles.savenclose,eventdata,handles);
+        case 'Cancel'
+            Settings = handles.Settings;
+            Settings.Exit = 1;
+            save('Settings.mat','Settings');
+            delete(handles.figure1);
+    end
+catch
+    delete(hObject)
+end
 
 % --- Executes on button press in calibratebutton.
 function calibratebutton_Callback(hObject, eventdata, handles)
@@ -492,8 +508,8 @@ if handles.calibrated
         Settings.YStar = handles.NaiveYstar;
         Settings.ZStar = handles.NaiveZstar;
 
-        max(handles.NaiveXstar)
-        min(handles.NaiveXstar)
+        max(handles.NaiveXstar);
+        min(handles.NaiveXstar);
 
         axes(handles.axes2)
         plot3(handles.ScanParams.xstar,handles.ScanParams.ystar,handles.ScanParams.zstar,'bo')
