@@ -72,7 +72,7 @@ LoadSettings(hObject,handles);
 
 %Add in extra code folder to search path
 destination = pwd;
-slashind = strfind(destination,'\');
+slashind = strfind(destination,filesep);
 destination = destination(1:slashind(end));
 destination = [destination 'Unused Code'];
 if exist(destination,'dir')
@@ -746,7 +746,7 @@ if strcmp(ButtonString,'Run')
         return
     end
     OutputPath = get(handles.OutputFileEdit,'String');
-    LastSlashInd = find(OutputPath == '\');
+    LastSlashInd = find(OutputPath == filesep);
     OutputDirectory = OutputPath(1:LastSlashInd(end)-1);
     if iscell(OutputPath)
         OutputPath = OutputPath{1};
@@ -1112,7 +1112,7 @@ if ~ exist(FirstImagePath,'file')
 end
 
 OutputPath = get(handles.OutputFileEdit,'String');
-LastSlashInd = find(OutputPath == '\');
+LastSlashInd = find(OutputPath == filesep);
 OutputDirectory = OutputPath(1:LastSlashInd(end)-1);
 if iscell(OutputPath)
     OutputPath = OutputPath{1};
