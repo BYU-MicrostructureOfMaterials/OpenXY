@@ -1,6 +1,6 @@
 function Settings = GetHROIMPreviousSettings()
 
-tempfile = load('Settings.mat');
+tempfile = load([pwd '\Settings.mat']);
 PrevSettings = tempfile.Settings;
 clear tempfile
 
