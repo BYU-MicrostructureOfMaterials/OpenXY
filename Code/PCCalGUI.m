@@ -502,7 +502,7 @@ if handles.calibrated
 
     cla(handles.axes2)
     
-    %Naive Plane Fit
+    % Naive Plane Fit
     if get(handles.naivebutton,'Value')
         Settings.XStar = handles.NaiveXstar;
         Settings.YStar = handles.NaiveYstar;
@@ -531,7 +531,8 @@ if handles.calibrated
         %surf(reshape(handles.NaiveXstar,Settings.Nx,Settings.Ny)',reshape(handles.NaiveYstar,Settings.Nx,Settings.Ny)',reshape(handles.NaiveZstar,Settings.Nx,Settings.Ny)',zeros(Settings.Ny,Settings.Nx))
         shading flat
     end
-
+    
+    % PC Data Fit
     if get(handles.pcplanefit,'Value')
         Settings.XStar = handles.FitXstar;
         Settings.YStar = handles.FitYstar;
@@ -541,7 +542,18 @@ if handles.calibrated
         plot3(handles.ScanParams.xstar,handles.ScanParams.ystar,handles.ScanParams.zstar,'bo')
         hold on
         plot3(Settings.CalibrationPointsPC(:,1),Settings.CalibrationPointsPC(:,2),Settings.CalibrationPointsPC(:,3),'ro')
-        surf(reshape(handles.FitXstar,Settings.Nx,Settings.Ny)',reshape(handles.FitYstar,Settings.Nx,Settings.Ny)',reshape(handles.FitZstar,Settings.Nx,Settings.Ny)',.5*ones(Settings.Ny,Settings.Nx))
+        switch ScanType
+            case 'Square'
+                surf(reshape(handles.FitXstar,Settings.Nx,Settings.Ny)',reshape(handles.FitYstar,Settings.Nx,Settings.Ny)',reshape(handles.FitZstar,Settings.Nx,Settings.Ny)',.5*ones(Settings.Ny,Settings.Nx))
+            case 'Hexagonal'
+                FitXstar = Hex2Array(handles.FitXstar, NumColsOdd, NumColsEven);
+                FitYstar = Hex2Array(handles.FitYstar, NumColsOdd, NumColsEven);
+                FitZstar = Hex2Array(handles.FitZstar, NumColsOdd, NumColsEven);
+                FitXstar = FitXstar(1:length(FitXstar)-1,:);
+                FitYstar = FitYstar(1:length(FitYstar)-1,:);
+                FitZstar = FitZstar(1:length(FitZstar)-1,:);
+                surf(FitXstar,FitYstar,FitZstar,.5*ones(size(FitXstar)));
+        end
         shading flat
     end
 
