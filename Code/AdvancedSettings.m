@@ -130,21 +130,27 @@ elseif ~isempty(Settings.ROIFilter)
     
 end
 
+if ~isempty(Settings.ImageFilterType)
+    ImageFilterType = Settings.ImageFilterType;
+    IndList = 1:length(ImageFilterTypeList);
+    Ind = IndList(strcmp(ImageFilterTypeList,ImageFilterType));
+    set(handles.ImageFilterType,'Value',Ind);
+    if strcmp(Settings.ImageFilterType,'localthresh')
 
-if strcmp(Settings.ImageFilterType,'localthresh')
+        set(handles.ImageFilterEdit1,'Enable','off');
+        set(handles.ImageFilterEdit2,'Enable','off');
+        set(handles.ImageFilterEdit3,'Enable','off');
+        set(handles.ImageFilterEdit4,'Enable','off');
+    %        set(handles.ROISizeEdit,'Enable','off');
+    end
+end
+if ~isempty(Settings.ImageFilter)
 
-   set(handles.ImageFilterEdit1,'Enable','off');
-   set(handles.ImageFilterEdit2,'Enable','off');
-   set(handles.ImageFilterEdit3,'Enable','off');
-   set(handles.ImageFilterEdit4,'Enable','off');
-%        set(handles.ROISizeEdit,'Enable','off');
-elseif ~isempty(Settings.ImageFilter)
-    
    set(handles.ImageFilterEdit1,'String',num2str(Settings.ImageFilter(1)));
    set(handles.ImageFilterEdit2,'String',num2str(Settings.ImageFilter(2)));
    set(handles.ImageFilterEdit3,'String',num2str(Settings.ImageFilter(3)));
    set(handles.ImageFilterEdit4,'String',num2str(Settings.ImageFilter(4)));
-    
+
 end
 if ~isempty(Settings.ROIFilter)
     
