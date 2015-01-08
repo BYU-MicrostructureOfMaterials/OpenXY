@@ -574,6 +574,7 @@ FilePath = get(handles.SettingsFileEdit,'String');
 %Loads MAT file if not already loaded
 if handles.matfileloaded
     Settings = handles.Settings;
+    alpha_data = handles.alpha_data;
 elseif ~strcmp(FilePath, 'Analysis Params')
     disp('Loading .mat file...');
     matfile = load(FilePath);
@@ -601,7 +602,7 @@ end
 
 
 %Get necessary data from Settings, if available
-if exist('Settings.CalcDerivatives','var')
+if isfield(Settings,'CalcDerivatives')
     if Settings.CalcDerivatives == 0
         warndlg(['Warning, the file: ' FilePath ', does not contain dislocation data'],'Warning');
         return;
@@ -620,6 +621,8 @@ if exist('Settings.CalcDerivatives','var')
     stepsize = stepsize_orig*(skippts+1);
 
     %Calculate Default Values
+    b = alpha_data.b;
+    NoiseCutoff=log10((0.006*pi/180)/(stepsize*max(b))); %lower cutoff filters noise below resolution level
     LowerCutoff=log10(1/stepsize^2);
     MinCutoff=max([LowerCutoff(:),NoiseCutoff(:)]);
     UpperCutoff=log10(1/(min(b)*stepsize));
