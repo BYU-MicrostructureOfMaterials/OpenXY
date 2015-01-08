@@ -228,6 +228,13 @@ switch ScanFormat
             XvalsEven=xvals(2:2:Dimensions(1));
             yvals=sort(unique(yvals));
             
+            %Check if NColsEven and Odd are correct, reverse if not 
+            %(Needs to be tested)
+            if exist([FirstImagePath(1:Xinds) num2str(XvalsOdd(NColsOdd)) 'y' num2str(yvals(0)) FirstImagePath(end-DistFromEnd:end)],'file');
+                disp('Reversing Number of Odd and Even Columns...');
+                NColsEven = NColsOdd;
+                NColsOdd = NColsEven - 1;
+            end
             for r = 1:NRows
                 if bitget(abs(r),1)~=0 %odd
                     for c = 1:NColsOdd
@@ -245,6 +252,12 @@ switch ScanFormat
             end
             
         else
+            %Check if NColsEven and Odd are correct, reverse if not
+            if exist([FirstImagePath(1:end-DistFromEnd-4) num2str(0) 'c' num2str(NColsOdd-1) FirstImagePath(end-DistFromEnd:end)],'file');
+                disp('Reversing Number of Odd and Even Columns...');
+                NColsEven = NColsOdd;
+                NColsOdd = NColsEven - 1;
+            end
             for r = 0:NRows-1
                 if bitget(abs(r),1)~=0 %odd
                     for c = 0:NColsOdd - 1
