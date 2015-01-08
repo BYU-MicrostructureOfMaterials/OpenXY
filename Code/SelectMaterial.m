@@ -78,6 +78,7 @@ switch s
         b1 = 1;
         c1 = 1;
         axs = 3;
+        Burgers = (5.430710 / sqrt(2))*10^-10;
         
 %          Fhkl=[18.4; 14.9; 9.2; 8.5; 6.9; 5.7]; % TSL does not have the final 2 planes
 %         dhkl=[3.136; 1.92; 1.358; 1.638; 1.109; 1.246]*1e-10;
