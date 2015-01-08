@@ -301,15 +301,15 @@ if ~strcmp(Settings.ScanType,'L')
 
 end
 if strcmp(Settings.ScanType,'Hexagonal')
-    Beta=zeros(3,3,3,r*c/2);
-    alpha_total3=zeros(1,r*c/2);
-    alpha_total5=zeros(1,r*c/2);
-    alpha_total9=zeros(1,r*c/2);
+    Beta=zeros(3,3,3,Settings.ScanLength);
+    alpha_total3=zeros(1,Settings.ScanLength);
+    alpha_total5=zeros(1,Settings.ScanLength);
+    alpha_total9=zeros(1,Settings.ScanLength);
 else
-    Beta=zeros(3,3,3,r*c);
-    alpha_total3=zeros(1,r*c);
-    alpha_total5=zeros(1,r*c);
-    alpha_total9=zeros(1,r*c);
+    Beta=zeros(3,3,3,Settings.ScanLength);
+    alpha_total3=zeros(1,Settings.ScanLength);
+    alpha_total5=zeros(1,Settings.ScanLength);
+    alpha_total9=zeros(1,Settings.ScanLength);
 end
 
 % if strcmp(Settings.ScanType,'L')

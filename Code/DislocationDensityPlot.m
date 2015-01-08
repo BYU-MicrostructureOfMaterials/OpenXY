@@ -25,6 +25,7 @@ if strcmp(Settings.ScanType,'Hexagonal')
 end
 
 alpha_total3 = alpha_data.alpha_total3;
+alpha_total9 = alpha_data.alpha_total9;
 alpha = alpha_data.alpha;
 
 % figure;hist(log10(alpha_data.alpha_total3),10:.1:17);xlim([11 17])
