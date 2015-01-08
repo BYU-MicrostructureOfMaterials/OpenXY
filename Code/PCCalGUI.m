@@ -279,55 +279,17 @@ if handles.VanPont
     handles.FitYstar = coeffs(4)*Settings.XData+coeffs(5)*Settings.YData+coeffs(6);
     handles.FitZstar = coeffs(7)*Settings.XData+coeffs(8)*Settings.YData+coeffs(9);
 
-
-    guidata(hObject, handles);
     Settings.PhosphorSize = psize;
-
-    cla(handles.axes2)
-
-    if get(handles.naivebutton,'Value')
-        Settings.XStar = handles.NaiveXstar;
-        Settings.YStar = handles.NaiveYstar;
-        Settings.ZStar = handles.NaiveZstar;
-
-        axes(handles.axes2)
-        plot3(handles.ScanParams.xstar,handles.ScanParams.ystar,handles.ScanParams.zstar,'bo')
-        hold on
-        plot3(Settings.CalibrationPointsPC(:,1),Settings.CalibrationPointsPC(:,2),Settings.CalibrationPointsPC(:,3),'ro')
-        surf(reshape(handles.NaiveXstar,Settings.Nx,Settings.Ny)',reshape(handles.NaiveYstar,Settings.Nx,Settings.Ny)',reshape(handles.NaiveZstar,Settings.Nx,Settings.Ny)',zeros(Settings.Ny,Settings.Nx))
-        shading flat
-    end
-
-    if get(handles.pcplanefit,'Value')
-        Settings.XStar = handles.FitXstar;
-        Settings.YStar = handles.FitYstar;
-        Settings.ZStar = handles.FitZstar;
-
-        axes(handles.axes2)
-        plot3(handles.ScanParams.xstar,handles.ScanParams.ystar,handles.ScanParams.zstar,'bo')
-        hold on
-        plot3(Settings.CalibrationPointsPC(:,1),Settings.CalibrationPointsPC(:,2),Settings.CalibrationPointsPC(:,3),'ro')
-        surf(reshape(handles.FitXstar,Settings.Nx,Settings.Ny)',reshape(handles.FitYstar,Settings.Nx,Settings.Ny)',reshape(handles.FitZstar,Settings.Nx,Settings.Ny)',.5*ones(Settings.Ny,Settings.Nx))
-        shading flat
-    end
-
-    if get(handles.nofit,'Value')
-        Settings.XStar = handles.MeanXstar*ones(size(handles.NaiveXstar));
-        Settings.YStar = handles.MeanYstar*ones(size(handles.NaiveXstar));
-        Settings.ZStar = handles.MeanZstar*ones(size(handles.NaiveXstar));
-
-        axes(handles.axes2)
-        plot3(handles.ScanParams.xstar,handles.ScanParams.ystar,handles.ScanParams.zstar,'bo')
-        hold on
-        plot3(Settings.CalibrationPointsPC(:,1),Settings.CalibrationPointsPC(:,2),Settings.CalibrationPointsPC(:,3),'ro')
-        plot3(handles.MeanXstar,handles.MeanYstar,handles.MeanZstar,'go')
-    end
-
-
-    handles.calibrated = 1;
     handles.Settings = Settings;
     guidata(hObject, handles);
     
+    cla(handles.axes2)
+    handles.calibrated = 1;
+    
+    planefitpanel_SelectionChangeFcn(handles.planefitpanel, eventdata, handles);
+    
+    guidata(hObject, handles);
+    planefitpanel_SelectionChangeFcn(handles.planefitpanel, eventdata, handles);
     if get(handles.autorunbox,'Value')
         savenclose_Callback(handles.savenclose,eventdata,handles);
     end
