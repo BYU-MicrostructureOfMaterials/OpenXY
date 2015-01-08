@@ -130,6 +130,7 @@ data.cols = Nx;
 data.rows = Ny;
 Settings.Nx = Nx;
 Settings.Ny = Ny;
+Settings.ScanLength = ScanLength;
 
 %% Initialize all Settings to be passed in to GetDefGradientTensor.
 ImageNamesList = ImageNamesList(:);
