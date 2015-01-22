@@ -2,6 +2,7 @@ function  [ Fhkl hkl C11 C12 C44 lattice a1 b1 c1 dhkl axs str C13 C33 C66 Burge
 %returns material parameters for materials in the "str" list. If the
 %Material string is not found
 
+Material = lower(Material);
 str = {'nickel','silicon','iron-alpha','titanium(alpha)','magnesium','aluminum',...
     'germanium','martensite','copper','tantalum','iron-gamma','boronzirconium_0060610','siliconcarbide6h','siliconcarbon_0020013', 'titaniumaluminum', 'cigs', 'grainfile','titanium(beta)'};
 if strcmp(Material,'newphase')
