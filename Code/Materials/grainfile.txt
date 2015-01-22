@@ -1,0 +1,13 @@
+Material		grainfile
+Fhkl		0 
+dhkl		0 
+hkl		0 0 0 
+C11		0 
+C12		0 
+C44		0 
+lattice		cubic
+a1		0 
+b1		0 
+c1		0 
+axs		0 
+Burgers		 
