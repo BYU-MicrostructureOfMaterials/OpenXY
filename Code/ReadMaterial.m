@@ -1,10 +1,9 @@
-function M = ReadMaterial()
+function M = ReadMaterial(Material)
 % Reads material data from text file in /Materials subfolder into a
 % structure
-Material = 'Zinc';
 filename = fullfile(pwd,'Materials',[Material '.txt']);
 
-if exist(filename,'dir')
+if exist(filename,'file')
     fid = fopen(fullfile(pwd,'Materials',[Material '.txt']));
     % Import each line into a structure with field names determined by file
     while ~feof(fid)
