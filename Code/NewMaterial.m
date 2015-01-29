@@ -16,6 +16,9 @@ for i = 1:numel(fields)
         format = fmt.string;
     else
         format = fmt.array;
+        if strcmp(varname1,'hkl')
+            var = var';
+        end
     end
     fprintf(fid,format,var);
     fprintf(fid,'\n');

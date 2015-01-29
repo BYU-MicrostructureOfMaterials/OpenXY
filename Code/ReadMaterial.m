@@ -11,6 +11,8 @@ if exist(filename,'file')
         [parname, value] = strtok(tline);
         if ~strcmp(parname,'Material') && ~strcmp(parname,'lattice')
             value = sscanf(value,'%f');
+        else
+            value = strtrim(value);
         end
         M.(parname)= value;
     end
