@@ -22,7 +22,7 @@ function varargout = NewMaterialGUI(varargin)
 
 % Edit the above text to modify the response to help NewMaterialGUI
 
-% Last Modified by GUIDE v2.5 27-Jan-2015 15:12:46
+% Last Modified by GUIDE v2.5 28-Jan-2015 15:25:53
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -57,11 +57,13 @@ handles.output = hObject;
 
 % Set edit box font size to 6
 edits = findobj('Style','edit');
-set(edits,'FontSize',6);
+set(edits,'FontSize',8);
 set(handles.material,'FontSize',8);
 
 latticelist = {'cubic', 'hexagonal', 'tetragonal'};
 set(handles.lattice,'String',latticelist);
+
+set(handles.units,'String',{'Angtroms'});
 
 set(handles.NumVal,'String',num2str(8));
 NumValues = 8;
@@ -82,24 +84,27 @@ pos.hkllabel = handles.hkllabel.Position;
 
 left = pos.fhkllabel(1) + pos.fhkllabel(3) + 2;
 height = 22;
+width = 20;
 fields = fieldnames(pos);
 for i = 1:numel(fields)
     fieldname = fields{i}(1:strfind(fields{i},'label')-1);
-    pos.(fieldname)(1) = left;
-    pos.(fieldname)(2) = pos.(fields{i})(2) + pos.(fields{i})(4)/2 - height/2;
-    pos.(fieldname)(3) = 100;
+    pos.(fieldname)(1) = pos.(fields{i})(1);
+    pos.(fieldname)(2) = pos.(fields{i})(2) + pos.(fields{i})(4)/2 - height/2 - 20;
+    pos.(fieldname)(3) = width;
     pos.(fieldname)(4) = height;
 end
 
 % Create Tables
-fhkl = uitable(handles.NewMaterial,'Position',pos.fhkl,'Data',cell(1,NumValues),...
-    'ColumnWidth',{25},'ColumnEditable',true(1,NumValues),...
+format = cell(1,NumValues);
+[format{:}] = deal('bank');
+fhkl = uitable(handles.NewMaterial,'Position',pos.fhkl,'Data',cell(NumValues,1),...
+    'ColumnWidth',{35},'ColumnEditable',true(1),...
     'RowName',[],'ColumnName',[],'Tag','fhkl');
-dhkl = uitable(handles.NewMaterial,'Position',pos.dhkl,'Data',cell(1,NumValues),...
-    'ColumnWidth',{25},'ColumnEditable',true(1,NumValues),...
+dhkl = uitable(handles.NewMaterial,'Position',pos.dhkl,'Data',cell(NumValues,1),...
+    'ColumnWidth',{35},'ColumnEditable',true(1),...
     'RowName',[],'ColumnName',[],'Tag','dhkl');
 hkl = uitable(handles.NewMaterial,'Position',pos.hkl,'Data',cell(NumValues,LatticeNumber),...
-    'ColumnWidth',{25},'ColumnEditable',true(1,NumValues),...
+    'ColumnWidth',{35},'ColumnEditable',true(1,NumValues),...
     'RowName',[],'ColumnName',[],'Tag','hkl');
 
 fhkl.Position(3)=fhkl.Extent(3);
@@ -113,6 +118,8 @@ shift = height1 - height2;
 hkl.Position(3)=hkl.Extent(3);
 hkl.Position(4)=hkl.Extent(4);
 a = hkl.Position(2);
+fhkl.Position(2)=a+shift;
+dhkl.Position(2)=a+shift;
 hkl.Position(2)=a+shift;
 
 
@@ -472,7 +479,7 @@ function addbutton_Callback(hObject, eventdata, handles)
 edits = findobj('Style','edit');
 set(edits,'ForegroundColor','black');
 set(edits,'BackgroundColor','white');
-fail = false;
+invalid = false;
 blank = false;
 
 M.Material = get(handles.material,'String');
@@ -545,12 +552,24 @@ color = color(:,3)==0;
 if sum(color) > 0 %There is at least one red box
     fail = true;
 end
-if fail
+if invalid
     warndlg('Input error: inputs must be numeric');
-elseif blank
+elseif ~blank
     warndlg('Input error: tables must be complete');
 else
-    NewMaterial(M);
+    %NewMaterial(M);
+    str = {'nickel','silicon','iron-alpha','titanium(alpha)','magnesium','aluminum',...
+    'germanium','martensite','copper','tantalum','iron-gamma','boronzirconium_0060610','siliconcarbide6h','siliconcarbon_0020013', 'titaniumaluminum', 'cigs', 'grainfile','titanium(beta)'};
+    for i = 1:length(str)
+        M.Material = str{i};
+        [ M.Fhkl, M.hkl, M.C11, M.C12, M.C44, M.lattice, M.a1, M.b1, M.c1, M.dhkl, M.axs, M.str, M.C13, M.C33, M.C66, M.Burgers] = SelectMaterial(M.Material);
+        M = rmfield(M,'str');
+        try
+            NewMaterial(M);
+        catch
+            keyboard
+        end
+    end
 end
 
 function output = NumericInput(edit, handles)
@@ -598,14 +617,14 @@ for i = 1:3
         if i == 3
             params{i}.Data{NumValues,col}=[];
         else
-            params{i}.Data{1,NumValues}=[];
+            params{i}.Data{NumValues,1}=[];
         end
     else
         data = params{i}.Data;
         if i == 3
             data = data(1:NumValues,:);
         else    
-            data = data(1:NumValues);
+            data = data(1:NumValues,:);
         end
         params{i}.Data = data;
     end
@@ -614,10 +633,8 @@ for i = 1:3
     shift = height1 - height2;
     params{i}.Position(3)=params{i}.Extent(3);
     params{i}.Position(4)=params{i}.Extent(4);
-    if i == 3
-        logical = params{i}.Position(2);
-        params{i}.Position(2)=logical+shift;
-    end
+    logical = params{i}.Position(2);
+    params{i}.Position(2)=logical+shift;
 end
 
 %Resize GUI if tables grow too large
@@ -681,7 +698,6 @@ function NumVal_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-@(hObject,eventdata)NewMaterialGUI('loadbutton_Callback',hObject,eventdata,guidata(hObject))
 
 % --- Executes on button press in loadbutton.
 function loadbutton_Callback(hObject, eventdata, handles)
@@ -723,7 +739,7 @@ if isfield(gui,'material')
 end
 
 delete(gui.f);
-ImportMaterial(handles,MaterialStruct);
+ImportMaterial(handles,eventdata,MaterialStruct);
 
 function material = MaterialSelection(hObject, eventdata,gui)
 string = get(gui.list,'String');
@@ -734,11 +750,23 @@ a = 1;
 gui.f.Visible = 'off';
 uiresume
 
-function ImportMaterial(handles,MaterialStruct)
-[m, n] = size(MaterialStruct.hkl)
+function ImportMaterial(handles,eventdata,MaterialStruct)
+[NumVal, latticenumber] = size(handles.hkl.Data);
+[m, n] = size(MaterialStruct.hkl);
+if m ~= NumVal
+    set(handles.NumVal,'String',num2str(m));
+    NumVal_Callback(handles.NumVal, eventdata, handles);
+end
+
+n_exp =floor(log10(MaterialStruct.dhkl(1)));
+if n_exp ~= -   10
+    warndlg('Units not in angtroms. Cannot import');
+    return;
+end
 set(handles.material,'String',MaterialStruct.Material);
-set(handles.NumVal,'String',num2str(m)');
-set(handles.fhkl,'Data',MaterialStruct.Fhkl');
+set(handles.NumVal,'String',num2str(m));
+set(handles.fhkl,'Data',MaterialStruct.Fhkl);
+MaterialStruct.dhkl = MaterialStruct.dhkl / (1*10^n_exp); %Convert to Angtroms
 set(handles.dhkl,'Data',MaterialStruct.dhkl);
 set(handles.hkl,'Data',MaterialStruct.hkl);
 if isfield(MaterialStruct,'C11')
@@ -765,6 +793,9 @@ lattice = MaterialStruct.lattice;
 IndList = 1:length(latticelist);
 Ind = IndList(strcmp(latticelist,lattice));
 set(handles.lattice, 'Value',Ind)
+if n ~= latticenumber
+    lattice_Callback(handles.lattice, eventdata, handles);
+end
 
 if isfield(MaterialStruct,'a1')
     set(handles.a1,'String',num2str(MaterialStruct.a1));
@@ -779,5 +810,29 @@ if isfield(MaterialStruct,'axs')
     set(handles.axs,'String',num2str(MaterialStruct.axs));
 end
 if isfield(MaterialStruct,'Burgers')
+    MaterialStruct.Burgers = MaterialStruct.Burgers / (1*10^n_exp); %Convert to Angtroms
     set(handles.burgers,'String',num2str(MaterialStruct.Burgers));
+end
+
+
+% --- Executes on selection change in units.
+function units_Callback(hObject, eventdata, handles)
+% hObject    handle to units (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns units contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from units
+
+
+% --- Executes during object creation, after setting all properties.
+function units_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to units (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
 end
