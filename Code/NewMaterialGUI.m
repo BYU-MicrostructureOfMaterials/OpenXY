@@ -96,15 +96,15 @@ end
 
 % Create Tables
 format = cell(1,NumValues);
-[format{:}] = deal('bank');
+[format{:}] = deal('numeric');
 fhkl = uitable(handles.NewMaterial,'Position',pos.fhkl,'Data',cell(NumValues,1),...
-    'ColumnWidth',{35},'ColumnEditable',true(1),...
+    'ColumnWidth',{35},'ColumnEditable',true(1),'ColumnFormat',format,...
     'RowName',[],'ColumnName',[],'Tag','fhkl');
 dhkl = uitable(handles.NewMaterial,'Position',pos.dhkl,'Data',cell(NumValues,1),...
-    'ColumnWidth',{35},'ColumnEditable',true(1),...
+    'ColumnWidth',{35},'ColumnEditable',true(1),'ColumnFormat',format,...
     'RowName',[],'ColumnName',[],'Tag','dhkl');
 hkl = uitable(handles.NewMaterial,'Position',pos.hkl,'Data',cell(NumValues,LatticeNumber),...
-    'ColumnWidth',{35},'ColumnEditable',true(1,NumValues),...
+    'ColumnWidth',{35},'ColumnEditable',true(1,NumValues),'ColumnFormat',format,...
     'RowName',[],'ColumnName',[],'Tag','hkl');
 
 fhkl.Position(3)=fhkl.Extent(3);
@@ -485,45 +485,17 @@ blank = false;
 M.Material = get(handles.material,'String');
 
 % Validate Tables
-Fhkl = get(handles.fhkl,'Data');
-dhkl = get(handles.dhkl,'Data');
-hkl = get(handles.hkl,'Data');
-for i = 1:length(Fhkl)
-    if ~isempty(Fhkl{i})
-        if isempty(str2num(Fhkl{i}))
-            Fhkl{i} = '';
-            invalid = true;
-        end
-    else
-        blank = true;
-    end
+Fhkl = cell2mat(get(handles.fhkl,'Data'));
+dhkl = cell2mat(get(handles.dhkl,'Data'));
+hkl = cell2mat(get(handles.hkl,'Data'));
+if sum(sum(isnan(Fhkl))) > 0
+    invalid = true;
+elseif sum(sum(isnan(dhkl))) > 0
+    invalid = true;
+elseif sum(sum(isnan(hkl))) > 0
+    invalid = true;
 end
-for i = 1:length(dhkl)
-    if ~isempty(dhkl{i})
-        if isempty(str2num(dhkl{i}))
-            dhkl{i} = '';
-            invalid = true;
-        end
-    else
-        blank = true;
-    end
-end
-[row,col] = size(hkl);
-for i = 1:row
-    for j = 1:col
-        if ~isempty(hkl{i,j})
-            if isempty(str2num(hkl{i,j}))
-                hkl{i,j} = '';
-                invalid = true;
-            end
-        else
-            blank = true;
-        end
-    end
-end
-set(handles.fhkl,'Data',Fhkl);
-set(handles.dhkl,'Data',dhkl);
-set(handles.hkl,'Data',hkl);
+
 M.Fhkl = Fhkl;
 M.dhkl = dhkl;
 M.hkl= hkl;
@@ -538,37 +510,30 @@ M.C66 = NumericInput(handles.C66,handles);
 
 latticelist = get(handles.lattice,'String');
 index = get(handles.lattice,'Value');
-M.lattice = latticelist(index);
+M.lattice = latticelist{index};
 
 M.a1 = NumericInput(handles.a1,handles);
 M.b1 = NumericInput(handles.b1,handles);
 M.c1 = NumericInput(handles.c1,handles);
 M.axs = NumericInput(handles.axs,handles);
 M.Burgers = NumericInput(handles.burgers,handles);
-
 color = get(edits,'BackgroundColor');
 color = cell2mat(color);
 color = color(:,3)==0;
 if sum(color) > 0 %There is at least one red box
-    fail = true;
+    invalid = true;
 end
 if invalid
     warndlg('Input error: inputs must be numeric');
-elseif ~blank
+elseif blank
     warndlg('Input error: tables must be complete');
 else
-    %NewMaterial(M);
-    str = {'nickel','silicon','iron-alpha','titanium(alpha)','magnesium','aluminum',...
-    'germanium','martensite','copper','tantalum','iron-gamma','boronzirconium_0060610','siliconcarbide6h','siliconcarbon_0020013', 'titaniumaluminum', 'cigs', 'grainfile','titanium(beta)'};
-    for i = 1:length(str)
-        M.Material = str{i};
-        [ M.Fhkl, M.hkl, M.C11, M.C12, M.C44, M.lattice, M.a1, M.b1, M.c1, M.dhkl, M.axs, M.str, M.C13, M.C33, M.C66, M.Burgers] = SelectMaterial(M.Material);
-        M = rmfield(M,'str');
-        try
-            NewMaterial(M);
-        catch
-            keyboard
-        end
+    materials = GetMaterialsList;
+    if sum(strncmp(M.Material,materials,length(M.Material))) > 0
+        warndlg('Material with same name already exists');
+    else
+        NewMaterial(M);
+        msgbox([M.Material ' successfully added'],'Add new material');
     end
 end
 
@@ -595,8 +560,6 @@ function cancelbutton_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 delete(handles.NewMaterial);
 
-
-
 function NumVal_Callback(hObject, eventdata, handles)
 % hObject    handle to NumVal (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -604,30 +567,36 @@ function NumVal_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of NumVal as text
 %        str2double(get(hObject,'String')) returns contents of NumVal as a double
-NumValues = str2double(get(hObject,'String'));
-NumValues = int32(NumValues);
+input = get(handles.NumVal,'String');
+if isempty(str2num(input))
+    set(hObject,'ForegroundColor','white');
+    set(hObject,'BackgroundColor','red');
+    return;
+else
+    edits = findobj('Style','edit');
+    set(edits,'ForegroundColor','black');
+    set(edits,'BackgroundColor','white');
+end
+NumValues = int32(str2num(get(handles.NumVal,'String')));
 params{1} = handles.fhkl;
 params{2} = handles.dhkl;
 params{3} = handles.hkl;
 
 % Resizes Fhkl, dhkl and hkl tables when value is changed
-[~, col] = size(params{3});
 for i = 1:3
-    if NumValues > length(params{i}.Data)
+    data = params{i}.Data;
+    [rows, cols] = size(data);
+    if NumValues > rows
+        data{NumValues,cols} = [];
         if i == 3
-            params{i}.Data{NumValues,col}=[];
+            params{i}.Data{NumValues,cols}=[];
         else
             params{i}.Data{NumValues,1}=[];
         end
     else
-        data = params{i}.Data;
-        if i == 3
-            data = data(1:NumValues,:);
-        else    
-            data = data(1:NumValues,:);
-        end
-        params{i}.Data = data;
+        data = data(1:NumValues,:);
     end
+    params{i}.Data = data;
     height1 = params{i}.Position(4);
     height2 = params{i}.Extent(4);
     shift = height1 - height2;
@@ -683,10 +652,6 @@ if objectshift ~= 0
     end
 end
 
-
-
-
-
 % --- Executes during object creation, after setting all properties.
 function NumVal_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to NumVal (see GCBO)
@@ -704,11 +669,7 @@ function loadbutton_Callback(hObject, eventdata, handles)
 % hObject    handle to loadbutton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-mats = dir('Materials');
-materials = {mats([mats.isdir] == 0).name};
-for i = 1   :length(materials)
-    [~,materials{i},~] = fileparts(materials{i});
-end
+materials = GetMaterialsList;
 
 %Create GUI
 width = 210;
@@ -759,16 +720,16 @@ if m ~= NumVal
 end
 
 n_exp =floor(log10(MaterialStruct.dhkl(1)));
-if n_exp ~= -   10
+if n_exp ~= -10
     warndlg('Units not in angtroms. Cannot import');
     return;
 end
 set(handles.material,'String',MaterialStruct.Material);
 set(handles.NumVal,'String',num2str(m));
-set(handles.fhkl,'Data',MaterialStruct.Fhkl);
+set(handles.fhkl,'Data',num2cell(MaterialStruct.Fhkl));
 MaterialStruct.dhkl = MaterialStruct.dhkl / (1*10^n_exp); %Convert to Angtroms
-set(handles.dhkl,'Data',MaterialStruct.dhkl);
-set(handles.hkl,'Data',MaterialStruct.hkl);
+set(handles.dhkl,'Data',num2cell(MaterialStruct.dhkl));
+set(handles.hkl,'Data',num2cell(MaterialStruct.hkl));
 if isfield(MaterialStruct,'C11')
     set(handles.C11,'String',num2str(MaterialStruct.C11));
 end
