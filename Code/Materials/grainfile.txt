@@ -4,7 +4,10 @@ dhkl		0
 hkl		0 0 0 
 C11		0 
 C12		0 
+C13		 
+C33		 
 C44		0 
+C66		 
 lattice		cubic
 a1		0 
 b1		0 
