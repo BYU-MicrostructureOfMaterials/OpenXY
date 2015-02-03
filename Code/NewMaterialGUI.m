@@ -22,7 +22,7 @@ function varargout = NewMaterialGUI(varargin)
 
 % Edit the above text to modify the response to help NewMaterialGUI
 
-% Last Modified by GUIDE v2.5 28-Jan-2015 15:25:53
+% Last Modified by GUIDE v2.5 03-Feb-2015 12:25:53
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -63,7 +63,7 @@ set(handles.material,'FontSize',8);
 latticelist = {'cubic', 'hexagonal', 'tetragonal'};
 set(handles.lattice,'String',latticelist);
 
-set(handles.units,'String',{'Angtroms'});
+set(handles.units,'String',{'Angstroms'});
 
 set(handles.NumVal,'String',num2str(8));
 NumValues = 8;
@@ -476,6 +476,7 @@ function addbutton_Callback(hObject, eventdata, handles)
 % hObject    handle to addbutton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
 edits = findobj('Style','edit');
 set(edits,'ForegroundColor','black');
 set(edits,'BackgroundColor','white');
@@ -483,10 +484,14 @@ invalid = false;
 blank = false;
 
 M.Material = get(handles.material,'String');
+unitname = get(handles.units,'String');
+if strcmp(unitname,'Angstroms')
+    units = 1e-10;
+end
 
 % Validate Tables
 Fhkl = cell2mat(get(handles.fhkl,'Data'));
-dhkl = cell2mat(get(handles.dhkl,'Data'));
+dhkl = cell2mat(get(handles.dhkl,'Data'))*units;
 hkl = cell2mat(get(handles.hkl,'Data'));
 if sum(sum(isnan(Fhkl))) > 0
     invalid = true;
@@ -516,7 +521,7 @@ M.a1 = NumericInput(handles.a1,handles);
 M.b1 = NumericInput(handles.b1,handles);
 M.c1 = NumericInput(handles.c1,handles);
 M.axs = NumericInput(handles.axs,handles);
-M.Burgers = NumericInput(handles.burgers,handles);
+M.Burgers = NumericInput(handles.burgers,handles)*units;
 color = get(edits,'BackgroundColor');
 color = cell2mat(color);
 color = color(:,3)==0;
@@ -529,9 +534,17 @@ elseif blank
     warndlg('Input error: tables must be complete');
 else
     materials = GetMaterialsList;
+    addmaterial = false;
     if sum(strncmp(M.Material,materials,length(M.Material))) > 0
-        warndlg('Material with same name already exists');
+        %warndlg('Material with same name already exists');
+        button = questdlg({'Material with same name already exists';'Would you like to overwrite it?'},'Add Material');
+        if strcmp(button,'Yes')
+            addmaterial = true;
+        end
     else
+        addmaterial = true;
+    end
+    if addmaterial
         NewMaterial(M);
         msgbox([M.Material ' successfully added'],'Add new material');
     end
@@ -669,8 +682,9 @@ function loadbutton_Callback(hObject, eventdata, handles)
 % hObject    handle to loadbutton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-materials = GetMaterialsList;
+buttonstring = get(hObject,'String');
 
+materials = GetMaterialsList;
 %Create GUI
 width = 210;
 height = 80;
@@ -692,15 +706,28 @@ gui.button = uicontrol(gui.f,'Style','pushbutton','Position',pos,'String','Selec
 gui.f.Visible = 'on';
 
 uiwait
-gui = guidata(gui.f);
-if isfield(gui,'material')
-    material = gui.material;
-    MaterialStruct = ReadMaterial(material);
-    assignin('base','MaterialStruct',MaterialStruct);
+if ishandle(gui.f)
+    gui = guidata(gui.f);
+    if isfield(gui,'material')
+        material = gui.material;
+        if strcmp(buttonstring,'Load Material')
+            MaterialStruct = ReadMaterial(material);
+            ImportMaterial(handles,eventdata,MaterialStruct);
+        elseif strcmp(buttonstring,'Delete Material')
+            fclose('all');            
+            filename = fullfile(pwd,'Materials',[material '.txt']);
+            delete(filename);
+            if ~exist(filename,'file')
+                msgbox([material ' successfully deleted']);
+            end
+            handles.loadbutton.String = 'Load Button';
+        end
+    end
+    delete(gui.f);
+    
 end
 
-delete(gui.f);
-ImportMaterial(handles,eventdata,MaterialStruct);
+
 
 function material = MaterialSelection(hObject, eventdata,gui)
 string = get(gui.list,'String');
@@ -721,8 +748,7 @@ end
 
 n_exp =floor(log10(MaterialStruct.dhkl(1)));
 if n_exp ~= -10
-    warndlg('Units not in angtroms. Cannot import');
-    return;
+    warndlg('Units not in angtroms');
 end
 set(handles.material,'String',MaterialStruct.Material);
 set(handles.NumVal,'String',num2str(m));
@@ -796,4 +822,32 @@ function units_CreateFcn(hObject, eventdata, handles)
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on key press with focus on NewMaterial and none of its controls.
+function NewMaterial_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to NewMaterial (see GCBO)
+% eventdata  structure with the following fields (see MATLAB.UI.FIGURE)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+switch eventdata.Key
+    case 'shift'
+        handles.loadbutton.String = 'Delete Material';  
+end
+
+
+% --- Executes on key release with focus on NewMaterial and none of its controls.
+function NewMaterial_KeyReleaseFcn(hObject, eventdata, handles)
+% hObject    handle to NewMaterial (see GCBO)
+% eventdata  structure with the following fields (see MATLAB.UI.FIGURE)
+%	Key: name of the key that was released, in lower case
+%	Character: character interpretation of the key(s) that was released
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) released
+% handles    structure with handles and user data (see GUIDATA)
+switch eventdata.Key
+    case 'shift'
+        handles.loadbutton.String = 'Load Material'; 
 end

@@ -990,8 +990,7 @@ stemp=load('Settings.mat');
 Settings=stemp.Settings;
 clear stemp;
 
-[ ~, ~, ~, ~, ~, ~, ~, ~, ~, ~, ~, str] = SelectMaterial('nickel');
-MatStrList = str;
+MatStrList = GetMaterialsList;
 set(handles.MaterialPopup, 'String', MatStrList);
 
 ScanTypeList = {'Square','Hexagonal'}; %'L' Removed 12/22/2014

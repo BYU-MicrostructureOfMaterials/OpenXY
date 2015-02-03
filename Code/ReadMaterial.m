@@ -24,7 +24,8 @@ if exist(filename,'file')
             LatticeNumber = 3;
         end
         M.hkl = reshape(M.hkl,[],LatticeNumber);
-    end     
+    end
+    fclose(fid);
 else
     warndlg('Material file not found');
 end

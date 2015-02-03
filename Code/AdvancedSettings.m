@@ -270,9 +270,9 @@ if isempty(Image)
 end
 
 GrainFileVals = ReadGrainFile(Settings.GrainFilePath);
-curMaterial=lower(GrainFileVals{11}(1));
+curMaterial=lower(GrainFileVals{11}{1});
 
-[ Fhkl hkl C11 C12 C44 lattice a1 b1 c1 dhkl axs str C13 C33 C66 Burgers]=SelectMaterial(curMaterial);
+[ Fhkl, hkl, C11, C12, C44, lattice, a1, b1, c1, dhkl, axs, str, C13, C33, C66, Burgers]=SelectMaterial(curMaterial);
 Av = Settings.AccelVoltage*1000; %put it in eV from KeV
 sampletilt = Settings.SampleTilt;
 elevang = Settings.CameraElevation;
