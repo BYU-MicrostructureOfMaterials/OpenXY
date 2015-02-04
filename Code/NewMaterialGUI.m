@@ -720,11 +720,12 @@ if ishandle(gui.f)
             if ~exist(filename,'file')
                 msgbox([material ' successfully deleted']);
             end
-            handles.loadbutton.String = 'Load Button';
+            handles.loadbutton.String = 'Load Material';
         end
     end
-    delete(gui.f);
-    
+    delete(gui.f);  
+else
+    handles.loadbutton.String = 'Load Material';
 end
 
 

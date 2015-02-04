@@ -23,7 +23,7 @@ if exist(filename,'file')
         else
             LatticeNumber = 3;
         end
-        M.hkl = reshape(M.hkl,[],LatticeNumber);
+        M.hkl = reshape(M.hkl,LatticeNumber,[])';
     end
     fclose(fid);
 else
