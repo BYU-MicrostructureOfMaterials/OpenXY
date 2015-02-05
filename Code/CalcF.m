@@ -365,8 +365,8 @@ Z= zeros(length(tempind),1);
 switch Settings.FCalcMethod
     
     
-    case 'Wilkinson Sample'
-        %% Method 1: Straight up wilkinson (sample frame)
+    case 'Real Sample'
+        %% Method 1: Straight up real (sample frame)
         r1=rs1';
         r2=rs2';
         r3=rs3';
@@ -439,7 +439,7 @@ switch Settings.FCalcMethod
         %         BCerr = sqrt(sum(BCerr.^2));
         %         BCerrs(1)=BCerr;
         
-    case 'Wilkinson Crystal'
+    case 'Real Crystal'
         %% Method 2: wilkinson in crystal frame
         
         r1=rc1';

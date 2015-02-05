@@ -58,7 +58,7 @@ Settings.IQCutoff = 0;
 Settings.IterationLimit = 6;
 Settings.RefImageInd = 0;
 
-%Options are: {'Wilkinson Sample','Wilkinson Crystal','Collin Sample','Collin Crystal'}; 
+%Options are: {'Real Sample','Real Crystal','Collin Sample','Collin Crystal'}; 
 Settings.FCalcMethod = 'Collin Crystal';
 
 %Options are: {'Min Kernel Avg Miso','IQ > Fit > CI'} - more may yet be added, eg.

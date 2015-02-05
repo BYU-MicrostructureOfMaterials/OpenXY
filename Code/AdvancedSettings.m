@@ -74,7 +74,7 @@ HROIMMethodList = {'Simulated','Real-Grain Ref','Real-Single Ref'};
 set(handles.HROIMMethodPopUp, 'String', HROIMMethodList);
 
 %Initialize FCalcMethod popup
-FCalcMethodList = {'Wilkinson Sample','Wilkinson Crystal','Collin Sample','Collin Crystal'};
+FCalcMethodList = {'Real Sample','Real Crystal','Collin Sample','Collin Crystal'};
 set(handles.FCalcMethodPopUp, 'String', FCalcMethodList);
 
 %Initialze Real Ref Image Method
@@ -163,7 +163,7 @@ end
 if ~isempty(Settings.HROIMMethod)
     
     HROIMMethod = Settings.HROIMMethod;
-    if strcmp(HROIMMethod,'Wilkinson')
+    if strcmp(HROIMMethod,'Real')
         if Settings.RefImageInd > 0
             HROIMMethod = 'Real-Single Ref';
             set(handles.RefImageIndEdit,'String',num2str(Settings.RefImageInd));
@@ -601,10 +601,10 @@ switch HROIMMethodList{MethodInd}
         Settings.HROIMMethod = HROIMMethodList{MethodInd};
         Settings.RefImageInd = 0;
     case 'Real-Grain Ref'
-        Settings.HROIMMethod = 'Wilkinson'; %Wilkison is the original name used for 'Real' pattern method
+        Settings.HROIMMethod = 'Real';
         Settings.RefImageInd = 0;
     case 'Real-Single Ref'
-        Settings.HROIMMethod = 'Wilkinson';
+        Settings.HROIMMethod = 'Real';
         Settings.RefImageInd = str2double(get(handles.RefImageIndEdit,'String'));
 end
 

@@ -122,7 +122,7 @@ gr=g;
 
 
 %Get Reference Image depending on the chosen HROIM Method (so far these are
-%either Simulated or Wilkinson. Plan on adding Sim/Wilk Hybrid
+%either Simulated or Real. Plan on adding Sim/Real Hybrid
 switch Settings.HROIMMethod
     
     case 'Simulated'
@@ -137,44 +137,7 @@ switch Settings.HROIMMethod
         
         RefImage = custimfilt(RefImage,Settings.ImageFilter(1), ...
             Settings.PixelSize,Settings.ImageFilter(3),Settings.ImageFilter(4));
-%         keyboard
-%             %%%%%%%%%%%%temp code to test effect of rotation error
-%             Settings.FCalcMethod='Wilkinson Sample';
-%             Settings.FCalcMethod='Wilkinson Crystal';
-%             Settings.FCalcMethod='Collin Sample';
-%             Settings.FCalcMethod='Collin Crystal';
-% % %             grtest = euler2gmat(Settings.Phi1Ref(ImageInd),Settings.PHIRef(ImageInd)+1*pi/180,Settings.Phi2Ref(ImageInd));
-% % %             RefImagetest = genEBSDPatternHybrid(grtest,paramspat,eye(3),lattice,al,bl,cl,axs);
-% % %             RefImagetest = genEBSDPatternHybrid(gr,paramspat,grtestdelta,lattice,al,bl,cl,axs);
-% % %             grtestdelta = gr*grtest';
-%             Ftest=eye(3); Ftest(1,2)=0.01;Ftest(2,1)=0.01;
-%             % Ftest=[1 0.01 -0.01 ; 0.02 1 0.02; 0.01 0.02 1];
-%             RefImagetest = genEBSDPatternHybrid(gr,paramspat,Ftest,lattice,al,bl,cl,axs);
-%             RefImagetest = custimfilt(RefImagetest,Settings.ImageFilter(1), ...
-%                 Settings.PixelSize,Settings.ImageFilter(3),Settings.ImageFilter(4));
-%             
-%             clear global rs cs Gs %WHY DO I NEED THIS LINE (I DO NEED IT OR IT KEEPS OLD VALUES)?????!!!!!!!
-%             [F1 SSE1] = CalcF(RefImage,RefImagetest,gr,eye(3),ImageInd,Settings,curMaterial);
-%             [r u]=poldec(F1);
-%             U=u;
-%             R=r;
-%             %
-%                 for i=1:50
-%         %             keyboard
-%                     [rr uu]=poldec(F1);
-%                     gr=rr'*gr; % correct the rotation component of the deformation so that it doesn't affect strain calc
-%                      RefImage = genEBSDPatternHybrid(gr,paramspat,eye(3),lattice,al,bl,cl,axs);
-%             RefImage = custimfilt(RefImagetest,Settings.ImageFilter(1), ...
-%                 Settings.PixelSize,Settings.ImageFilter(3),Settings.ImageFilter(4));
-%         
-%              clear global rs cs Gs
-%                 [F1 SSE1] = CalcF(RefImage,RefImagetest,gr,eye(3),ImageInd,Settings,curMaterial);
-%         %         [Settings.Phi1Ref(ImageInd),Settings.PHIRef(ImageInd)+1*pi/180,Settings.Phi2Ref(ImageInd)]
-%                 [p1 p2 p3]=gmat2euler(gr);
-%                 Settings.PHIRef(ImageInd)+1*pi/180-p2
-%                 end
-%                 keyboard
-        % %%%%%%%%%%%%%%%%%%%%%%%%%%%
+
         %Initialize
         clear global rs cs Gs
         [F1 SSE1] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial);
@@ -225,7 +188,7 @@ switch Settings.HROIMMethod
         
         
         
-    case 'Wilkinson'
+    case 'Real'
         %Find the grain of scan image and get the reference image for that
         %grain
         RefImagePath = Settings.RefImageNames{ImageInd}; % original line
@@ -240,19 +203,19 @@ switch Settings.HROIMMethod
 %         disp(RefImagePath);
         [F1 SSE1] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,RefInd);
         
-    case 'UnholyAlliance'
+    case 'Hybrid'
         %Use simulated pattern method on one reference image then use
-        %Wilkinson for all others in that grain.
+        %Real for all others in that grain.
         
         
 end
 
 if DoLGrid
     
-    %For the leg points just set it to Wilkinson Sample all the
+    %For the leg points just set it to Real Sample all the
     %time
     KeepFCalcMethod = Settings.FCalcMethod;
-    Settings.FCalcMethod = 'Wilkinson Sample';
+    Settings.FCalcMethod = 'Real Sample';
     
     
     % evaluate point a using b as the reference
