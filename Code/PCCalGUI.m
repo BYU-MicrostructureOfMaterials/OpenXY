@@ -288,8 +288,7 @@ if handles.VanPont
     
     planefitpanel_SelectionChangeFcn(handles.planefitpanel, eventdata, handles);
     
-    guidata(hObject, handles);
-    planefitpanel_SelectionChangeFcn(handles.planefitpanel, eventdata, handles);
+    handles = guidata(hObject);
     if get(handles.autorunbox,'Value')
         savenclose_Callback(handles.savenclose,eventdata,handles);
     end

@@ -91,7 +91,7 @@ else
     str = Default.str;
 end
 if isfield(M,'Burgers')
-    Burgers = M.axs;
+    Burgers = M.Burgers;
 else
     Burgers = Default.axs;
 end
