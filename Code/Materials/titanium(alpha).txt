@@ -1,16 +1,16 @@
 Material		titanium(alpha)
 Fhkl		1 1 1 1 
-dhkl		2.555e-10 2.34e-10 2.242e-10 1.726e-10 
 hkl		1 0 -1 0 0 0 0 2 1 0 -1 1 1 0 -1 2 
 C11		176.1 
 C12		86.9 
+C44		50.8 
+lattice		hexagonal
+a		2.95 
+b		2.95 
+c		4.68 
+dhkl		2.555e-10 2.34e-10 2.242e-10 1.726e-10 
+axs		3 
 C13		68.3 
 C33		190.5 
-C44		50.8 
 C66		44.6 
-lattice		hexagonal
-a1		2.95 
-b1		2.95 
-c1		4.68 
-axs		3 
 Burgers		 
