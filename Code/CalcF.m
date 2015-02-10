@@ -21,7 +21,7 @@ function [F, SSE] = CalcF(RefImage,ScanImage,g,Fo,Ind,Settings,curMaterial,RefIn
 %
 %% handle inputs
 
-[ ~, ~, C11, C12, C44, lattice, ~, ~, ~, ~, ~, ~, C13, C33, C66 ] = SelectMaterial(curMaterial);
+Material = ReadMaterial(curMaterial);
 
 if nargin < 8
     RefInd = 0;
@@ -276,10 +276,10 @@ end
 length(tempind);
 g=Qsc;
 %Create stiffness matrix
-if strcmp(lattice,'cubic') || strcmp(lattice,'tetragonal')
-    C1111=C11*1e9;
-    C2323=C44*1e9;
-    C1122=C12*1e9;
+if strcmp(Material.lattice,'cubic') || strcmp(Material.lattice,'tetragonal')
+    C1111=Material.C11*1e9;
+    C2323=Material.C44*1e9;
+    C1122=Material.C12*1e9;
     delta=eye(3);
     %Transform to the crystal apply stress normal to surface is zero
     Cc=zeros(3,3,3,3);
@@ -300,12 +300,12 @@ if strcmp(lattice,'cubic') || strcmp(lattice,'tetragonal')
         end
     end
 else
-    C1111=C11*1e9;
-    C3333=C33*1e9;
-    C1212=C66*1e9;
-    C2323=C44*1e9;
-    C1122=C12*1e9;
-    C1133=C13*1e9;
+    C1111=Material.C11*1e9;
+    C3333=Material.C33*1e9;
+    C1212=Material.C66*1e9;
+    C2323=Material.C44*1e9;
+    C1122=Material.C12*1e9;
+    C1133=Material.C13*1e9;
     delta=eye(3);
     %Transform to the crystal apply stress normal to surface is zero
     Cc=zeros(3,3,3,3);

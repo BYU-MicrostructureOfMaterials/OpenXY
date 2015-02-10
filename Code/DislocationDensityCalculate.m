@@ -161,10 +161,9 @@ if ~strcmp(Settings.ScanType,'L')
     Burgers=zeros(N,1);
 
     for p=1:N
-        [ ~, ~, ~, ~, ~, lattemp , ~, ~, ~ , ~ , ~ , ~ , ~ , ~ , ~, Btemp] = SelectMaterial(lower(Settings.Phase(p)));
-        lattice{p}=lattemp;
-
-        Burgers(p)=Btemp;
+        Material = ReadMaterial(lower(Settings.Phase(p)));
+        lattice{p}=Material.lattice;
+        Burgers(p)=Material.Burgers;
     end
     b = Burgers;
 
@@ -347,15 +346,13 @@ end
 lattice=cell(i,1);
 Burgers=zeros(i,1);
 for p=1:i
-    [ ~, ~, ~, ~, ~, lattemp , ~, ~, ~ , ~ , ~ , ~ , ~ , ~ , ~, Btemp] = ...
-    SelectMaterial(lower(Settings.Phase(p)));
-    lattice{p}=lattemp;
-    
-    Burgers(p)=Btemp;
+    Material = ReadMaterial(lower(Settings.Phase(p)));
+    lattice{p}=Material.lattice;
+    Burgers(p)=Material.Burgers;
 end
 b = Burgers;
 if isempty(b)
-   errordlg('No Burgers vector specified for this material in SelectMaterials.m (in Utilities folder).','Error');
+   errordlg('No Burgers vector specified for this material in Materials sub-folder).','Error');
    return
 end
 

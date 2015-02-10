@@ -1,6 +1,16 @@
 function M = ReadMaterial(Material)
 % Reads material data from text file in /Materials subfolder into a
 % structure
+if strcmp(Material,'newphase')
+    Material='iron-alpha';
+end
+if strcmp(Material,'Austenite') || strcmp(Material,'austenite')
+    Material='iron-gamma';
+end
+if strcmp(Material,'Ferrite') || strcmp(Material,'ferrite')
+    Material='iron-alpha';
+end
+
 filename = fullfile(pwd,'Materials',[Material '.txt']);
 
 if exist(filename,'file')
