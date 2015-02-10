@@ -27,7 +27,7 @@ Settings.DoParallel = NumberOfCores - 1;
 Settings.DoShowPlot = 0;
 Settings.ImageFilterType='standard';
 
-%Options are in SelectMaterial.m
+%Options are in output by GetMaterialsList.m
 Settings.Material = 'grainfile';
 
 %Options are: {'Square','Hexagonal','L'};

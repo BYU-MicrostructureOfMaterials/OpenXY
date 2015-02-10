@@ -28,9 +28,8 @@ if DoShowGB && ~strcmp(Settings.ScanType,'Hexagonal')
     % HROIM angles for grain boundary calc
     
     anglestemp = reshape(angles,[r,c,3]);
-    [ Fhkl hkl C11 C12 C44 lattice al bl cl dhkl axs] = ...
-        SelectMaterial(Settings.Material);
-    [grains grainsize sizes BOUND]=findgrains(anglestemp, lattice, clean, small, mistol);
+    Material = ReadMaterial(Settings.Material);
+    [grains grainsize sizes BOUND]=findgrains(anglestemp, Material.lattice, clean, small, mistol);
     % BOUND=flipud(fliplr(BOUND));
     
     x=[1:r];

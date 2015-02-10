@@ -272,20 +272,20 @@ end
 GrainFileVals = ReadGrainFile(Settings.GrainFilePath);
 curMaterial=lower(GrainFileVals{11}{1});
 
-[ Fhkl, hkl, C11, C12, C44, lattice, a1, b1, c1, dhkl, axs, str, C13, C33, C66, Burgers]=SelectMaterial(curMaterial);
+Material = ReadMaterial(curMaterial);
 Av = Settings.AccelVoltage*1000; %put it in eV from KeV
 sampletilt = Settings.SampleTilt;
 elevang = Settings.CameraElevation;
 pixsize = size(Image,1);
 disp(Settings.AngFilePath)
 [SquareFileVals ScanParams] = ReadAngFile(Settings.AngFilePath);
-paramspat={ScanParams.xstar;ScanParams.ystar;ScanParams.zstar;pixsize;Av;sampletilt;elevang;Fhkl;dhkl;hkl};
+paramspat={ScanParams.xstar;ScanParams.ystar;ScanParams.zstar;pixsize;Av;sampletilt;elevang;Material.Fhkl;Material.dhkl;Material.hkl};
 Angles(:,1) = SquareFileVals{1};
 Angles(:,2) = SquareFileVals{2};
 Angles(:,3) = SquareFileVals{3};
 g=euler2gmat(Angles(1,1),Angles(1,2),Angles(1,3));
 
-GenImage = genEBSDPatternHybrid(g,paramspat,eye(3),lattice,a1,b1,c1,axs);
+GenImage = genEBSDPatternHybrid(g,paramspat,eye(3),Material.lattice,Material.a,Material.b,Material.c,Material.axs);
 GenImage = custimfilt(GenImage, Settings.ImageFilter(1), Settings.ImageFilter(2),Settings.ImageFilter(3),Settings.ImageFilter(4));
 handles.GenImage=GenImage;
 handles.Image = Image;
