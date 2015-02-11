@@ -161,7 +161,7 @@ if ~strcmp(Settings.ScanType,'L')
     Burgers=zeros(N,1);
 
     for p=1:N
-        Material = ReadMaterial(lower(Settings.Phase(p)));
+        Material = ReadMaterial(lower(Settings.Phase{p}));
         lattice{p}=Material.lattice;
         Burgers(p)=Material.Burgers;
     end
@@ -346,7 +346,7 @@ end
 lattice=cell(i,1);
 Burgers=zeros(i,1);
 for p=1:i
-    Material = ReadMaterial(lower(Settings.Phase(p)));
+    Material = ReadMaterial(lower(Settings.Phase{p}));
     lattice{p}=Material.lattice;
     Burgers(p)=Material.Burgers;
 end
