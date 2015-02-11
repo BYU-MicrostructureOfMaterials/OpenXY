@@ -10,7 +10,7 @@ clear global rs cs Gs
 % I2 = genEBSDPatternHybrid(g,params2,F,lattice,a1,b1,c1,axs);
 
 % Remove rotational error first DTF 7/15/14
-for i = 1:2
+for i = 1:3
     I1 = genEBSDPatternHybrid(g,params2,eye(3),lattice,a1,b1,c1,axs);
     I1 = custimfilt(I1,X(1),Settings.PixelSize,X(3),X(4));
     clear global rs cs Gs
@@ -36,7 +36,7 @@ end
 
 [R U] = poldec(F);
 
-U = U-eye(3);
+U = triu(U);
 % D = F-eye(3);
 
 % angle = GeneralMisoCalc(R,eye(3),lattice);
@@ -45,7 +45,7 @@ U = U-eye(3);
 %     normF = sum(sum((D.*D)));
 % else
     %normF = sum(sum((U.*U))); experimentally removed by Craig and Tim and replaced by below, Aug27 2014
-    normF=norm(U);
+    normF=sum(sum((U.*U)));
 % end
 
 % disp(F)
