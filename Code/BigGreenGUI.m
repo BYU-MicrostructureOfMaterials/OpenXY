@@ -717,7 +717,7 @@ function RunButton_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 ButtonString = get(handles.RunButton,'String');
 if strcmp(ButtonString,'Run')
-        stemp=load('Settings.mat');
+    stemp=load('Settings.mat');
     Settings=stemp.Settings;
     AngFilePath = get(handles.AngFileEdit,'String');
     if iscell(AngFilePath)
@@ -746,8 +746,26 @@ if strcmp(ButtonString,'Run')
         return
     end
     OutputPath = get(handles.OutputFileEdit,'String');
-    LastSlashInd = find(OutputPath == filesep);
-    OutputDirectory = OutputPath(1:LastSlashInd(end)-1);
+    while exist(OutputPath,'file')
+        button = questdlg({'Output file already exists'; 'Would you like to overwrite it?'},'Run OpenXY');
+        switch button
+            case 'Yes'
+                break;
+            case 'No'
+                [Path, Name, ext] = fileparts(OutputPath);
+                NewName = inputdlg('Input a output name','Run OpenXY',[1 50],{Name});
+                if isempty(NewName) %No input or Canceled
+                    Name = [Name ext];
+                else
+                    Name = [NewName{1} ext];
+                end
+                OutputPath = fullfile(Path, Name);
+            case 'Cancel'
+                return;
+        end
+    end
+                
+    OutputDirectory = fileparts(OutputPath);
     if iscell(OutputPath)
         OutputPath = OutputPath{1};
     end
