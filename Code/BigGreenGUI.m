@@ -816,7 +816,7 @@ if strcmp(ButtonString,'Run')
 
     Settings.FirstImagePath = FirstImagePath;
 
-    Settings.OutputPath = get(handles.OutputFileEdit,'String');
+    Settings.OutputPath = OutputPath;
 
     Settings.DoUsePCFile = get(handles.UsePCFileToggle,'Value');
     if Settings.DoUsePCFile
