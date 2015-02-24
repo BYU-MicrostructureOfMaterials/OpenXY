@@ -22,7 +22,7 @@ function varargout = PCCalGUI(varargin)
 
 % Edit the above text to modify the response to help PCCalGUI
 
-% Last Modified by GUIDE v2.5 12-Feb-2015 14:03:24
+% Last Modified by GUIDE v2.5 24-Feb-2015 13:55:28
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -108,6 +108,9 @@ axes(handles.axes2)
 plot3(ScanParams.xstar,ScanParams.ystar,ScanParams.zstar,'bo')
 colormap jet
 
+set(handles.SavePCCal,'Value',1);
+handles.SaveAllPC = 1;
+
 % Update handles structure
 handles.Settings = Settings;
 handles.ScanParams = ScanParams;
@@ -159,7 +162,7 @@ if ~handles.calibrated
 end
 if ~strcmp(YesNo,'No')
     Settings = handles.Settings;
-    SaveAllPC = 1;
+    SaveAllPC = handles.SaveAllPC;
     if SaveAllPC
         PCCal.MeanXstar = handles.MeanXstar;
         PCCal.MeanYstar = handles.MeanYstar;
@@ -664,3 +667,14 @@ Settings.PCCal.NaiveYstar = handles.NaiveYstar;
 Settings.PCCal.NaiveZstar = handles.NaiveZstar;
 
 save(fullfile(path,name),'Settings');
+
+
+% --- Executes on button press in SavePCCal.
+function SavePCCal_Callback(hObject, eventdata, handles)
+% hObject    handle to SavePCCal (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of SavePCCal
+handles.SaveAllPC = get(hObject,'Value');
+guidata(hObject,handles);
