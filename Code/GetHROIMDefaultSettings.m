@@ -57,6 +57,8 @@ Settings.IQCutoff = 0;
 
 Settings.IterationLimit = 6;
 Settings.RefImageInd = 0;
+Settings.DoDDS = 0;
+
 
 %Options are: {'Real Sample','Real Crystal','Collin Sample','Collin Crystal'}; 
 Settings.FCalcMethod = 'Collin Crystal';

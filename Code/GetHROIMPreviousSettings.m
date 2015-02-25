@@ -47,6 +47,9 @@ Settings.IterationLimit = PrevSettings.IterationLimit;
 if isfield(PrevSettings, 'RefImageInd')
     Settings.RefImageInd = PrevSettings.RefImageInd;
 end
+if isfield(PrevSettings, 'DoDDS')
+    Settings.DoDDS = PrevSettings.DoDDS;
+end
 Settings.FCalcMethod = PrevSettings.FCalcMethod;
 Settings.GrainRefImageType = PrevSettings.GrainRefImageType;
 Settings.KernelAvgMisoPath = PrevSettings.KernelAvgMisoPath;
