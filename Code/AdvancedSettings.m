@@ -22,7 +22,7 @@ function varargout = AdvancedSettings(varargin)
 
 % Edit the above text to modify the response to help AdvancedSettings
 
-% Last Modified by GUIDE v2.5 27-Dec-2014 10:48:06
+% Last Modified by GUIDE v2.5 25-Feb-2015 16:00:32
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -80,6 +80,10 @@ set(handles.FCalcMethodPopUp, 'String', FCalcMethodList);
 %Initialze Real Ref Image Method
 GrainRefImageTypeList = {'Min Kernel Avg Miso','IQ > Fit > CI'};
 set(handles.GrainRefTypePopUp, 'String', GrainRefImageTypeList);
+
+%Initialize DDS Method
+DDSList = {'Nye-Kroner', 'Nye-Kroner (Pantleon)','Distortion Matching'};
+set(handles.DDMethod,'String',DDSList);
 
 if ~isempty(Settings.ROISizePercent)
     if ~isnumeric(Settings.ROISizePercent) || Settings.ROISizePercent <= 0
@@ -1146,3 +1150,39 @@ function skippointshelp_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 SkipPointsHelp();
+
+
+% --- Executes on button press in SplitDD.
+function SplitDD_Callback(hObject, eventdata, handles)
+% hObject    handle to SplitDD (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of SplitDD
+if get(hObject,'Value') == 1
+    handles.Settings.DoDDS = 1;
+    guidata(hObject,handles);
+end
+
+
+% --- Executes on selection change in DDMethod.
+function DDMethod_Callback(hObject, eventdata, handles)
+% hObject    handle to DDMethod (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns DDMethod contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from DDMethod
+
+
+% --- Executes during object creation, after setting all properties.
+function DDMethod_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to DDMethod (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end

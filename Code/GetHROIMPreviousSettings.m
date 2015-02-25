@@ -49,6 +49,8 @@ if isfield(PrevSettings, 'RefImageInd')
 end
 if isfield(PrevSettings, 'DoDDS')
     Settings.DoDDS = PrevSettings.DoDDS;
+else
+    Settings.DoDDS = 0;
 end
 Settings.FCalcMethod = PrevSettings.FCalcMethod;
 Settings.GrainRefImageType = PrevSettings.GrainRefImageType;
