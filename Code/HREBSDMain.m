@@ -449,7 +449,10 @@ if Settings.CalcDerivatives == 1
     
     DislocationDensityCalculate(Settings,MaxMisorientation,IQcutoff,VaryStepSizeI) 
 end
-
+if Settings.DoDDS == 1
+    alpha_data = load('alpha_data');
+    rhos = SplitDD(Settings, alpha_data, Settings.DDSMethod);
+end
 %% Output Plotting
 % save([OutputPathWithSlash 'Data_' FileName],'data');
 input{1} = [SaveFile '.mat'];

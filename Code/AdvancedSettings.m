@@ -211,6 +211,22 @@ if ~isempty(Settings.HROIMMethod)
     end
     
 end
+if ~isempty(Settings.DoDDS)
+    set(handles.SplitDD, 'Value', Settings.DoDDS)
+else
+    set(handles.SplitDD, 'Value', 0);
+end
+if isfield(Settings,'DDSMethod')
+    switch Settings.DDSMethod
+        case 1
+            DDSMethodInd = 1;
+        case 9
+            DDSMethodInd = 2;
+        case 2
+            DDSMethodInd = 3;
+    end
+    set(handles.DDMethod,'Value',DDSMethodInd);
+end
 if ~isempty(Settings.CalcDerivatives)
     
     set(handles.CalcDerivativesCheckBox, 'Value', Settings.CalcDerivatives)
@@ -259,7 +275,13 @@ if ~isempty(Settings.GrainRefImageType)
     IndList = 1:length(GrainRefImageTypeList);
     SelectedGrainRefImageTypeInd = IndList(strcmp(GrainRefImageTypeList,GrainRefImageType));
     set(handles.GrainRefTypePopUp, 'Value', SelectedGrainRefImageTypeInd);
-    
+    if strcmp(GrainRefImageType,'IQ > Fit > CI')
+        set(handles.KernelAvgFilePathEdit, 'Enable', 'off');
+        set(handles.KernelAvgBrowseButton, 'Enable', 'off');
+    else
+        set(handles.KernelAvgFilePathEdit, 'Enable', 'on');
+        set(handles.KernelAvgBrowseButton, 'Enable', 'on');
+    end
 end
 
 if ~isempty(Settings.KernelAvgMisoPath)
@@ -617,6 +639,17 @@ Settings.CalcDerivatives = get(handles.CalcDerivativesCheckBox, 'Value');
 Settings.NumSkipPts = get(handles.NumSkipPtsBox, 'String');
 Settings.MisoTol = str2double(get(handles.MisoTolBox, 'String'));
 Settings.IQCutoff = str2double(get(handles.IQCutoffBox, 'String'));
+Settings.DoDDS = get(handles.SplitDD, 'Value');
+DDSMethodList = get(handles.DDMethod, 'String');
+MethodInd = get(handles.DDMethod, 'Value');
+switch DDSMethodList{MethodInd}
+    case 'Nye-Kroner'
+        Settings.DDSMethod = 1;
+    case 'Nye-Kroner (Pantleon)'
+        Settings.DDSMethod = 9;
+    case 'Distortion Matching'
+        Settings.DDSMethod = 2;
+end
 
 Limit = uint8(str2num(get(handles.IterationLimitEdit,'String')));
 if isinteger(Limit) && Limit > 0
@@ -1028,12 +1061,15 @@ if value == 0
     set(handles.NumSkipPtsBox, 'Enable', 'off');
     set(handles.MisoTolBox, 'Enable', 'off');
     set(handles.IQCutoffBox, 'Enable', 'off');
+    set(handles.SplitDD, 'Enable', 'off');
+    set(handles.SplitDD, 'Value', 0);
 elseif value == 1
     set(handles.NumSkipPtsBox, 'Enable', 'on');
     set(handles.MisoTolBox, 'Enable', 'on');
     set(handles.IQCutoffBox, 'Enable', 'on');
+    set(handles.SplitDD, 'Enable', 'on');
 end
-    
+SplitDD_Callback(handles.SplitDD, eventdata, handles);
 
 
 
@@ -1160,8 +1196,9 @@ function SplitDD_Callback(hObject, eventdata, handles)
 
 % Hint: get(hObject,'Value') returns toggle state of SplitDD
 if get(hObject,'Value') == 1
-    handles.Settings.DoDDS = 1;
-    guidata(hObject,handles);
+    set(handles.DDMethod, 'Enable', 'on');
+else
+    set(handles.DDMethod, 'Enable', 'off');
 end
 
 
