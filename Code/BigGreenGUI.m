@@ -78,6 +78,9 @@ destination = [destination 'Unused Code'];
 if exist(destination,'dir')
     addpath(destination);
 end
+if exist('DDS','dir')
+    addpath('DDS');
+end
 
 %Visuals
 axes(handles.background);
@@ -833,6 +836,14 @@ if strcmp(ButtonString,'Run')
     Settings.DoShowPlot = get(handles.DoDisplayCheckBox,'Value');
     Settings.DoPCStrainMin = get(handles.PCCalibrationBox,'Value');
     Settings.Exit = 0;
+    
+    DefaultSettings = GetHROIMDefaultSettings;
+    DefaultFields = fieldnames(DefaultSettings);
+    for i = 1:length(DefaultFields)
+        if ~isfield(Settings,DefaultFields{i})
+            Settings.(DefaultFields{i}) = DefaultSettings.(DefaultFields{i});
+        end
+    end
     
     % Disable Run Button
     set(handles.RunButton,'String','Running...');

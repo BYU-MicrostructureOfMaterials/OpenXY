@@ -450,7 +450,7 @@ if Settings.CalcDerivatives == 1
     DislocationDensityCalculate(Settings,MaxMisorientation,IQcutoff,VaryStepSizeI) 
 end
 if Settings.DoDDS == 1
-    alpha_data = load('alpha_data');
+    alpha_data = load([Settings.AnalysisParamsPath '.mat']);
     rhos = SplitDD(Settings, alpha_data, Settings.DDSMethod);
 end
 %% Output Plotting

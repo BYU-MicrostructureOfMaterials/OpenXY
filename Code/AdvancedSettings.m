@@ -211,7 +211,7 @@ if ~isempty(Settings.HROIMMethod)
     end
     
 end
-if ~isempty(Settings.DoDDS)
+if isfield(Settings,'DoDDS')
     set(handles.SplitDD, 'Value', Settings.DoDDS)
 else
     set(handles.SplitDD, 'Value', 0);
