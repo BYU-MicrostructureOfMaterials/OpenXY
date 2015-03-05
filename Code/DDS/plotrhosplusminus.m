@@ -1,6 +1,6 @@
-function plotrhosplusminus(Settings, alpha_data)
+function plotrhosplusminus(Settings, alpha_data, rhos)
 
-rhos = alpha_data.rhos;
+
 stepsize = alpha_data.stepsize;
 n = Settings.data.cols;
 m = Settings.data.rows;
