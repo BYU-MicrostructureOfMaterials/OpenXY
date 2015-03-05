@@ -447,11 +447,15 @@ if Settings.CalcDerivatives == 1
     IQcutoff = Settings.IQCutoff;
     VaryStepSizeI = Settings.NumSkipPts;
     
-    DislocationDensityCalculate(Settings,MaxMisorientation,IQcutoff,VaryStepSizeI) 
-end
-if Settings.DoDDS == 1
-    alpha_data = load([Settings.AnalysisParamsPath '.mat']);
-    rhos = SplitDD(Settings, alpha_data, Settings.DDSMethod);
+    DislocationDensityCalculate(Settings,MaxMisorientation,IQcutoff,VaryStepSizeI)
+    % Split Dislocation Density (Code by Tim Ruggles, added 3/5/2015)
+    if Settings.DoDDS == 1
+        save('DDSettings');
+        alpha_data = load([Settings.AnalysisParamsPath '.mat']);
+        alpha_data = alpha_data.alpha_data;
+        rhos = SplitDD(Settings, alpha_data, Settings.DDSMethod);
+        save('DDSettings');
+    end
 end
 %% Output Plotting
 % save([OutputPathWithSlash 'Data_' FileName],'data');
