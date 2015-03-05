@@ -1,5 +1,6 @@
 function rhos = SplitDD( Settings, alpha_data, alphaorbeta)
-
+% Written by Tim Ruggles
+% Implemented by Brian Jackson March 2015
 
 [matchoose,vv] = listdlg('PromptString','Select the material type','SelectionMode','single','ListString',{'Mg','Cu','Mg (a systems only)','Ta','Ta (with 112 planes)','Mg(no a-pyram)','Ni','Ni(18ss)','Al-18ss'});
 if vv==0; error('Exited by user'); end
@@ -83,7 +84,6 @@ end
 n = Settings.data.cols;
 m = Settings.data.rows;
 
-
 if length(phi1rn)==3*length(Fatemp)
     temp1 = zeros(length(Fatemp),1);
     temp2 = zeros(length(Fatemp),1);
@@ -130,23 +130,40 @@ alphavecp(6,:)=-betaderiv2(1,3,:) - betaderiv1(2,3,:);%.5*(betaderiv1(3,2,:,:) -
 rhos = zeros(length(bedge) + length(bscrew),m,n);
 
 
-
-matlabpool close force;
-%Determine the number of available cores and use one less
-%(Keeps Matlab from near-freezing the computer if it is not
-% entirely dedicated to running HROIM)
-NumberOfCores = feature('numCores');
-if NumberOfCores > 1
-        
-   NumberOfCores = NumberOfCores - 1;
-%  NumberOfCores = 4; % just for my computer or multi-threaded i7's
-%, otherwise use the previous line
-        
+NumberOfCores = Settings.DoParallel;
+try
+    ppool = gcp('nocreate');
+    if isempty(ppool)
+        parpool(NumberOfCores);
+    end
+catch
+    ppool = matlabpool('size');
+    if ~ppool
+        matlabpool('local',NumberOfCores); 
+    end
 end
-%     matlabpool('open', NumberOfCores);
-matlabpool('local',NumberOfCores)
 % addpath cd
 pctRunOnAll javaaddpath(cd)
+
+disp(['Starting cross-correlation: ' num2str(m*n) ' points']);
+ppm = ParforProgMon( 'Multi Core Progress', m*n );
+    
+% matlabpool close force;
+% %Determine the number of available cores and use one less
+% %(Keeps Matlab from near-freezing the computer if it is not
+% % entirely dedicated to running HROIM)
+% NumberOfCores = feature('numCores');
+% if NumberOfCores > 1
+%         
+%    NumberOfCores = NumberOfCores - 1;
+% %  NumberOfCores = 4; % just for my computer or multi-threaded i7's
+% %, otherwise use the previous line
+%         
+% end
+% %     matlabpool('open', NumberOfCores);
+% matlabpool('local',NumberOfCores)
+% % addpath cd
+% pctRunOnAll javaaddpath(cd)
 
 
 parfor i = 1:m*n
@@ -174,14 +191,13 @@ parfor i = 1:m*n
                 merp(6,1) = beta(10,i);
                 rhos(:,i)=resolvedisloc(merp,11,minscheme,matchoose,gmat,stress, stepsize^2, x0type);
         end
-                
+        ppm.increment();        
         
         
 
 
     
 end
-matlabpool close force;
 
 % alpha_data.rhos = rhos;
 % splitparams.x0type = x0type;
