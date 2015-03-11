@@ -254,39 +254,45 @@ if ~strcmp(Settings.ScanType,'L')
         % reference pattern
 %         imgray=rgb2gray(imread(ImagePath)); % this can add significant time for large scans
 %         intensityr(cnt)=mean(imgray(:));
-               
-        % first, evaluate point a
-        clear global rs cs Gs
-            if ~strcmp(Settings.ScanType,'Hexagonal') || (strcmp(Settings.ScanType,'Hexagonal') && skippts>0)
-                
-                    [AllFa{cnt},AllSSEa(cnt)] = CalcF(image_b,image_a,g_b,eye(3),cnt,Settings,Settings.Phase{cnt});
-                
-            
-            else
-                [AllFa1,AllSSEa1] = CalcF(image_b,image_a1,g_b,eye(3),cnt,Settings,Settings.Phase{cnt});
-                [AllFa2,AllSSEa2] = CalcF(image_b,image_a2,g_b,eye(3),cnt,Settings,Settings.Phase{cnt});
-                AllFa{cnt}=0.5*(AllFa1+AllFa2);
-                AllSSEa(cnt)=0.5*(AllSSEa1+AllSSEa2);
-            end
-            
-            % scale a direction step F tensor for different step size 
-            if strcmp(Settings.ScanType,'Hexagonal')
-                AllFatemp=AllFa{cnt}-eye(3);
-                AllFatemp=AllFatemp/sqrt(3)*2;
-                AllFa{cnt}=AllFatemp+eye(3);
-            end
-            
-        % then, evaluate point c
-        clear global rs cs Gs
-        if ~strcmp(Settings.ScanType,'Hexagonal') || (strcmp(Settings.ScanType,'Hexagonal') && skippts>0)
-             
-            [AllFc{cnt},AllSSEc(cnt)] = CalcF(image_b,image_c,g_b,eye(3),cnt,Settings,Settings.Phase{cnt});
-             
-        else
-            [AllFc{cnt},AllSSEc(cnt)] = CalcF(image_b,image_c,g_b,eye(3),cnt,Settings,Settings.Phase{cnt});
-
-        end
         
+        if isempty(image_b) || isempty(image_a) || isempty(image_c)
+            AllFa{cnt}= -eye(3);
+            AllSSEa(cnt)=101;
+            AllFc{cnt}=-eye(3);
+            AllSSEc(cnt)=101;
+        else
+            % first, evaluate point a
+            clear global rs cs Gs
+                if ~strcmp(Settings.ScanType,'Hexagonal') || (strcmp(Settings.ScanType,'Hexagonal') && skippts>0)
+
+                        [AllFa{cnt},AllSSEa(cnt)] = CalcF(image_b,image_a,g_b,eye(3),cnt,Settings,Settings.Phase{cnt});
+
+
+                else
+                    [AllFa1,AllSSEa1] = CalcF(image_b,image_a1,g_b,eye(3),cnt,Settings,Settings.Phase{cnt});
+                    [AllFa2,AllSSEa2] = CalcF(image_b,image_a2,g_b,eye(3),cnt,Settings,Settings.Phase{cnt});
+                    AllFa{cnt}=0.5*(AllFa1+AllFa2);
+                    AllSSEa(cnt)=0.5*(AllSSEa1+AllSSEa2);
+                end
+
+                % scale a direction step F tensor for different step size 
+                if strcmp(Settings.ScanType,'Hexagonal')
+                    AllFatemp=AllFa{cnt}-eye(3);
+                    AllFatemp=AllFatemp/sqrt(3)*2;
+                    AllFa{cnt}=AllFatemp+eye(3);
+                end
+
+            % then, evaluate point c
+            clear global rs cs Gs
+            if ~strcmp(Settings.ScanType,'Hexagonal') || (strcmp(Settings.ScanType,'Hexagonal') && skippts>0)
+
+                [AllFc{cnt},AllSSEc(cnt)] = CalcF(image_b,image_c,g_b,eye(3),cnt,Settings,Settings.Phase{cnt});
+
+            else
+                [AllFc{cnt},AllSSEc(cnt)] = CalcF(image_b,image_c,g_b,eye(3),cnt,Settings,Settings.Phase{cnt});
+
+            end
+        end
 %         waitbar(cnt/length(ImageNamesList),h,['cnt: ',num2str(cnt)]);% Change for parallel computing
         ppm.increment();
     end
