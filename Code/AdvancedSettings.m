@@ -22,7 +22,7 @@ function varargout = AdvancedSettings(varargin)
 
 % Edit the above text to modify the response to help AdvancedSettings
 
-% Last Modified by GUIDE v2.5 27-Dec-2014 10:48:06
+% Last Modified by GUIDE v2.5 25-Feb-2015 16:00:32
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -57,6 +57,13 @@ stemp=load('Settings.mat');
 Settings=stemp.Settings;
 clear stemp
 
+%Read Grain File and get material data
+GrainFileVals = ReadGrainFile(Settings.GrainFilePath);
+allMaterials = unique(lower(GrainFileVals{11}));
+handles.allMaterials = allMaterials;
+curMaterial=allMaterials{1};
+guidata(hObject,handles);
+
 %Initialize NumROIs popup
 MaxROINum = 50;
 set(handles.NumberROIsPopUp,'String',num2cell(1:MaxROINum));
@@ -80,6 +87,10 @@ set(handles.FCalcMethodPopUp, 'String', FCalcMethodList);
 %Initialze Real Ref Image Method
 GrainRefImageTypeList = {'Min Kernel Avg Miso','IQ > Fit > CI'};
 set(handles.GrainRefTypePopUp, 'String', GrainRefImageTypeList);
+
+%Initialize DDS Method
+DDSList = {'Nye-Kroner', 'Nye-Kroner (Pantleon)','Distortion Matching'};
+set(handles.DDMethod,'String',DDSList);
 
 if ~isempty(Settings.ROISizePercent)
     if ~isnumeric(Settings.ROISizePercent) || Settings.ROISizePercent <= 0
@@ -207,6 +218,22 @@ if ~isempty(Settings.HROIMMethod)
     end
     
 end
+if isfield(Settings,'DoDDS')
+    set(handles.SplitDD, 'Value', Settings.DoDDS)
+else
+    set(handles.SplitDD, 'Value', 0);
+end
+if isfield(Settings,'DDSMethod')
+    switch Settings.DDSMethod
+        case 1
+            DDSMethodInd = 1;
+        case 9
+            DDSMethodInd = 2;
+        case 2
+            DDSMethodInd = 3;
+    end
+    set(handles.DDMethod,'Value',DDSMethodInd);
+end
 if ~isempty(Settings.CalcDerivatives)
     
     set(handles.CalcDerivativesCheckBox, 'Value', Settings.CalcDerivatives)
@@ -255,7 +282,13 @@ if ~isempty(Settings.GrainRefImageType)
     IndList = 1:length(GrainRefImageTypeList);
     SelectedGrainRefImageTypeInd = IndList(strcmp(GrainRefImageTypeList,GrainRefImageType));
     set(handles.GrainRefTypePopUp, 'Value', SelectedGrainRefImageTypeInd);
-    
+    if strcmp(GrainRefImageType,'IQ > Fit > CI')
+        set(handles.KernelAvgFilePathEdit, 'Enable', 'off');
+        set(handles.KernelAvgBrowseButton, 'Enable', 'off');
+    else
+        set(handles.KernelAvgFilePathEdit, 'Enable', 'on');
+        set(handles.KernelAvgBrowseButton, 'Enable', 'on');
+    end
 end
 
 if ~isempty(Settings.KernelAvgMisoPath)
@@ -268,9 +301,6 @@ Image = ReadEBSDImage(Settings.FirstImagePath, Settings.ImageFilter);
 if isempty(Image)
     Image = ReadEBSDImage('demo.bmp', Settings.ImageFilter);
 end
-
-GrainFileVals = ReadGrainFile(Settings.GrainFilePath);
-curMaterial=lower(GrainFileVals{11}{1});
 
 Material = ReadMaterial(curMaterial);
 Av = Settings.AccelVoltage*1000; %put it in eV from KeV
@@ -613,6 +643,17 @@ Settings.CalcDerivatives = get(handles.CalcDerivativesCheckBox, 'Value');
 Settings.NumSkipPts = get(handles.NumSkipPtsBox, 'String');
 Settings.MisoTol = str2double(get(handles.MisoTolBox, 'String'));
 Settings.IQCutoff = str2double(get(handles.IQCutoffBox, 'String'));
+Settings.DoDDS = get(handles.SplitDD, 'Value');
+DDSMethodList = get(handles.DDMethod, 'String');
+MethodInd = get(handles.DDMethod, 'Value');
+switch DDSMethodList{MethodInd}
+    case 'Nye-Kroner'
+        Settings.DDSMethod = 1;
+    case 'Nye-Kroner (Pantleon)'
+        Settings.DDSMethod = 9;
+    case 'Distortion Matching'
+        Settings.DDSMethod = 2;
+end
 
 Limit = uint8(str2num(get(handles.IterationLimitEdit,'String')));
 if isinteger(Limit) && Limit > 0
@@ -1024,12 +1065,15 @@ if value == 0
     set(handles.NumSkipPtsBox, 'Enable', 'off');
     set(handles.MisoTolBox, 'Enable', 'off');
     set(handles.IQCutoffBox, 'Enable', 'off');
+    set(handles.SplitDD, 'Enable', 'off');
+    set(handles.SplitDD, 'Value', 0);
 elseif value == 1
     set(handles.NumSkipPtsBox, 'Enable', 'on');
     set(handles.MisoTolBox, 'Enable', 'on');
     set(handles.IQCutoffBox, 'Enable', 'on');
+    set(handles.SplitDD, 'Enable', 'on');
 end
-    
+SplitDD_Callback(handles.SplitDD, eventdata, handles);
 
 
 
@@ -1146,3 +1190,58 @@ function skippointshelp_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 SkipPointsHelp();
+
+
+% --- Executes on button press in SplitDD.
+function SplitDD_Callback(hObject, eventdata, handles)
+% hObject    handle to SplitDD (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of SplitDD
+valid = 0;
+j = 1;
+for i = 1:length(handles.allMaterials)
+    M = ReadMaterial(handles.allMaterials{i});
+    if isfield(M,'SplitDD')
+        valid = 1;
+    else
+        valid = 0;
+        invalidInd(j) = i;
+        j = j + 1;
+    end
+end
+if valid
+    if get(hObject,'Value') == 1
+        set(handles.DDMethod, 'Enable', 'on');
+    else
+        set(handles.DDMethod, 'Enable', 'off');
+    end
+else
+    warndlg(['Split Dislocation data not available for ' handles.allMaterials{invalidInd(1)}],'OpenXY');
+    set(hObject,'Value',0);
+    set(handles.DDMethod, 'Enable', 'off');
+end
+
+
+% --- Executes on selection change in DDMethod.
+function DDMethod_Callback(hObject, eventdata, handles)
+% hObject    handle to DDMethod (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns DDMethod contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from DDMethod
+
+
+% --- Executes during object creation, after setting all properties.
+function DDMethod_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to DDMethod (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
