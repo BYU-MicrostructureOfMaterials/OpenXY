@@ -453,7 +453,9 @@ if Settings.CalcDerivatives == 1
         alpha_data = load([Settings.AnalysisParamsPath '.mat']);
         alpha_data = alpha_data.alpha_data;
         rhos = SplitDD(Settings, alpha_data, Settings.DDSMethod);
-        save(Settings.AnalysisParamsPath,'rhos','-append');
+        if ~isempty(rhos)
+            save(Settings.AnalysisParamsPath,'rhos','-append');
+        end
     end
 end
 %% Output Plotting

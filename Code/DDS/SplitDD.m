@@ -1,11 +1,31 @@
 function rhos = SplitDD( Settings, alpha_data, alphaorbeta)
 % Written by Tim Ruggles
 % Implemented by Brian Jackson March 2015
+allMaterials = unique(Settings.Phase);
+matList = cell(0);
+for i = 1:length(allMaterials)
+    M = ReadMaterial(allMaterials{i});
+    if isfield(M,'SplitDD')
+        matList = cat(2,matList,M.SplitDD);
+    end
+end
 
-[matchoose,vv] = listdlg('PromptString','Select the material type','SelectionMode','single','ListString',{'Mg','Cu','Mg (a systems only)','Ta','Ta (with 112 planes)','Mg(no a-pyram)','Ni','Ni(18ss)','Al-18ss'});
-if vv==0; error('Exited by user'); end
-
-[bedge,ledge, bscrew,lscrew,v, normals, crssfactor, type] = choosemat(matchoose);
+if length(matList) > 1
+    [matchoose,vv] = listdlg('PromptString','Select the material type','SelectionMode','single','ListString',matList);
+    if vv==0
+        warndlg('Nothing selected: skipping split dislocation density calculation','Split Dislocation Density'); 
+        rhos = [];
+        return;
+    end
+elseif length(matList) == 0
+    warndlg(['No SplitDD material data for ' allMaterials{1}, 'Exiting SplitDD calculation'],'Split Dislocation Density');
+    rhos = [];
+    return;
+else
+    matchoose = 1;
+end
+matchoice = matList{matchoose};
+[bedge,ledge, bscrew,lscrew,v, normals, crssfactor, type] = choosemat(matchoice);
 
 if (matchoose==1)||(matchoose==3)||(matchoose==6)
     lattype = 'hexagonal';
@@ -20,10 +40,18 @@ end
 force = 0;
 stress = 0;
 [minscheme,vv] = listdlg('PromptString','Select minimization scheme','SelectionMode','single','ListString',{'Min. density','Min. energy','CRSSfactor','Schmid+CRSS', 'CRSS + l'});
-if vv==0; error('Exited by user'); end
+if vv==0
+    warndlg('Nothing selected: skipping split dislocation density calculation','Split Dislocation Density')
+    rhos = [];
+    return;
+end
 
 [x0type,vv] = listdlg('PromptString','Select optimization startpoint','SelectionMode','single','ListString',{'Least squares','Origin'});
-if vv==0; error('Exited by user'); end
+if vv==0
+    warndlg('Nothing selected: skipping split dislocation density calculation','Split Dislocation Density')
+    rhos = [];
+    return;
+end
 
 if minscheme == 4
     [loadtype,vv] = listdlg('PromptString','Select load type','SelectionMode','single','ListString',{'Axial','Plane strain','Plane stress'});
@@ -174,13 +202,13 @@ parfor i = 1:m*n
         switch alphaorbeta
             case 1
                 merp = alphavecp(1:3,i);
-                rhos(:,i)=resolvedisloc(merp,1,minscheme,matchoose,gmat,stress, stepsize^2, x0type);
+                rhos(:,i)=resolvedisloc(merp,1,minscheme,matchoice,gmat,stress, stepsize^2, x0type);
             case 2
                 merp = beta(:,i);
-                rhos(:,i)=resolvedisloc(merp,2,minscheme,matchoose,gmat,stress, stepsize^2, x0type); %CHANGE BACK TO 2
+                rhos(:,i)=resolvedisloc(merp,2,minscheme,matchoice,gmat,stress, stepsize^2, x0type); %CHANGE BACK TO 2
             case 9
                 merp = alphavecp(:,i);
-                rhos(:,i)=resolvedisloc(merp,9,minscheme,matchoose,gmat,stress, stepsize^2, x0type);
+                rhos(:,i)=resolvedisloc(merp,9,minscheme,matchoice,gmat,stress, stepsize^2, x0type);
             case 11
                 merp = zeros(6,1);
                 merp(1,1) = beta(1,i);
@@ -189,7 +217,7 @@ parfor i = 1:m*n
                 merp(4,1) = beta(6,i);
                 merp(5,1) = beta(9,i);
                 merp(6,1) = beta(10,i);
-                rhos(:,i)=resolvedisloc(merp,11,minscheme,matchoose,gmat,stress, stepsize^2, x0type);
+                rhos(:,i)=resolvedisloc(merp,11,minscheme,matchoice,gmat,stress, stepsize^2, x0type);
         end
         ppm.increment();        
         

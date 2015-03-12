@@ -1,25 +1,25 @@
 function [bedge,ledge, bscrew,lscrew,v, normals, crssfactor, type] = choosemat( mat )
-
-if mat==1
-    [bedge,ledge, bscrew,lscrew,v, normals, crssfactor, type]=mgsystems;
-elseif mat==2
-    [bedge,ledge, bscrew,lscrew,v, normals, crssfactor, type]=cusystems;
-elseif mat==3
-    [bedge,ledge, bscrew,lscrew,v, normals, crssfactor, type]=mgAsystems;
-elseif mat==4
-    [bedge,ledge, bscrew,lscrew,v, normals, crssfactor, type]=tasystems4;
-elseif mat==5
-    [bedge,ledge, bscrew,lscrew,v, normals, crssfactor, type]=tasystems3;
-elseif mat==6
-    [bedge,ledge, bscrew,lscrew,v, normals, crssfactor, type]=mgsystemsNoAPyram;
-elseif mat==7
-    [bedge,ledge, bscrew,lscrew,v, normals, crssfactor, type]=nisystems;
-elseif mat==8
-    [bedge,ledge, bscrew,lscrew,v, normals, crssfactor, type]=nisystemsSLICK;
-elseif mat==9
-    [bedge,ledge, bscrew,lscrew,v, normals, crssfactor, type]=alsystems;
-else
-    error('No other crystal systems defined');
+switch mat
+    case 'Mg' 
+        [bedge,ledge, bscrew,lscrew,v, normals, crssfactor, type]=mgsystems;
+    case 'Cu'
+        [bedge,ledge, bscrew,lscrew,v, normals, crssfactor, type]=cusystems;
+    case 'Mg (a systems only)'
+        [bedge,ledge, bscrew,lscrew,v, normals, crssfactor, type]=mgAsystems;
+    case 'Ta'
+        [bedge,ledge, bscrew,lscrew,v, normals, crssfactor, type]=tasystems4;
+    case 'Ta (with 112 planes)'
+        [bedge,ledge, bscrew,lscrew,v, normals, crssfactor, type]=tasystems3;
+    case 'Mg(no a-pyram)'
+        [bedge,ledge, bscrew,lscrew,v, normals, crssfactor, type]=mgsystemsNoAPyram;
+    case 'Ni'
+        [bedge,ledge, bscrew,lscrew,v, normals, crssfactor, type]=nisystems;
+    case 'Ni(18ss)'
+        [bedge,ledge, bscrew,lscrew,v, normals, crssfactor, type]=nisystemsSLICK;
+    case 'Al-18ss'
+        [bedge,ledge, bscrew,lscrew,v, normals, crssfactor, type]=alsystems;
+    otherwise
+        error('No other crystal systems defined');
 end
 
 end

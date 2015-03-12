@@ -57,6 +57,13 @@ stemp=load('Settings.mat');
 Settings=stemp.Settings;
 clear stemp
 
+%Read Grain File and get material data
+GrainFileVals = ReadGrainFile(Settings.GrainFilePath);
+allMaterials = unique(lower(GrainFileVals{11}));
+handles.allMaterials = allMaterials;
+curMaterial=allMaterials{1};
+guidata(hObject,handles);
+
 %Initialize NumROIs popup
 MaxROINum = 50;
 set(handles.NumberROIsPopUp,'String',num2cell(1:MaxROINum));
@@ -294,9 +301,6 @@ Image = ReadEBSDImage(Settings.FirstImagePath, Settings.ImageFilter);
 if isempty(Image)
     Image = ReadEBSDImage('demo.bmp', Settings.ImageFilter);
 end
-
-GrainFileVals = ReadGrainFile(Settings.GrainFilePath);
-curMaterial=lower(GrainFileVals{11}{1});
 
 Material = ReadMaterial(curMaterial);
 Av = Settings.AccelVoltage*1000; %put it in eV from KeV
@@ -1195,9 +1199,27 @@ function SplitDD_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of SplitDD
-if get(hObject,'Value') == 1
-    set(handles.DDMethod, 'Enable', 'on');
+valid = 0;
+j = 1;
+for i = 1:length(handles.allMaterials)
+    M = ReadMaterial(handles.allMaterials{i});
+    if isfield(M,'SplitDD')
+        valid = 1;
+    else
+        valid = 0;
+        invalidInd(j) = i;
+        j = j + 1;
+    end
+end
+if valid
+    if get(hObject,'Value') == 1
+        set(handles.DDMethod, 'Enable', 'on');
+    else
+        set(handles.DDMethod, 'Enable', 'off');
+    end
 else
+    warndlg(['Split Dislocation data not available for ' handles.allMaterials{invalidInd(1)}],'OpenXY');
+    set(hObject,'Value',0);
     set(handles.DDMethod, 'Enable', 'off');
 end
 
