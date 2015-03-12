@@ -61,7 +61,7 @@ if length(varargin) == 1
     set(handles.SettingsFileEdit,'String',input{1});
 end
 
-OutputTypesList = {'Strain','Dislocation Density','Tetragonality'};
+OutputTypesList = {'Strain','Dislocation Density','Split Dislocation Density','Tetragonality'};
 set(handles.OptionsPopup,'String',OutputTypesList);
 
 smin = -0.05; % range for colormap of strain
@@ -266,6 +266,9 @@ if handles.matfileloaded
     if isfield(handles,'alpha_data')
         alpha_data = handles.alpha_data;
     end
+    if isfield(handles,'rhos')
+        rhos = handles.rhos;
+    end
 %Exits if file no file is selected
 elseif ~exist(FilePath,'file')
    warndlg(['Warning, the file: ' FilePath ', was not found'],'Warning');
@@ -278,6 +281,10 @@ else
     if isfield(matfile,'alpha_data')
         handles.alpha_data = matfile.alpha_data;
         alpha_data = handles.alpha_data;
+    end
+    if isfield(matfile,'rhos')
+        handles.rhos = matfile.rhos;
+        rhos = handles.rhos;
     end
     if isfield(matfile,'Settings')
         handles.Settings = matfile.Settings;
@@ -323,8 +330,9 @@ end
 
 %Make a call to plotting function(s) depending on what is selected
 Components = get(handles.ComponentsListBox,'String');
+Calculations = get(handles.CalculatedListBox,'String');
 
-%check for strain components
+%Check for strain components
 StrainComponentsList = {'e11';'e12';'e13';'e22';'e23';'e33'};
 Matches = [];
 Matches = intersect(StrainComponentsList,Components);
@@ -363,6 +371,17 @@ if ~isempty(Matches)
         DislocationDensityPlot(Settings, alpha_data, cmin, cmax);
     else
         warndlg(['Warning, the file: ' FilePath ', does not contain an alpha_data file'],'Warning');
+    end
+end
+
+%Check for Split Dislocation Density
+Matches = [];
+Matches = intersect('Split Dislocation Density',Calculations);
+if ~isempty(Matches)
+    if exist('alpha_data','var') && exist('rhos','var')
+        plotrhosplusminus(Settings,alpha_data,rhos)
+    else
+        warndlg(['Warning, the file: ' FilePath ', does not contain alpha_data and rhos files'],'Warning');
     end
 end
 
@@ -408,9 +427,7 @@ else
         if strcmp(SelectedOption,'Dislocation Density')
             AddDislocationDensityComponents(handles);
         end
-       
    end
-   
 end
 
 
@@ -433,7 +450,7 @@ DisloComponentsList = {'alpha13';'alpha23';'alpha33';'alphaTotal'};
         CurrentComponentsList = cat(1,CurrentComponentsList,DisloComponentsList);
         set(handles.ComponentsListBox,'String',CurrentComponentsList);
     end
-
+        
 function RemoveStrainComponents(handles)
     CurrentComponentsList = get(handles.ComponentsListBox,'String');
     StrainComponentsList = {'e11';'e12';'e13';'e22';'e23';'e33'};
