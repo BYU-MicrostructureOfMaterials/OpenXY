@@ -308,7 +308,10 @@ if Settings.DoParallel > 1
         end
     end
     % addpath cd
-    pctRunOnAll javaaddpath(cd)
+    javapaths = javaclasspath('-dynamic');
+    if isempty(strfind(javapaths,cd))
+        pctRunOnAll javaaddpath(cd)
+    end
     
     disp('Starting cross-correlation');
     N = length(ImageNamesList);

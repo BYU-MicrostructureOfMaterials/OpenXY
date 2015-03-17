@@ -234,7 +234,7 @@ if isfield(Settings,'DDSMethod')
     end
     set(handles.DDMethod,'Value',DDSMethodInd);
 end
-if ~isempty(Settings.CalcDerivatives)
+if isfield(Settings,'CalcDerivatives')
     
     set(handles.CalcDerivativesCheckBox, 'Value', Settings.CalcDerivatives)
     CalcDerivativesCheckBox_Callback(handles.CalcDerivativesCheckBox, eventdata, handles)
@@ -1211,17 +1211,18 @@ for i = 1:length(handles.allMaterials)
         j = j + 1;
     end
 end
-if valid
-    if get(hObject,'Value') == 1
+if get(hObject,'Value') == 1
+    if valid
         set(handles.DDMethod, 'Enable', 'on');
     else
+        warndlg(['Split Dislocation data not available for ' handles.allMaterials{invalidInd(1)}],'OpenXY');
+        set(hObject,'Value',0);
         set(handles.DDMethod, 'Enable', 'off');
     end
 else
-    warndlg(['Split Dislocation data not available for ' handles.allMaterials{invalidInd(1)}],'OpenXY');
-    set(hObject,'Value',0);
     set(handles.DDMethod, 'Enable', 'off');
 end
+
 
 
 % --- Executes on selection change in DDMethod.

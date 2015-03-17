@@ -150,8 +150,9 @@ if ~strcmp(Settings.ScanType,'L')
             matlabpool('local',NumberOfCores); 
         end
     end
-%   addpath cd
-    if Settings.DoParallel == 0
+    % addpath cd
+    javapaths = javaclasspath('-dynamic');
+    if isempty(strfind(javapaths,cd))
         pctRunOnAll javaaddpath(cd)
     end
     

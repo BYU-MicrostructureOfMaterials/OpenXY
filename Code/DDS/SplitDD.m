@@ -171,7 +171,10 @@ catch
     end
 end
 % addpath cd
-pctRunOnAll javaaddpath(cd)
+javapaths = javaclasspath('-dynamic');
+if isempty(strfind(javapaths,cd))
+    pctRunOnAll javaaddpath(cd)
+end
 
 disp(['Starting cross-correlation: ' num2str(m*n) ' points']);
 ppm = ParforProgMon( 'Multi Core Progress', m*n );
