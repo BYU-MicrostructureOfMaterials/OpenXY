@@ -234,7 +234,11 @@ if isfield(Settings,'DDSMethod')
     end
     set(handles.DDMethod,'Value',DDSMethodInd);
 end
+<<<<<<< HEAD
 if isfield(Settings,'CalcDerivatives')
+=======
+if ~isempty(Settings.CalcDerivatives)
+>>>>>>> master
     
     set(handles.CalcDerivativesCheckBox, 'Value', Settings.CalcDerivatives)
     CalcDerivativesCheckBox_Callback(handles.CalcDerivativesCheckBox, eventdata, handles)
@@ -1211,6 +1215,7 @@ for i = 1:length(handles.allMaterials)
         j = j + 1;
     end
 end
+
 if get(hObject,'Value') == 1
     if valid
         set(handles.DDMethod, 'Enable', 'on');
@@ -1220,10 +1225,6 @@ if get(hObject,'Value') == 1
         set(handles.DDMethod, 'Enable', 'off');
     end
 else
-    set(handles.DDMethod, 'Enable', 'off');
-end
-
-
 
 % --- Executes on selection change in DDMethod.
 function DDMethod_Callback(hObject, eventdata, handles)

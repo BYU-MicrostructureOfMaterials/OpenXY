@@ -22,7 +22,7 @@ function varargout = PCCalGUI(varargin)
 
 % Edit the above text to modify the response to help PCCalGUI
 
-% Last Modified by GUIDE v2.5 13-Nov-2014 15:33:19
+% Last Modified by GUIDE v2.5 24-Feb-2015 13:55:28
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -108,6 +108,9 @@ axes(handles.axes2)
 plot3(ScanParams.xstar,ScanParams.ystar,ScanParams.zstar,'bo')
 colormap jet
 
+set(handles.SavePCCal,'Value',1);
+handles.SaveAllPC = 1;
+
 % Update handles structure
 handles.Settings = Settings;
 handles.ScanParams = ScanParams;
@@ -158,8 +161,21 @@ if ~handles.calibrated
     YesNo = questdlg({'No pattern center calibration has been performed.'; 'Are you sure you want to continue?'},'No Calibration');
 end
 if ~strcmp(YesNo,'No')
-       
     Settings = handles.Settings;
+    SaveAllPC = handles.SaveAllPC;
+    if SaveAllPC
+        PCCal.MeanXstar = handles.MeanXstar;
+        PCCal.MeanYstar = handles.MeanYstar;
+        PCCal.MeanZstar = handles.MeanZstar;
+        PCCal.FitXstar = handles.FitXstar;
+        PCCal.FitYstar = handles.FitYstar;
+        PCCal.FitZstar = handles.FitZstar;
+        PCCal.NaiveXstar = handles.NaiveXstar;
+        PCCal.NaiveYstar = handles.NaiveYstar;
+        PCCal.NaiveZstar = handles.NaiveZstar;
+        Settings.PCCal = PCCal;
+    end
+    
     if ~handles.calibrated
         Settings.DoPCStrainMin = 0;
     end
@@ -360,7 +376,7 @@ switch Settings.ScanType
                     morepoints = 0;
                 end
                 npoints = npoints + 1;
-            elseif npoints > 3 %When RETRUN key is pressed
+            elseif npoints > 3 %When RETURN key is pressed
                 morepoints = 0;
             end
             
@@ -551,3 +567,114 @@ function axes2_CreateFcn(hObject, eventdata, handles)
 % handles    empty - handles not created until after all CreateFcns called
 
 % Hint: place code in OpeningFcn to populate axes2
+
+
+% --- Executes on button press in LoadPCCalc.
+function LoadPCCalc_Callback(hObject, eventdata, handles)
+% hObject    handle to LoadPCCalc (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+Settings = handles.Settings;
+[filename, filepath] = uigetfile('*mat','Select an Analysis_Params file');
+matfile = load(fullfile(filepath,filename));
+if isfield(matfile,'Settings')
+    loadedSettings = matfile.Settings;
+    valid = 1;
+    if (Settings.AccelVoltage ~= loadedSettings.AccelVoltage)...
+        ||(Settings.SampleTilt ~= loadedSettings.SampleTilt)...
+        ||(Settings.SampleAzimuthal ~= loadedSettings.SampleAzimuthal)...
+        ||(Settings.CameraElevation ~= loadedSettings.CameraElevation)...
+        ||(Settings.CameraAzimuthal ~= loadedSettings.CameraAzimuthal)...
+        ||(~strcmp(Settings.AngFilePath,loadedSettings.AngFilePath))...
+        ||(~strcmp(Settings.GrainFilePath,loadedSettings.GrainFilePath))...
+        ||(~strcmp(Settings.ScanType,loadedSettings.ScanType))...
+        ||(sum(Settings.IQ ~= loadedSettings.IQ)>0)
+        valid = 0;
+    end
+    if valid == 0
+        warndlg('Selected Scan not compatible with current scan');
+    end
+    % Validation
+    if isfield(loadedSettings,'PCCal') && valid
+        PCCal = loadedSettings.PCCal;
+        handles.MeanXstar = PCCal.MeanXstar;
+        handles.MeanYstar = PCCal.MeanYstar;
+        handles.MeanZstar = PCCal.MeanZstar;
+        handles.FitXstar = PCCal.FitXstar;
+        handles.FitYstar = PCCal.FitYstar;
+        handles.FitZstar = PCCal.FitZstar;
+        handles.NaiveXstar = PCCal.NaiveXstar;
+        handles.NaiveYstar = PCCal.NaiveYstar;
+        handles.NaiveZstar = PCCal.NaiveZstar;
+        handles.calibrated = 1;
+        handles.Settings.CalibrationPointIndecies = loadedSettings.CalibrationPointIndecies;
+        handles.Settings.CalibrationPointsPC = loadedSettings.CalibrationPointsPC;
+        handles.Settings.PhosphorSize = loadedSettings.PhosphorSize;
+        
+        IQPlot = handles.IQPlot;
+        CalibrationPointIndecies = loadedSettings.CalibrationPointIndecies;
+        Nx = Settings.Nx;
+        IQ = Settings.IQ;
+        XData = Settings.XData;
+        YData = Settings.YData;
+        NumColsEven = floor(Nx/2);
+        NumColsOdd = ceil(Nx/2);
+        switch Settings.ScanType
+            case 'Square'
+                indi = 1:1:Nx*Ny;
+                indi = reshape(indi,Nx,Ny)';
+                for i = 1:length(CalibrationPointIndecies)
+                    Xind(i) = mod(CalibrationPointIndecies(i),Nx);
+                    Yind(i) = ceil(CalibrationPointIndecies(i)/Nx);
+                end
+                axes(handles.axes1)
+                imagesc(IQPlot)
+                axis image
+                hold on
+                plot(Xind,Yind,'kd','MarkerFaceColor','k');
+            case 'Hexagonal'
+                indi = 1:length(XData);
+                indi = Hex2Array(indi, NumColsOdd, NumColsEven);
+                axes(handles.axes1)
+                surf(IQPlot.x,IQPlot.y,IQPlot.iq,'EdgeColor','none');
+                view(2);
+                caxis(IQPlot.Limits);
+                hold on
+                height(1:length(CalibrationPointIndecies)) = max(IQ);
+                scatter3(XData(CalibrationPointIndecies),YData(CalibrationPointIndecies),height);
+        end
+        guidata(hObject,handles);
+    end
+end
+clear matfile;
+
+
+% --- Executes on button press in SavePCCalc.
+function SavePCCalc_Callback(hObject, eventdata, handles)
+% hObject    handle to SavePCCalc (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+[path, name] = fileparts(handles.Settings.OutputPath);
+Settings = handles.Settings;
+Settings.PCCal.MeanXstar = handles.MeanXstar;
+Settings.PCCal.MeanYstar = handles.MeanYstar;
+Settings.PCCal.MeanZstar = handles.MeanZstar;
+Settings.PCCal.FitXstar = handles.FitXstar;
+Settings.PCCal.FitYstar = handles.FitYstar;
+Settings.PCCal.FitZstar = handles.FitZstar;
+Settings.PCCal.NaiveXstar = handles.NaiveXstar;
+Settings.PCCal.NaiveYstar = handles.NaiveYstar;
+Settings.PCCal.NaiveZstar = handles.NaiveZstar;
+
+save(fullfile(path,name),'Settings');
+
+
+% --- Executes on button press in SavePCCal.
+function SavePCCal_Callback(hObject, eventdata, handles)
+% hObject    handle to SavePCCal (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of SavePCCal
+handles.SaveAllPC = get(hObject,'Value');
+guidata(hObject,handles);

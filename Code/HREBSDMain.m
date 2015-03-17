@@ -437,10 +437,8 @@ if length(DotInd) > 1
 end
 
 Settings.data = data;
-LastSlashInd = find(Settings.OutputPath == '\');
-OutputPathWithSlash = Settings.OutputPath(1:LastSlashInd(end));
-FileName = Settings.OutputPath(LastSlashInd(end)+1:DotInd-1);
-SaveFile = [OutputPathWithSlash 'AnalysisParams_' FileName];
+[OutputPath, FileName, ext] = fileparts(Settings.OutputPath);
+SaveFile = fullfile(OutputPath,['AnalysisParams_' FileName]);
 Settings.AnalysisParamsPath = SaveFile;
 save(SaveFile, 'Settings');
 
@@ -466,7 +464,8 @@ end
 input{1} = [SaveFile '.mat'];
 OutputPlotting(input); %moved here due to error writing ang file for vaudin files ****
 %%
-WriteHROIMAngFile(Settings.AngFilePath,[OutputPathWithSlash 'Corr_' FileName '.ang'],...
+
+WriteHROIMAngFile(Settings.AngFilePath,fullfile(OutputPath, ['Corr_' FileName ext]),...
     Settings.NewAngles(:,1),Settings.NewAngles(:,2),Settings.NewAngles(:,3)...
     ,Settings.SSE);
 
