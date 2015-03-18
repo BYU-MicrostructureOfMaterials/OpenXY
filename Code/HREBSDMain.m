@@ -7,8 +7,8 @@ function Settings = HREBSDMain(Settings)
 % tic
 % profile n
 disp('Dont forget to change PC if the image is cropped by ReadEBSDImage.m')
-Settings.DoUsePCFile
-Settings.DoPCStrainMin
+Settings.DoUsePCFile;
+Settings.DoPCStrainMin;
 %% Read in the first image and get the pixel size.
 %The assumption is made that all following images in the scan
 %are the same size and square.

@@ -901,7 +901,7 @@ function AdvancedButton_Callback(hObject, eventdata, handles)
     clear stemp
     
     SaveSettings(hObject, handles);
-    AdvancedSettings();
+    AdvancedSettings;
     
     handles.AlreadyOpened = 1;
     
