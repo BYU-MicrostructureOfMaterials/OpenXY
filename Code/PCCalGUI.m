@@ -163,7 +163,10 @@ end
 if ~strcmp(YesNo,'No')
     Settings = handles.Settings;
     SaveAllPC = handles.SaveAllPC;
-    if SaveAllPC
+    
+    if ~handles.calibrated
+        Settings.DoPCStrainMin = 0;
+    elseif SaveAllPC
         PCCal.MeanXstar = handles.MeanXstar;
         PCCal.MeanYstar = handles.MeanYstar;
         PCCal.MeanZstar = handles.MeanZstar;
@@ -174,10 +177,6 @@ if ~strcmp(YesNo,'No')
         PCCal.NaiveYstar = handles.NaiveYstar;
         PCCal.NaiveZstar = handles.NaiveZstar;
         Settings.PCCal = PCCal;
-    end
-    
-    if ~handles.calibrated
-        Settings.DoPCStrainMin = 0;
     end
     if strcmp(YesNo,'Cancel')
         Settings.Exit = 1;
