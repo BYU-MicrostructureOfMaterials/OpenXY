@@ -256,7 +256,8 @@ if ~strcmp(Settings.ScanType,'L')
 %         imgray=rgb2gray(imread(ImagePath)); % this can add significant time for large scans
 %         intensityr(cnt)=mean(imgray(:));
         
-        if isempty(image_b) || isempty(image_a) || isempty(image_c)
+        if (isempty(image_b)) || (isempty(image_a) && (~strcmp(Settings.ScanType,'Hexagonal'))) || (isempty(image_c)) || (skippts > 0) ...
+                (strcmp(Settings.ScanType,'Hexagonal') && skippts == 0 && (isempty(image_a1) || isempty(image_a2)))
             AllFa{cnt}= -eye(3);
             AllSSEa(cnt)=101;
             AllFc{cnt}=-eye(3);
