@@ -39,7 +39,7 @@ if exist(filename,'file')
 else
     warndlg('Material file not found');
 end
- {'Mg','Cu','Mg (a systems only)','Ta','Ta (with 112 planes)','Mg(no a-pyram)','Ni','Ni(18ss)','Al-18ss'};
+
 %SplitDD info
 switch lower(Material)
     case 'nickel'
