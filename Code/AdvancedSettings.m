@@ -315,7 +315,7 @@ Angles(:,2) = SquareFileVals{2};
 Angles(:,3) = SquareFileVals{3};
 g=euler2gmat(Angles(1,1),Angles(1,2),Angles(1,3));
 
-GenImage = genEBSDPatternHybrid(g,paramspat,eye(3),Material.lattice,Material.a,Material.b,Material.c,Material.axs);
+GenImage = genEBSDPatternHybrid(g,paramspat,eye(3),Material.lattice,Material.a1,Material.b1,Material.c1,Material.axs);
 GenImage = custimfilt(GenImage, Settings.ImageFilter(1), Settings.ImageFilter(2),Settings.ImageFilter(3),Settings.ImageFilter(4));
 handles.GenImage=GenImage;
 handles.Image = Image;

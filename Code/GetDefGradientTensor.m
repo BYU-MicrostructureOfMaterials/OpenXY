@@ -80,7 +80,7 @@ if strcmp(Settings.ROIStyle,'Intensity')
     %     Settings.ROISizePercent=15; % was 25% - seems way too big
     %     Settings.ROISize=round(Settings.ROISizePercent*pixsize/100);
     %     Settings.ROIStyle='Intensity'; % was 'Grid'; comment out to revert - but beware that grid always chooses 48 ROIs
-    I1 = genEBSDPatternHybrid(g,paramspat,eye(3),Material.lattice,Material.a,Material.b,Material.c,Material.axs); %use high intensity points in simulated image rather than real image to pick ROI points
+    I1 = genEBSDPatternHybrid(g,paramspat,eye(3),Material.lattice,Material.a1,Material.b1,Material.c1,Material.axs); %use high intensity points in simulated image rather than real image to pick ROI points
     
     [roixc,roiyc]= GetROIs(I1,Settings.NumROIs,pixsize,Settings.ROISize,...
         Settings.ROIStyle);
@@ -127,7 +127,7 @@ switch Settings.HROIMMethod
     case 'Simulated'
         
         %         RefImage = genEBSDPatternHybrid(gr,paramspat,eye(3),lattice,al,bl,cl,axs); % testing next line instead *****
-        RefImage = genEBSDPatternHybrid(gr,paramspat,eye(3),Material.lattice,Material.a,Material.b,Material.c,Material.axs);
+        RefImage = genEBSDPatternHybrid(gr,paramspat,eye(3),Material.lattice,Material.a1,Material.b1,Material.c1,Material.axs);
         %          RefImage = genEBSDPatternHybridMexHat(gr,paramspat,eye(3),lattice,al,bl,cl,axs);
         
         %use following line only for optical distortion correction
@@ -145,7 +145,7 @@ switch Settings.HROIMMethod
         for iq=1:2
             [rr uu]=poldec(F1); % extract the rotation part of the deformation, rr
             gr=rr'*gr; % correct the rotation component of the deformation so that it doesn't affect strain calc
-            RefImage = genEBSDPatternHybrid(gr,paramspat,eye(3),Material.lattice,Material.a,Material.b,Material.c,Material.axs);
+            RefImage = genEBSDPatternHybrid(gr,paramspat,eye(3),Material.lattice,Material.a1,Material.b1,Material.c1,Material.axs);
             RefImage = custimfilt(RefImage,Settings.ImageFilter(1), ...
                 Settings.PixelSize,Settings.ImageFilter(3),Settings.ImageFilter(4));
             
@@ -169,7 +169,7 @@ switch Settings.HROIMMethod
             FTemp=R1*U1; %**** isn't this just F1 - why did we bother doing this????
             
             
-            NewRefImage = genEBSDPatternHybrid(gr,paramspat,FTemp,Material.lattice,Material.a,Material.b,Material.c,Material.axs);% correct method ******DTF changed to test new profiles             pattern *****
+            NewRefImage = genEBSDPatternHybrid(gr,paramspat,FTemp,Material.lattice,Material.a1,Material.b1,Material.c1,Material.axs);% correct method ******DTF changed to test new profiles             pattern *****
             %  NewRefImage = genEBSDPatternHybridmult(gr,paramspat,FTemp,lattice,al,bl,cl,axs);  % multiplied simulated approach
             %   NewRefImage = genEBSDPatternHybridMexHat(gr,paramspat,eye(3),lattice,al,bl,cl,axs);
             %             NewRefImage = genEBSDPatternProfileFnew(gr,paramspat,FTemp,lattice,al,bl,cl,axs,ScanImage);
