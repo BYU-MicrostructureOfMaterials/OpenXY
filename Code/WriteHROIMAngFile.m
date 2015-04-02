@@ -19,10 +19,14 @@ while curline(1)=='#'
     end
 end
 
+
 for i=1:length(phi1List)
-    fprintf(fout,'%1.5f   %1.5f   %1.5f  %s %5g %s \n', ...
+    C = textscan(curline,'%f');
+    C = C{1};
+    fprintf(fout,'%1.5f\t %1.5f %1.5f %1.5f %1.5f %5.1f\t %1.3f %i %i %1.3f \n', ...
         phi1List(i),PhiList(i), phi2List(i), ...
-        curline(30:63),SSE{i},curline(72:end));
+        C(4), C(5), C(6),...
+        SSE{i},C(8),C(9),C(10));
     curline=fgetl(fin);
 end
 fclose(fin);
