@@ -173,11 +173,11 @@ end
 % addpath cd
 javapaths = javaclasspath('-dynamic');
 if isempty(strfind(javapaths,cd))
-    pctRunOnAll javaaddpath(cd)
+    pctRunOnAll javaaddpath('java')
 end
 
 disp(['Starting cross-correlation: ' num2str(m*n) ' points']);
-ppm = ParforProgMon( 'Multi Core Progress', m*n );
+ppm = ParforProgMon( 'Multi Core Progress', m*n,1,400,50 );
     
 % matlabpool close force;
 % %Determine the number of available cores and use one less

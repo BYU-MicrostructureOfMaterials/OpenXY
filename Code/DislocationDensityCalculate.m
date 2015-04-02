@@ -153,7 +153,7 @@ if ~strcmp(Settings.ScanType,'L')
     % addpath cd
     javapaths = javaclasspath('-dynamic');
     if isempty(strfind(javapaths,cd))
-        pctRunOnAll javaaddpath(cd)
+        pctRunOnAll javaaddpath(java)
     end
     
     N = length(Settings.ImageNamesList);
@@ -169,7 +169,7 @@ if ~strcmp(Settings.ScanType,'L')
     b = Burgers;
 
     %Create standard lgrid style images   
-    ppm = ParforProgMon( 'Dislocation Density Progress', N );
+    ppm = ParforProgMon( 'Dislocation Density Progress ', N , 1, 400, 50);
     parfor (cnt = 1:N)% Change for parallel computing
 %     h=waitbar(0,'start');
 %     for cnt=1:length(ImageNamesList)

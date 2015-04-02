@@ -310,12 +310,12 @@ if Settings.DoParallel > 1
     % addpath cd
     javapaths = javaclasspath('-dynamic');
     if isempty(strfind(javapaths,cd))
-        pctRunOnAll javaaddpath(cd)
+        pctRunOnAll javaaddpath('java')
     end
     
     disp('Starting cross-correlation');
     N = length(ImageNamesList);
-    ppm = ParforProgMon( 'Multi Core Progress', N );
+    ppm = ParforProgMon('Cross Correlation Analysis ',N,1,400,50);
     parfor(ImageInd = 1:N,NumberOfCores)
 %         disp(ImageInd)
         %Returns F as either a cell array of deformation gradient tensors
