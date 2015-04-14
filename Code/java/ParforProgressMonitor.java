@@ -82,6 +82,7 @@ public class ParforProgressMonitor {
         private String title;
         private Thread fThread;
         private AtomicBoolean fKeepGoing;
+		private long startTime, avgTime, remTime;
 
         private ProgServer( String s, int N, int progressStepSize, int width, int height ) throws IOException {
             // The UI
@@ -98,6 +99,11 @@ public class ParforProgressMonitor {
 			fN = N;
 			fStep = progressStepSize;
 			title = s;
+			
+			//Added Time Estimation
+			startTime = 0;
+			avgTime = 0;
+			remTime = 0;
 
             // Get an anonymous port
             fSocket = new ServerSocket( 0 );
@@ -156,7 +162,11 @@ public class ParforProgressMonitor {
                     public void run() {
                         fBar.setValue( fStep*newVal );
                         double percentage = 100.0*fStep*newVal/fN;
-                        fFrame.setTitle(title + (int)percentage + "% completed.");
+						avgTime = (System.nanoTime() - startTime)/fValue;
+						remTime = (fN - fValue)*avgTime/(long)1e9; //in seconds
+						double minutes = Math.floor(remTime/60);
+						double seconds = remTime%60;
+                        fFrame.setTitle(title + (int)percentage + "% completed. (" + minutes + "m, " + seconds + "s rem)");
                         if ( newVal == fBar.getMaximum() ) {
                             done();
                         }
@@ -175,7 +185,10 @@ public class ParforProgressMonitor {
          * Provide public access to this for pool-close PARFORs
          */
         public synchronized void increment() {
-            fValue++;
+			fValue++;
+			if (fValue == 1) {
+				startTime = System.nanoTime();
+			}
             updateBar( fValue );
         }
 
