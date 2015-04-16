@@ -46,7 +46,6 @@ Settings.ImageFilter = [9 90 0 0];
 % Settings.ImageFilter = [2 150 0 0];
 
 %Options are: 'Simulated', 'Real-Single Ref', 'Real-Grain Ref', %Someday will add Hybrid - also
-%called by Josh the "unholy alliance"
 Settings.HROIMMethod = 'Simulated';
 
 %Derivatives Settings
