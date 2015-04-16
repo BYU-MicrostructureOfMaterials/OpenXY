@@ -93,26 +93,49 @@ switch ScanFormat
         while isstrprop(PositionPart(i),'digit') || strcmp(PositionPart(i),'.')
             i = i + 1;
         end
+        Xval = str2num(PositionPart(Xinds+1:i-1));
         midStr = PositionPart(i:Yinds);
         i = Yinds + 1;
         while isstrprop(PositionPart(i),'digit') || strcmp(PositionPart(i),'.')
             i = i + 1;
-            if i > length(PositionPart), break; end;
+            if i > length(PositionPart), 
+                i = i - 1;
+                break; 
+            end
         end
-        endStr = PositionPart(i:end);
-
+        Yval = str2num(PositionPart(Yinds+1:i));
+        endStr = PositionPart(i+1:end);
+        
+        for i = 1:NumColumns
+            testname = fullfile(path,[preStr num2str(Xval+i) midStr num2str(Yval) endStr ext]);
+            if exist(testname,'file')
+                X2val = Xval + i;
+                break;
+            end
+        end
+        for i = 1:NumRows
+            testname = fullfile(path,[preStr num2str(Xval) midStr num2str(Yval+i) endStr ext]);
+            if exist(testname,'file')
+                Y2val = Yval + i;
+                break;
+            end
+        end        
+        
+            
+        
         %Determine multiplication factor between position in .ang file and position in image name
         TimesFactor = 1;
         for i = 1:5
             testname = fullfile(path,[preStr num2str(XStep*(10^i)) midStr num2str(YStep*(10^i)) endStr ext]);
             if exist(testname,'file')
                 TimesFactor = 10^i;
-                break;go
+                break;
             end
         end
         XStep = XStep * TimesFactor;
         YStep = YStep * TimesFactor;
-            
+          
+        %Create ImageNamesList
         for i = 1:ScanLength
             X = mod(i-1,NumColumns)*XStep;
             Y = floor((i-1)/NumColumns)*YStep;
