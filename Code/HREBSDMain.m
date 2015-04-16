@@ -92,16 +92,20 @@ switch Settings.ScanType;
         XData = SquareFileVals{4};
         YData = SquareFileVals{5};
         
+        %Unique x and y
+        X = unique(XData);
+        Y = unique(YData);
+        
         %Number of steps in x and y
-        Nx = length(unique(XData));
-        Ny = length(unique(YData));
+        Nx = length(X);
+        Ny = length(Y);
         
         %Step size in x and y
-        %         XStep = XData(2)-XData(1);
-        %         YStep = YData(2)-YData(1);
+        XStep = X(2)-X(1);
+        YStep = Y(2)-Y(1);
         
         %Create image file name list
-        ImageNamesList = GetImageNamesList(Settings.ScanType, ScanLength,[Nx Ny], Settings.FirstImagePath);
+        ImageNamesList = GetImageNamesList(Settings.ScanType, ScanLength,[Nx Ny], Settings.FirstImagePath, XStep, YStep);
 %         ImageNamesList = GetImageNamesListHkl(Settings.ScanType, ScanLength,[Nx Ny], Settings.FirstImagePath); %*****TEMPORARY FOR VAUDIN FILES
 %         disp('using hkl naming in HREBSDMain.m at line 100')
         

@@ -88,7 +88,7 @@ switch ScanFormat
         for ii = 1:i-1
             preStr = [preStr NameParts{ii} ' '];
         end
-        preStr = [preStr(1:end-1) PositionPart(1:Xinds)];
+        preStr = [preStr PositionPart(1:Xinds)];
         i = Xinds + 1;
         while isstrprop(PositionPart(i),'digit') || strcmp(PositionPart(i),'.')
             i = i + 1;
@@ -101,9 +101,22 @@ switch ScanFormat
         end
         endStr = PositionPart(i:end);
 
+        %Determine multiplication factor between position in .ang file and position in image name
+        TimesFactor = 1;
+        for i = 1:5
+            testname = fullfile(path,[preStr num2str(XStep*(10^i)) midStr num2str(YStep*(10^i)) endStr ext]);
+            if exist(testname,'file')
+                TimesFactor = 10^i;
+                break;go
+            end
+        end
+        XStep = XStep * TimesFactor;
+        YStep = YStep * TimesFactor;
+            
         for i = 1:ScanLength
-            %X(i) = mod(i,NumColumns)*XStep;
-            %Y(i) = floor(i/NumColumns)*YStep;
+            X = mod(i-1,NumColumns)*XStep;
+            Y = floor((i-1)/NumColumns)*YStep;
+            ImageNamesList{i} = fullfile(path,[preStr num2str(X) midStr num2str(Y) endStr ext]);
         end
         if isempty(Rinds) 
             Rinds = 0;
