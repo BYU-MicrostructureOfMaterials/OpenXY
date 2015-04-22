@@ -128,9 +128,9 @@ switch ScanFormat
             X = mod(i-1,NumColumns)*XStep;
             Y = floor((i-1)/NumColumns)*YStep;
             if rcNaming
-                ImageNamesList{i} = fullfile(path,[preStr num2str(X) midStr num2str(Y) endStr ext]);
-            else
                 ImageNamesList{i} = fullfile(path,[preStr num2str(Y) midStr num2str(X) endStr ext]);
+            else
+                ImageNamesList{i} = fullfile(path,[preStr num2str(X) midStr num2str(Y) endStr ext]);
             end
         end
     case 'Hexagonal'

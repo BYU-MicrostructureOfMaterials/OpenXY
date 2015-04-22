@@ -146,14 +146,6 @@ Settings.Ny = Ny;
 Settings.ScanLength = ScanLength;
 
 %% Initialize all Settings to be passed in to GetDefGradientTensor.
-ImageNamesList = ImageNamesList(:);
-%Rearrange ImageNamesList vector to match .ang file order
-if strcmp(Settings.ScanType,'Square')
-    ImageNamesList=reshape(ImageNamesList,[data.rows data.cols])';
-    ImageNamesList=ImageNamesList(:);
-end
-% end of list reshape
-
 Settings.Angles = Angles;
 Settings.XData = XData;
 Settings.YData = YData;
