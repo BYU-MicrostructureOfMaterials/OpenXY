@@ -472,10 +472,10 @@ function planefitpanel_SelectionChangeFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 Settings = handles.Settings;
+Nx = Settings.Nx;
+NumColsEven = floor(Nx/2);
+NumColsOdd = ceil(Nx/2);
 ScanType = Settings.ScanType;
-NumRows = handles.ScanParams.NumRows;
-NumColsEven = handles.ScanParams.NumColsEven;
-NumColsOdd = handles.ScanParams.NumColsOdd;
 
 if handles.calibrated
 
