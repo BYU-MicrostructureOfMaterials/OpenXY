@@ -120,10 +120,19 @@ switch Settings.ScanType;
         XData = SquareFileVals{4};
         YData = SquareFileVals{5};
         
+        %Unique x and y
+        X = unique(XData);
+        Y = unique(YData);
+        
         %Number of steps in x and y
-        Nx = length(unique(XData));
-        Ny = length(unique(YData));
-        ImageNamesList = GetImageNamesList(Settings.ScanType, ScanLength,[Nx Ny], Settings.FirstImagePath);
+        Nx = length(X);
+        Ny = length(Y);
+        
+        %Step size in x and y
+        XStep = X(2)-X(1);
+        YStep = Y(2)-Y(1);
+        
+        ImageNamesList = GetImageNamesList(Settings.ScanType, ScanLength,[Nx Ny], Settings.FirstImagePath, XStep, YStep);
 end
 
 %Common to all scan types
