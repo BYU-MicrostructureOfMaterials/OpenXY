@@ -1,10 +1,15 @@
-function [ImageNamesList IsNewOIMNaming] = GetImageNamesList(ScanFormat, ScanLength, Dimensions, FirstImagePath, XStep, YStep)
+function [ImageNamesList IsNewOIMNaming] = GetImageNamesList(ScanFormat, ScanLength, Dimensions, FirstImagePath, StartLocation, Steps)
 %GETIMAGENAMESLIST
 %ImageNamesList = GetImageNamesList(ScanFormat, ScanLength, Dimensions, FirstImagePath, XStep, YStep)
 %Returns a list of image names belonging to a scan, given the scan format,
 %length, dimensions, and the path of the first image. XStep and YStep are
 %currently not used, but may be in the future.
 %Jay Basinger 5/10/2011
+
+%Assumptions:
+%   Numberings are the last thing in the filename part
+%   Format is either x-y pair, r-c pair, or a line scan
+%   Line scan: Last set of numbers in filename is the incremental serial number
 
 %Read EBSD images
 %Determine the number of characters in the file extension
@@ -19,14 +24,19 @@ if DistFromEnd ~= 3 && DistFromEnd ~= 4
     error('Had trouble reading in the file names')
 end
 
+%Split up input data
 NumColumns = Dimensions(1);
 NumRows = Dimensions(2);
+X0 = StartLocation(1);
+Y0 = StartLocation(2);
+XStepData = Steps(1);
+YStepData = Steps(2);
 
-%Check to see if we have a new OIM naming scheme starting somewhere around OIM 6.2 or greater
-IsNewOIMNaming = 1;
-IsLineScan = 0;
+%Set up parameters
+IsLineScan = true;
 NameParts = textscan(ImageName,'%s');
 NameParts = NameParts{1};
+rcNaming = false;
 
 %Looks for pairs of x,y or r,c that have numbers after them
 for i = 1:length(NameParts)
@@ -37,6 +47,7 @@ for i = 1:length(NameParts)
     if (~isempty(Xinds) && ~isempty(Yinds))
         if (isstrprop(NameParts{i}(Xinds(end)+1),'digit')) && (isstrprop(NameParts{i}(Yinds(end)+1),'digit'))
             rcNaming = false;
+            IsLineScan = false;
             break;
         end
     elseif (~isempty(Rinds) && ~isempty(Cinds))
@@ -44,120 +55,171 @@ for i = 1:length(NameParts)
             Xinds = Rinds;
             Yinds = Cinds;
             rcNaming = true;
+            IsLineScan = false;
             break;
         end
     end
 end
-Xinds = Xinds(end); Yinds = Yinds(end);
-PositionPart = NameParts{i};
 
-%Break up the Position string around the position numbers
 preStr = '';
+midStr = '';
+endStr = '';
 for ii = 1:i-1
     preStr = [preStr NameParts{ii} ' '];
 end
-preStr = [preStr PositionPart(1:Xinds)];
-i = Xinds + 1;
-while isstrprop(PositionPart(i),'digit') || strcmp(PositionPart(i),'.')
-    i = i + 1;
-end
-Xval = str2num(PositionPart(Xinds+1:i-1));
-midStr = PositionPart(i:Yinds);
-i = Yinds + 1;
-while isstrprop(PositionPart(i),'digit') || strcmp(PositionPart(i),'.')
-    i = i + 1;
-    if i > length(PositionPart), 
-        i = i - 1;
-        break; 
-    end
-end
-Yval = str2num(PositionPart(Yinds+1:i));
-endStr = PositionPart(i+1:end);
-%Find the next image file
-for i = 1:NumColumns
-    testname = fullfile(path,[preStr num2str(Xval+i) midStr num2str(Yval) endStr ext]);
-    if exist(testname,'file')
-        X2val = Xval + i;
-        break;
-    end
-end
-for i = 1:NumRows
-    testname = fullfile(path,[preStr num2str(Xval) midStr num2str(Yval+i) endStr ext]);
-    if exist(testname,'file')
-        Y2val = Yval + i;
-        break;
-    end
-end
-
-%Determine multiplication factor between position in .ang file and position in image name
-TimesFactor = 0;
-for i = 1:5
-    testname = fullfile(path,[preStr num2str(XStep*(10^i)) midStr num2str(YStep*(10^i)) endStr ext]);
-    if exist(testname,'file')
-        TimesFactor = 10^i;
-        break;
-    end
-end
-%Or look for sequential numbering
-if TimesFactor == 0
-    for i = 1:10
-        testname = fullfile(path,[preStr num2str(i) midStr num2str(Yval) endStr ext]);
-        if exist(testname,'file')
-            TimesFactor = 1;
-            XStep = i - Xval;
-            break;
-        end
-    end
-    for i = 1:10
-        testname = fullfile(path,[preStr num2str(Xval) midStr num2str(i) endStr ext]);
-        if exist(testname,'file')
-            TimesFactor = 1;
-            YStep = i - Yval;
-            break;
-        end
-    end
-end
-XStep = XStep * TimesFactor;
-YStep = YStep * TimesFactor;
-
-%Create ImageNamesList
 ImageNamesList = cell(ScanLength,1);
-switch ScanFormat
-    case 'Square'
-        for i = 1:ScanLength
-            X = mod(i-1,NumColumns)*XStep;
-            Y = floor((i-1)/NumColumns)*YStep;
-            if rcNaming
-                ImageNamesList{i} = fullfile(path,[preStr num2str(Y) midStr num2str(X) endStr ext]);
-            else
-                ImageNamesList{i} = fullfile(path,[preStr num2str(X) midStr num2str(Y) endStr ext]);
-            end
+
+if IsLineScan
+    %Break up the Position string around the position numbers
+    PositionPart = NameParts{end};
+    i = length(PositionPart);
+    if isempty(str2num(PositionPart(i)))
+        while isempty(str2num(PositionPart(i)))
+            i = i - 1;
         end
-    case 'Hexagonal'
-        NumColsOdd = ceil(Dimensions(1)/2);
-        NumColsEven = floor(Dimensions(1)/2);
-        i = 1;
-        for Y = 0:NumRows-1
-            if mod(Y,2) %Even
-                for X = 0:NumColsEven-1
-                    if rcNaming
-                        ImageNamesList{i} = fullfile(path,[preStr num2str(Y*YStep) midStr num2str(X*XStep) endStr ext]);
-                    else
-                        ImageNamesList{i} = fullfile(path,[preStr num2str(X*XStep) midStr num2str(Y*YStep) endStr ext]);
-                    end 
-                    i = i + 1;
+        endStr = PositionPart(i:end);
+    end    
+    ii = i;
+    while ~isempty(str2num(PositionPart(ii)))
+        if ii <= 1, break; end;
+        ii = ii - 1;
+    end
+    preStr = [preStr PositionPart(1:ii-1)];
+    
+    %Get number info
+    numberLength = i-ii+1;
+    Xval = str2double(PositionPart(ii:i));
+    numFormat = ['%0' num2str(numberLength) 'd'];
+
+    %Write ImageNamesList
+    for i = 1:ScanLength
+        ImageNamesList{i} = fullfile(path,[preStr sprintf(numFormat,Xval+i-1) endStr ext]);
+    end
+        
+else
+    %Break up the Position string around the position numbers
+    Xinds = Xinds(end); Yinds = Yinds(end);
+    PositionPart = NameParts{i};
+    
+    preStr = [preStr PositionPart(1:Xinds)];
+    i = Xinds + 1;
+    while isstrprop(PositionPart(i),'digit') || strcmp(PositionPart(i),'.')
+        i = i + 1;
+    end
+    Xval = str2num(PositionPart(Xinds+1:i-1));
+    midStr = PositionPart(i:Yinds);
+    i = Yinds + 1;
+    while isstrprop(PositionPart(i),'digit') || strcmp(PositionPart(i),'.')
+        i = i + 1;
+        if i > length(PositionPart), 
+            i = i - 1;
+            break; 
+        end
+    end
+    Yval = str2num(PositionPart(Yinds+1:i));
+    endStr = PositionPart(i+1:end);
+
+    %Find the next image file
+    for i = 1:NumColumns
+        testname = fullfile(path,[preStr num2str(Xval+i) midStr num2str(Yval) endStr ext]);
+        if exist(testname,'file')
+            X2val = Xval + i;
+            NameXStep = X2val - Xval;
+            break;
+        end
+    end
+    for i = 1:NumRows
+        testname = fullfile(path,[preStr num2str(Xval) midStr num2str(Yval+i) endStr ext]);
+        if exist(testname,'file')
+            Y2val = Yval + i;
+            NameYStep = Y2val - Yval;
+            break;
+        end
+    end
+
+    %Determine multiplication factor between position in .ang file and position in image name
+    TimesFactor = 0;
+    IsIncremental = false;
+    for i = 0:7
+        testname = fullfile(path,[preStr num2str(XStepData*(10^i)) midStr num2str(YStepData*(10^i)) endStr ext]);
+        if exist(testname,'file')
+            TimesFactor = 10^i;
+            break;
+        end
+    end
+    %Or assume sequential numbering
+    if TimesFactor == 0
+        IsIncremental = true;
+        TimesFactor = 1;
+    end
+    X0 = X0 * TimesFactor;
+    Y0 = Y0 * TimesFactor;
+    XStepData = XStepData * TimesFactor;
+    YStepData = YStepData * TimesFactor;
+
+    %Validate Start Image/Location
+    if IsIncremental
+        NameX = floor(X0 / XStepData);
+        NameY = floor(Y0 / YStepData);
+    elseif IsLineScan
+        NameX = Xval;
+    else
+        NameX = X0;
+        NameY = Y0;
+    end
+    if NameX ~= Xval || NameY ~= Yval
+        if rcNaming
+            testname = fullfile(path,[preStr num2str(NameY) midStr num2str(NameX) endStr ext]);
+        else
+            testname = fullfile(path,[preStr num2str(NameX) midStr num2str(NameY) endStr ext]);
+        end
+        if exist(testname, 'file')
+            button = questdlg(['Accept "' testname '" as new First Image?'],'OpenXY');
+            if ~strcmp(button,'Yes')
+                errordlg('Start Image Path doesn''t match data starting location');
+            end
+        else
+            errordlg('Start Image Path doesn''t match data starting location');
+        end   
+    end
+    
+    %Write ImageNamesList
+    switch ScanFormat
+        case 'Square'
+            for i = 1:ScanLength
+                X = mod(i-1,NumColumns)*NameXStep;
+                Y = floor((i-1)/NumColumns)*NameYStep;
+                if rcNaming
+                    ImageNamesList{i} = fullfile(path,[preStr num2str(NameY+Y) midStr num2str(NameX+X) endStr ext]);
+                else
+                    ImageNamesList{i} = fullfile(path,[preStr num2str(NameX+X) midStr num2str(NameY+Y) endStr ext]);
                 end
-            else
-                for X = 0:NumColsOdd-1
-                    if rcNaming
-                        ImageNamesList{i} = fullfile(path,[preStr num2str(Y*YStep) midStr num2str(X*XStep) endStr ext]);
-                    else
-                        ImageNamesList{i} = fullfile(path,[preStr num2str(X*XStep) midStr num2str(Y*YStep) endStr ext]);
+            end
+        case 'Hexagonal'
+            NumColsOdd = ceil(Dimensions(1)/2);
+            NumColsEven = floor(Dimensions(1)/2);
+            i = 1;
+            for Y = 0:NumRows-1
+                if mod(Y,2) %Even
+                    for X = 0:NumColsEven-1
+                        if rcNaming
+                            ImageNamesList{i} = fullfile(path,[preStr num2str(NameY+Y*NameYStep) midStr num2str(NameX+X*NameXStep) endStr ext]);
+                        else
+                            ImageNamesList{i} = fullfile(path,[preStr num2str(NameX+X*NameXStep) midStr num2str(NameY+Y*NameYStep) endStr ext]);
+                        end 
+                        i = i + 1;
                     end
-                    i = i + 1;
+                else
+                    for X = 0:NumColsOdd-1
+                        if rcNaming
+                            ImageNamesList{i} = fullfile(path,[preStr num2str(NameY+Y*NameYStep) midStr num2str(NameX+X*NameXStep) endStr ext]);
+                        else
+                            ImageNamesList{i} = fullfile(path,[preStr num2str(NameX+X*NameXStep) midStr num2str(NameY+Y*NameYStep) endStr ext]);
+                        end 
+                        i = i + 1;
+                    end
                 end
             end
-        end
+    end
 end
-   
 end
