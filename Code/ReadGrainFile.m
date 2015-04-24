@@ -34,11 +34,7 @@ while ~feof(fid)
            errordlg('Error reading grainfile','Error')
            return;
         end
-        %comment in the following line for annoying grain files that have
-      %12 columns (and comment out he other GrainFileVals line)
-%         GrainFileVals = textscan(fid, '%f %f %f %f %f %f %f %f %f %f %s %s');
         GrainFileVals = textscan(fid, '%f %f %f %f %f %f %f %f %f %f %s %s %s'); % commented out 5/15 for 11 column version
-%         GrainFileVals = textscan(fid, '%f %f %f %f %f %f %f %f %f %f %s'); % uncommented this for older grain files with 11 columns
         
         size(GrainFileVals{1},1);
 

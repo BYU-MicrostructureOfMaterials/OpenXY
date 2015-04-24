@@ -7,11 +7,11 @@ function DislocationDensityCalculate(Settings,MaxMisorientation,IQcutoff,VarySte
 format compact
 tic
 
-% if ~isfield(Settings,'Phase')
+if ~isfield(Settings,'Phase')
     Settings.Phase=cell(size(Settings.ImageNamesList));
     gf=ReadGrainFile(Settings.GrainFilePath);
     Settings.Phase(1:length(Settings.ImageNamesList))=lower(gf{11});
-% end
+end
 %Calculate Dislocation Density
 data = Settings.data;
 AnalysisParamsPath=Settings.AnalysisParamsPath;

@@ -133,6 +133,24 @@ Settings.CI = CI;
 Settings.Fit = Fit;
 Settings.ImageNamesList = ImageNamesList;
 
+%% Get Grain ID's
+[~, ~, ext] = fileparts(Settings.AngFilePath);
+if strcmp(ext,'.ang')
+    GrainFileVals = ReadGrainFile(Settings.GrainFilePath);
+    Settings.grainID = GrainFileVals{9};
+    if strcmp(Settings.Material,'grainfile')
+        Settings.Phase=lower(GrainFileVals{11});
+    end
+else strcmp(ext,'ctf')
+    angles = reshape(Angles,Nx,Ny,3);
+    MaterialData = ReadMaterial(Settings.Material);
+    clean = true;
+    small = true;
+    mistol = Settings.MaxMisorientation*pi/180;
+    [Settings.grainID] = findgrains(angles, MaterialData.lattice, clean, small,mistol);
+end
+    
+    
 %% Read Grain File
 if ~exist(Settings.GrainFilePath,'file')
     errordlg(['Could not read grain file at: ' GrainFilePath ],'Error');

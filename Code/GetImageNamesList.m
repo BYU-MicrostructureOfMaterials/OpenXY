@@ -6,6 +6,8 @@ function [ImageNamesList IsNewOIMNaming] = GetImageNamesList(ScanFormat, ScanLen
 %currently not used, but may be in the future.
 %Jay Basinger 5/10/2011
 
+%Re-written by Brian Jackson 4/2015
+
 %Assumptions:
 %   Numberings are the last thing in the filename part
 %   Format is either x-y pair, r-c pair, or a line scan
