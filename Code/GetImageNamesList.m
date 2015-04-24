@@ -1,4 +1,4 @@
-function [ImageNamesList IsNewOIMNaming] = GetImageNamesList(ScanFormat, ScanLength, Dimensions, FirstImagePath, XStep, YStep)
+function [ImageNamesList IsNewOIMNaming] = GetImageNamesList(ScanFormat, ScanLength, Dimensions, FirstImagePath, StartLocation, Steps)
 %GETIMAGENAMESLIST
 %ImageNamesList = GetImageNamesList(ScanFormat, ScanLength, Dimensions, FirstImagePath, XStep, YStep)
 %Returns a list of image names belonging to a scan, given the scan format,
@@ -6,8 +6,14 @@ function [ImageNamesList IsNewOIMNaming] = GetImageNamesList(ScanFormat, ScanLen
 %currently not used, but may be in the future.
 %Jay Basinger 5/10/2011
 
+%Assumptions:
+%   Numberings are the last thing in the filename part
+%   Format is either x-y pair, r-c pair, or a line scan
+%   Line scan: Last set of numbers in filename is the incremental serial number
+
 %Read EBSD images
 %Determine the number of characters in the file extension
+[path, ImageName, ext] = fileparts(FirstImagePath);
 DotPosition = find(FirstImagePath=='.');
 if length(DotPosition) > 1
     DotPosition = DotPosition(length(DotPosition));
@@ -18,267 +24,202 @@ if DistFromEnd ~= 3 && DistFromEnd ~= 4
     error('Had trouble reading in the file names')
 end
 
-switch ScanFormat
-    
-    case 'L'
+%Split up input data
+NumColumns = Dimensions(1);
+NumRows = Dimensions(2);
+X0 = StartLocation(1);
+Y0 = StartLocation(2);
+XStepData = Steps(1);
+YStepData = Steps(2);
 
-    
-    % The 'L' points are labeled as shown:
-    %   a
-    %   b c
-    % They also generally correspond to the image names as follows: a =
-    % 0001c1 , b = 0001c2, c = 0001c3
-    NumSmallGridPoints = 3; %makes the L
-    
-    %total number of larger-step-size grid points
-    NumGridPoints = ScanLength/NumSmallGridPoints; 
-        
-    if rem(NumGridPoints,1) ~= 0;
-        warndlg('Missing a scan point','Warning - GetImageNamesList.m')
-    end
-    
-    ImageNamesList = cell([ScanLength/NumSmallGridPoints,NumSmallGridPoints]);
-    if NumGridPoints > 100000
-        errordlg('your scan is way too big','Error - GetImageNamesList.m','modal')
-        return;
-    end
-    
-    %don't bother putting it in a grid, just make an n by 3 list where
-    %n = NumGridPoints
-       
-    for i = 1:NumGridPoints
-        for j = 1:NumSmallGridPoints
-            ImageNamesList{i,j} = ...
-                [FirstImagePath(1:end-DistFromEnd-9) '_' sprintf('%05.0f',i) 'c' num2str(j) FirstImagePath(end-DistFromEnd:end)];
+%Set up parameters
+IsLineScan = true;
+NameParts = textscan(ImageName,'%s');
+NameParts = NameParts{1};
+rcNaming = false;
+
+%Looks for pairs of x,y or r,c that have numbers after them
+for i = 1:length(NameParts)
+    Xinds = strfind(NameParts{i},'x');
+    Yinds = strfind(NameParts{i},'y');
+    Rinds = strfind(NameParts{i},'r');
+    Cinds = strfind(NameParts{i},'c');
+    if (~isempty(Xinds) && ~isempty(Yinds))
+        if (isstrprop(NameParts{i}(Xinds(end)+1),'digit')) && (isstrprop(NameParts{i}(Yinds(end)+1),'digit'))
+            rcNaming = false;
+            IsLineScan = false;
+            break;
+        end
+    elseif (~isempty(Rinds) && ~isempty(Cinds))
+        if (isstrprop(NameParts{i}(Rinds(end)+1),'digit')) && (isstrprop(NameParts{i}(Cinds(end)+1),'digit'))
+            Xinds = Rinds;
+            Yinds = Cinds;
+            rcNaming = true;
+            IsLineScan = false;
+            break;
         end
     end
+end
+
+preStr = '';
+midStr = '';
+endStr = '';
+for ii = 1:i-1
+    preStr = [preStr NameParts{ii} ' '];
+end
+ImageNamesList = cell(ScanLength,1);
+
+if IsLineScan
+    %Break up the Position string around the position numbers
+    PositionPart = NameParts{end};
+    i = length(PositionPart);
+    if isempty(str2num(PositionPart(i)))
+        while isempty(str2num(PositionPart(i)))
+            i = i - 1;
+        end
+        endStr = PositionPart(i:end);
+    end    
+    ii = i;
+    while ~isempty(str2num(PositionPart(ii)))
+        if ii <= 1, break; end;
+        ii = ii - 1;
+    end
+    preStr = [preStr PositionPart(1:ii-1)];
     
-    case 'OIMreadableL' % does the same as 'L'
-    
-    
-    % The 'L' points are labeled as shown:
-    %   a
-    %   b c
-    % They also generally correspond to the image names as follows: a =
-    % 0001c1 , b = 0001c2, c = 0001c3
-    NumSmallGridPoints = 3; %makes the L
-    
-    %total number of larger-step-size grid points
-    NumGridPoints = ScanLength/NumSmallGridPoints; 
+    %Get number info
+    numberLength = i-ii+1;
+    Xval = str2double(PositionPart(ii:i));
+    numFormat = ['%0' num2str(numberLength) 'd'];
+
+    %Write ImageNamesList
+    for i = 1:ScanLength
+        ImageNamesList{i} = fullfile(path,[preStr sprintf(numFormat,Xval+i-1) endStr ext]);
+    end
         
-    if rem(NumGridPoints,1) ~= 0;
-        warndlg('Missing a scan point','Warning - GetImageNamesList.m')
-    end
+else
+    %Break up the Position string around the position numbers
+    Xinds = Xinds(end); Yinds = Yinds(end);
+    PositionPart = NameParts{i};
     
-    ImageNamesList = cell([ScanLength/NumSmallGridPoints,NumSmallGridPoints]);
-    if NumGridPoints > 100000
-        errordlg('your scan is way too big','Error - GetImageNamesList.m','modal')
-        return;
+    preStr = [preStr PositionPart(1:Xinds)];
+    i = Xinds + 1;
+    while isstrprop(PositionPart(i),'digit') || strcmp(PositionPart(i),'.')
+        i = i + 1;
     end
-    
-    %don't bother putting it in a grid, just make an n by 3 list where
-    %n = NumGridPoints
-       
-    for i = 1:NumGridPoints
-        for j = 1:NumSmallGridPoints
-            ImageNamesList{i,j} = ...
-                [FirstImagePath(1:end-DistFromEnd-9) '_' sprintf('%05.0f',i) 'c' num2str(j) FirstImagePath(end-DistFromEnd:end)];
+    Xval = str2num(PositionPart(Xinds+1:i-1));
+    midStr = PositionPart(i:Yinds);
+    i = Yinds + 1;
+    while isstrprop(PositionPart(i),'digit') || strcmp(PositionPart(i),'.')
+        i = i + 1;
+        if i > length(PositionPart), 
+            i = i - 1;
+            break; 
         end
     end
-   
-    case 'Square'
-    NumColumns = Dimensions(1);
-    NumRows = Dimensions(2);
-        
-    %Check to see if we have a new OIM naming scheme starting somewhere around OIM 6.2 or greater
-    IsNewOIMNaming = 1;
-    Xinds = strfind(FirstImagePath,'x');
-    Yinds = strfind(FirstImagePath,'y');
-    Rinds = strfind(FirstImagePath,'r');
-    if isempty(Rinds) 
-        Rinds = 0;
+    Yval = str2num(PositionPart(Yinds+1:i));
+    endStr = PositionPart(i+1:end);
+
+    %Find the next image file
+    for i = 1:NumColumns
+        testname = fullfile(path,[preStr num2str(Xval+i) midStr num2str(Yval) endStr ext]);
+        if exist(testname,'file')
+            X2val = Xval + i;
+            NameXStep = X2val - Xval;
+            break;
+        end
     end
-    if isempty(Xinds) || isempty(Yinds) 
-        IsNewOIMNaming = 0;
+    for i = 1:NumRows
+        testname = fullfile(path,[preStr num2str(Xval) midStr num2str(Yval+i) endStr ext]);
+        if exist(testname,'file')
+            Y2val = Yval + i;
+            NameYStep = Y2val - Yval;
+            break;
+        end
+    end
+
+    %Determine multiplication factor between position in .ang file and position in image name
+    TimesFactor = 0;
+    IsIncremental = false;
+    for i = 0:7
+        testname = fullfile(path,[preStr num2str(XStepData*(10^i)) midStr num2str(YStepData*(10^i)) endStr ext]);
+        if exist(testname,'file')
+            TimesFactor = 10^i;
+            break;
+        end
+    end
+    %Or assume sequential numbering
+    if TimesFactor == 0
+        IsIncremental = true;
+        TimesFactor = 1;
+    end
+    X0 = X0 * TimesFactor;
+    Y0 = Y0 * TimesFactor;
+    XStepData = XStepData * TimesFactor;
+    YStepData = YStepData * TimesFactor;
+
+    %Validate Start Image/Location
+    if IsIncremental
+        NameX = floor(X0 / XStepData);
+        NameY = floor(Y0 / YStepData);
+    elseif IsLineScan
+        NameX = Xval;
     else
-        Xinds = Xinds(end);
-        Yinds = Yinds(end);
-        Rinds = Rinds(end);
-       if length(FirstImagePath) - Xinds(end)  > 20 || length(FirstImagePath) - Yinds(end)  > 20 || Rinds > max(Xinds,Yinds)
-           IsNewOIMNaming = 0;
-       end
-       
+        NameX = X0;
+        NameY = Y0;
     end
-        
-    ImageNamesList = cell([ScanLength/NumColumns,NumColumns]);
-    
-    if IsNewOIMNaming
-        spos=max(strfind(FirstImagePath,'\'));
-        d=dir(FirstImagePath(1:spos-1));
-        IMnames={d.name};
-        UseList=[];
-        for i=1:length(IMnames)
-            if length(IMnames{i})>7
-                if strcmp(IMnames{i}(end-3:end),FirstImagePath(end-3:end))
-                    UseList=[UseList,i];
-                end
-            end
-        end
-        IMnames=IMnames(UseList);
-
-        curI=IMnames{1};
-        xpos=max(strfind(curI,'x'));
-
-        for i=1:length(IMnames)
-            curI=IMnames{i};
-
-            ypos=max(strfind(curI,'y'));
-            yvals(i)=str2double(curI(ypos+1:end-4));
-            xvals(i)=str2double(curI(xpos+1:ypos-1));
-        end
-
-        xvals=sort(unique(xvals));
-        yvals=sort(unique(yvals));
-            
-%         XStep = xvals(2);
-%         YStep = XStep;
-%         disp(['Image increment: ',num2str(YStep)])
-%         
-%         for x = 0:NumColumns-1
-%             for y = 0:NumRows-1
-%                 ImageNamesList{y+1,x+1} = [FirstImagePath(1:Xinds(end)) num2str(x*XStep) 'y' num2str(y*YStep) FirstImagePath(end-DistFromEnd:end)];
-%             end
-%         end
-        
-        XStep = xvals(3)/2;
-        YStep = XStep;
-        disp(['Image increment: ',num2str(YStep)])
-        
-        for x = 0:NumColumns-1
-            for y = 0:NumRows-1
-                ImageNamesList{y+1,x+1} = [FirstImagePath(1:Xinds(end)) num2str(floor(x*XStep)) 'y' num2str(y*YStep) FirstImagePath(end-DistFromEnd:end)];
-            end
-        end
-        
-    else
-        
-        for r = 1:NumRows
-            for c = 1:NumColumns
-                ImageNamesList{r,c} = [FirstImagePath(1:end-DistFromEnd-4) num2str(r-1) 'c' num2str(c-1) FirstImagePath(end-DistFromEnd:end)];
-            end
-        end
-        
-    end
-    
-    case 'Hexagonal'
-        
-        NColsOdd = ceil(Dimensions(1)/2);
-        NColsEven = floor(Dimensions(1)/2);
-        NRows = Dimensions(2);
-        
-        IsNewOIMNaming = 1;
-        Xinds = strfind(FirstImagePath,'x');
-        Yinds = strfind(FirstImagePath,'y');
-        Rinds = strfind(FirstImagePath,'r');
-
-        
-        if isempty(Rinds) 
-            Rinds = 0;
-        end
-        if isempty(Xinds) || isempty(Yinds) 
-            IsNewOIMNaming = 0;
+    if NameX ~= Xval || NameY ~= Yval
+        if rcNaming
+            testname = fullfile(path,[preStr num2str(NameY) midStr num2str(NameX) endStr ext]);
         else
-            Xinds = Xinds(end);
-            Yinds = Yinds(end);
-            Rinds = Rinds(end);
-           if length(FirstImagePath) - Xinds(end)  > 20 || length(FirstImagePath) - Yinds(end)  > 20 || Rinds > max(Xinds,Yinds)
-               IsNewOIMNaming = 0;
-           end
-
+            testname = fullfile(path,[preStr num2str(NameX) midStr num2str(NameY) endStr ext]);
         end
-        
-        count = 1;
-        if IsNewOIMNaming
-            spos=max(strfind(FirstImagePath,'\'));
-            d=dir(FirstImagePath(1:spos-1));
-            IMnames={d.name};
-            UseList=[];
-            for i=1:length(IMnames)
-                if length(IMnames{i})>7
-                    if strcmp(IMnames{i}(end-3:end),FirstImagePath(end-3:end))
-                        UseList=[UseList,i];
-                    end
+        if exist(testname, 'file')
+            button = questdlg(['Accept "' testname '" as new First Image?'],'OpenXY');
+            if ~strcmp(button,'Yes')
+                errordlg('Start Image Path doesn''t match data starting location');
+            end
+        else
+            errordlg('Start Image Path doesn''t match data starting location');
+        end   
+    end
+    
+    %Write ImageNamesList
+    switch ScanFormat
+        case 'Square'
+            for i = 1:ScanLength
+                X = mod(i-1,NumColumns)*NameXStep;
+                Y = floor((i-1)/NumColumns)*NameYStep;
+                if rcNaming
+                    ImageNamesList{i} = fullfile(path,[preStr num2str(NameY+Y) midStr num2str(NameX+X) endStr ext]);
+                else
+                    ImageNamesList{i} = fullfile(path,[preStr num2str(NameX+X) midStr num2str(NameY+Y) endStr ext]);
                 end
             end
-            IMnames=IMnames(UseList);
-            
-            curI=IMnames{1};
-            xpos=max(strfind(curI,'x'));
-            
-            for i=1:length(IMnames)
-                curI=IMnames{i};
-                
-                ypos=max(strfind(curI,'y'));
-                yvals(i)=str2double(curI(ypos+1:end-4));
-                xvals(i)=str2double(curI(xpos+1:ypos-1));
-            end
-            
-            xvals=sort(unique(xvals));
-            XvalsOdd=xvals(1:2:Dimensions(1));
-            XvalsEven=xvals(2:2:Dimensions(1));
-            yvals=sort(unique(yvals));
-            
-            %Check if NColsEven and Odd are correct, reverse if not 
-            %(Needs to be tested)
-            if exist([FirstImagePath(1:Xinds) num2str(XvalsOdd(NColsOdd)) 'y' num2str(yvals(0)) FirstImagePath(end-DistFromEnd:end)],'file');
-                disp('Reversing Number of Odd and Even Columns...');
-                NColsEven = NColsOdd;
-                NColsOdd = NColsEven - 1;
-            end
-            for r = 1:NRows
-                if bitget(abs(r),1)~=0 %odd
-                    for c = 1:NColsOdd
-                        ImageNamesList{count} = ...
-                            [FirstImagePath(1:Xinds) num2str(XvalsOdd(c)) 'y' num2str(yvals(r)) FirstImagePath(end-DistFromEnd:end)];
-                        count = count + 1;
+        case 'Hexagonal'
+            NumColsOdd = ceil(Dimensions(1)/2);
+            NumColsEven = floor(Dimensions(1)/2);
+            i = 1;
+            for Y = 0:NumRows-1
+                if mod(Y,2) %Even
+                    for X = 0:NumColsEven-1
+                        if rcNaming
+                            ImageNamesList{i} = fullfile(path,[preStr num2str(NameY+Y*NameYStep) midStr num2str(NameX+X*NameXStep) endStr ext]);
+                        else
+                            ImageNamesList{i} = fullfile(path,[preStr num2str(NameX+X*NameXStep) midStr num2str(NameY+Y*NameYStep) endStr ext]);
+                        end 
+                        i = i + 1;
                     end
                 else
-                    for c = 1:NColsEven
-                        ImageNamesList{count} = ...
-                            [FirstImagePath(1:Xinds) num2str(XvalsEven(c)) 'y' num2str(yvals(r)) FirstImagePath(end-DistFromEnd:end)];
-                        count = count + 1;
+                    for X = 0:NumColsOdd-1
+                        if rcNaming
+                            ImageNamesList{i} = fullfile(path,[preStr num2str(NameY+Y*NameYStep) midStr num2str(NameX+X*NameXStep) endStr ext]);
+                        else
+                            ImageNamesList{i} = fullfile(path,[preStr num2str(NameX+X*NameXStep) midStr num2str(NameY+Y*NameYStep) endStr ext]);
+                        end 
+                        i = i + 1;
                     end
                 end
             end
-            
-        else
-            %Check if NColsEven and Odd are correct, reverse if not
-            if exist([FirstImagePath(1:end-DistFromEnd-4) num2str(0) 'c' num2str(NColsOdd-1) FirstImagePath(end-DistFromEnd:end)],'file');
-                disp('Reversing Number of Odd and Even Columns...');
-                NColsEven = NColsOdd;
-                NColsOdd = NColsEven - 1;
-            end
-            for r = 0:NRows-1
-                if bitget(abs(r),1)~=0 %odd
-                    for c = 0:NColsOdd - 1
-                        ImageNamesList{count} = ...
-                            [FirstImagePath(1:end-DistFromEnd-4) num2str(r) 'c' num2str(c) FirstImagePath(end-DistFromEnd:end)];
-                        count = count + 1;
-                    end
-                else
-                    for c = 0:NColsEven - 1
-                        ImageNamesList{count} = ...
-                            [FirstImagePath(1:end-DistFromEnd-4) num2str(r) 'c' num2str(c) FirstImagePath(end-DistFromEnd:end)];
-                        count = count + 1;
-                    end
-                end
-            end
-            
-        end
-        
-        
-    otherwise 
-    
-    errordlg('Scan Format/Type does not exist in GetImageNamesListList','Error','modal');
-    
+    end
+end
 end

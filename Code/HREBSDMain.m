@@ -25,9 +25,44 @@ Settings.ROISize = round((Settings.ROISizePercent * .01)*Settings.PixelSize);
 %square-grid equivalent for later display. These call slightly modified
 %versions of Sadegh's original Step0 and Step1 code.
 LImageNamesList = [];
+[SquareFileVals ScanParams] = ReadAngFile(Settings.AngFilePath); 
+ScanLength = size(SquareFileVals{1},1);
+Angles(:,1) = SquareFileVals{1};
+Angles(:,2) = SquareFileVals{2};
+Angles(:,3) = SquareFileVals{3};
+XData = SquareFileVals{4};
+YData = SquareFileVals{5};
 
-switch Settings.ScanType;
-    
+%Unique x and y
+X = unique(XData);
+Y = unique(YData);
+
+%Number of steps in x and y
+Nx = length(X);
+Ny = length(Y);
+
+switch Settings.ScanType;   
+    case 'Square'
+        %Step size in x and y
+        XStep = X(2)-X(1);
+        if length(Y) > 1
+            YStep = Y(2)-Y(1);
+        else
+            YStep = 0;
+        end
+        
+        %Create image file name list
+        ImageNamesList = GetImageNamesList(Settings.ScanType, ScanLength,[Nx Ny], Settings.FirstImagePath, [X(1),Y(1)], [XStep, YStep]);
+%         ImageNamesList = GetImageNamesListHkl(Settings.ScanType, ScanLength,[Nx Ny], Settings.FirstImagePath); %*****TEMPORARY FOR VAUDIN FILES
+%         disp('using hkl naming in HREBSDMain.m at line 100')
+        
+    case 'Hexagonal'
+        %Step size in x and y
+        XStep = X(3)-X(1);
+        YStep = Y(3)-Y(1);
+        
+        ImageNamesList = GetImageNamesList(Settings.ScanType, ScanLength,[Nx Ny], Settings.FirstImagePath, [X(1),Y(1)], [XStep, YStep]);
+        
     case 'L'
         CorrectedXYAngPath = LGridXYConvert(Settings.AngFilePath,Settings.CustomFilePath);
         if isempty(CorrectedXYAngPath)
@@ -51,75 +86,31 @@ switch Settings.ScanType;
         LXData = LFileVals{4};
         LYData = LFileVals{5};
         
-        [SquareFileVals ScanParams] = ReadAngFile(SquareGridAngPath);
         
+        [SquareFileVals ScanParams] = ReadAngFile(SquareGridAngPath); 
+        ScanLength = size(SquareFileVals{1},1);
         Angles(:,1) = SquareFileVals{1};
         Angles(:,2) = SquareFileVals{2};
         Angles(:,3) = SquareFileVals{3};
         XData = SquareFileVals{4};
         YData = SquareFileVals{5};
         
-        
+        %Unique x and y
+        X = unique(XData);
+        Y = unique(YData);
+
         %Number of steps in x and y
-        Nx = length(unique(XData));
-        Ny = length(unique(YData));
-        
-        %Step size in x and y
-        XStep = XData(2)-XData(1);
-        YStep = YData(2)-YData(1);
+        Nx = length(X);
+        Ny = length(Y);
         
         ScanLength = size(LFileVals{1},1);
-        
         ConvertedLength = size(SquareFileVals{1},1);
         
         %Create image file name list
         %Get names for L-Grid and then just the main points for a square grid.
         LImageNamesList = GetImageNamesList(Settings.ScanType, ScanLength, Ny, Settings.FirstImagePath);
-        
         ImageNamesList = LImageNamesList(:,2);
-        
         Settings.LImageNamesList = LImageNamesList;
-        
-    case 'Square'
-        
-        [SquareFileVals ScanParams] = ReadAngFile(Settings.AngFilePath);
-        
-        ScanLength = size(SquareFileVals{1},1);
-        
-        Angles(:,1) = SquareFileVals{1};
-        Angles(:,2) = SquareFileVals{2};
-        Angles(:,3) = SquareFileVals{3};
-        XData = SquareFileVals{4};
-        YData = SquareFileVals{5};
-        
-        %Number of steps in x and y
-        Nx = length(unique(XData));
-        Ny = length(unique(YData));
-        
-        %Step size in x and y
-        %         XStep = XData(2)-XData(1);
-        %         YStep = YData(2)-YData(1);
-        
-        %Create image file name list
-        ImageNamesList = GetImageNamesList(Settings.ScanType, ScanLength,[Nx Ny], Settings.FirstImagePath);
-%         ImageNamesList = GetImageNamesListHkl(Settings.ScanType, ScanLength,[Nx Ny], Settings.FirstImagePath); %*****TEMPORARY FOR VAUDIN FILES
-%         disp('using hkl naming in HREBSDMain.m at line 100')
-        
-    case 'Hexagonal'
-        [SquareFileVals ScanParams] = ReadAngFile(Settings.AngFilePath);
-        
-        ScanLength = size(SquareFileVals{1},1);
-        
-        Angles(:,1) = SquareFileVals{1};
-        Angles(:,2) = SquareFileVals{2};
-        Angles(:,3) = SquareFileVals{3};
-        XData = SquareFileVals{4};
-        YData = SquareFileVals{5};
-        
-        %Number of steps in x and y
-        Nx = length(unique(XData));
-        Ny = length(unique(YData));
-        ImageNamesList = GetImageNamesList(Settings.ScanType, ScanLength,[Nx Ny], Settings.FirstImagePath);
 end
 
 %Common to all scan types
@@ -133,14 +124,6 @@ Settings.Ny = Ny;
 Settings.ScanLength = ScanLength;
 
 %% Initialize all Settings to be passed in to GetDefGradientTensor.
-ImageNamesList = ImageNamesList(:);
-%Rearrange ImageNamesList vector to match .ang file order
-if strcmp(Settings.ScanType,'Square')
-    ImageNamesList=reshape(ImageNamesList,[data.rows data.cols])';
-    ImageNamesList=ImageNamesList(:);
-end
-% end of list reshape
-
 Settings.Angles = Angles;
 Settings.XData = XData;
 Settings.YData = YData;
