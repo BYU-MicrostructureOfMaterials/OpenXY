@@ -182,7 +182,11 @@ if ~strcmp(Settings.ScanType,'L')
         image_c = 0;
         Amat = 0;
         Cmat = 0;
-        
+        RefIndA = 0;
+        RefIndA1 = 0;
+        RefIndA2 = 0;
+        RefIndC = 0;
+
         ImagePath = ImageNamesList{cnt};% Change for parallel computing
                  g_b = euler2gmat(Allg{cnt}(1),Allg{cnt}(2),Allg{cnt}(3));% is Allg in the same order as ImageNamesList?
                
@@ -192,15 +196,19 @@ if ~strcmp(Settings.ScanType,'L')
             if cnt <= c*(skippts+1) % this is the first row(s)
                 image_a = ReadEBSDImage(ImageNamesList{cnt+c*(skippts+1)},ImageFilter);
                 Amat=euler2gmat(Allg{cnt+c*(skippts+1)}(1),Allg{cnt+c*(skippts+1)}(2),Allg{cnt+c*(skippts+1)}(3));
+                RefIndA = cnt+c*(skippts+1);
             else
                 image_a = ReadEBSDImage(ImageNamesList{cnt-c*(skippts+1)},ImageFilter);% Change for parallel computing
+                RefIndA = cnt-c*(skippts+1);
                 Amat=euler2gmat(Allg{cnt-c*(skippts+1)}(1),Allg{cnt-c*(skippts+1)}(2),Allg{cnt-c*(skippts+1)}(3));
             end
             if mod(cnt,c)==0 || (c-mod(cnt,c))<=skippts               
                 image_c = ReadEBSDImage(ImageNamesList{cnt-(skippts+1)},ImageFilter); 
+                RefIndC = cnt-(skippts+1);
                 Cmat=euler2gmat(Allg{cnt-(skippts+1)}(1),Allg{cnt-(skippts+1)}(2),Allg{cnt-(skippts+1)}(3));
             else
                 image_c = ReadEBSDImage(ImageNamesList{cnt+(skippts+1)},ImageFilter);% Change for parallel computing
+                RefIndC = cnt+(skippts+1);
                 Cmat=euler2gmat(Allg{cnt+(skippts+1)}(1),Allg{cnt+(skippts+1)}(2),Allg{cnt+(skippts+1)}(3));
             end
 
@@ -213,27 +221,34 @@ if ~strcmp(Settings.ScanType,'L')
                 if skippts==0
                     
                     image_a1 = ReadEBSDImage(ImageNamesList{cnt+NColsEven},ImageFilter);
+                    RefIndA1 = cnt+NColsEven;
                     image_a2 = ReadEBSDImage(ImageNamesList{cnt+NColsEven+1},ImageFilter);
+                    RefIndA2 = cnt+NColsEven+1;
                     Amat=euler2gmat(Allg{cnt+NColsEven}(1),Allg{cnt+NColsEven}(2),Allg{cnt+NColsEven}(3));
                     
                     image_c = ReadEBSDImage(ImageNamesList{cnt+1},ImageFilter);% Change for parallel computing
+                    RefIndC = cnt+1;
                     Cmat=euler2gmat(Allg{cnt+1}(1),Allg{cnt+1}(2),Allg{cnt+1}(3));
                 else
                     if cnt <= c*(skippts+1)/2 % this is the first row(s) / top rows
                                         
                         image_a = ReadEBSDImage(ImageNamesList{cnt+c*(skippts+1)/2},ImageFilter);
+                        RefIndA = cnt+c*(skippts+1)/2;
                         Amat=euler2gmat(Allg{cnt+c*(skippts+1)/2}(1),Allg{cnt+c*(skippts+1)/2}(2),Allg{cnt+c*(skippts+1)/2}(3));
                     else
                         
                         image_a = ReadEBSDImage(ImageNamesList{cnt-c*(skippts+1)/2},ImageFilter);% Change for parallel computing
+                        RefIndA = cnt-c*(skippts+1)/2;
                         Amat=euler2gmat(Allg{cnt-c*(skippts+1)/2}(1),Allg{cnt-c*(skippts+1)/2}(2),Allg{cnt-c*(skippts+1)/2}(3));
                     end
 % keyboard
                     if (mod(cnt,c)>NColsOdd-skippts && mod(cnt,c)<=NColsOdd) || (mod(cnt,c)>c-skippts && mod(cnt,c)<c) % distinguish even and odd rows then first look at points too close to right edge
                         image_c = ReadEBSDImage(ImageNamesList{cnt-(skippts+1)},ImageFilter);
+                        RefIndC = cnt-(skippts+1);
                         Cmat=euler2gmat(Allg{cnt-(skippts+1)}(1),Allg{cnt-(skippts+1)}(2),Allg{cnt-(skippts+1)}(3));
                     else
                         image_c = ReadEBSDImage(ImageNamesList{cnt+(skippts+1)},ImageFilter);% Change for parallel computing
+                        RefIndC = cnt+(skippts+1);
                         Cmat=euler2gmat(Allg{cnt+(skippts+1)}(1),Allg{cnt+(skippts+1)}(2),Allg{cnt+(skippts+1)}(3));
                     end   
                 end
@@ -243,6 +258,11 @@ if ~strcmp(Settings.ScanType,'L')
                 image_a1 = image_b;
                 image_a2 = image_b;
                 image_c = image_b;
+                
+                RefIndA = cnt;
+                RefIndA1 = cnt;
+                RefIndA2 = cnt;
+                RefIndC = cnt;
                 
                 Amat=g_b;
                 Cmat=g_b;
@@ -267,12 +287,12 @@ if ~strcmp(Settings.ScanType,'L')
             clear global rs cs Gs
                 if ~strcmp(Settings.ScanType,'Hexagonal') || (strcmp(Settings.ScanType,'Hexagonal') && skippts>0)
 
-                        [AllFa{cnt},AllSSEa(cnt)] = CalcF(image_b,image_a,g_b,eye(3),cnt,Settings,Settings.Phase{cnt});
+                        [AllFa{cnt},AllSSEa(cnt)] = CalcF(image_b,image_a,g_b,eye(3),cnt,Settings,Settings.Phase{cnt}, RefIndA);
 
 
                 else
-                    [AllFa1,AllSSEa1] = CalcF(image_b,image_a1,g_b,eye(3),cnt,Settings,Settings.Phase{cnt});
-                    [AllFa2,AllSSEa2] = CalcF(image_b,image_a2,g_b,eye(3),cnt,Settings,Settings.Phase{cnt});
+                    [AllFa1,AllSSEa1] = CalcF(image_b,image_a1,g_b,eye(3),cnt,Settings,Settings.Phase{cnt},RefIndA1);
+                    [AllFa2,AllSSEa2] = CalcF(image_b,image_a2,g_b,eye(3),cnt,Settings,Settings.Phase{cnt},RefIndA2);
                     AllFa{cnt}=0.5*(AllFa1+AllFa2);
                     AllSSEa(cnt)=0.5*(AllSSEa1+AllSSEa2);
                 end
@@ -288,10 +308,10 @@ if ~strcmp(Settings.ScanType,'L')
             clear global rs cs Gs
             if ~strcmp(Settings.ScanType,'Hexagonal') || (strcmp(Settings.ScanType,'Hexagonal') && skippts>0)
 
-                [AllFc{cnt},AllSSEc(cnt)] = CalcF(image_b,image_c,g_b,eye(3),cnt,Settings,Settings.Phase{cnt});
+                [AllFc{cnt},AllSSEc(cnt)] = CalcF(image_b,image_c,g_b,eye(3),cnt,Settings,Settings.Phase{cnt},RefIndC);
 
             else
-                [AllFc{cnt},AllSSEc(cnt)] = CalcF(image_b,image_c,g_b,eye(3),cnt,Settings,Settings.Phase{cnt});
+                [AllFc{cnt},AllSSEc(cnt)] = CalcF(image_b,image_c,g_b,eye(3),cnt,Settings,Settings.Phase{cnt},RefIndC);
 
             end
         end
