@@ -1,15 +1,15 @@
 % Convert Lgrid scan to a Square-grid scan
 % Written by Sadegh Ahmadi, 9/28/2010
-function NewAngFilePath = LGrid2SquareConvert(OIMPath,TxtPath)
+function NewScanFilePath = LGrid2SquareConvert(OIMPath,TxtPath)
 %LGRID2SQUARECONVERT
-%NewAngFilePath = LGrid2SquareConvert(OIMPath,TxtPath)
+%NewScanFilePath = LGrid2SquareConvert(OIMPath,TxtPath)
 % Convert Lgrid scan to a Square-grid scan
 % Written by Sadegh Ahmadi, 9/28/2010, modified for use in the Green
 % Machine code by Jay Basinger
 % [OIMFile OIMPath]=uigetfile({'*.ang';'*.txt';'*.*'},'Select OIM .ang file.');
  fid = fopen(OIMPath,'r');
 if fid == -1
-   NewAngFilePath  = []; 
+   NewScanFilePath  = []; 
    return;
 end
 
@@ -57,9 +57,9 @@ angdata = [phi1,Phi,phi2,xpos,ypos,IQ,CI,Bdary,GID,fit];
 indlist = 2:3:size(angdata,1);
 newdata = angdata(indlist,:);
 
-NewAngFilePath = [OIMPath(1:end-4),'_OIMreadable.ang'];
+NewScanFilePath = [OIMPath(1:end-4),'_OIMreadable.ang'];
 
-[fid message] = fopen(NewAngFilePath, 'w+');
+[fid message] = fopen(NewScanFilePath, 'w+');
 % write the headers
 for i=1:length(headerlines)
     fprintf(fid,'%s\n',headerlines{i});

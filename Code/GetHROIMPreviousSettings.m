@@ -11,7 +11,7 @@ Settings.SampleTilt = PrevSettings.SampleTilt; %radians
 Settings.SampleAzimuthal = PrevSettings.SampleAzimuthal; %radians
 Settings.CameraElevation = PrevSettings.CameraElevation; %radisns
 Settings.CameraAzimuthal = PrevSettings.CameraAzimuthal; %radians
-Settings.AngFilePath = PrevSettings.AngFilePath;
+Settings.ScanFilePath = PrevSettings.ScanFilePath;
 Settings.GrainFilePath = PrevSettings.GrainFilePath;
 if isfield(PrevSettings,'CustomFilePath')
     Settings.CustomFilePath = PrevSettings.CustomFilePath;

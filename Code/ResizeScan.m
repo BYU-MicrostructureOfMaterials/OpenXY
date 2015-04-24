@@ -1,8 +1,8 @@
 function ResizeScan()
 [filename filepath] = uigetfile('*.ang','Select .ang File');
-AngFilePath = fullfile(filepath,filename);
-%AngFilePath = 'K:\DROBO SHARED\TSL Scans of clear steel morphology\Steel Ferrite-Martensite 40000X w 1x1 Pats.ang';
-[SquareFileVals ScanParams] = ReadAngFile(AngFilePath);
+ScanFilePath = fullfile(filepath,filename);
+%ScanFilePath = 'K:\DROBO SHARED\TSL Scans of clear steel morphology\Steel Ferrite-Martensite 40000X w 1x1 Pats.ang';
+[SquareFileVals ScanParams] = ReadAngFile(ScanFilePath);
 
 %Extract variables from Ang Files
 ScanLength = size(SquareFileVals{1},1);       
@@ -102,11 +102,11 @@ YDataNew = YDataNew(:);
 SSENew = SSENew(:);
 SSENew = num2cell(SSENew);
 
-[outpath, outname, outext] = fileparts(AngFilePath);
+[outpath, outname, outext] = fileparts(ScanFilePath);
 OutputPath = [outpath filesep outname '-Resize' outext];
 
 %Write Ang File
-fin=fopen(AngFilePath,'r');
+fin=fopen(ScanFilePath,'r');
 fout=fopen(OutputPath,'wt+');
 curline=fgetl(fin);
 fprintf(fout,'%s\n',curline);

@@ -722,12 +722,12 @@ ButtonString = get(handles.RunButton,'String');
 if strcmp(ButtonString,'Run')
     stemp=load('Settings.mat');
     Settings=stemp.Settings;
-    AngFilePath = get(handles.AngFileEdit,'String');
-    if iscell(AngFilePath)
-        AngFilePath = AngFilePath{1};
+    ScanFilePath = get(handles.AngFileEdit,'String');
+    if iscell(ScanFilePath)
+        ScanFilePath = ScanFilePath{1};
     end
-    if ~ exist(AngFilePath,'file')
-        warndlg(['Warning: the .ang file: ' AngFilePath ' was not found'],'Warning','modal');
+    if ~ exist(ScanFilePath,'file')
+        warndlg(['Warning: the .ang file: ' ScanFilePath ' was not found'],'Warning','modal');
         return
     end
 
@@ -813,7 +813,7 @@ if strcmp(ButtonString,'Run')
 
     Settings.CameraElevation = str2double(get(handles.CameraElevationEdit,'String'))*pi/180;
 
-    Settings.AngFilePath = AngFilePath;
+    Settings.ScanFilePath = ScanFilePath;
 
     Settings.GrainFilePath = GrainFilePath;
 
@@ -876,7 +876,7 @@ end
 
 % OutputFilePath = get(handles.OutputFileEdit,'String')
 % if ~ exist(OutputFilePath,'file')
-%     warndlg(['Warning: the .ang file: ' Settings.AngFilePath ' does not exist'],'Warning','modal');
+%     warndlg(['Warning: the .ang file: ' Settings.ScanFilePath ' does not exist'],'Warning','modal');
 %     return
 % end
 
@@ -1043,8 +1043,8 @@ end
 if ~isempty(Settings.CameraAzimuthal)
     set(handles.CameraAzimuthalEdit,'String',num2str(Settings.CameraAzimuthal*180/pi));
 end
-if ~isempty(Settings.AngFilePath)
-    set(handles.AngFileEdit,'String',Settings.AngFilePath);
+if ~isempty(Settings.ScanFilePath)
+    set(handles.AngFileEdit,'String',Settings.ScanFilePath);
 end
 if ~isempty(Settings.GrainFilePath)
     set(handles.GrainFileEdit,'String',Settings.GrainFilePath);
@@ -1112,12 +1112,12 @@ stemp=load('Settings.mat');
 Settings=stemp.Settings;
 clear stemp;
 
-AngFilePath = get(handles.AngFileEdit,'String');
-if iscell(AngFilePath)
-    AngFilePath = AngFilePath{1};
+ScanFilePath = get(handles.AngFileEdit,'String');
+if iscell(ScanFilePath)
+    ScanFilePath = ScanFilePath{1};
 end
-if ~ exist(AngFilePath,'file')
-    warndlg(['Warning: the .ang file: ' AngFilePath ' was not found'],'Warning','modal');
+if ~ exist(ScanFilePath,'file')
+    warndlg(['Warning: the .ang file: ' ScanFilePath ' was not found'],'Warning','modal');
     return
 end
 
@@ -1186,7 +1186,7 @@ Settings.CameraAzimuthal = str2double(get(handles.CameraAzimuthalEdit,'String'))
 
 Settings.CameraElevation = str2double(get(handles.CameraElevationEdit,'String'))*pi/180;
 
-Settings.AngFilePath = AngFilePath;
+Settings.ScanFilePath = ScanFilePath;
 
 Settings.GrainFilePath = GrainFilePath;
 

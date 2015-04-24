@@ -307,8 +307,8 @@ Av = Settings.AccelVoltage*1000; %put it in eV from KeV
 sampletilt = Settings.SampleTilt;
 elevang = Settings.CameraElevation;
 pixsize = size(Image,1);
-disp(Settings.AngFilePath)
-[SquareFileVals ScanParams] = ReadAngFile(Settings.AngFilePath);
+disp(Settings.ScanFilePath)
+[SquareFileVals ScanParams] = ReadAngFile(Settings.ScanFilePath);
 paramspat={ScanParams.xstar;ScanParams.ystar;ScanParams.zstar;pixsize;Av;sampletilt;elevang;Material.Fhkl;Material.dhkl;Material.hkl};
 Angles(:,1) = SquareFileVals{1};
 Angles(:,2) = SquareFileVals{2};

@@ -310,12 +310,12 @@ Settings.OutputPath = FilePath;
 if UpdateFileLocations
     NewDir=FilePath(1:find(FilePath=='\',1,'last'));
     % Assumes Ang file is in the outer most path/folder
-    MainPathLength=find(Settings.AngFilePath=='\',1,'last');
+    MainPathLength=find(Settings.ScanFilePath=='\',1,'last');
         
     Settings.ImageNamesList=UpdatePath(Settings.ImageNamesList,NewDir,MainPathLength);
     Settings.FirstImagePath=UpdatePath(Settings.FirstImagePath,NewDir,MainPathLength);
     Settings.GrainFilePath=UpdatePath(Settings.GrainFilePath,NewDir,MainPathLength);
-    Settings.AngFilePath=UpdatePath(Settings.AngFilePath,NewDir,MainPathLength);
+    Settings.ScanFilePath=UpdatePath(Settings.ScanFilePath,NewDir,MainPathLength);
     if ~strcmp(Settings.HROIMMethod,'Simulated')
         Settings.RefImageNames=UpdatePath(Settings.RefImageNames,NewDir,MainPathLength);
     end

@@ -1,6 +1,6 @@
-function NewAngFilePath = LGridXYConvert(OIMPath,TxtPath)
+function NewScanFilePath = LGridXYConvert(OIMPath,TxtPath)
 %LGRIDXYCONVERT
-% NewAngFilePath = LGridXYConvert(OIMPath,TxtPath)
+% NewScanFilePath = LGridXYConvert(OIMPath,TxtPath)
 % In a custom scan, depending on where the starting point is chosen, values of xpos and ypos can be positive or negative. 
 % Negative values of x and y positions cause problems in finding the size of scan and location of scan points.  
 % This code will shift all the negative values to the positive area and makes the (0,0) point as the starting point of the custom scan.
@@ -10,7 +10,7 @@ function NewAngFilePath = LGridXYConvert(OIMPath,TxtPath)
 % [OIMFile OIMPath]=uigetfile({'*.ang';'*.txt';'*.*'},'Select OIM .ang file.');
  fid = fopen(OIMPath,'r');
 if fid == -1
-   NewAngFilePath  = []; 
+   NewScanFilePath  = []; 
    return;
 end
 
@@ -48,8 +48,8 @@ xpos=xpos-xpos(2); ypos=ypos-ypos(2);
 
 newdata = [phi1,Phi,phi2,xpos,ypos,IQ,CI,Bdary,GID,fit];
 
-NewAngFilePath = [OIMPath(1:end-4),'correctedXY.ang'];
-fid = fopen(NewAngFilePath, 'w+');
+NewScanFilePath = [OIMPath(1:end-4),'correctedXY.ang'];
+fid = fopen(NewScanFilePath, 'w+');
 % write the headers
 for i=1:length(headerlines)
     fprintf(fid,'%s\n',headerlines{i});

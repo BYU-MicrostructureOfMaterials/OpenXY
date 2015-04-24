@@ -25,7 +25,7 @@ Settings.ROISize = round((Settings.ROISizePercent * .01)*Settings.PixelSize);
 %square-grid equivalent for later display. These call slightly modified
 %versions of Sadegh's original Step0 and Step1 code.
 LImageNamesList = [];
-[SquareFileVals ScanParams] = ReadAngFile(Settings.AngFilePath); 
+[SquareFileVals ScanParams] = ReadAngFile(Settings.ScanFilePath); 
 ScanLength = size(SquareFileVals{1},1);
 Angles(:,1) = SquareFileVals{1};
 Angles(:,2) = SquareFileVals{2};
@@ -64,13 +64,13 @@ switch Settings.ScanType;
         ImageNamesList = GetImageNamesList(Settings.ScanType, ScanLength,[Nx Ny], Settings.FirstImagePath, [X(1),Y(1)], [XStep, YStep]);
         
     case 'L'
-        CorrectedXYAngPath = LGridXYConvert(Settings.AngFilePath,Settings.CustomFilePath);
+        CorrectedXYAngPath = LGridXYConvert(Settings.ScanFilePath,Settings.CustomFilePath);
         if isempty(CorrectedXYAngPath)
             errordlg('Error reading .ang file in LGridXYConvert','Error','modal')
             return;
         end
         
-        SquareGridAngPath = LGrid2SquareConvert(Settings.AngFilePath,Settings.CustomFilePath);
+        SquareGridAngPath = LGrid2SquareConvert(Settings.ScanFilePath,Settings.CustomFilePath);
         if isempty(SquareGridAngPath)
             errordlg('Error reading .ang file in LGrid2SquareConvert','Error','modal')
             return;
@@ -134,7 +134,7 @@ Settings.Fit = Fit;
 Settings.ImageNamesList = ImageNamesList;
 
 %% Get Grain ID's
-[~, ~, ext] = fileparts(Settings.AngFilePath);
+[~, ~, ext] = fileparts(Settings.ScanFilePath);
 if strcmp(ext,'.ang')
     GrainFileVals = ReadGrainFile(Settings.GrainFilePath);
     Settings.grainID = GrainFileVals{9};
@@ -257,7 +257,7 @@ if Settings.DoUsePCFile
         %                 Settings.YStar(1:length(ImageNamesList)) = PCList(:,2);
         %                 Settings.ZStar(1:length(ImageNamesList)) = PCList(:,3);
         %
-        %         [Settings.XStar,Settings.YStar,Settings.ZStar,fval] = BatchPC(PCPath, Settings.AngFilePath, Settings.GrainFilePath, Settings);
+        %         [Settings.XStar,Settings.YStar,Settings.ZStar,fval] = BatchPC(PCPath, Settings.ScanFilePath, Settings.GrainFilePath, Settings);
         
     else
         errordlg('PC calibration file type is invalid','PC Calibration File Path Error');
@@ -466,7 +466,7 @@ input{1} = [SaveFile '.mat'];
 OutputPlotting(input); %moved here due to error writing ang file for vaudin files ****
 %%
 
-WriteHROIMAngFile(Settings.AngFilePath,fullfile(OutputPath, ['Corr_' FileName '.ang']),...
+WriteHROIMAngFile(Settings.ScanFilePath,fullfile(OutputPath, ['Corr_' FileName '.ang']),...
     Settings.NewAngles(:,1),Settings.NewAngles(:,2),Settings.NewAngles(:,3)...
     ,Settings.SSE);
 
