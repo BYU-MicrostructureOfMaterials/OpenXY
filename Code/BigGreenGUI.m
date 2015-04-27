@@ -1043,7 +1043,10 @@ end
 if ~isempty(Settings.CameraAzimuthal)
     set(handles.CameraAzimuthalEdit,'String',num2str(Settings.CameraAzimuthal*180/pi));
 end
-if ~isempty(Settings.ScanFilePath)
+if isfield(Settings,'AngFilePath')
+    set(handles.AngFileEdit,'String',Settings.AngFilePath);
+end
+if isfield(Settings,'ScanFilePath')
     set(handles.AngFileEdit,'String',Settings.ScanFilePath);
 end
 if ~isempty(Settings.GrainFilePath)

@@ -12,6 +12,8 @@ if nargin == 0
     [FileName, FilePath] = uigetfile();
     FilePath = [FilePath FileName];
     commentchar = inputdlg('Input comment character', 'GetFileData');
+else
+    commentchar = '';
 end
 
 fid = fopen(FilePath);
@@ -19,7 +21,10 @@ cnt=0;
 datacnt = 1;
 while ~feof(fid)
     tline = fgetl(fid);
+    
     if strcmp(tline(1),commentchar)
+        cnt = cnt + 1;
+    elseif (isempty(commentchar) || (nargin == 1)) && (isempty(str2num(tline)))
         cnt = cnt + 1;
     else
         if datacnt == 1
@@ -35,7 +40,7 @@ filedata.datarows = datacnt - 1;
 filedata.rows = datacnt + cnt;
 fmt = '%f';
 tmp = fmt;
-for i = 1:filedata.cols
+for i = 1:filedata.cols-1
     tmp = [tmp ' ' fmt];
 end
 filedata.format = tmp;
