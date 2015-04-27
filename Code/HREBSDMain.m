@@ -141,7 +141,7 @@ if strcmp(ext,'.ang')
     if strcmp(Settings.Material,'grainfile')
         Settings.Phase=lower(GrainFileVals{11});
     end
-else strcmp(ext,'ctf')
+elseif strcmp(ext,'.ctf')
     angles = reshape(Angles,Nx,Ny,3);
     MaterialData = ReadMaterial(Settings.Material);
     clean = true;
