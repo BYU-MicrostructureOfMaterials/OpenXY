@@ -318,6 +318,7 @@ if ~strcmp(Settings.ScanType,'L')
 %         waitbar(cnt/length(ImageNamesList),h,['cnt: ',num2str(cnt)]);% Change for parallel computing
         ppm.increment();
     end
+    ppm.delete();
 %     if strcmp(Settings.ScanType,'LtoSquare')
 %         close(h)
 %     end

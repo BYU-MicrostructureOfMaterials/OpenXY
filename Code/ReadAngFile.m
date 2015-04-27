@@ -45,7 +45,7 @@ while ~feof(fid)
         
         ScanParamsData('x-star','xstar');
         ScanParamsData('y-star','ystar');
-        ScanParamsData('z-star','xstar');
+        ScanParamsData('z-star','zstar');
         ScanParamsData('MaterialName','material');
         ScanParamsData('XSTEP','xstep');
         ScanParamsData('YSTEP','ystep');

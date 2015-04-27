@@ -249,6 +249,7 @@ if handles.VanPont
         CalibrationPointsPC(i,:) = PCref';
         ppm.increment();
     end
+    ppm.delete();
     Settings.CalibrationPointsPC = CalibrationPointsPC;
 
     handles.MeanXstar = mean(Settings.CalibrationPointsPC(:,1));

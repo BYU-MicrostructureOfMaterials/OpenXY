@@ -337,6 +337,7 @@ if Settings.DoParallel > 1
         
         ppm.increment();
     end
+    ppm.delete();
     
 else
     h = waitbar(0,'Single Processor Progress');
