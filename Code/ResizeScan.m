@@ -2,7 +2,7 @@ function ResizeScan()
 [filename filepath] = uigetfile('*.ang','Select .ang File');
 ScanFilePath = fullfile(filepath,filename);
 %ScanFilePath = 'K:\DROBO SHARED\TSL Scans of clear steel morphology\Steel Ferrite-Martensite 40000X w 1x1 Pats.ang';
-[SquareFileVals ScanParams] = ReadAngFile(ScanFilePath);
+[SquareFileVals ScanParams] = ReadScanFile(ScanFilePath);
 
 %Extract variables from Ang Files
 ScanLength = size(SquareFileVals{1},1);       

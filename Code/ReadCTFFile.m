@@ -1,5 +1,6 @@
 function [CtfFileVals, ScanParams] = ReadCTFFile(FilePath,FileName)
 %CtfFileVals: Cell array containing all data from .ctf file.
+%   Phase	X	Y	Bands	Error	Euler1	Euler2	Euler3	MAD	BC	BS
 %ScanParams: Struct containing information gathered from header
 %Written by Brian Jackson 4/27/2015
 

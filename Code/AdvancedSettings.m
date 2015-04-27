@@ -308,7 +308,7 @@ sampletilt = Settings.SampleTilt;
 elevang = Settings.CameraElevation;
 pixsize = size(Image,1);
 disp(Settings.ScanFilePath)
-[SquareFileVals ScanParams] = ReadAngFile(Settings.ScanFilePath);
+[SquareFileVals ScanParams] = ReadScanFile(Settings.ScanFilePath);
 paramspat={ScanParams.xstar;ScanParams.ystar;ScanParams.zstar;pixsize;Av;sampletilt;elevang;Material.Fhkl;Material.dhkl;Material.hkl};
 Angles(:,1) = SquareFileVals{1};
 Angles(:,2) = SquareFileVals{2};

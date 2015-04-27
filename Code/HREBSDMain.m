@@ -25,7 +25,7 @@ Settings.ROISize = round((Settings.ROISizePercent * .01)*Settings.PixelSize);
 %square-grid equivalent for later display. These call slightly modified
 %versions of Sadegh's original Step0 and Step1 code.
 LImageNamesList = [];
-[SquareFileVals ScanParams] = ReadAngFile(Settings.ScanFilePath); 
+[SquareFileVals ScanParams] = ReadScanFile(Settings.ScanFilePath); 
 ScanLength = size(SquareFileVals{1},1);
 Angles(:,1) = SquareFileVals{1};
 Angles(:,2) = SquareFileVals{2};
@@ -78,7 +78,7 @@ switch Settings.ScanType;
         
         %For L-grid, we need to use the corrected XY and may use
         %SquareGrid-converted file
-        [LFileVals ScanParams] = ReadAngFile(CorrectedXYAngPath);
+        [LFileVals ScanParams] = ReadScanFile(CorrectedXYAngPath);
         
         LAngles(:,1) = LFileVals{1};
         LAngles(:,2) = LFileVals{2};
@@ -87,7 +87,7 @@ switch Settings.ScanType;
         LYData = LFileVals{5};
         
         
-        [SquareFileVals ScanParams] = ReadAngFile(SquareGridAngPath); 
+        [SquareFileVals ScanParams] = ReadScanFile(SquareGridAngPath); 
         ScanLength = size(SquareFileVals{1},1);
         Angles(:,1) = SquareFileVals{1};
         Angles(:,2) = SquareFileVals{2};

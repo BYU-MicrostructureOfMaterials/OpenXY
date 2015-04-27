@@ -62,7 +62,7 @@ else
     load Settings
 end
 
-[SquareFileVals ScanParams] = ReadAngFile(Settings.ScanFilePath);
+[SquareFileVals ScanParams] = ReadScanFile(Settings.ScanFilePath);
 
 IQ = Settings.IQ;
 
