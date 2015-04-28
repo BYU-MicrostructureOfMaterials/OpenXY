@@ -47,12 +47,12 @@ while ~feof(fid)
         ScanParamsData('y-star','ystar');
         ScanParamsData('z-star','zstar');
         ScanParamsData('MaterialName','material');
-        ScanParamsData('XSTEP','xstep');
-        ScanParamsData('YSTEP','ystep');
-        ScanParamsData('GRID','GridType');
-        ScanParamsData('NCOLS_ODD','NumColsOdd');
-        ScanParamsData('NCOLS_EVEN','NumColsEven');
-        ScanParamsData('NROWS','NumRows');
+        ScanParamsData('XSTEP:','xstep');
+        ScanParamsData('YSTEP:','ystep');
+        ScanParamsData('GRID:','GridType');
+        ScanParamsData('NCOLS_ODD:','NumColsOdd');
+        ScanParamsData('NCOLS_EVEN:','NumColsEven');
+        ScanParamsData('NROWS:','NumRows');
         
     else
         %Backs up one line in order to read in first line of data
