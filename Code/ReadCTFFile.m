@@ -27,7 +27,7 @@ function ScanParamsData(FileStr, VarName)
     if ~isempty(loc)
         val = strtok(tline(loc(end)+length(FileStr):end));
         if ~isempty(str2num(val))
-            ScanParams.(VarName) = str2double(strtok(tline(loc(end)+length(FileStr):end)));
+            ScanParams.(VarName) = str2double(val);
         else
             ScanParams.(VarName) = val;
         end

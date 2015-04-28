@@ -28,13 +28,13 @@ disp('Reading in the .ang file . . . ')
 tline = '#';
 
 function ScanParamsData(FileStr,VarName)
-    [first,last] = regexp(tline,FileStr);
-    val = tline(last+1:end);
-    if (first)  
+    loc = strfind(tline, FileStr);
+    if ~isempty(loc)
+        val = strtok(tline(loc(end)+length(FileStr):end));
         if ~isempty(str2num(val))
-            ScanParams.(VarName) = str2double(tline(last+1:end));
+            ScanParams.(VarName) = str2double(val);
         else
-            ScanParams.(VarName) = tline(last+1:end);
+            ScanParams.(VarName) = val;
         end
     end
 end
