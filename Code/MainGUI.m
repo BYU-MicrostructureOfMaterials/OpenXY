@@ -22,7 +22,7 @@ function varargout = MainGUI(varargin)
 
 % Edit the above text to modify the response to help MainGUI
 
-% Last Modified by GUIDE v2.5 28-Apr-2015 10:41:20
+% Last Modified by GUIDE v2.5 28-Apr-2015 12:26:55
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -119,16 +119,24 @@ if name ~= 0
         set(handles.ScanNameText,'String',name);
         set(handles.ScanFolderText,'String',path);
         set(handles.ScanFolderText,'TooltipString',path);
-        [handles.Settings.ScanFileData,handles.Settings.ScanParams] = ReadScanFile(fullfile(path,name));
+        [ScanFileData,handles.Settings.ScanParams] = ReadScanFile(fullfile(path,name));
         if isfield(handles.Settings.ScanParams,'NumColsOdd') && isfield(handles.Settings.ScanParams,'NumRows')
             SizeStr = [num2str(handles.Settings.ScanParams.NumColsOdd) 'x' num2str(handles.Settings.ScanParams.NumRows)];
         else
             SizeStr = 'Size not included in Scan File';
         end
         set(handles.ScanSizeText,'String',SizeStr);
+        
+        %Read ScanFile Data into Settings
+        handles.Settings.ScanLength = size(SquareFileVals{1},1);
+        handles.Settings.Angles(:,1) = SquareFileVals{1};
+        handles.Settings.Angles(:,2) = SquareFileVals{2};
+        handles.Settings.Angles(:,3) = SquareFileVals{3};
+        handles.Settings.XData = SquareFileVals{4};
+        handles.Settings.YData = SquareFileVals{5};
         handles.Settings.FirstImagePath = fullfile(path,name);
         handles.ScanFileLoaded = true;
-    end     
+    end         
 end
 enableRunButton(handles);
 guidata(hObject, handles);
@@ -224,6 +232,9 @@ function PCCalibrationBox_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of PCCalibrationBox
+handles.Settings.DoPCStrainMin = get(hObject,'Value');
+guidata(hObject, handles);
+
 
 
 % --- Executes on button press in DisplayShiftsBox.
@@ -233,6 +244,8 @@ function DisplayShiftsBox_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of DisplayShiftsBox
+handles.Settings.DoShowPlot = get(hObject,'Value');
+guidata(hObject, handles);
 
 
 % --- Executes on selection change in MaterialPopup.
@@ -243,6 +256,16 @@ function MaterialPopup_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns MaterialPopup contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from MaterialPopup
+Material = GetPopupString(hObject);
+handles.Settings.Material = Material;
+if ScanFileLoaded
+    [~,~,ext] = filparts(handles.Settings.ScanFilePath);
+    if strcmp(Material,'Auto-detect')
+        if strcmp(ext,'.ang')
+            [GrainFileVals FileName FilePath ] = ReadGrainFile(FilePath,FileName)
+        
+    
+guidata(hObject, handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -266,7 +289,8 @@ function ScanTypePopup_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns ScanTypePopup contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from ScanTypePopup
-
+handles.Settings.ScanType = GetPopupString(hObject);
+guidata(hObject, handles);
 
 % --- Executes during object creation, after setting all properties.
 function ScanTypePopup_CreateFcn(hObject, eventdata, handles)
@@ -289,6 +313,8 @@ function ProcessorsPopup_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns ProcessorsPopup contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from ProcessorsPopup
+handles.Settings.DoParallel = str2double(GetPopupString(hObject));
+guidata(hObject, handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -310,15 +336,15 @@ function FileMenu_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % --------------------------------------------------------------------
-function LoadSettings_Callback(hObject, eventdata, handles)
-% hObject    handle to LoadSettings (see GCBO)
+function LoadAnalysis_Callback(hObject, eventdata, handles)
+% hObject    handle to LoadAnalysis (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
 
 % --------------------------------------------------------------------
-function SaveSettings_Callback(hObject, eventdata, handles)
-% hObject    handle to SaveSettings (see GCBO)
+function SaveAnalysis_Callback(hObject, eventdata, handles)
+% hObject    handle to SaveAnalysis (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
@@ -326,6 +352,13 @@ function SaveSettings_Callback(hObject, eventdata, handles)
 % --------------------------------------------------------------------
 function RestoreDefaultSettings_Callback(hObject, eventdata, handles)
 % hObject    handle to RestoreDefaultSettings (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --------------------------------------------------------------------
+function Close_Callback(hObject, eventdata, handles)
+% hObject    handle to Close (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
@@ -363,3 +396,10 @@ if handles.ScanFileLoaded && handles.ImageLoaded && handles.OutputLoaded
 else
     set(handles.RunButton,'Enable','off');
 end
+
+function string = GetPopupString(Popup)
+List = get(Popup,'String');
+Value = get(Popup,'Value');
+string = List(Value);
+
+
