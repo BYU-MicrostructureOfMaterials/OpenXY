@@ -63,11 +63,7 @@ end
 if DoCropSquare %Default setting is to do this
     %Crop if image is not square
     if size(Image,1) ~= size(Image,2)
-        [MinSize MinLoc] = min([size(Image,1) size(Image,2)]);
-        [MaxSize MaxLoc] = max([size(Image,1) size(Image,2)]);
-        MidStart = (MaxSize - MinSize)/2;   %Is this ever a fraction?????******
-        newpic = Image(1:MinSize,MidStart:MinSize+MidStart-1); % assumes it's always 2nd dimension that is bigger *****
-        Image = newpic;
+        Image = CropSquare(Image);
     end
 end
 
