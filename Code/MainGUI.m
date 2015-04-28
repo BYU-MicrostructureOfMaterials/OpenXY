@@ -22,7 +22,7 @@ function varargout = MainGUI(varargin)
 
 % Edit the above text to modify the response to help MainGUI
 
-% Last Modified by GUIDE v2.5 27-Apr-2015 14:30:09
+% Last Modified by GUIDE v2.5 28-Apr-2015 10:41:20
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -55,6 +55,34 @@ function MainGUI_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for MainGUI
 handles.output = hObject;
 
+%Visuals
+axes(handles.background);
+pic = imread('OpenXYLogo.png');
+% pic = imread('DSCN0416.JPG');
+imagesc(pic)
+%alpha(0.5)
+set(gca,'xcolor',get(gcf,'color'));
+set(gca,'ycolor',get(gcf,'color'));
+set(gca,'ytick',[]);
+set(gca,'xtick',[]);
+BGColor = 0.94*[1 1 1];
+TextColor = 'black';
+
+%Load Popup Menus
+ScanTypeList = {'Auto-detect','Square','Hexagonal'};
+set(handles.ScanTypePopup,'String',ScanTypeList);
+MaterialList = GetMaterialsList;
+set(handles.MaterialPopup,'String',MaterialList);
+NumberOfCores = feature('numCores');
+set(handles.ProcessorsPopup, 'String', 1:NumberOfCores);
+set(handles.ProcessorsPopup,'Value',NumberOfCores-1);
+
+handles.FileDir = pwd;
+handles.ScanFileLoaded = false;
+handles.ImageLoaded = false;
+handles.OutputLoaded = false;
+enableRunButton(handles);
+
 % Update handles structure
 guidata(hObject, handles);
 
@@ -72,9 +100,266 @@ function varargout = MainGUI_OutputFcn(hObject, eventdata, handles)
 % Get default command line output from handles structure
 varargout{1} = handles.output;
 
-
-% --- Executes on button press in pushbutton1.
-function pushbutton1_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton1 (see GCBO)
+% --- Executes on button press in SelectScanButton.
+function SelectScanButton_Callback(hObject, eventdata, handles)
+% hObject    handle to SelectScanButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+wd = pwd;
+if ~strcmp(handles.FileDir,pwd)
+    cd(handles.FileDir);
+end
+[name, path] = uigetfile({'*.ang;*.ctf','Scan Files (*.ang,*.ctf)'},'Select a Scan File');
+cd(wd);
+if name ~= 0
+    handles.FileDir = path;
+    prevName = get(handles.ScanNameText,'String');
+    prevFolder = get(handles.ScanFolderText,'String');
+    if ~strcmp(prevName,name) || ~strcmp(prevFolder,path)
+        set(handles.ScanNameText,'String',name);
+        set(handles.ScanFolderText,'String',path);
+        set(handles.ScanFolderText,'TooltipString',path);
+        [handles.Settings.ScanFileData,handles.Settings.ScanParams] = ReadScanFile(fullfile(path,name));
+        if isfield(handles.Settings.ScanParams,'NumColsOdd') && isfield(handles.Settings.ScanParams,'NumRows')
+            SizeStr = [num2str(handles.Settings.ScanParams.NumColsOdd) 'x' num2str(handles.Settings.ScanParams.NumRows)];
+        else
+            SizeStr = 'Size not included in Scan File';
+        end
+        set(handles.ScanSizeText,'String',SizeStr);
+        handles.Settings.FirstImagePath = fullfile(path,name);
+        handles.ScanFileLoaded = true;
+    end     
+end
+enableRunButton(handles);
+guidata(hObject, handles);
+    
+
+
+% --- Executes on button press in SelectImageButton.
+function SelectImageButton_Callback(hObject, eventdata, handles)
+% hObject    handle to SelectImageButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+wd = pwd;
+if ~strcmp(handles.FileDir,pwd)
+    cd(handles.FileDir);
+end
+[name, path] = uigetfile({'*.jpg;*.jpeg;*.tif;*.tiff;*.bmp;*.png','Image Files (*.jpg,*.tif,*.bmp,*.png)'},'Select the First Image of the Scan');
+cd(wd);
+if name ~= 0
+    if strcmp(handles.FileDir,pwd)
+        handles.FileDir = path;
+    end
+    prevName = get(handles.FirstImageNameText,'String');
+    prevFolder = get(handles.ImageFolderText,'String');
+    if ~strcmp(prevName,name) || ~strcmp(prevFolder,path)
+        set(handles.FirstImageNameText,'String',name);
+        set(handles.ImageFolderText,'String',path);
+        set(handles.ImageFolderText,'TooltipString',path);
+        [x,y] = size(imread(fullfile(path,name)));
+        improp = dir(fullfile(path,name));
+        SizeStr = [num2str(x) 'x' num2str(y) ' (' num2str(round(improp.bytes/1024)) ' KB)'];
+        set(handles.ImageSizeText,'String',SizeStr);
+        handles.ImageLoaded = true;
+    end
+end
+enableRunButton(handles);
+guidata(hObject, handles);
+
+
+% --- Executes on button press in SelectOutputButton.
+function SelectOutputButton_Callback(hObject, eventdata, handles)
+% hObject    handle to SelectOutputButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+wd = pwd;
+if ~strcmp(handles.FileDir,pwd)
+    cd(handles.FileDir);
+end
+[name, path] = uiputfile({'*.ang;*.ctf','Scan Files (*.ang,*.ctf)'},'Select a Scan File');
+cd(wd);
+if name ~= 0
+    handles.FileDir = path;
+    prevName = get(handles.FirstImageNameText,'String');
+    prevFolder = get(handles.ImageFolderText,'String');
+    if ~strcmp(prevName,name) || ~strcmp(prevFolder,path)
+        %Make sure output files aren't overwriting other files
+        [~,baseName,~] = fileparts(name);
+        ResultsName = ['AnalysisParams_' baseName '.mat'];
+        ScanName = ['Corr_' name];
+        if exist(fullfile(path,ResultsName),'file') || exist(fullfile(path,ScanName),'file')
+            button = questdlg({'Output file already exists'; 'Would you like to overwrite it?'},'Run OpenXY');
+            switch button
+                case 'No'
+                    SelectOutputButton_Callback(hObject,eventdata,handles);
+                    return;
+                case 'Cancel'
+                    return;
+            end
+        end
+        
+        set(handles.OutputResultsText,'String',ResultsName);
+        set(handles.OutputScanText,'String',ScanName);
+        set(handles.OutputFolderText,'String',path);
+        set(handles.OutputFolderText,'TooltipString',path);
+        handles.OutputLoaded = true;
+    end     
+end
+enableRunButton(handles);
+guidata(hObject, handles);
+
+
+% --- Executes on button press in RunButton.
+function RunButton_Callback(hObject, eventdata, handles)
+% hObject    handle to RunButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+disp('Run');
+
+
+% --- Executes on button press in PCCalibrationBox.
+function PCCalibrationBox_Callback(hObject, eventdata, handles)
+% hObject    handle to PCCalibrationBox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of PCCalibrationBox
+
+
+% --- Executes on button press in DisplayShiftsBox.
+function DisplayShiftsBox_Callback(hObject, eventdata, handles)
+% hObject    handle to DisplayShiftsBox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of DisplayShiftsBox
+
+
+% --- Executes on selection change in MaterialPopup.
+function MaterialPopup_Callback(hObject, eventdata, handles)
+% hObject    handle to MaterialPopup (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns MaterialPopup contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from MaterialPopup
+
+
+% --- Executes during object creation, after setting all properties.
+function MaterialPopup_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to MaterialPopup (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in ScanTypePopup.
+function ScanTypePopup_Callback(hObject, eventdata, handles)
+% hObject    handle to ScanTypePopup (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns ScanTypePopup contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from ScanTypePopup
+
+
+% --- Executes during object creation, after setting all properties.
+function ScanTypePopup_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to ScanTypePopup (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in ProcessorsPopup.
+function ProcessorsPopup_Callback(hObject, eventdata, handles)
+% hObject    handle to ProcessorsPopup (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns ProcessorsPopup contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from ProcessorsPopup
+
+
+% --- Executes during object creation, after setting all properties.
+function ProcessorsPopup_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to ProcessorsPopup (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+% --------------------------------------------------------------------
+function FileMenu_Callback(hObject, eventdata, handles)
+% hObject    handle to SettingsMenu (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% --------------------------------------------------------------------
+function LoadSettings_Callback(hObject, eventdata, handles)
+% hObject    handle to LoadSettings (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --------------------------------------------------------------------
+function SaveSettings_Callback(hObject, eventdata, handles)
+% hObject    handle to SaveSettings (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --------------------------------------------------------------------
+function RestoreDefaultSettings_Callback(hObject, eventdata, handles)
+% hObject    handle to RestoreDefaultSettings (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --------------------------------------------------------------------
+function SettingsMenu_Callback(hObject, eventdata, handles)
+% hObject    handle to SettingsMenu (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --------------------------------------------------------------------
+function ROISettings_Callback(hObject, eventdata, handles)
+% hObject    handle to ROISettings (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --------------------------------------------------------------------
+function AdvancedSettings_Callback(hObject, eventdata, handles)
+% hObject    handle to AdvancedSettings (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --------------------------------------------------------------------
+function MicroscopeSettings_Callback(hObject, eventdata, handles)
+% hObject    handle to MicroscopeSettings (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+function enableRunButton(handles)
+if handles.ScanFileLoaded && handles.ImageLoaded && handles.OutputLoaded
+    set(handles.RunButton,'Enable','on');
+else
+    set(handles.RunButton,'Enable','off');
+end
