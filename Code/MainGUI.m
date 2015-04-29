@@ -392,6 +392,8 @@ function AdvancedSettings_Callback(hObject, eventdata, handles)
 % hObject    handle to AdvancedSettings (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+handles.Settings = AdvancedSettingsGUI(handles.Settings);
+guidata(hObject,handles);
 
 
 % --------------------------------------------------------------------
