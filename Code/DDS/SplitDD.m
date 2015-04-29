@@ -203,13 +203,13 @@ parfor i = 1:m*n
         gmat = euler2gmat(phi1rn(i),PHIrn(i), phi2rn(i));     
         
         switch alphaorbeta
-            case 1
+            case 'Nye-Kroner'
                 merp = alphavecp(1:3,i);
                 rhos(:,i)=resolvedisloc(merp,1,minscheme,matchoice,gmat,stress, stepsize^2, x0type);
-            case 2
+            case 'Distortion Matching'
                 merp = beta(:,i);
                 rhos(:,i)=resolvedisloc(merp,2,minscheme,matchoice,gmat,stress, stepsize^2, x0type); %CHANGE BACK TO 2
-            case 9
+            case 'Nye-Kroner (Pantleon)'
                 merp = alphavecp(:,i);
                 rhos(:,i)=resolvedisloc(merp,9,minscheme,matchoice,gmat,stress, stepsize^2, x0type);
             case 11
