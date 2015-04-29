@@ -55,6 +55,13 @@ function MainGUI_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for MainGUI
 handles.output = hObject;
 
+%Load in Settings
+try
+    handles.Settings = GetHROIMPreviousSettings();
+catch
+    handles.Settings = GetHROIMDefaultSettings();
+end
+
 %Visuals
 axes(handles.background);
 pic = imread('OpenXYLogo.png');
@@ -128,18 +135,20 @@ if name ~= 0
         set(handles.ScanSizeText,'String',SizeStr);
         
         %Read ScanFile Data into Settings
-        handles.Settings.ScanLength = size(SquareFileVals{1},1);
-        handles.Settings.Angles(:,1) = SquareFileVals{1};
-        handles.Settings.Angles(:,2) = SquareFileVals{2};
-        handles.Settings.Angles(:,3) = SquareFileVals{3};
-        handles.Settings.XData = SquareFileVals{4};
-        handles.Settings.YData = SquareFileVals{5};
-        handles.Settings.FirstImagePath = fullfile(path,name);
+        handles.Settings.ScanLength = size(ScanFileData{1},1);
+        handles.Settings.Angles(:,1) = ScanFileData{1};
+        handles.Settings.Angles(:,2) = ScanFileData{2};
+        handles.Settings.Angles(:,3) = ScanFileData{3};
+        handles.Settings.XData = ScanFileData{4};
+        handles.Settings.YData = ScanFileData{5};
+        handles.Settings.ScanFilePath = fullfile(path,name);
         handles.ScanFileLoaded = true;
     end         
 end
-enableRunButton(handles);
 guidata(hObject, handles);
+MaterialPopup_Callback(handles.MaterialPopup, eventdata, handles);
+enableRunButton(handles);
+
     
 
 
@@ -168,6 +177,7 @@ if name ~= 0
         improp = dir(fullfile(path,name));
         SizeStr = [num2str(x) 'x' num2str(y) ' (' num2str(round(improp.bytes/1024)) ' KB)'];
         set(handles.ImageSizeText,'String',SizeStr);
+        handles.Settings.FirstImagePath = fullfile(path,file);
         handles.ImageLoaded = true;
     end
 end
@@ -210,6 +220,7 @@ if name ~= 0
         set(handles.OutputScanText,'String',ScanName);
         set(handles.OutputFolderText,'String',path);
         set(handles.OutputFolderText,'TooltipString',path);
+        handles.Settings.OutputPath = fullfile(path,name);
         handles.OutputLoaded = true;
     end     
 end
@@ -256,15 +267,13 @@ function MaterialPopup_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns MaterialPopup contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from MaterialPopup
+Settings = handles.Settings;
 Material = GetPopupString(hObject);
 handles.Settings.Material = Material;
-if ScanFileLoaded
-    [~,~,ext] = filparts(handles.Settings.ScanFilePath);
-    if strcmp(Material,'Auto-detect')
-        if strcmp(ext,'.ang')
-            [GrainFileVals FileName FilePath ] = ReadGrainFile(FilePath,FileName)
-        
-    
+if handles.ScanFileLoaded
+    [handles.Settings.grainID, handles.Settings.Phase] = GetGrainInfo(...
+        Settings.ScanFilePath, Material, Settings.ScanParams, Settings.Angles, Settings.MisoTol);
+end
 guidata(hObject, handles);
 
 
@@ -375,7 +384,8 @@ function ROISettings_Callback(hObject, eventdata, handles)
 % hObject    handle to ROISettings (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+handles.Settings = ROISettingsGUI(handles.Settings);
+guidata(hObject,handles)
 
 % --------------------------------------------------------------------
 function AdvancedSettings_Callback(hObject, eventdata, handles)
@@ -400,6 +410,6 @@ end
 function string = GetPopupString(Popup)
 List = get(Popup,'String');
 Value = get(Popup,'Value');
-string = List(Value);
+string = List{Value};
 
 

@@ -22,7 +22,7 @@ function varargout = ROISettingsGUI(varargin)
 
 % Edit the above text to modify the response to help ROISettingsGUI
 
-% Last Modified by GUIDE v2.5 28-Apr-2015 12:49:46
+% Last Modified by GUIDE v2.5 29-Apr-2015 12:54:05
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -67,6 +67,8 @@ end
 %Set Images to Grayscale
 colormap gray;
 
+%ROI Size
+set(handles.ROISizeEdit,'String',num2str(Settings.ROISizePercent));
 %NumROI Popup
 MaxROINum = 50;
 set(handles.NumROIPopup,'String',num2cell(1:MaxROINum));
@@ -75,30 +77,64 @@ SetPopupValue(handles.NumROIPopup,Settings.NumROIs);
 ROIStyleList = {'Grid','Radial','Intensity'};
 set(handles.ROIStylePopup, 'String', ROIStyleList);
 SetPopupValue(handles.ROIStylePopup,Settings.ROIStyle);
+%ROIFilter
+set(handles.ROIFilter1,'String',num2str(Settings.ROIFilter(1)));
+set(handles.ROIFilter2,'String',num2str(Settings.ROIFilter(2)));
+set(handles.ROIFilter3,'String',num2str(Settings.ROIFilter(3)));
+set(handles.ROIFilter4,'String',num2str(Settings.ROIFilter(4)));
 %Image Filter Type Popup
 ImageFilterTypeList = {'standard','localthresh'};
 set(handles.ImageFilterType, 'String', ImageFilterTypeList);
 SetPopupValue(handles.ImageFilterType,Settings.ImageFilterType);
+%ImageFilter
+set(handles.ImageFilter1,'String',num2str(Settings.ImageFilter(1)));
+set(handles.ImageFilter2,'String',num2str(Settings.ImageFilter(2)));
+set(handles.ImageFilter3,'String',num2str(Settings.ImageFilter(3)));
+set(handles.ImageFilter4,'String',num2str(Settings.ImageFilter(4)));
 
 %Draw Original Image
 axes(handles.OriginalImage);
-imagesc(CropSquare(imread(Settings.FirstImagePath)));
+handles.OrigImage = imread(Settings.FirstImagePath);
+imagesc(CropSquare(handles.OrigImage));
 set(gca,'xcolor',get(gcf,'color'));
 set(gca,'ycolor',get(gcf,'color'));
 set(gca,'ytick',[]);
 set(gca,'xtick',[]);
 axis equal
 
-if strcmp(Settings.Material,'Auto-detect')
-    
+%Draw Filtered Image
+handles.Settings = Settings;
+guidata(hObject, handles);
+UpdateImageDisplay(handles);
+handles = guidata(hObject);
 
+%Draw Simulated Pattern
+Image = ReadEBSDImage(Settings.FirstImagePath, Settings.ImageFilter);
+if isempty(Image)
+    Image = ReadEBSDImage('demo.bmp', Settings.ImageFilter);
+end
+Material = ReadMaterial(Settings.Phase{1});
+paramspat={Settings.ScanParams.xstar;Settings.ScanParams.ystar;Settings.ScanParams.zstar;...
+    size(Image,1);Settings.AccelVoltage*1000;Settings.SampleTilt;Settings.CameraElevation;...
+    Material.Fhkl;Material.dhkl;Material.hkl};
+g=euler2gmat(Settings.Angles(1,1),Settings.Angles(1,2),Settings.Angles(1,3));
+handles.GenImage = genEBSDPatternHybrid(g,paramspat,eye(3),Material.lattice,Material.a1,Material.b1,Material.c1,Material.axs);
+handles.GenImage = custimfilt(handles.GenImage, Settings.ImageFilter(1), Settings.ImageFilter(2),Settings.ImageFilter(3),Settings.ImageFilter(4));
+axes(handles.SimPat);
+imagesc(handles.GenImage)
+drawnow
+set(gca,'xcolor',get(gcf,'color'));
+set(gca,'ycolor',get(gcf,'color'));
+set(gca,'ytick',[]);
+set(gca,'xtick',[]);
+axis equal
 
 % Update handles structure
 handles.Settings = Settings;
 guidata(hObject, handles);
 
 % UIWAIT makes ROISettingsGUI wait for user response (see UIRESUME)
-% uiwait(handles.ROISettingsGUI);
+uiwait(handles.ROISettingsGUI);
 
 
 % --- Outputs from this function are returned to the command line.
@@ -109,8 +145,21 @@ function varargout = ROISettingsGUI_OutputFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Get default command line output from handles structure
-varargout{1} = handles.output;
+varargout{1} = handles.Settings;
+delete(handles.ROISettingsGUI);
 
+% --- Executes when user attempts to close ROISettingsGUI.
+function ROISettingsGUI_CloseRequestFcn(hObject, eventdata, handles)
+% hObject    handle to ROISettingsGUI (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: delete(hObject) closes the figure
+if strcmp(get(hObject,'waitstatus'),'waiting')
+    uiresume(hObject);
+else
+    delete(hObject);
+end
 
 
 function ImageFilter1_Callback(hObject, eventdata, handles)
@@ -120,6 +169,8 @@ function ImageFilter1_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of ImageFilter1 as text
 %        str2double(get(hObject,'String')) returns contents of ImageFilter1 as a double
+handles.Settings.ImageFilter(1) = str2double(get(hObject,'String'));
+guidata(hObject,handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -143,6 +194,8 @@ function ImageFilter2_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of ImageFilter2 as text
 %        str2double(get(hObject,'String')) returns contents of ImageFilter2 as a double
+handles.Settings.ImageFilter(2) = str2double(get(hObject,'String'));
+guidata(hObject,handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -166,6 +219,8 @@ function ImageFilter3_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of ImageFilter3 as text
 %        str2double(get(hObject,'String')) returns contents of ImageFilter3 as a double
+handles.Settings.ImageFilter(3) = str2double(get(hObject,'String'));
+guidata(hObject,handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -189,6 +244,8 @@ function ImageFilter4_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of ImageFilter4 as text
 %        str2double(get(hObject,'String')) returns contents of ImageFilter4 as a double
+handles.Settings.ImageFilter(4) = str2double(get(hObject,'String'));
+guidata(hObject,handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -212,6 +269,9 @@ function ImageFilterType_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns ImageFilterType contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from ImageFilterType
+contents = cellstr(get(hObject,'String'));
+handles.Settings.ImageFilterType = contents{get(hObject,'Value')};
+guidata(hObject,handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -235,6 +295,8 @@ function ROISizeEdit_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of ROISizeEdit as text
 %        str2double(get(hObject,'String')) returns contents of ROISizeEdit as a double
+handles.Settings.ROISizePercent = num2double(get(hObject,'String'));
+guidata(hObject,handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -258,6 +320,9 @@ function NumROIPopup_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns NumROIPopup contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from NumROIPopup
+contents = cellstr(get(hObject,'String'));
+handles.Settings.NumROIs = contents{get(hObject,'Value')};
+guidata(hObject,handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -281,7 +346,9 @@ function ROIStylePopup_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns ROIStylePopup contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from ROIStylePopup
-
+contents = cellstr(get(hObject,'String'));
+handles.Settings.ROIStyle = contents{get(hObject,'Value')};
+guidata(hObject,handles);
 
 % --- Executes during object creation, after setting all properties.
 function ROIStylePopup_CreateFcn(hObject, eventdata, handles)
@@ -304,6 +371,8 @@ function ROIFilter1_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of ROIFilter1 as text
 %        str2double(get(hObject,'String')) returns contents of ROIFilter1 as a double
+handles.Settings.ROIFilter(1) = str2double(get(hObject,'String'));
+guidata(hObject,handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -327,7 +396,8 @@ function ROIFilter2_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of ROIFilter2 as text
 %        str2double(get(hObject,'String')) returns contents of ROIFilter2 as a double
-
+handles.Settings.ROIFilter(2) = str2double(get(hObject,'String'));
+guidata(hObject,handles);
 
 % --- Executes during object creation, after setting all properties.
 function ROIFilter2_CreateFcn(hObject, eventdata, handles)
@@ -350,7 +420,8 @@ function ROIFilter3_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of ROIFilter3 as text
 %        str2double(get(hObject,'String')) returns contents of ROIFilter3 as a double
-
+handles.Settings.ROIFilter(3) = str2double(get(hObject,'String'));
+guidata(hObject,handles);
 
 % --- Executes during object creation, after setting all properties.
 function ROIFilter3_CreateFcn(hObject, eventdata, handles)
@@ -365,7 +436,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-
 function ROIFilter4_Callback(hObject, eventdata, handles)
 % hObject    handle to ROIFilter4 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -373,7 +443,8 @@ function ROIFilter4_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of ROIFilter4 as text
 %        str2double(get(hObject,'String')) returns contents of ROIFilter4 as a double
-
+handles.Settings.ROIFilter(4) = str2double(get(hObject,'String'));
+guidata(hObject,handles);
 
 % --- Executes during object creation, after setting all properties.
 function ROIFilter4_CreateFcn(hObject, eventdata, handles)
@@ -387,14 +458,35 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-function UpdateImageDisplay(handles,ImageFilt)
+
+% --- Executes on button press in SaveCloseButton.
+function SaveCloseButton_Callback(hObject, eventdata, handles)
+% hObject    handle to SaveCloseButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in RefreshButton.
+function RefreshButton_Callback(hObject, eventdata, handles)
+% hObject    handle to RefreshButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+UpdateImageDisplay(handles);
+
+% --- Executes on button press in UpdateROIButton.
+function UpdateROIButton_Callback(hObject, eventdata, handles)
+% hObject    handle to UpdateROIButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+UpdateROIDisplay(handles);
+
+
+function UpdateImageDisplay(handles)
 % Apply updated filter to displayed image
 Settings=handles.Settings;
-ImageFilterTypeList=get(handles.ImageFilterType,'String');
-Ind=get(handles.ImageFilterType,'Value');
 
-if strcmp(ImageFilterTypeList(Ind),'standard')
-    Image=ReadEBSDImage(Settings.FirstImagePath,ImageFilt);
+if strcmp(Settings.ImageFilterType,'standard')
+    Image=ReadEBSDImage(Settings.FirstImagePath,Settings.ImageFilter);
 else
     Image=localthresh(Settings.FirstImagePath);
 end
@@ -407,6 +499,82 @@ set(gca,'ytick',[]);
 set(gca,'xtick',[]);
 axis equal
 
+handles.FiltImage = Image;
+guidata(handles.ROISettingsGUI,handles);
+
+function UpdateROIDisplay(handles)
+Settings = handles.Settings;
+UpdateImageDisplay(handles);
+handles = guidata(handles.ROISettingsGUI);
+FiltImage = handles.FiltImage;
+
+pixsize = size(FiltImage,1);
+ROInum = Settings.NumROIs;
+ROISize = Settings.ROISizePercent/100*pixsize;
+ROIStyle = Settings.ROIStyle;
+GenImage=handles.GenImage;
+
+if ~strcmp(ROIStyle,'Intensity')
+    [roixc,roiyc]= GetROIs(FiltImage,ROInum,pixsize,ROISize,ROIStyle);
+else % use intensity method
+    [roixc,roiyc]= GetROIs(GenImage,ROInum,pixsize,ROISize,ROIStyle);
+end
+
+
+for ii = 1:length(roixc)
+    hold on  
+    DrawROI(roixc(ii),roiyc(ii),ROISize);
+%     rectangle('Curvature',[0 0],'Position',...
+%         [roixc(ii)-roisize/2 roiyc(ii)-roisize/2 roisize roisize],...
+%         'EdgeColor','g');   
+end
+axes(handles.SimPat)
+cla
+imagesc(GenImage);
+set(gca,'xcolor',get(gcf,'color'));
+set(gca,'ycolor',get(gcf,'color'));
+set(gca,'ytick',[]);
+set(gca,'xtick',[]);
+axis equal
+
+if strcmp(ROIStyle,'Intensity')
+    for jj = 1:length(roixc)
+        hold on
+        DrawROI(roixc(jj),roiyc(jj),ROISize);
+    %     rectangle('Curvature',[0 0],'Position',...
+    %         [roixc(jj)-roisize/2 roiyc(jj)-roisize/2 roisize roisize],...
+    %         'EdgeColor','g');
+    end
+end
+
+function DrawROI(roixc,roiyc,ROISize)
+%Draw a box around the passed in region of interest in the current figure
+hold on
+% plot(roiyc,roixc, '*g');
+
+TL = [roiyc - ROISize/2 roixc - ROISize/2 ];
+BR = [roiyc + ROISize/2 roixc + ROISize/2];
+
+TopLineC = TL(2):BR(2);
+TopLineR(1:length(TopLineC)) = TL(1);
+hold on
+plot(TopLineC, TopLineR, '-g');
+
+RightLineR = TL(1):BR(1);
+RightLineC(1:length(RightLineR)) = BR(2);
+hold on
+plot(RightLineC, RightLineR, '-g');
+
+BottomLineC = TL(2):BR(2);
+BottomLineR(1:length(BottomLineC)) = BR(1);
+hold on
+plot(BottomLineC, BottomLineR, '-g');
+
+LeftLineR = TL(1):BR(1);
+LeftLineC(1:length(LeftLineR)) = TL(2);
+hold on
+plot(LeftLineC, LeftLineR, '-g');
+
 function SetPopupValue(Popup,String)
 String = num2str(String);    
 List = get(Popup,'String');
@@ -414,8 +582,16 @@ IndList = 1:length(List);
 Value = IndList(strcmp(List,String));
 set(Popup, 'Value', Value);
     
+function string = GetPopupString(Popup)
+List = get(Popup,'String');
+Value = get(Popup,'Value');
+string = List{Value};    
     
     
     
     
-    
+
+
+
+
+
