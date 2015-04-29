@@ -157,3 +157,15 @@ switch ROImethod
             roiyc(i+1+row1num)=roiyc(1)+dy;
         end
 end
+
+
+% figure; imagesc(I1); colormap gray
+% for ii = 1:length(roixc)
+%    
+% %     DrawROI(roixc(ii),roiyc(ii),roisize)
+%     hold on
+%     rectangle('Curvature',[0 0],'Position',...
+%         [roixc(ii)-roisize/2 roiyc(ii)-roisize/2 roisize roisize],...
+%         'EdgeColor','g');
+% end
+% axis equal
