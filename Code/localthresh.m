@@ -52,6 +52,9 @@ BW((G>locave+.5*locSD))=(BW((G>locave+.5*locSD))).^1.5;
 % [BW grainsize perimsize Mx My]=cutgrains(BW,cutsize); % cutgrains.m uses circshift, cutgrains2.m uses ffts - cutgrains is faster
 % figure
 % imshow(BW/max(max(BW)))
+
+BW = CropSquare(BW); %Added by Brian Jackson 4/29/2015
+
 return
 figure
 hist(grainsize,50);
