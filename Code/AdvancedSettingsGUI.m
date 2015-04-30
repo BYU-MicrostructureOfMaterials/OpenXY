@@ -68,7 +68,6 @@ end
 HROIMMethodList = {'Simulated','Real-Grain Ref','Real-Single Ref'};
 set(handles.HROIMMethod, 'String', HROIMMethodList);
 SetPopupValue(handles.HROIMMethod,Settings.HROIMMethod);
-set(handles.HROIMMethod,'Value',1);
 %Ref Image Index
 set(handles.HROIMedit,'String',num2str(Settings.RefImageInd));
 %Standard Deviation
@@ -412,10 +411,15 @@ function SelectKAM_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 w = pwd;
-path = fileparts(Settings.ScanFilePath);
+if exist(handles.Settings.ScanFilePath,'file')
+    path = fileparts(handles.Settings.ScanFilePath);
+else
+    path = pwd;
+end
 cd(path);
 [name, path] = uigetfile('*.txt','OIM Map Data');
 set(handles.KAMname,'String',name);
+set(handles.KAMname,'TooltipString',name);
 set(handles.KAMpath,'String',path);
 set(handles.KAMpath,'TooltipString',path);
 handles.Settings.KernelAvgMisoPath = fullfile(path,name);
