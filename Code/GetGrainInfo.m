@@ -21,9 +21,10 @@ function [ grainID, Phase ] = GetGrainInfo( ScanFilePath, Material, ScanParams, 
 if strcmp(ext,'.ang')
     GrainFilePath = fullfile(path,[name '.txt']);
     if ~exist(GrainFilePath,'file')
-        button = questdlg(['No matching grain file was found. Would you like to manually select a grain file?'],'Grain file not found');
+        button = questdlg('No matching grain file was found. Would you like to manually select a grain file?','Grain file not found');
         if strcmp(button,'Yes')
             [name, path] = uigetfile({'*.txt', 'Grain Files (*.txt)'},'Select a Grain File');
+            GrainFilePath = fullfile(path,name);
         else
             error('No grain matching ground file was found');
         end
