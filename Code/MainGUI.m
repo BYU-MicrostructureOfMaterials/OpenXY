@@ -56,11 +56,8 @@ function MainGUI_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.output = hObject;
 
 %Load in Settings
-try
-    handles.Settings = GetHROIMPreviousSettings();
-catch
-    handles.Settings = GetHROIMDefaultSettings();
-end
+handles.Settings = GetHROIMDefaultSettings();
+
 
 %Visuals
 axes(handles.background);
@@ -384,7 +381,11 @@ function ROISettings_Callback(hObject, eventdata, handles)
 % hObject    handle to ROISettings (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.Settings = ROISettingsGUI(handles.Settings);
+if handles.ScanFileLoaded && handles.ImageLoaded
+    handles.Settings = ROISettingsGUI(handles.Settings);
+else
+    warndlg({'Cannot open ROI Settings menu'; 'Must select scan file data and first image'},'OpenXY: Invalid Operation');
+end
 guidata(hObject,handles)
 
 % --------------------------------------------------------------------
