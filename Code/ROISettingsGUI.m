@@ -22,7 +22,7 @@ function varargout = ROISettingsGUI(varargin)
 
 % Edit the above text to modify the response to help ROISettingsGUI
 
-% Last Modified by GUIDE v2.5 29-Apr-2015 12:54:05
+% Last Modified by GUIDE v2.5 30-Apr-2015 07:11:31
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -63,6 +63,7 @@ if isempty(varargin)
 else
     Settings = varargin{1};
 end
+handles.PrevSettings = Settings;
 
 %Set Images to Grayscale
 colormap gray;
@@ -160,6 +161,22 @@ if strcmp(get(hObject,'waitstatus'),'waiting')
 else
     delete(hObject);
 end
+
+% --- Executes on button press in SaveCloseButton.
+function SaveCloseButton_Callback(hObject, eventdata, handles)
+% hObject    handle to SaveCloseButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ROISettingsGUI_CloseRequestFcn(handles.ROISettingsGUI, eventdata, handles);
+
+% --- Executes on button press in CancelButton.
+function CancelButton_Callback(hObject, eventdata, handles)
+% hObject    handle to CancelButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.Settings = handles.PrevSettings;
+guidata(hObject,handles);
+ROISettingsGUI_CloseRequestFcn(handles.ROISettingsGUI, eventdata, handles);
 
 
 function ImageFilter1_Callback(hObject, eventdata, handles)
@@ -295,7 +312,7 @@ function ROISizeEdit_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of ROISizeEdit as text
 %        str2double(get(hObject,'String')) returns contents of ROISizeEdit as a double
-handles.Settings.ROISizePercent = num2double(get(hObject,'String'));
+handles.Settings.ROISizePercent = str2double(get(hObject,'String'));
 guidata(hObject,handles);
 
 
@@ -458,14 +475,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-
-% --- Executes on button press in SaveCloseButton.
-function SaveCloseButton_Callback(hObject, eventdata, handles)
-% hObject    handle to SaveCloseButton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
 % --- Executes on button press in RefreshButton.
 function RefreshButton_Callback(hObject, eventdata, handles)
 % hObject    handle to RefreshButton (see GCBO)
@@ -586,12 +595,3 @@ function string = GetPopupString(Popup)
 List = get(Popup,'String');
 Value = get(Popup,'Value');
 string = List{Value};    
-    
-    
-    
-    
-
-
-
-
-

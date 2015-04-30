@@ -22,7 +22,7 @@ function varargout = AdvancedSettingsGUI(varargin)
 
 % Edit the above text to modify the response to help AdvancedSettingsGUI
 
-% Last Modified by GUIDE v2.5 29-Apr-2015 16:30:46
+% Last Modified by GUIDE v2.5 30-Apr-2015 06:56:10
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -63,13 +63,20 @@ if isempty(varargin)
 else
     Settings = varargin{1};
 end
+handles.PrevSettings = Settings;
 
 %HROIM Method
 HROIMMethodList = {'Simulated','Real-Grain Ref','Real-Single Ref'};
 set(handles.HROIMMethod, 'String', HROIMMethodList);
-SetPopupValue(handles.HROIMMethod,Settings.HROIMMethod);
-%Ref Image Index
-set(handles.HROIMedit,'String',num2str(Settings.RefImageInd));
+if strcmp(Settings.HROIMMethod,'Simulated')
+    SetPopupValue(handles.HROIMMethod,'Simulated');
+else
+    if Settings.RefImageInd == 0
+        SetPopupValue(handles.HROIMMethod,'Real-Grain Ref');
+    else
+        SetPopupValue(handles.HROIMMethod,'Real-Single Ref');
+    end
+end
 %Standard Deviation
 set(handles.StandardDeviation,'String',num2str(Settings.StandardDeviation));
 %Misorientation Tolerance
@@ -89,6 +96,9 @@ DDSList = {'Nye-Kroner', 'Nye-Kroner (Pantleon)','Distortion Matching'};
 set(handles.SplitDDMethod,'String',DDSList);
 SetPopupValue(handles.SplitDDMethod,Settings.DDSMethod);
 %Kernel Avg Miso
+if iscell(Settings.KernelAvgMisoPath)
+    Settings.KernelAvgMisoPath = Settings.KernelAvgMisoPath{1};
+end
 if exist(Settings.KernelAvgMisoPath,'file')
     [path,name,ext] = fileparts(Settings.KernelAvgMisoPath);
     set(handles.KAMname,'String',[name ext]);
@@ -134,6 +144,22 @@ else
     delete(hObject);
 end
 
+% --- Executes on button press in SaveButton.
+function SaveButton_Callback(hObject, eventdata, handles)
+% hObject    handle to SaveButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+AdvancedSettingsGUI_CloseRequestFcn(handles.AdvancedSettingsGUI, eventdata, handles);
+
+% --- Executes on button press in CancelButton.
+function CancelButton_Callback(hObject, eventdata, handles)
+% hObject    handle to CancelButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.Settings = handles.PrevSettings;
+guidata(hObject,handles);
+AdvancedSettingsGUI_CloseRequestFcn(handles.AdvancedSettingsGUI, eventdata, handles);
+
 
 % --- Executes on selection change in HROIMMethod.
 function HROIMMethod_Callback(hObject, eventdata, handles)
@@ -151,18 +177,25 @@ switch HROIMMethod
         set(handles.HROIMedit,'String',num2str(handles.Settings.IterationLimit));
         set(handles.GrainRefType,'Enable','off');
         set(handles.SelectKAM,'Enable','off');
+        handles.Settings.HROIMMethod = HROIMMethod;
     case 'Real-Grain Ref'
         set(handles.HROIMlabel,'String','Ref Image Index');
         set(handles.HROIMedit,'String',num2str(handles.Settings.RefImageInd));
+        set(handles.HROIMedit,'Enable','off');
         set(handles.GrainRefType,'Enable','on');
-        GrainRefType_Callback(handles.GrainRefType, eventdata, handles)
+        GrainRefType_Callback(handles.GrainRefType, eventdata, handles);
+        handles.Settings.RefImageInd = 0;
+        handles.Settings.HROIMMethod = 'Real';
     case 'Real-Single Ref'
         set(handles.HROIMlabel,'String','Ref Image Index');
         set(handles.HROIMedit,'String',num2str(handles.Settings.RefImageInd));
+        set(handles.HROIMedit,'Enable','on');
         set(handles.GrainRefType,'Enable','on');
-        GrainRefType_Callback(handles.GrainRefType, eventdata, handles)
+        GrainRefType_Callback(handles.GrainRefType, eventdata, handles);
+        HROIMedit_Callback(handles.HROIMedit, eventdata, handles);
+        handles.Settings.HROIMMethod = 'Real';
 end
-handles.Settings.HROIMMethod = HROIMMethod;
+
 guidata(hObject,handles);
 
 
@@ -425,7 +458,6 @@ set(handles.KAMpath,'TooltipString',path);
 handles.Settings.KernelAvgMisoPath = fullfile(path,name);
 guidata(hObject,handles);
 cd(w);
-
 
 
 function SetPopupValue(Popup,String)

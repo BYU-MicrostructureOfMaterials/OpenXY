@@ -22,7 +22,7 @@ function varargout = MainGUI(varargin)
 
 % Edit the above text to modify the response to help MainGUI
 
-% Last Modified by GUIDE v2.5 28-Apr-2015 12:26:55
+% Last Modified by GUIDE v2.5 30-Apr-2015 09:41:53
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -58,13 +58,15 @@ handles.output = hObject;
 %Load in Settings
 handles.Settings = GetHROIMDefaultSettings();
 
+%Loads saved Settings data into GUI
+if ~isempty(varargin)
+    handles.Settings = MergeSettings(handles.Settings,varargin{1});
+end
 
 %Visuals
 axes(handles.background);
 pic = imread('OpenXYLogo.png');
-% pic = imread('DSCN0416.JPG');
 imagesc(pic)
-%alpha(0.5)
 set(gca,'xcolor',get(gcf,'color'));
 set(gca,'ycolor',get(gcf,'color'));
 set(gca,'ytick',[]);
@@ -72,19 +74,42 @@ set(gca,'xtick',[]);
 BGColor = 0.94*[1 1 1];
 TextColor = 'black';
 
-%Load Popup Menus
-ScanTypeList = {'Auto-detect','Square','Hexagonal'};
-set(handles.ScanTypePopup,'String',ScanTypeList);
-MaterialList = GetMaterialsList;
-set(handles.MaterialPopup,'String',MaterialList);
-NumberOfCores = feature('numCores');
-set(handles.ProcessorsPopup, 'String', 1:NumberOfCores);
-set(handles.ProcessorsPopup,'Value',NumberOfCores-1);
-
+%Set Default handles values
 handles.FileDir = pwd;
 handles.ScanFileLoaded = false;
 handles.ImageLoaded = false;
 handles.OutputLoaded = false;
+
+%ScanType
+ScanTypeList = {'Auto-detect','Square','Hexagonal'};
+set(handles.ScanTypePopup,'String',ScanTypeList);
+SetPopupValue(handles.ScanTypePopup,handles.Settings.ScanType);
+%Material
+MaterialList = GetMaterialsList;
+set(handles.MaterialPopup,'String',MaterialList);
+SetPopupValue(handles.MaterialPopup,handles.Settings.Material);
+%Processors
+NumberOfCores = feature('numCores');
+set(handles.ProcessorsPopup, 'String', 1:NumberOfCores);
+set(handles.ProcessorsPopup,'Value',NumberOfCores-1);
+if handles.Settings.DoParallel <= feature('numCores');
+    set(handles.ProcessorsPopup,'Value',handles.Settings.DoParallel);
+end
+%PC Calibration
+set(handles.PCCalibrationBox,'Value',handles.Settings.DoPCStrainMin);
+%Display Shifts
+set(handles.DisplayShiftsBox,'Value',handles.Settings.DoShowPlot);
+%Files
+[path,name,ext] = fileparts(handles.Settings.ScanFilePath);
+SetScanFields(handles,[name ext],path);
+handles = guidata(hObject);
+[path,name,ext] = fileparts(handles.Settings.FirstImagePath);
+SetImageFields(handles,[name ext],path);
+handles = guidata(hObject);
+[path,name,ext] = fileparts(handles.Settings.OutputPath);
+SetOutputFields(handles,[name ext],path);
+handles = guidata(hObject);
+
 enableRunButton(handles);
 
 % Update handles structure
@@ -104,6 +129,18 @@ function varargout = MainGUI_OutputFcn(hObject, eventdata, handles)
 % Get default command line output from handles structure
 varargout{1} = handles.output;
 
+% --- Executes when user attempts to close MainGUI.
+function MainGUI_CloseRequestFcn(hObject, eventdata, handles)
+% hObject    handle to MainGUI (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: delete(hObject) closes the figure
+Settings = handles.Settings;
+save('Settings.mat','Settings');
+delete(hObject);
+
+
 % --- Executes on button press in SelectScanButton.
 function SelectScanButton_Callback(hObject, eventdata, handles)
 % hObject    handle to SelectScanButton (see GCBO)
@@ -115,12 +152,16 @@ if ~strcmp(handles.FileDir,pwd)
 end
 [name, path] = uigetfile({'*.ang;*.ctf','Scan Files (*.ang,*.ctf)'},'Select a Scan File');
 cd(wd);
+SetScanFields(handles,name,path);
+
+function SetScanFields(handles,name,path)
 if name ~= 0
     handles.FileDir = path;
     prevName = get(handles.ScanNameText,'String');
     prevFolder = get(handles.ScanFolderText,'String');
     if ~strcmp(prevName,name) || ~strcmp(prevFolder,path)
         set(handles.ScanNameText,'String',name);
+        set(handles.ScanNameText,'TooltipString',name);
         set(handles.ScanFolderText,'String',path);
         set(handles.ScanFolderText,'TooltipString',path);
         [ScanFileData,handles.Settings.ScanParams] = ReadScanFile(fullfile(path,name));
@@ -140,10 +181,15 @@ if name ~= 0
         handles.Settings.YData = ScanFileData{5};
         handles.Settings.ScanFilePath = fullfile(path,name);
         handles.ScanFileLoaded = true;
-    end         
+    end 
+elseif ~handles.ScanFileLoaded
+    set(handles.ScanNameText,'String','Select a Scan');
+    set(handles.ScanFolderText,'String','Select a Scan');
+    set(handles.ScanFolderText,'TooltipString','');
+    set(handles.ScanSizeText,'String','Select a Scan');
 end
-guidata(hObject, handles);
-MaterialPopup_Callback(handles.MaterialPopup, eventdata, handles);
+guidata(handles.SelectScanButton, handles);
+MaterialPopup_Callback(handles.MaterialPopup, [], handles);
 enableRunButton(handles);
 
     
@@ -157,9 +203,15 @@ function SelectImageButton_Callback(hObject, eventdata, handles)
 wd = pwd;
 if ~strcmp(handles.FileDir,pwd)
     cd(handles.FileDir);
+elseif handles.ScanFileLoaded
+    cd(fileparts(handles.Settings.ScanFilePath));
 end
+    
 [name, path] = uigetfile({'*.jpg;*.jpeg;*.tif;*.tiff;*.bmp;*.png','Image Files (*.jpg,*.tif,*.bmp,*.png)'},'Select the First Image of the Scan');
 cd(wd);
+SetImageFields(handles,name,path);
+
+function SetImageFields(handles,name,path)
 if name ~= 0
     if strcmp(handles.FileDir,pwd)
         handles.FileDir = path;
@@ -168,18 +220,23 @@ if name ~= 0
     prevFolder = get(handles.ImageFolderText,'String');
     if ~strcmp(prevName,name) || ~strcmp(prevFolder,path)
         set(handles.FirstImageNameText,'String',name);
+        set(handles.FirstImageNameText,'TooltipString',name);
         set(handles.ImageFolderText,'String',path);
         set(handles.ImageFolderText,'TooltipString',path);
         [x,y] = size(imread(fullfile(path,name)));
         improp = dir(fullfile(path,name));
         SizeStr = [num2str(x) 'x' num2str(y) ' (' num2str(round(improp.bytes/1024)) ' KB)'];
         set(handles.ImageSizeText,'String',SizeStr);
-        handles.Settings.FirstImagePath = fullfile(path,file);
+        handles.Settings.FirstImagePath = fullfile(path,name);
         handles.ImageLoaded = true;
     end
+elseif ~handles.ImageLoaded
+    set(handles.FirstImageNameText,'String','Select an Image');
+    set(handles.ImageFolderText,'String','Select an Image');
+    set(handles.ImageSizeText,'String','Select an Image');
 end
 enableRunButton(handles);
-guidata(hObject, handles);
+guidata(handles.SelectImageButton, handles);
 
 
 % --- Executes on button press in SelectOutputButton.
@@ -193,6 +250,9 @@ if ~strcmp(handles.FileDir,pwd)
 end
 [name, path] = uiputfile({'*.ang;*.ctf','Scan Files (*.ang,*.ctf)'},'Select a Scan File');
 cd(wd);
+SetOutputFields(handles,name,path);
+
+function SetOutputFields(handles,name,path)
 if name ~= 0
     handles.FileDir = path;
     prevName = get(handles.FirstImageNameText,'String');
@@ -214,15 +274,21 @@ if name ~= 0
         end
         
         set(handles.OutputResultsText,'String',ResultsName);
+        set(handles.OutputResultsText,'TooltipString',ResultsName);
         set(handles.OutputScanText,'String',ScanName);
+        set(handles.OutputScanText,'TooltipString',ScanName);
         set(handles.OutputFolderText,'String',path);
         set(handles.OutputFolderText,'TooltipString',path);
         handles.Settings.OutputPath = fullfile(path,name);
         handles.OutputLoaded = true;
     end     
+elseif ~handles.OutputLoaded
+    set(handles.OutputResultsText,'String','Select an Output File');
+    set(handles.OutputScanText,'String','Select an Output File');
+    set(handles.OutputFolderText,'String','Select an Output File');
 end
 enableRunButton(handles);
-guidata(hObject, handles);
+guidata(handles.SelectOutputButton, handles);
 
 
 % --- Executes on button press in RunButton.
@@ -319,7 +385,7 @@ function ProcessorsPopup_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns ProcessorsPopup contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from ProcessorsPopup
-handles.Settings.DoParallel = str2double(GetPopupString(hObject));
+handles.Settings.DoParallel = get(hObject,'Value');
 guidata(hObject, handles);
 
 
@@ -341,11 +407,33 @@ function FileMenu_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+
+% --------------------------------------------------------------------
+function LoadPrevAnalysis_Callback(hObject, eventdata, handles)
+% hObject    handle to LoadPrevAnalysis (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+temp = load('Settings.mat');
+PrevSettings = temp.Settings;
+clear temp
+MainGUI(PrevSettings);
+
 % --------------------------------------------------------------------
 function LoadAnalysis_Callback(hObject, eventdata, handles)
 % hObject    handle to LoadAnalysis (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+[name,path] = uigetfile('*.mat','OpenXY Settings or Results File');
+if name ~= 0
+    temp = load([path name]);
+    if isfield(temp,'Settings')
+        NewSettings = temp.Settings;
+        MainGUI(NewSettings);
+    else
+        warndlg('No Settings structure found in file');
+    end
+    clear temp;
+end
 
 
 % --------------------------------------------------------------------
@@ -353,6 +441,10 @@ function SaveAnalysis_Callback(hObject, eventdata, handles)
 % hObject    handle to SaveAnalysis (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+Settings = handles.Settings;
+[name, path] = uiputfile('*.mat','Save Analysis Settings');
+save(fullfile(path,name),'Settings');
+disp('Analysis Saved');
 
 
 % --------------------------------------------------------------------
@@ -360,13 +452,14 @@ function RestoreDefaultSettings_Callback(hObject, eventdata, handles)
 % hObject    handle to RestoreDefaultSettings (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+MainGUI;
 
 % --------------------------------------------------------------------
 function Close_Callback(hObject, eventdata, handles)
 % hObject    handle to Close (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+MainGUI_CloseRequestFcn(handles.MainGUI, eventdata, handles)
 
 
 % --------------------------------------------------------------------
@@ -386,7 +479,7 @@ if handles.ScanFileLoaded && handles.ImageLoaded
 else
     warndlg({'Cannot open ROI Settings menu'; 'Must select scan file data and first image'},'OpenXY: Invalid Operation');
 end
-guidata(hObject,handles)
+guidata(hObject,handles);
 
 % --------------------------------------------------------------------
 function AdvancedSettings_Callback(hObject, eventdata, handles)
@@ -402,6 +495,8 @@ function MicroscopeSettings_Callback(hObject, eventdata, handles)
 % hObject    handle to MicroscopeSettings (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+handles.Settings = MicroscopeSettingsGUI(handles.Settings);
+guidata(hObject,handles);
 
 function enableRunButton(handles)
 if handles.ScanFileLoaded && handles.ImageLoaded && handles.OutputLoaded
@@ -415,4 +510,11 @@ List = get(Popup,'String');
 Value = get(Popup,'Value');
 string = List{Value};
 
+function SetPopupValue(Popup,String)
+String = num2str(String);    
+List = get(Popup,'String');
+IndList = 1:length(List);
+Value = IndList(strcmp(List,String));
+if isempty(Value); Value =1; end;
+set(Popup, 'Value', Value);
 
