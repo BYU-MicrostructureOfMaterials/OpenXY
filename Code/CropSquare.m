@@ -5,7 +5,9 @@ function [ CroppedImage ] = CropSquare( Image )
 [MinSize, MinLoc] = min([size(Image,1) size(Image,2)]);
 [MaxSize, MaxLoc] = max([size(Image,1) size(Image,2)]);
 MidStart = (MaxSize - MinSize)/2;   %Is this ever a fraction?????******
-newpic = Image(1:MinSize,MidStart:MinSize+MidStart-1); % assumes it's always 2nd dimension that is bigger *****
-CroppedImage = newpic;
+if MidStart ~= 0
+    Image = Image(1:MinSize,MidStart:MinSize+MidStart-1); % assumes it's always 2nd dimension that is bigger *****
+end
+CroppedImage = Image;
 end
 
