@@ -108,6 +108,14 @@ else
     set(handles.KAMpath,'String','No File Selected');
 end
 
+%Set Position
+if length(varargin) > 1
+    MainSize = varargin{2};
+    set(hObject,'Units','pixels');
+    GUIsize = get(hObject,'Position');
+    set(hObject,'Position',[MainSize(1)-GUIsize(3)-20 MainSize(2) GUIsize(3) GUIsize(4)]);
+end
+
 % Update handles structure
 handles.Settings = Settings;
 guidata(hObject, handles);

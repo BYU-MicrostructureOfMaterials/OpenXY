@@ -75,7 +75,15 @@ set(handles.SampleAzimuthal,'String',num2str(Settings.SampleAzimuthal*180/pi)); 
 set(handles.CameraElevation,'String',num2str(Settings.CameraElevation*180/pi)); %degrees
 %Camera Azimuthal
 set(handles.CameraAzimuthal,'String',num2str(Settings.CameraAzimuthal*180/pi)); %degrees
- 
+
+%Set Position
+if length(varargin) > 1
+    MainSize = varargin{2};
+    set(hObject,'Units','pixels');
+    GUIsize = get(hObject,'Position');
+    set(hObject,'Position',[MainSize(1)+MainSize(3)+20 MainSize(2)+MainSize(4)-GUIsize(4) GUIsize(3) GUIsize(4)]);
+end
+
 % Update handles structure
 handles.Settings = Settings;
 guidata(hObject, handles);

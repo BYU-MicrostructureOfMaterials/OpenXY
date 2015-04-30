@@ -65,6 +65,14 @@ else
 end
 handles.PrevSettings = Settings;
 
+%Set Position
+if length(varargin) > 1
+    MainSize = varargin{2};
+    set(hObject,'Units','pixels');
+    GUIsize = get(hObject,'Position');
+    set(hObject,'Position',[MainSize(1) MainSize(2)+MainSize(4)+70 GUIsize(3) GUIsize(4)]);
+end
+
 %Set Images to Grayscale
 colormap gray;
 

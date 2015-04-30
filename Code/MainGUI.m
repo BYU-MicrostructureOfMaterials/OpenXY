@@ -112,6 +112,12 @@ handles = guidata(hObject);
 
 enableRunButton(handles);
 
+%Set GUI Position
+ScreenSize = get(groot,'ScreenSize');
+set(hObject,'Units','pixels');
+GUIsize = get(hObject,'Position');
+set(handles.MainGUI,'Position',[(ScreenSize(3)-GUIsize(3))/2 (ScreenSize(4)-(500+GUIsize(4))) GUIsize(3) GUIsize(4)]);
+
 % Update handles structure
 guidata(hObject, handles);
 
@@ -475,7 +481,7 @@ function ROISettings_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 if handles.ScanFileLoaded && handles.ImageLoaded
-    handles.Settings = ROISettingsGUI(handles.Settings);
+    handles.Settings = ROISettingsGUI(handles.Settings,get(handles.MainGUI,'Position'));
 else
     warndlg({'Cannot open ROI Settings menu'; 'Must select scan file data and first image'},'OpenXY: Invalid Operation');
 end
@@ -486,7 +492,7 @@ function AdvancedSettings_Callback(hObject, eventdata, handles)
 % hObject    handle to AdvancedSettings (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.Settings = AdvancedSettingsGUI(handles.Settings);
+handles.Settings = AdvancedSettingsGUI(handles.Settings,get(handles.MainGUI,'Position'));
 guidata(hObject,handles);
 
 
@@ -495,7 +501,7 @@ function MicroscopeSettings_Callback(hObject, eventdata, handles)
 % hObject    handle to MicroscopeSettings (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.Settings = MicroscopeSettingsGUI(handles.Settings);
+handles.Settings = MicroscopeSettingsGUI(handles.Settings,get(handles.MainGUI,'Position'));
 guidata(hObject,handles);
 
 function enableRunButton(handles)
