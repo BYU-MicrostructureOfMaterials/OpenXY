@@ -120,25 +120,7 @@ else
     end
     Yval = str2num(PositionPart(Yinds+1:i));
     endStr = PositionPart(i+1:end);
-
-    %Find the next image file
-    for i = 1:NumColumns
-        testname = fullfile(path,[preStr num2str(Xval+i) midStr num2str(Yval) endStr ext]);
-        if exist(testname,'file')
-            X2val = Xval + i;
-            NameXStep = X2val - Xval;
-            break;
-        end
-    end
-    for i = 1:NumRows
-        testname = fullfile(path,[preStr num2str(Xval) midStr num2str(Yval+i) endStr ext]);
-        if exist(testname,'file')
-            Y2val = Yval + i;
-            NameYStep = Y2val - Yval;
-            break;
-        end
-    end
-
+    
     %Determine multiplication factor between position in .ang file and position in image name
     TimesFactor = 0;
     IsIncremental = false;
@@ -159,15 +141,35 @@ else
     XStepData = XStepData * TimesFactor;
     YStepData = YStepData * TimesFactor;
 
+%     %Find the next image file
+%     for i = 1:NumColumns
+%         testname = fullfile(path,[preStr num2str((Xval+i)*TimesFactor) midStr num2str(Yval*TimesFactor) endStr ext]);
+%         if exist(testname,'file')
+%             X2val = Xval + i;
+%             NameXStep = X2val - Xval;
+%             break;
+%         end
+%     end
+%     for i = 1:NumRows
+%         testname = fullfile(path,[preStr num2str(Xval*TimesFactor) midStr num2str((Yval+i)*TimesFactor) endStr ext]);
+%         if exist(testname,'file')
+%             Y2val = Yval + i;
+%             NameYStep = Y2val - Yval;
+%             break;
+%         end
+%     end
+
     %Validate Start Image/Location
     if IsIncremental
         NameX = floor(X0 / XStepData);
         NameY = floor(Y0 / YStepData);
-    elseif IsLineScan
-        NameX = Xval;
+        NameXStep = 1;
+        NameYStep = 1;
     else
         NameX = X0;
         NameY = Y0;
+        NameXStep = XStepData;
+        NameYStep = YStepData;
     end
     if NameX ~= Xval || NameY ~= Yval
         if rcNaming

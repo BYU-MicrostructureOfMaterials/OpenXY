@@ -60,12 +60,11 @@ fclose(ctf);
 cpr = fopen(fullfile(path,[file '.cpr']));
 while ~feof(cpr)
    tline = fgetl(cpr);
-   ScanParamsData('VHRatio','VHRatio');
-   ScanParamsData('PCX','PCX');
-   ScanParamsData('PCY','PCY');
-   ScanParamsData('DD','DD');
-   ScanParamsData('PCX','PCX');
-   ScanParamsData('StructureName','material');
+   ScanParamsData('VHRatio=','VHRatio');
+   ScanParamsData('PCX=','PCX');
+   ScanParamsData('PCY=','PCY');
+   ScanParamsData('DD=','DD');
+   ScanParamsData('StructureName=','material');
 end
 fclose(cpr);
 

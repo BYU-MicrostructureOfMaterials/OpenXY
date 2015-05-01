@@ -57,11 +57,11 @@ elseif strcmp(ext,'.ctf')
     end
     
     %Set up params for findgrains.m
-    angles = reshape(Angles,Nx,Ny,3);
+    angles = reshape(Angles,ScanParams.NumColsOdd,ScanParams.NumRows,3);
     clean = true;
     small = true;
     mistol = MaxMisorientation*pi/180;
-    [Settings.grainID] = findgrains(angles, MaterialData.lattice, clean, small,mistol);
+    [grainID] = findgrains(angles, MaterialData.lattice, clean, small,mistol);
 end
 
 end
