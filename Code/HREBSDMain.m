@@ -5,19 +5,20 @@
 
 function Settings = HREBSDMain(Settings)
 % tic
-% profile n
+profile on
 disp('Dont forget to change PC if the image is cropped by ReadEBSDImage.m')
-Settings.DoUsePCFile;
-Settings.DoPCStrainMin;
 %% Read in the first image and get the pixel size.
 %The assumption is made that all following images in the scan
 %are the same size and square.
 fftw('planner','exhaustive');
-% keyboard
+
 FirstPic = ReadEBSDImage(Settings.FirstImagePath,Settings.ImageFilter);
 Settings.largefftmeth = fftw('wisdom');
 Settings.PixelSize = size(FirstPic,1);
 Settings.ROISize = round((Settings.ROISizePercent * .01)*Settings.PixelSize);
+
+%% Add Sub-folder(s)
+addpath('DDS');
 
 %% Check Scan Type
 %Options: 'L', Square, Hexagonal
@@ -25,17 +26,22 @@ Settings.ROISize = round((Settings.ROISizePercent * .01)*Settings.PixelSize);
 %square-grid equivalent for later display. These call slightly modified
 %versions of Sadegh's original Step0 and Step1 code.
 LImageNamesList = [];
-[SquareFileVals ScanParams] = ReadScanFile(Settings.ScanFilePath); 
-ScanLength = size(SquareFileVals{1},1);
-Angles(:,1) = SquareFileVals{1};
-Angles(:,2) = SquareFileVals{2};
-Angles(:,3) = SquareFileVals{3};
-XData = SquareFileVals{4};
-YData = SquareFileVals{5};
+if ~isfield(Settings,'Angles')
+    [SquareFileVals, ScanParams] = ReadScanFile(Settings.ScanFilePath); 
+    Settings.ScanLength = size(SquareFileVals{1},1);
+    Settings.Angles(:,1) = SquareFileVals{1};
+    Settings.Settings.Angles(:,2) = SquareFileVals{2};
+    Settings.Angles(:,3) = SquareFileVals{3};
+    Settings.XData = SquareFileVals{4};
+    Settings.YData = SquareFileVals{5};
+    Settings.IQ = SquareFileVals{6};
+    Settings.CI = SquareFileVals{7};
+    Settings.Fit = SquareFileVals{10};
+end
 
 %Unique x and y
-X = unique(XData);
-Y = unique(YData);
+X = unique(Settings.XData);
+Y = unique(Settings.YData);
 
 %Number of steps in x and y
 Nx = length(X);
@@ -48,11 +54,11 @@ switch Settings.ScanType;
         if length(Y) > 1
             YStep = Y(2)-Y(1);
         else
-            YStep = 0;
+            YStep = 0; %Line Scans
         end
         
         %Create image file name list
-        ImageNamesList = GetImageNamesList(Settings.ScanType, ScanLength,[Nx Ny], Settings.FirstImagePath, [X(1),Y(1)], [XStep, YStep]);
+        Settings.ImageNamesList = GetImageNamesList(Settings.ScanType, Settings.ScanLength,[Nx Ny], Settings.FirstImagePath, [X(1),Y(1)], [XStep, YStep]);
 %         ImageNamesList = GetImageNamesListHkl(Settings.ScanType, ScanLength,[Nx Ny], Settings.FirstImagePath); %*****TEMPORARY FOR VAUDIN FILES
 %         disp('using hkl naming in HREBSDMain.m at line 100')
         
@@ -61,7 +67,7 @@ switch Settings.ScanType;
         XStep = X(3)-X(1);
         YStep = Y(3)-Y(1);
         
-        ImageNamesList = GetImageNamesList(Settings.ScanType, ScanLength,[Nx Ny], Settings.FirstImagePath, [X(1),Y(1)], [XStep, YStep]);
+        Settings.ImageNamesList = GetImageNamesList(Settings.ScanType, Settings.ScanLength,[Nx Ny], Settings.FirstImagePath, [X(1),Y(1)], [XStep, YStep]);
         
     case 'L'
         CorrectedXYAngPath = LGridXYConvert(Settings.ScanFilePath,Settings.CustomFilePath);
@@ -87,7 +93,7 @@ switch Settings.ScanType;
         LYData = LFileVals{5};
         
         
-        [SquareFileVals ScanParams] = ReadScanFile(SquareGridAngPath); 
+        [SquareFileVals, ScanParams] = ReadScanFile(SquareGridAngPath); 
         ScanLength = size(SquareFileVals{1},1);
         Angles(:,1) = SquareFileVals{1};
         Angles(:,2) = SquareFileVals{2};
@@ -114,49 +120,16 @@ switch Settings.ScanType;
 end
 
 %Common to all scan types
-IQ = SquareFileVals{6};
-CI = SquareFileVals{7};
-Fit = SquareFileVals{10};
 data.cols = Nx;
 data.rows = Ny;
 Settings.Nx = Nx;
 Settings.Ny = Ny;
-Settings.ScanLength = ScanLength;
-
-%% Initialize all Settings to be passed in to GetDefGradientTensor.
-Settings.Angles = Angles;
-Settings.XData = XData;
-Settings.YData = YData;
-
-Settings.IQ = IQ;
-Settings.CI = CI;
-Settings.Fit = Fit;
-Settings.ImageNamesList = ImageNamesList;
 
 %% Get Grain ID's
-[~, ~, ext] = fileparts(Settings.ScanFilePath);
-if strcmp(ext,'.ang')
-    GrainFileVals = ReadGrainFile(Settings.GrainFilePath);
-    Settings.grainID = GrainFileVals{9};
-    if strcmp(Settings.Material,'grainfile')
-        Settings.Phase=lower(GrainFileVals{11});
-    end
-elseif strcmp(ext,'.ctf')
-    angles = reshape(Angles,Nx,Ny,3);
-    MaterialData = ReadMaterial(Settings.Material);
-    clean = true;
-    small = true;
-    mistol = Settings.MaxMisorientation*pi/180;
-    [Settings.grainID] = findgrains(angles, MaterialData.lattice, clean, small,mistol);
+if ~isfield(Settings,'grainID') || ~isfield(Settings,'Phase')
+    [Settings.grainID, Settings.Phase] = GetGrainInfo(...
+            Settings.ScanFilePath, Settings.Material, Settings.ScanParams, Settings.Angles, Settings.MisoTol);
 end
-    
-    
-%% Read Grain File
-if ~exist(Settings.GrainFilePath,'file')
-    errordlg(['Could not read grain file at: ' GrainFilePath ],'Error');
-end
-GrainFileVals = ReadGrainFile(Settings.GrainFilePath);
-Settings.grainID = GrainFileVals{9};
 
 %% Get Reference Image(s) when not Simulated Method
 % Get reference images and assign the name to each scan image (or main
@@ -164,41 +137,24 @@ Settings.grainID = GrainFileVals{9};
 if ~strcmp(Settings.HROIMMethod,'Simulated')
     RefImageInd = Settings.RefImageInd;  
     if RefImageInd~=0
-        datalength = length(ImageNamesList);
+        datalength = Settings.ScanLength;
         Settings.RefImageNames = cell(datalength,1);
-        Settings.RefImageNames(:)= {ImageNamesList{RefImageInd}};
+        Settings.RefImageNames(:)= {Settings.ImageNamesList{RefImageInd}};
         Settings.Phi1Ref(1:datalength) = Settings.Angles(RefImageInd,1);
         Settings.PHIRef(1:datalength) = Settings.Angles(RefImageInd,2);
         Settings.Phi2Ref(1:datalength) = Settings.Angles(RefImageInd,3);
         Settings.RefInd(1:datalength)= RefImageInd;
     else
         if strcmp(Settings.GrainRefImageType,'Min Kernel Avg Miso')
-            [Settings.RefImageNames Settings.Phi1Ref ...
-                Settings.PHIRef Settings.Phi2Ref Settings.RefInd] = GetRefImageNames(ImageNamesList, ...
-                GrainFileVals, Settings.KernelAvgMisoPath);
+            [Settings.RefImageNames, Settings.Phi1Ref, ...
+                Settings.PHIRef, Settings.Phi2Ref, Settings.RefInd] = GetRefImageNames(Settings.ImageNamesList, ...
+                {Settings.Angles;Settings.IQ;Settings.CI;Settings.Fit}, Settings.grainID, Settings.KernelAvgMisoPath);
         else
-            [Settings.RefImageNames Settings.Phi1Ref ...
-                Settings.PHIRef Settings.Phi2Ref Settings.RefInd] = GetRefImageNames(ImageNamesList, ...
-                GrainFileVals);
+            [Settings.RefImageNames, Settings.Phi1Ref, ...
+                Settings.PHIRef, Settings.Phi2Ref, Settings.RefInd] = GetRefImageNames(Settings.ImageNamesList, ...
+                {Settings.Angles;Settings.IQ;Settings.CI;Settings.Fit}, Settings.grainID);
         end
     end  
-end
-
-% disp('set pc')
-%Settings.XStar(1:length(ImageNamesList)) = ScanParams.xstar;
-%Settings.YStar(1:length(ImageNamesList)) = ScanParams.ystar;
-%Settings.ZStar(1:length(ImageNamesList)) = ScanParams.zstar;
-
-
-% setup Settings.Phase
-% Settings.Phase=cell(size(GrainFileVals{11},1),1);
-% size(GrainFileVals{11})
-if strcmp(Settings.Material,'grainfile')
-    Settings.Phase=lower(GrainFileVals{11});
-else
-    for op=1:length(GrainFileVals{11})
-        Settings.Phase{op}=Settings.Material;
-    end
 end
 
 %% Pattern Center Calibration
@@ -227,7 +183,7 @@ if Settings.DoUsePCFile
             Settings.YStar(1:length(ImageNamesList)) = PCData{3};
             Settings.ZStar(1:length(ImageNamesList)) = PCData{4};
         else
-            [Settings.XStar Settings.YStar Settings.ZStar] = FitPCPlaneText(PCData, Settings.XData, Settings.YData);
+            [Settings.XStar, Settings.YStar, Settings.ZStar] = FitPCPlaneText(PCData, Settings.XData, Settings.YData);
         end
     elseif strcmp(Extension,'mat') %this is for backwards compatibility with Josh's format for PC calibration files.
         %Hopefully the variable they all contain is named cuttoff...
@@ -275,9 +231,9 @@ elseif Settings.DoPCStrainMin
 end
 if ~Settings.DoPCStrainMin
     disp('No PC calibration at all')
-    Settings.XStar(1:length(ImageNamesList)) = ScanParams.xstar;
-    Settings.YStar(1:length(ImageNamesList)) = ScanParams.ystar;
-    Settings.ZStar(1:length(ImageNamesList)) = ScanParams.zstar;
+    Settings.XStar(1:length(Settings.ImageNamesList)) = Settings.ScanParams.xstar;
+    Settings.YStar(1:length(Settings.ImageNamesList)) = Settings.ScanParams.ystar;
+    Settings.ZStar(1:length(Settings.ImageNamesList)) = Settings.ScanParams.zstar;
 end
 
      
@@ -292,6 +248,7 @@ end
 %     Settings.YStar(1:length(ImageNamesList)) = ScanParams.ystar;
 %     Settings.ZStar(1:length(ImageNamesList)) = ScanParams.zstar;
 %save('SettingsHREBSD.mat','Settings');
+
 %% Run Analysis
 %Use a parfor loop if allowed multiple processors.
 tic
@@ -315,7 +272,7 @@ if Settings.DoParallel > 1
     end
     
     disp('Starting cross-correlation');
-    N = length(ImageNamesList);
+    N = Settings.ScanLength;
     ppm = ParforProgMon('Cross Correlation Analysis ',N,1,400,50);
     parfor(ImageInd = 1:N,NumberOfCores)
 %         disp(ImageInd)
@@ -368,10 +325,8 @@ Time = toc/60;
 disp(['Time to finish: ' num2str(Time) ' minutes'])
 
 %% Save output and write to .ang file
-for jj = 1:length(ImageNamesList)
-    
-    
-    
+for jj = 1:Settings.ScanLength
+   
     data.IQ{jj} = Settings.IQ(jj);
     
     if strcmp(Settings.ScanType,'L')
@@ -404,7 +359,6 @@ for jj = 1:length(ImageNamesList)
         data.PHIrn{jj} = PHI;
         data.phi2rn{jj} = phi2;
         
-        
     end
     
     data.g{jj} = [phi1 PHI phi2];
@@ -426,41 +380,34 @@ end
 
 Settings.AverageSSE = mean([Settings.SSE{:}]);
 
-% if Settings.DoPCStrainMin
-%     save(PCStrainMinSaveFile, 'cuttoff', 'data', 'Settings');
-%     return;
-% end
-
 %%
 %Save deformation gradient, rotation, strain tensors, and SSE.
-DotInd = find(Settings.OutputPath == '.');
-if length(DotInd) > 1
-    DotInd = DotInd(end);
-end
-
 Settings.data = data;
-[OutputPath, FileName, ext] = fileparts(Settings.OutputPath);
+[OutputPath, FileName, ~] = fileparts(Settings.OutputPath);
 SaveFile = fullfile(OutputPath,['AnalysisParams_' FileName]);
 Settings.AnalysisParamsPath = SaveFile;
 save(SaveFile, 'Settings');
 
 %% Calculate derivatives
-if Settings.CalcDerivatives == 1
+if Settings.CalcDerivatives
     MaxMisorientation = Settings.MisoTol;
     IQcutoff = Settings.IQCutoff;
     VaryStepSizeI = Settings.NumSkipPts;
     
     DislocationDensityCalculate(Settings,MaxMisorientation,IQcutoff,VaryStepSizeI)
     % Split Dislocation Density (Code by Tim Ruggles, added 3/5/2015)
-    if Settings.DoDDS == 1
-        alpha_data = load([Settings.AnalysisParamsPath '.mat']);
-        alpha_data = alpha_data.alpha_data;
+    if Settings.DoDDS
+        temp = load([Settings.AnalysisParamsPath '.mat']);
+        alpha_data = temp.alpha_data;
+        clear temp
         rhos = SplitDD(Settings, alpha_data, Settings.DDSMethod);
         if ~isempty(rhos)
             save(Settings.AnalysisParamsPath,'rhos','-append');
         end
     end
 end
+profile off
+profile viewer
 %% Output Plotting
 % save([OutputPathWithSlash 'Data_' FileName],'data');
 input{1} = [SaveFile '.mat'];
