@@ -57,22 +57,27 @@ fclose(ctf);
 %Open .cpr file
 %   Assumes same file name as .ctf file
 [path, file, ~] = fileparts(FileName);
-cpr = fopen(fullfile(path,[file '.cpr']));
-while ~feof(cpr)
-   tline = fgetl(cpr);
-   ScanParamsData('VHRatio=','VHRatio');
-   ScanParamsData('PCX=','PCX');
-   ScanParamsData('PCY=','PCY');
-   ScanParamsData('DD=','DD');
-   ScanParamsData('StructureName=','material');
-end
-fclose(cpr);
+CprFilePath = fullfile(path,[file '.cpr']);
+if exist(CprFilePath,'file')
+    cpr = fopen(CprFilePath);
+    while ~feof(cpr)
+       tline = fgetl(cpr);
+       ScanParamsData('VHRatio=','VHRatio');
+       ScanParamsData('PCX=','PCX');
+       ScanParamsData('PCY=','PCY');
+       ScanParamsData('DD=','DD');
+       ScanParamsData('StructureName=','material');
+    end
+    fclose(cpr);
 
-%Calculate Pattern Center
-%   Assumes square cropping
-%   Formula by DTF
-ScanParams.xstar = (ScanParams.PCX-(1-ScanParams.VHRatio)/2)/ScanParams.VHRatio;
-ScanParams.ystar = ScanParams.PCY;
-ScanParams.zstar = ScanParams.DD/ScanParams.VHRatio;
+    %Calculate Pattern Center
+    %   Assumes square cropping
+    %   Formula by DTF
+    ScanParams.xstar = (ScanParams.PCX-(1-ScanParams.VHRatio)/2)/ScanParams.VHRatio;
+    ScanParams.ystar = ScanParams.PCY;
+    ScanParams.zstar = ScanParams.DD/ScanParams.VHRatio;
+else
+    warndlg('No .cpr file found');
+end
 
 end

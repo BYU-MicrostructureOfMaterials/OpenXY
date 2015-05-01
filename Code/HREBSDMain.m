@@ -20,6 +20,9 @@ Settings.ROISize = round((Settings.ROISizePercent * .01)*Settings.PixelSize);
 %% Add Sub-folder(s)
 addpath('DDS');
 
+%Sets default color scheme for all figures and axes
+set(0,'DefaultFigureColormap',jet);
+
 %% Check Scan Type
 %Options: 'L', Square, Hexagonal
 %Check to see if it is an L-grid scan, apply xycorrection and generate a
@@ -386,7 +389,7 @@ Settings.data = data;
 [OutputPath, FileName, ~] = fileparts(Settings.OutputPath);
 SaveFile = fullfile(OutputPath,['AnalysisParams_' FileName]);
 Settings.AnalysisParamsPath = SaveFile;
-save(SaveFile, 'Settings');
+save([SaveFile '.mat'], 'Settings');
 
 %% Calculate derivatives
 if Settings.CalcDerivatives

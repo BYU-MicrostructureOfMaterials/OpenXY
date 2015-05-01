@@ -180,10 +180,10 @@ else
         if exist(testname, 'file')
             button = questdlg(['Accept "' testname '" as new First Image?'],'OpenXY');
             if ~strcmp(button,'Yes')
-                errordlg('Start Image Path doesn''t match data starting location');
+                error('Start Image Path doesn''t match data starting location');
             end
         else
-            errordlg('Start Image Path doesn''t match data starting location');
+            error('Start Image Path doesn''t match data starting location');
         end   
     end
     

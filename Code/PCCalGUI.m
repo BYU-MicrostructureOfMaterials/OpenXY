@@ -577,8 +577,11 @@ function LoadPCCalc_Callback(hObject, eventdata, handles)
 % hObject    handle to LoadPCCalc (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+w = cd;
 Settings = handles.Settings;
+cd(fileparts(Settings.ScanFilePath));
 [filename, filepath] = uigetfile('*mat','Select an Analysis_Params file');
+cd(w);
 matfile = load(fullfile(filepath,filename));
 if isfield(matfile,'Settings')
     loadedSettings = matfile.Settings;
@@ -616,6 +619,7 @@ if isfield(matfile,'Settings')
         IQPlot = handles.IQPlot;
         CalibrationPointIndecies = loadedSettings.CalibrationPointIndecies;
         Nx = Settings.Nx;
+        Ny = Settings.Ny;
         IQ = Settings.IQ;
         XData = Settings.XData;
         YData = Settings.YData;

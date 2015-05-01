@@ -181,8 +181,16 @@ if name ~= 0
         end
         set(handles.ScanSizeText,'String',SizeStr);
         
-        %Read ScanFile Data into Settings
+        %Initialize Variables
         handles.Settings.ScanLength = size(ScanFileData{1},1);
+        handles.Settings.Angles = zeros(handles.Settings.ScanLength,3);
+        handles.Settings.XData = zeros(handles.Settings.ScanLength,1);
+        handles.Settings.YData = zeros(handles.Settings.ScanLength,1);
+        handles.Settings.IQ = zeros(handles.Settings.ScanLength,1);
+        handles.Settings.CI = zeros(handles.Settings.ScanLength,1);
+        handles.Settings.FIT = zeros(handles.Settings.ScanLength,1);
+        
+        %Read ScanFile Data into Settings
         handles.Settings.Angles(:,1) = ScanFileData{1};
         handles.Settings.Angles(:,2) = ScanFileData{2};
         handles.Settings.Angles(:,3) = ScanFileData{3};
@@ -193,6 +201,8 @@ if name ~= 0
         handles.Settings.Fit = ScanFileData{10};
         handles.Settings.ScanFilePath = fullfile(path,name);
         handles.ScanFileLoaded = true;
+        MaterialPopup_Callback(handles.MaterialPopup, [], handles);
+        handles = guidata(handles.MainGUI);
     end 
 elseif ~handles.ScanFileLoaded
     set(handles.ScanNameText,'String','Select a Scan');
@@ -201,7 +211,7 @@ elseif ~handles.ScanFileLoaded
     set(handles.ScanSizeText,'String','Select a Scan');
 end
 guidata(handles.SelectScanButton, handles);
-MaterialPopup_Callback(handles.MaterialPopup, [], handles);
+
 enableRunButton(handles);
 
 
