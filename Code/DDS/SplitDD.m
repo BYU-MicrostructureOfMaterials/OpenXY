@@ -17,8 +17,8 @@ if length(matList) > 1
         rhos = [];
         return;
     end
-elseif length(matList) == 0
-    warndlg(['No SplitDD material data for ' allMaterials{1}, 'Exiting SplitDD calculation'],'Split Dislocation Density');
+elseif isempty(matList)
+    warndlg(['No SplitDD material data for ' allMaterials{1}, ' Exiting SplitDD calculation'],'Split Dislocation Density');
     rhos = [];
     return;
 else
@@ -177,7 +177,7 @@ if isempty(strfind(javapaths,cd))
 end
 
 disp(['Starting cross-correlation: ' num2str(m*n) ' points']);
-ppm = ParforProgMon( 'Multi Core Progress', m*n,1,400,50 );
+ppm = ParforProgMon( 'Split Dislocation Density ', m*n,1,400,50 );
     
 % matlabpool close force;
 % %Determine the number of available cores and use one less

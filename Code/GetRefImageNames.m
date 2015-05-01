@@ -1,5 +1,5 @@
 
-function [RefImageNames phi1ref PHIref phi2ref RefInd] = GetRefImageNames(ImageNamesList, GrainFileVals, MapDataPath, DoUseMin)
+function [RefImageNames, phi1ref, PHIref, phi2ref, RefInd] = GetRefImageNames(ImageNamesList, ScanFileVals, GrainID, MapDataPath, DoUseMin)
 %GETREFIMAGENAMES
 %[RefImageNames phi1ref PHIref phi2ref GrainID] = GetRefImageNames(ImageNamesList, GrainFilePath, MapDataPath, DoUseMin)
 %Given an ImageNamesList and the path for the OIM output file GrainFilePath
@@ -19,27 +19,22 @@ function [RefImageNames phi1ref PHIref phi2ref RefInd] = GetRefImageNames(ImageN
 %MapDataPath is preferred for selecting reference images in each grain.
 %DoUseMin = 0 prefers the maximum values in the MapDataPath file
 DoUseMapData = 0;
-if nargin == 3
+if nargin == 4
     DoUseMapData = 1;
     DoUseMin = 1;
 end
-if nargin == 4
+if nargin == 5
     DoUseMapData = 1;
 end
 
 
 %Create variables from GrainFileVals
-phi1 = GrainFileVals{1};
-PHI = GrainFileVals{2};
-phi2 = GrainFileVals{3};
-% x = GrainFileVals{4};
-% y = GrainFileVals{5};
-IQ = GrainFileVals{6};
-CI = GrainFileVals{7};
-Fit = GrainFileVals{8};
-GrainID = GrainFileVals{9};
-% edge = GrainFileVals{10};
-% Phase = GrainFileVals{11};
+phi1 = ScanFileVals{1}(:,1);
+PHI = ScanFileVals{1}(:,2);
+phi2 = ScanFileVals{1}(:,3);
+IQ = ScanFileVals{2};
+CI = ScanFileVals{3};
+Fit = ScanFileVals{4};
 
 IndVect = 1:length(GrainID);
 
