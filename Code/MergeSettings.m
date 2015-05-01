@@ -6,13 +6,24 @@ function [ Settings ] = MergeSettings( Settings, NewSettings )
 %   OUTPUT:
 %       Settings: Merged Settings structure
 
-function copyParam(ParamName,OldName)
+function copyParam(ParamName,ValidEntries, OldName)
 if isfield(Settings,ParamName) && isfield(NewSettings,ParamName)
-    Settings.(ParamName) = NewSettings.(ParamName);
+    
+    if nargin == 2
+        if ~isempty(ValidEntries)
+            if strmatch(num2str(NewSettings.(ParamName)),ValidEntries,'exact')
+                Settings.(ParamName) = NewSettings.(ParamName);
+            end
+        end
+    else
+        Settings.(ParamName) = NewSettings.(ParamName);
+    end
 end
+
+
 % For backwards compatibility when reading in older Settings structures
 % (i.e. ScanFilePath used to be called AngFilePath)
-if nargin == 2
+if nargin == 3
     if isfield(Settings,ParamName) && isfield(NewSettings,OldName)
        Settings.(ParamName) = NewSettings.(OldName); 
     end
@@ -21,12 +32,12 @@ end
 
 %% Main GUI
 %Scan Data
-copyParam('ScanFilePath','AngFilePath');
+copyParam('ScanFilePath',{},'AngFilePath');
 copyParam('FirstImagePath');
 copyParam('OutputPath');
 %MainGUI Settings
-copyParam('ScanType');
-copyParam('Material');
+copyParam('ScanType',{'Square','Hexagonal'});
+copyParam('Material',GetMaterialsList);
 copyParam('DoParallel');
 copyParam('DoShowPlot');
 copyParam('DoPCStrainMin');
@@ -35,27 +46,27 @@ copyParam('DoPCStrainMin');
 %ROI Settings
 copyParam('ROISizePercent');
 copyParam('NumROIs');
-copyParam('ROIStyle');
+copyParam('ROIStyle',{'Grid','Radial','Intensity'});
 copyParam('ROIFilter');
 %Filter Settings
 copyParam('ImageFilter');
-copyParam('ImageFilterType');
+copyParam('ImageFilterType',{'standard','localthresh'});
 
 %% Advanced Settings
 %HROIM Settings
-copyParam('HROIMMethod');
+copyParam('HROIMMethod',{'Simulated', 'Real'});
 copyParam('IterationLimit');
 copyParam('RefImageInd');
 copyParam('StandardDeviation');
 copyParam('MisoTol');
-copyParam('GrainRefImageType');
+copyParam('GrainRefImageType',{'Min Kernel Avg Miso','IQ > Fit > CI'});
 
 %Dislocation Density Settings
 copyParam('CalcDerivatives');
 copyParam('DoDDS');
 copyParam('NumSkipPts');
 copyParam('IQCutoff');
-copyParam('DDSMethod');
+copyParam('DDSMethod',{'Nye-Kroner', 'Nye-Kroner (Pantleon)','Distortion Matching'});
 
 %Kernel Average Misorientation
 copyParam('KernelAvgMisoPath');

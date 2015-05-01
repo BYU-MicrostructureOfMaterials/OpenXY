@@ -13,7 +13,7 @@ NumberOfCores = feature('numCores');
 Settings.ScanFilePath = '';
 Settings.FirstImagePath = '';
 Settings.OutputPath = '';
-Settings.ScanType = 'Auto-detect'; %{'Square','Hexagonal'};
+Settings.ScanType = 'Square'; %{'Square','Hexagonal'};
 Settings.Material = 'Auto-detect'; %Options from GetMaterialsList.m
 Settings.DoParallel = NumberOfCores - 1;
 Settings.DoShowPlot = false;
@@ -31,7 +31,7 @@ Settings.ImageFilter = [9 90 0 0];
 
 %% Advanced Settings
 %HROIM Settings
-Settings.HROIMMethod = 'Simulated'; %{'Simulated', 'Real-Single Ref', 'Real-Grain Ref'}, %Someday will add Hybrid
+Settings.HROIMMethod = 'Simulated'; %{'Simulated', 'Real'}, %Someday will add Hybrid
 Settings.IterationLimit = 6;
 Settings.RefImageInd = 0;
 Settings.StandardDeviation = 2;

@@ -81,7 +81,7 @@ handles.ImageLoaded = false;
 handles.OutputLoaded = false;
 
 %ScanType
-ScanTypeList = {'Auto-detect','Square','Hexagonal'};
+ScanTypeList = {'Square','Hexagonal'};
 set(handles.ScanTypePopup,'String',ScanTypeList);
 SetPopupValue(handles.ScanTypePopup,handles.Settings.ScanType);
 %Material
@@ -110,13 +110,16 @@ handles = guidata(hObject);
 SetOutputFields(handles,[name ext],path);
 handles = guidata(hObject);
 
-enableRunButton(handles);
-
 %Set GUI Position
 ScreenSize = get(groot,'ScreenSize');
 set(hObject,'Units','pixels');
 GUIsize = get(hObject,'Position');
 set(handles.MainGUI,'Position',[(ScreenSize(3)-GUIsize(3))/2 (ScreenSize(4)-(500+GUIsize(4))) GUIsize(3) GUIsize(4)]);
+
+% Reset Run Button
+set(handles.RunButton,'String','Run');
+set(handles.RunButton,'BackgroundColor',[0 1 0]);
+enableRunButton(handles);
 
 % Update handles structure
 guidata(hObject, handles);
@@ -185,6 +188,9 @@ if name ~= 0
         handles.Settings.Angles(:,3) = ScanFileData{3};
         handles.Settings.XData = ScanFileData{4};
         handles.Settings.YData = ScanFileData{5};
+        handles.Settings.IQ = ScanFileData{6};
+        handles.Settings.CI = ScanFileData{7};
+        handles.Settings.Fit = ScanFileData{10};
         handles.Settings.ScanFilePath = fullfile(path,name);
         handles.ScanFileLoaded = true;
     end 
@@ -197,8 +203,6 @@ end
 guidata(handles.SelectScanButton, handles);
 MaterialPopup_Callback(handles.MaterialPopup, [], handles);
 enableRunButton(handles);
-
-    
 
 
 % --- Executes on button press in SelectImageButton.
@@ -272,7 +276,7 @@ if name ~= 0
             button = questdlg({'Output file already exists'; 'Would you like to overwrite it?'},'Run OpenXY');
             switch button
                 case 'No'
-                    SelectOutputButton_Callback(hObject,eventdata,handles);
+                    SelectOutputButton_Callback(handles.SelectOutputButton,[],handles);
                     return;
                 case 'Cancel'
                     return;
@@ -302,7 +306,27 @@ function RunButton_Callback(hObject, eventdata, handles)
 % hObject    handle to RunButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-disp('Run');
+Settings = handles.Settings;
+save('Settings.mat','Settings');
+Settings.Exit = false;
+
+% Disable Run Button
+set(handles.RunButton,'String','Running...');
+set(handles.RunButton,'BackgroundColor',[1 0 0]);
+set(handles.RunButton,'Enable','off');
+
+% Run HREBSD Main
+Settings = HREBSDMain(Settings);
+
+%Check if terminated
+if Settings.Exit
+    msgbox('Open XY did not finish calculation');
+end
+
+% Reset Run Button
+set(handles.RunButton,'String','Run');
+set(handles.RunButton,'BackgroundColor',[0 1 0]);
+set(handles.RunButton,'Enable','on');
 
 
 % --- Executes on button press in PCCalibrationBox.

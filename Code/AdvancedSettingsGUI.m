@@ -344,7 +344,8 @@ if get(hObject,'Value')
     set(handles.DoSplitDD,'Enable','on');
     set(handles.SkipPoints,'Enable','on');
     set(handles.IQCutoff,'Enable','on');
-    DoSplitDD_Callback(handles.DoSplitDD, eventdata, handles)
+    DoSplitDD_Callback(handles.DoSplitDD, eventdata, handles);
+    handles = guidata(hObject);
 else
     set(handles.DoSplitDD,'Enable','off');
     set(handles.SkipPoints,'Enable','off');
@@ -361,12 +362,33 @@ function DoSplitDD_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of DoSplitDD
-handles.Settings.DoDDS = get(hObject,'Value');
+Settings = handles.Settings;
+valid = 0;
+j = 1;
+allMaterials = unique(Settings.Phase);
+for i = 1:length(allMaterials)
+    M = ReadMaterial(allMaterials{i});
+    if isfield(M,'SplitDD')
+        valid = 1;
+    else
+        valid = 0;
+        invalidInd(j) = i;
+        j = j + 1;
+    end
+end
 if get(hObject,'Value')
-    set(handles.SplitDDMethod,'Enable','on');
+    if valid
+        set(handles.SplitDDMethod,'Enable','on');
+    else
+        warndlg(['Split Dislocation data not available for ' allMaterials{invalidInd(1)}],'OpenXY');
+        set(hObject,'Value',0);
+        set(handles.SplitDDMethod, 'Enable', 'off');
+    end
 else
+    set(hObject,'Value',0);
     set(handles.SplitDDMethod,'Enable','off');
 end
+handles.Settings.DoDDS = get(hObject,'Value');
 guidata(hObject,handles);
 
 
@@ -377,9 +399,24 @@ function SkipPoints_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of SkipPoints as text
 %        str2double(get(hObject,'String')) returns contents of SkipPoints as a double
-handles.Settings.NumSkipPts = str2double(get(hObject,'String'));
-guidata(hObject,handles);
+%Input validation
+Settings = handles.Settings;
+UserInput = get(hObject,'String');
+if isempty(str2num(UserInput))
+    if ~strcmp(UserInput, 'a') && ~strcmp(UserInput, 't')
+        set(hObject, 'String', Settings.NumSkipPts);
+        warndlg('Input must be numerical, "a" or "t"');
+    end
+elseif str2double(UserInput) < 0
+    set(hObject, 'String', Settings.NumSkipPts);
+    warndlg('Input must be positive');
+else
+    set(hObject, 'String', round(str2double(UserInput)));
+end
+handles.Settings.NumSkipPts = get(hObject,'String');
 
+%Updates handles object
+guidata(hObject, handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -473,4 +510,5 @@ String = num2str(String);
 List = get(Popup,'String');
 IndList = 1:length(List);
 Value = IndList(strcmp(List,String));
+if isempty(Value); Value =1; end;
 set(Popup, 'Value', Value);

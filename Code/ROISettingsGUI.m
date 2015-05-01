@@ -597,6 +597,7 @@ String = num2str(String);
 List = get(Popup,'String');
 IndList = 1:length(List);
 Value = IndList(strcmp(List,String));
+if isempty(Value); Value =1; end;
 set(Popup, 'Value', Value);
     
 function string = GetPopupString(Popup)
