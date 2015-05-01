@@ -314,7 +314,6 @@ if UpdateFileLocations
         
     Settings.ImageNamesList=UpdatePath(Settings.ImageNamesList,NewDir,MainPathLength);
     Settings.FirstImagePath=UpdatePath(Settings.FirstImagePath,NewDir,MainPathLength);
-    Settings.GrainFilePath=UpdatePath(Settings.GrainFilePath,NewDir,MainPathLength);
     Settings.ScanFilePath=UpdatePath(Settings.ScanFilePath,NewDir,MainPathLength);
     if ~strcmp(Settings.HROIMMethod,'Simulated')
         Settings.RefImageNames=UpdatePath(Settings.RefImageNames,NewDir,MainPathLength);
