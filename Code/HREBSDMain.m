@@ -269,10 +269,7 @@ if Settings.DoParallel > 1
         end
     end
     % addpath cd
-    javapaths = javaclasspath('-dynamic');
-    if isempty(strfind(javapaths,cd))
-        pctRunOnAll javaaddpath('java')
-    end
+    pctRunOnAll javaaddpath('java')
     
     disp('Starting cross-correlation');
     N = Settings.ScanLength;

@@ -171,10 +171,7 @@ catch
     end
 end
 % addpath cd
-javapaths = javaclasspath('-dynamic');
-if isempty(strfind(javapaths,cd))
-    pctRunOnAll javaaddpath('java')
-end
+pctRunOnAll javaaddpath('java')
 
 disp(['Starting cross-correlation: ' num2str(m*n) ' points']);
 ppm = ParforProgMon( 'Split Dislocation Density ', m*n,1,400,50 );

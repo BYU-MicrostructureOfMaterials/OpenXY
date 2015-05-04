@@ -239,10 +239,7 @@ if handles.VanPont
         end
     end
     
-    javapaths = javaclasspath('-dynamic');
-    if isempty(strfind(javapaths,cd))
-        pctRunOnAll javaaddpath('java')
-    end
+    pctRunOnAll javaaddpath('java')
     ppm = ParforProgMon( 'Point Calibration ', npoints,1,400,50 );
     parfor i=1:npoints
         PCref = PCMinSinglePattern(Settings, ScanParams, Settings.CalibrationPointIndecies(i));

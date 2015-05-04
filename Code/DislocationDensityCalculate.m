@@ -150,10 +150,7 @@ if ~strcmp(Settings.ScanType,'L')
         end
     end
     % addpath cd
-    javapaths = javaclasspath('-dynamic');
-    if isempty(strfind(javapaths,cd))
-        pctRunOnAll javaaddpath(java)
-    end
+    pctRunOnAll javaaddpath('java')
     
     N = length(Settings.ImageNamesList);
     
