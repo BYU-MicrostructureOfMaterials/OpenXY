@@ -132,7 +132,7 @@ else
         end
     end
     %Or assume sequential numbering
-    if TimesFactor == 0
+    if rcNaming
         IsIncremental = true;
         TimesFactor = 1;
     end

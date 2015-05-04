@@ -243,7 +243,7 @@ if name ~= 0
         set(handles.FirstImageNameText,'TooltipString',name);
         set(handles.ImageFolderText,'String',path);
         set(handles.ImageFolderText,'TooltipString',path);
-        [x,y] = size(imread(fullfile(path,name)));
+        [x,y,~] = size(imread(fullfile(path,name)));
         improp = dir(fullfile(path,name));
         SizeStr = [num2str(x) 'x' num2str(y) ' (' num2str(round(improp.bytes/1024)) ' KB)'];
         set(handles.ImageSizeText,'String',SizeStr);
