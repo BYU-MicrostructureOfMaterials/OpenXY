@@ -1,4 +1,4 @@
-function [ImageNamesList IsNewOIMNaming] = GetImageNamesList(ScanFormat, ScanLength, Dimensions, FirstImagePath, StartLocation, Steps)
+function [ImageNamesList] = GetImageNamesList(ScanFormat, ScanLength, Dimensions, FirstImagePath, StartLocation, Steps)
 %GETIMAGENAMESLIST
 %ImageNamesList = GetImageNamesList(ScanFormat, ScanLength, Dimensions, FirstImagePath, XStep, YStep)
 %Returns a list of image names belonging to a scan, given the scan format,
@@ -35,7 +35,7 @@ XStepData = Steps(1);
 YStepData = Steps(2);
 
 %Set up parameters
-IsLineScan = true;
+IsSerial = true; %Image names are incrementally serialized
 NameParts = textscan(ImageName,'%s');
 NameParts = NameParts{1};
 rcNaming = false;
@@ -49,7 +49,7 @@ for i = 1:length(NameParts)
     if (~isempty(Xinds) && ~isempty(Yinds))
         if (isstrprop(NameParts{i}(Xinds(end)+1),'digit')) && (isstrprop(NameParts{i}(Yinds(end)+1),'digit'))
             rcNaming = false;
-            IsLineScan = false;
+            IsSerial = false;
             break;
         end
     elseif (~isempty(Rinds) && ~isempty(Cinds))
@@ -57,7 +57,7 @@ for i = 1:length(NameParts)
             Xinds = Rinds;
             Yinds = Cinds;
             rcNaming = true;
-            IsLineScan = false;
+            IsSerial = false;
             break;
         end
     end
@@ -71,7 +71,7 @@ for ii = 1:i-1
 end
 ImageNamesList = cell(ScanLength,1);
 
-if IsLineScan
+if IsSerial
     %Break up the Position string around the position numbers
     PositionPart = NameParts{end};
     i = length(PositionPart);
@@ -86,11 +86,11 @@ if IsLineScan
         if ii <= 1, break; end;
         ii = ii - 1;
     end
-    preStr = [preStr PositionPart(1:ii-1)];
+    preStr = [preStr PositionPart(1:ii)];
     
     %Get number info
-    numberLength = i-ii+1;
-    Xval = str2double(PositionPart(ii:i));
+    numberLength = i-ii;
+    Xval = str2double(PositionPart(ii+1:i));
     numFormat = ['%0' num2str(numberLength) 'd'];
 
     %Write ImageNamesList
