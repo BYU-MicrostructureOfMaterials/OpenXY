@@ -62,7 +62,7 @@ else
     load Settings
 end
 
-[SquareFileVals ScanParams] = ReadScanFile(Settings.ScanFilePath);
+%[SquareFileVals, ScanParams] = ReadScanFile(Settings.ScanFilePath);
 
 IQ = Settings.IQ;
 
@@ -105,7 +105,7 @@ switch ScanType
         
 end
 axes(handles.axes2)
-plot3(ScanParams.xstar,ScanParams.ystar,ScanParams.zstar,'bo')
+plot3(Settings.ScanParams.xstar,Settings.ScanParams.ystar,Settings.ScanParams.zstar,'bo')
 colormap jet
 
 set(handles.SavePCCal,'Value',1);
@@ -113,7 +113,7 @@ handles.SaveAllPC = 1;
 
 % Update handles structure
 handles.Settings = Settings;
-handles.ScanParams = ScanParams;
+handles.ScanParams = Settings.ScanParams;
 handles.VanPont = 0;
 handles.calibrated = 0;
 handles.IQPlot = IQPlot;
@@ -241,7 +241,7 @@ if handles.VanPont
     
     pctRunOnAll javaaddpath('java')
     ppm = ParforProgMon( 'Point Calibration ', npoints,1,400,50 );
-    parfor i=1:npoints
+    for i=1:npoints
         PCref = PCMinSinglePattern(Settings, ScanParams, Settings.CalibrationPointIndecies(i));
         CalibrationPointsPC(i,:) = PCref';
         ppm.increment();
