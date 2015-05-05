@@ -17,11 +17,11 @@ Y=Y';
 convim=zeros(nx,ny);
 convim(1:3,1:3)=1;
 convim=circshift(convim,[-1,-1]);
-h=waitbar(0, 'Cleaning up Small Grains');
+%h=waitbar(0, 'Cleaning up Small Grains');
 for i=1:N
     if grainsize(i)<small && grainsize(i)>0
         if i>dummy
-            waitbar(i/N);
+            %waitbar(i/N);
             dummy=dummy+N/20;
         end
         thisgrain=(grains==i); % pick out the current small grain
@@ -59,4 +59,4 @@ for i=1:N
                 goodgrainsize(i)=0;
     end
 end
-close(h);
+%close(h);
