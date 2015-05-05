@@ -165,7 +165,6 @@ for i=1:length(roixc)
     if size(RefImage)~=size(ScanImage)
         RefImage=ScanImage;
         disp('No Ref Image')
-        
     end
     
     [rimage dxshift dyshift] = custfftxc((RefImage(rrange,crange)),...
