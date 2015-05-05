@@ -412,11 +412,17 @@ profile viewer
 % save([OutputPathWithSlash 'Data_' FileName],'data');
 input{1} = [SaveFile '.mat'];
 OutputPlotting(input); %moved here due to error writing ang file for vaudin files ****
-%%
-
-WriteHROIMAngFile(Settings.ScanFilePath,fullfile(OutputPath, ['Corr_' FileName '.ang']),...
-    Settings.NewAngles(:,1),Settings.NewAngles(:,2),Settings.NewAngles(:,3)...
-    ,Settings.SSE);
+%% Write Corrected Scan File
+[~,~,ext] = fileparts(Settings.ScanFilePath);
+if strcmp(ext,'.ang')
+    WriteHROIMAngFile(Settings.ScanFilePath,fullfile(OutputPath, ['Corr_' FileName '.ang']),...
+        Settings.NewAngles(:,1),Settings.NewAngles(:,2),Settings.NewAngles(:,3)...
+        ,Settings.SSE);
+elseif strcmp(ext,'.ctf')
+    WriteHROIMCtfFile(Settings.ScanFilePath,fullfile(OutputPath, ['Corr_' FileName '.ctf']),...
+        Settings.NewAngles(:,1),Settings.NewAngles(:,2),Settings.NewAngles(:,3)...
+        ,Settings.SSE);
+end
 
 % profile viewer
 % profile off
