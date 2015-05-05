@@ -73,9 +73,16 @@ if exist(CprFilePath,'file')
     %Calculate Pattern Center
     %   Assumes square cropping
     %   Formula by DTF
-    ScanParams.xstar = (ScanParams.PCX-(1-ScanParams.VHRatio)/2)/ScanParams.VHRatio;
-    ScanParams.ystar = ScanParams.PCY;
-    ScanParams.zstar = ScanParams.DD/ScanParams.VHRatio;
+    if ~isfield(ScanParams,'PCX') || ~isfield(ScanParams,'PCY') || ~isfield(ScanParams,'VHRatio') || ~isfield(ScanParams,'DD')
+        warndlg({'No Pattern Center data found. PC vals set to zero.';'Run PC Calibration'},'Missing Info in .CPR file');
+        ScanParams.xstar = 0.1;
+        ScanParams.ystar = 0.1;
+        ScanParams.zstar = 0.1;
+    else
+        ScanParams.xstar = (ScanParams.PCX-(1-ScanParams.VHRatio)/2)/ScanParams.VHRatio;
+        ScanParams.ystar = ScanParams.PCY;
+        ScanParams.zstar = ScanParams.DD/ScanParams.VHRatio;
+    end
 else
     warndlg('No .cpr file found');
 end
