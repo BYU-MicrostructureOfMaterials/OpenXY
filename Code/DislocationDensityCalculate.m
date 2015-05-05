@@ -189,15 +189,21 @@ if ~strcmp(Settings.ScanType,'L')
         image_b = ReadEBSDImage(ImagePath,ImageFilter);% Change for parallel computing
         if strcmp(ScanType,'Square') || strcmp(ScanType,'LtoSquare')% Change for parallel computing
             
-            if cnt <= c*(skippts+1) % this is the first row(s)
-                image_a = ReadEBSDImage(ImageNamesList{cnt+c*(skippts+1)},ImageFilter);
-                Amat=euler2gmat(Allg{cnt+c*(skippts+1)}(1),Allg{cnt+c*(skippts+1)}(2),Allg{cnt+c*(skippts+1)}(3));
-                RefIndA = cnt+c*(skippts+1);
-            else
-                image_a = ReadEBSDImage(ImageNamesList{cnt-c*(skippts+1)},ImageFilter);% Change for parallel computing
-                RefIndA = cnt-c*(skippts+1);
-                Amat=euler2gmat(Allg{cnt-c*(skippts+1)}(1),Allg{cnt-c*(skippts+1)}(2),Allg{cnt-c*(skippts+1)}(3));
-            end
+            if r > 1 %No image_a for line scans
+                if cnt <= c*(skippts+1) % this is the first row(s)
+                    image_a = ReadEBSDImage(ImageNamesList{cnt+c*(skippts+1)},ImageFilter);
+                    Amat=euler2gmat(Allg{cnt+c*(skippts+1)}(1),Allg{cnt+c*(skippts+1)}(2),Allg{cnt+c*(skippts+1)}(3));
+                    RefIndA = cnt+c*(skippts+1);
+                else
+                    image_a = ReadEBSDImage(ImageNamesList{cnt-c*(skippts+1)},ImageFilter);% Change for parallel computing
+                    RefIndA = cnt-c*(skippts+1);
+                    Amat=euler2gmat(Allg{cnt-c*(skippts+1)}(1),Allg{cnt-c*(skippts+1)}(2),Allg{cnt-c*(skippts+1)}(3));
+                end
+            elseif r == 1
+                image_a = image_b;
+                Amat = eye(3);
+                RefIndA = cnt;
+            end 
             if mod(cnt,c)==0 || (c-mod(cnt,c))<=skippts               
                 image_c = ReadEBSDImage(ImageNamesList{cnt-(skippts+1)},ImageFilter); 
                 RefIndC = cnt-(skippts+1);
@@ -280,11 +286,12 @@ if ~strcmp(Settings.ScanType,'L')
             AllSSEc(cnt)=101;
         else
             % first, evaluate point a
-            clear global rs cs Gs
+            if r > 1 %Not Line Scan
+            
+                clear global rs cs Gs
                 if ~strcmp(Settings.ScanType,'Hexagonal') || (strcmp(Settings.ScanType,'Hexagonal') && skippts>0)
 
                         [AllFa{cnt},AllSSEa(cnt)] = CalcF(image_b,image_a,g_b,eye(3),cnt,Settings,Settings.Phase{cnt}, RefIndA);
-
 
                 else
                     [AllFa1,AllSSEa1] = CalcF(image_b,image_a1,g_b,eye(3),cnt,Settings,Settings.Phase{cnt},RefIndA1);
@@ -299,6 +306,10 @@ if ~strcmp(Settings.ScanType,'L')
                     AllFatemp=AllFatemp/sqrt(3)*2;
                     AllFa{cnt}=AllFatemp+eye(3);
                 end
+            else
+                AllFa{cnt}= -eye(3);
+                AllSSEa(cnt)=101;
+            end
 
             % then, evaluate point c
             clear global rs cs Gs
@@ -434,15 +445,18 @@ discount=0;
 alpha_filt=alpha;
 
 if strcmp(Settings.ScanType,'Square') ||  strcmp(Settings.ScanType,'LtoSquare') % Square grid
-    misang=zeros(length(alpha_data.Fa),1);
-    for i=1:length(data.Fa)
+    misang=zeros(Settings.ScanLength,1);
+    for i=1:Settings.ScanLength
         bnum=i;
-        if i <= c*(skippts+1)
-            anum=bnum+c*(skippts+1);
-        else
-            anum=bnum-c*(skippts+1);
+        if r > 1 
+            if i <= c*(skippts+1)
+                anum=bnum+c*(skippts+1);
+            else
+                anum=bnum-c*(skippts+1);
+            end
+        elseif r == 1
+            anum = bnum;
         end
-
         if mod(i,c)==0 || (c-mod(i,c))<=skippts
             cnum=bnum-(skippts+1);
         else
