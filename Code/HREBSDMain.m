@@ -6,7 +6,7 @@
 function Settings = HREBSDMain(Settings)
 % tic
 profile on
-disp('Dont forget to change PC if the image is cropped by ReadEBSDImage.m')
+if Settings.DisplayGUI; disp('Dont forget to change PC if the image is cropped by ReadEBSDImage.m'); end;
 %% Read in the first image and get the pixel size.
 %The assumption is made that all following images in the scan
 %are the same size and square.
@@ -223,7 +223,7 @@ if Settings.DoUsePCFile
     end
     
 elseif Settings.DoPCStrainMin
-    disp('Running PC GUI')
+    if Settings.DisplayGUI; disp('Running PC GUI'); end;
     save('Settings.mat','Settings')
     PCCalGUI();
     uiwait;
@@ -233,7 +233,7 @@ elseif Settings.DoPCStrainMin
     end
 end
 if ~Settings.DoPCStrainMin
-    disp('No PC calibration at all')
+    if Settings.DisplayGUI; disp('No PC calibration at all'); end;
     Settings.XStar(1:length(Settings.ImageNamesList)) = Settings.ScanParams.xstar;
     Settings.YStar(1:length(Settings.ImageNamesList)) = Settings.ScanParams.ystar;
     Settings.ZStar(1:length(Settings.ImageNamesList)) = Settings.ScanParams.zstar;
@@ -268,12 +268,12 @@ if Settings.DoParallel > 1
             matlabpool('local',NumberOfCores); 
         end
     end
-    % addpath cd
+
     pctRunOnAll javaaddpath('java')
-    
-    disp('Starting cross-correlation');
-    N = Settings.ScanLength;
-    ppm = ParforProgMon('Cross Correlation Analysis ',N,1,400,50);
+    if Settings.DisplayGUI
+        disp('Starting cross-correlation');
+        ppm = ParforProgMon('Cross Correlation Analysis ',N,1,400,50);
+    end
     parfor(ImageInd = 1:N,NumberOfCores)
 %         disp(ImageInd)
         %Returns F as either a cell array of deformation gradient tensors
@@ -292,12 +292,12 @@ if Settings.DoParallel > 1
         end
         %}
         
-        ppm.increment();
+        if Settings.DisplayGUI; ppm.increment(); end;
     end
-    ppm.delete();
+    if Settings.DisplayGUI; ppm.delete(); end;
     
 else
-    h = waitbar(0,'Single Processor Progress');
+    if Settings.DispalyGUI; h = waitbar(0,'Single Processor Progress'); end;
     
     for ImageInd = 1:length(ImageNamesList)
         %         tic
@@ -313,16 +313,16 @@ else
 %             U{ImageInd} - eye(3)
 %         end
         
-        waitbar(ImageInd/length(ImageNamesList),h);
+        if Settings.DisplayGUI; waitbar(ImageInd/length(ImageNamesList),h); end;
         %         IterTime(ImageInd) = toc
 %         if ImageInd>50
 %             keyboard
 %         end
     end
-    close(h);
+    if Settings.DisplayGUI; close(h); end;
 end
 Time = toc/60;
-disp(['Time to finish: ' num2str(Time) ' minutes'])
+if Settings.DisplayGUI; disp(['Time to finish: ' num2str(Time) ' minutes']); end;
 
 %% Save output and write to .ang file
 for jj = 1:Settings.ScanLength
@@ -394,7 +394,9 @@ if Settings.CalcDerivatives
     IQcutoff = Settings.IQCutoff;
     VaryStepSizeI = Settings.NumSkipPts;
     
+    if Settings.DisplayGUI; disp('Starting Dislocation Density Calculation'); end;
     DislocationDensityCalculate(Settings,MaxMisorientation,IQcutoff,VaryStepSizeI)
+    
     % Split Dislocation Density (Code by Tim Ruggles, added 3/5/2015)
     if Settings.DoDDS
         temp = load([Settings.AnalysisParamsPath '.mat']);
@@ -423,9 +425,6 @@ elseif strcmp(ext,'.ctf')
         Settings.NewAngles(:,1),Settings.NewAngles(:,2),Settings.NewAngles(:,3)...
         ,Settings.SSE);
 end
-
-% profile viewer
-% profile off
 
 % keyboard
 % profsave(profile('info'),'profile_results')

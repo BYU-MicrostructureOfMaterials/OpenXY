@@ -513,7 +513,11 @@ if handles.calibrated
                 NaiveZstar = Hex2Array(handles.NaiveZstar(1:end-1), NumColsOdd, NumColsEven);
         end
         
-        surf(NaiveXstar,NaiveYstar,NaiveZstar,zeros(size(NaiveZstar)))
+        if Settings.Ny > 1
+            surf(NaiveXstar,NaiveYstar,NaiveZstar,zeros(size(NaiveZstar)))
+        else
+            plot3(NaiveXstar,NaiveYstar,NaiveZstar)
+        end
         %surf(reshape(handles.NaiveXstar,Settings.Nx,Settings.Ny)',reshape(handles.NaiveYstar,Settings.Nx,Settings.Ny)',reshape(handles.NaiveZstar,Settings.Nx,Settings.Ny)',zeros(Settings.Ny,Settings.Nx))
         shading flat
     end

@@ -318,7 +318,10 @@ function RunButton_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 Settings = handles.Settings;
 save('Settings.mat','Settings');
+
+%Set Settings fields
 Settings.Exit = false;
+Settings.DisplayGUI = true;
 
 % Disable Run Button
 set(handles.RunButton,'String','Running...');
