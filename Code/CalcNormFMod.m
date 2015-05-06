@@ -19,7 +19,7 @@ for i = 1:3
     [R U] = poldec(F);
     g=R'*g;
 end
-
+ F=eye(3);
 % for i = 1:Settings.IterationLimit
 for i = 1:3
     I1 = genEBSDPatternHybrid(g,params2,F,lattice,a1,b1,c1,axs);
@@ -36,6 +36,7 @@ end
 
 [R U] = poldec(F);
 
+U=U-eye(3);
 U = triu(U);
 % D = F-eye(3);
 
