@@ -75,6 +75,11 @@ switch ScanType
 
     case 'Square'
         IQPlot = reshape(IQ, Nx,Ny)';
+        if Ny == 1 %Lines Scans
+            for i = 2:10
+                IQPlot(i,:) = IQPlot(1,:);
+            end
+        end
 
         axes(handles.axes1)
         imagesc(IQPlot)
@@ -336,7 +341,11 @@ NumColsOdd = ceil(Nx/2);
 IQPlot = handles.IQPlot;
 XStep = XData(2)-XData(1);
 YStep = YData(YData > 0);
-YStep = YStep(1);
+if isempty(YStep) %Lines Scans
+    YStep = 0;
+else
+    YStep = YStep(1);
+end
 Title = 'Press RETURN key or right-click last point to exit';
 
 %Create Correct Indice Matrix
