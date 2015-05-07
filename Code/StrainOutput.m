@@ -108,16 +108,25 @@ for i=1:3
             epsij=reshape(epsij, [c r])';
             
         end
+        if r == 1
+            epsijBand = repmat(epsij,50,1);
+        end
+        
         AverageStrain = mean(epsij(:));
         if any(strcmp(['e' num2str(i) num2str(j)],Components))
             figure;
-            imagesc(epsij)
+            imagesc(epsijBand)
             title(['\epsilon_',num2str(i),'_',num2str(j) ' Average Strain: ' num2str(AverageStrain)],'fontsize',14)
             shading flat
             axis equal tight
             % view(2)
             colorbar
             caxis([smin smax])
+            
+            if r == 1
+               
+               
+            end
             
             if DoShowGB && ~strcmp(Settings.ScanType,'Hexagonal')
                 h=gcf;set(h,'Position',[50 50 750 750])
