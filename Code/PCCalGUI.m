@@ -243,14 +243,19 @@ if handles.VanPont
             matlabpool('local',NumCores); 
         end
     end
+    M = NumCores;
     
     pctRunOnAll javaaddpath('java')
     ppm = ParforProgMon( 'Point Calibration ', npoints,1,400,50 );
-    for i=1:npoints
+    profile on
+    parfor (i=1:npoints,M)
         PCref = PCMinSinglePattern(Settings, ScanParams, Settings.CalibrationPointIndecies(i));
+        disp(['Point: ' num2str(i)])
         CalibrationPointsPC(i,:) = PCref';
         ppm.increment();
     end
+    profile off
+    profile viewer
     ppm.delete();
     Settings.CalibrationPointsPC = CalibrationPointsPC;
 
@@ -347,6 +352,11 @@ else
     YStep = YStep(1);
 end
 Title = 'Press RETURN key or right-click last point to exit';
+if Settings.Ny > 1
+    MinPoints = 3;
+elseif Settings.Ny == 1
+    MinPoints = 1;
+end
 
 %Create Correct Indice Matrix
 switch Settings.ScanType
@@ -381,11 +391,11 @@ switch Settings.ScanType
                 Xind(npoints) = round(x);
                 Yind(npoints) = round(y);
                 
-                if button ~= 1 && npoints > 2
+                if button ~= 1 && npoints >= MinPoints
                     morepoints = 0;
                 end
                 npoints = npoints + 1;
-            elseif npoints > 3 %When RETURN key is pressed
+            elseif npoints > MinPoints %When RETURN key is pressed
                 morepoints = 0;
             end
             

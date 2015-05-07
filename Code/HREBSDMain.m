@@ -268,7 +268,8 @@ if Settings.DoParallel > 1
             matlabpool('local',NumberOfCores); 
         end
     end
-
+    
+    N = Settings.ScanLength;
     pctRunOnAll javaaddpath('java')
     if Settings.DisplayGUI
         disp('Starting cross-correlation');
