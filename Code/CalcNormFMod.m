@@ -18,8 +18,9 @@ for i = 1:3
     [F SSE] = CalcF(I1,I0,g,eye(3),ImageInd,Settings,Settings.Phase{ImageInd}); % new DTF 
     [R U] = poldec(F);
     g=R'*g;
-end
 
+end
+    F=eye(3); % added 2/5/15 DTF
 % for i = 1:Settings.IterationLimit
 for i = 1:3
     I1 = genEBSDPatternHybrid(g,params2,F,lattice,a1,b1,c1,axs);
@@ -36,7 +37,7 @@ end
 
 [R U] = poldec(F);
 
-U = triu(U);
+U = U-eye(3);
 % D = F-eye(3);
 
 % angle = GeneralMisoCalc(R,eye(3),lattice);
@@ -44,8 +45,8 @@ U = triu(U);
 % if angle >= 0.5
 %     normF = sum(sum((D.*D)));
 % else
-    %normF = sum(sum((U.*U))); experimentally removed by Craig and Tim and replaced by below, Aug27 2014
-    normF=sum(sum((U.*U)));
+U=triu(U);  %make upper triangular so that shears aren't weighted twice as much as tensile stresses DTF 2/9/15
+    normF = sum(sum((U.*U)));
 % end
 
 % disp(F)
