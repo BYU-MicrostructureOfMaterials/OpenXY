@@ -37,7 +37,7 @@ if strcmp(ext,'.ang')
     if strcmp(Material,'Auto-detect')
         Phase=lower(GrainFileVals{11});
     else
-        Phase = cell(length(GrainFileVals),1);
+        Phase = cell(length(GrainFileVals{1}),1);
         Phase(:) = {Material};
     end
 elseif strcmp(ext,'.ctf')
