@@ -160,7 +160,8 @@ function savenclose_Callback(hObject, eventdata, handles)
 % hObject    handle to savenclose (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+planefitpanel_SelectionChangeFcn(handles.planefitpanel, eventdata, handles);
+handles = guidata(hObject);
 YesNo = 'Yes';
 if ~handles.calibrated
     YesNo = questdlg({'No pattern center calibration has been performed.'; 'Are you sure you want to continue?'},'No Calibration');
@@ -262,6 +263,9 @@ if handles.VanPont
     handles.MeanXstar = mean(Settings.CalibrationPointsPC(:,1));
     handles.MeanYstar = mean(Settings.CalibrationPointsPC(:,2));
     handles.MeanZstar = mean(Settings.CalibrationPointsPC(:,3));
+%     disp(['xstar: ' num2str(handles.MeanXstar(1))]);
+%     disp(['ystar: ' num2str(handles.MeanYstar(1))]);
+%     disp(['zstar: ' num2str(handles.MeanZstar(1))]);
 
     psize = str2double(get(handles.edit1,'String'));
     handles.NaiveXstar = handles.MeanXstar-(Settings.XData)/psize;
@@ -544,7 +548,9 @@ if handles.calibrated
         plot3(Settings.CalibrationPointsPC(:,1),Settings.CalibrationPointsPC(:,2),Settings.CalibrationPointsPC(:,3),'ro')
         switch ScanType
             case 'Square'
-                surf(reshape(handles.FitXstar,Settings.Nx,Settings.Ny)',reshape(handles.FitYstar,Settings.Nx,Settings.Ny)',reshape(handles.FitZstar,Settings.Nx,Settings.Ny)',.5*ones(Settings.Ny,Settings.Nx))
+                FitXstar = reshape(handles.FitXstar,Settings.Nx,Settings.Ny)';
+                FitYstar = reshape(handles.FitYstar,Settings.Nx,Settings.Ny)';
+                FitZstar = reshape(handles.FitZstar,Settings.Nx,Settings.Ny)';
             case 'Hexagonal'
                 FitXstar = Hex2Array(handles.FitXstar, NumColsOdd, NumColsEven);
                 FitYstar = Hex2Array(handles.FitYstar, NumColsOdd, NumColsEven);
@@ -552,7 +558,11 @@ if handles.calibrated
                 FitXstar = FitXstar(1:length(FitXstar)-1,:);
                 FitYstar = FitYstar(1:length(FitYstar)-1,:);
                 FitZstar = FitZstar(1:length(FitZstar)-1,:);
-                surf(FitXstar,FitYstar,FitZstar,.5*ones(size(FitXstar)));
+        end
+        if Settings.Ny > 1
+            surf(FitXstar,FitYstar,FitZstar,.5*ones(size(FitXstar)));
+        else
+            plot3(FitXstar,FitYstar,FitZstar);
         end
         shading flat
     end

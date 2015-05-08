@@ -1,4 +1,4 @@
-function [F g U SSE] = GetDefGradientTensor(ImageInd,Settings,curMaterial)
+function [F, g, U, SSE] = GetDefGradientTensor(ImageInd,Settings,curMaterial)
 %GETDEFGRADIENTTENSOR
 %[F g U SSE] = GetDefGradientTensor(ImageInd,Settings)
 %Takes in the HREBSD Settings structure and the image index
