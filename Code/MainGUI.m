@@ -200,10 +200,10 @@ if name ~= 0
         handles.Settings.CI = ScanFileData{7};
         handles.Settings.Fit = ScanFileData{10};
         handles.Settings.ScanFilePath = fullfile(path,name);
-        handles.ScanFileLoaded = true;
         MaterialPopup_Callback(handles.MaterialPopup, [], handles);
         handles = guidata(handles.MainGUI);
     end 
+    handles.ScanFileLoaded = true;
 elseif ~handles.ScanFileLoaded
     set(handles.ScanNameText,'String','Select a Scan');
     set(handles.ScanFolderText,'String','Select a Scan');
@@ -248,8 +248,8 @@ if name ~= 0
         SizeStr = [num2str(x) 'x' num2str(y) ' (' num2str(round(improp.bytes/1024)) ' KB)'];
         set(handles.ImageSizeText,'String',SizeStr);
         handles.Settings.FirstImagePath = fullfile(path,name);
-        handles.ImageLoaded = true;
     end
+    handles.ImageLoaded = true;
 elseif ~handles.ImageLoaded
     set(handles.FirstImageNameText,'String','Select an Image');
     set(handles.ImageFolderText,'String','Select an Image');
@@ -300,8 +300,8 @@ if name ~= 0
         set(handles.OutputFolderText,'String',path);
         set(handles.OutputFolderText,'TooltipString',path);
         handles.Settings.OutputPath = fullfile(path,name);
-        handles.OutputLoaded = true;
     end     
+    handles.OutputLoaded = true;
 elseif ~handles.OutputLoaded
     set(handles.OutputResultsText,'String','Select an Output File');
     set(handles.OutputScanText,'String','Select an Output File');
