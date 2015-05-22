@@ -632,7 +632,11 @@ if isfield(Settings,'CalcDerivatives')
     if strcmp(Settings.NumSkipPts,'a') || strcmp(Settings.NumSkipPts,'t')
         skippts = 0;
     else
-        skippts = str2double(Settings.NumSkipPts);
+        if isnumeric(Settings.NumSkipPts)
+            skippts = Settings.NumSkipPts;
+        else
+            skippts = str2double(Settings.NumSkipPts);
+        end
     end
     stepsize = stepsize_orig*(skippts+1);
 

@@ -200,6 +200,7 @@ if name ~= 0
         handles.Settings.CI = ScanFileData{7};
         handles.Settings.Fit = ScanFileData{10};
         handles.Settings.ScanFilePath = fullfile(path,name);
+        handles.ScanFileLoaded = true;
         MaterialPopup_Callback(handles.MaterialPopup, [], handles);
         handles = guidata(handles.MainGUI);
     end 

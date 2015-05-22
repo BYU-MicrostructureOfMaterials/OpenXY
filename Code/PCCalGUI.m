@@ -76,9 +76,7 @@ switch ScanType
     case 'Square'
         IQPlot = reshape(IQ, Nx,Ny)';
         if Ny == 1 %Lines Scans
-            for i = 2:10
-                IQPlot(i,:) = IQPlot(1,:);
-            end
+            IQPlot = repmat(IQPlot,floor(Settings.ScanLength/4),1);
         end
 
         axes(handles.axes1)
@@ -248,15 +246,15 @@ if handles.VanPont
     
     pctRunOnAll javaaddpath('java')
     ppm = ParforProgMon( 'Point Calibration ', npoints,1,400,50 );
-    profile on
+%     profile on
     parfor (i=1:npoints,M)
         PCref = PCMinSinglePattern(Settings, ScanParams, Settings.CalibrationPointIndecies(i));
         disp(['Point: ' num2str(i)])
         CalibrationPointsPC(i,:) = PCref';
         ppm.increment();
     end
-    profile off
-    profile viewer
+%     profile off
+%     profile viewer
     ppm.delete();
     Settings.CalibrationPointsPC = CalibrationPointsPC;
 

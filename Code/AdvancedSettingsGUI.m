@@ -89,6 +89,8 @@ SetPopupValue(handles.GrainRefType,Settings.GrainRefImageType);
 set(handles.DoDD,'Value', Settings.CalcDerivatives);
 %Do Split DD
 set(handles.DoSplitDD,'Value',Settings.DoDDS);
+%Number of Skip Points
+set(handles.SkipPoints,'String',Settings.NumSkipPts);
 %IQ Cutoff
 set(handles.IQCutoff,'String',num2str(Settings.IQCutoff));
 %SplitDD Method
