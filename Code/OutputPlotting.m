@@ -61,10 +61,7 @@ OutputTypesList = {'Strain','Dislocation Density','Split Dislocation Density','T
 if length(varargin) == 1
     input = varargin{1};
     set(handles.SettingsFileEdit,'String',input{1});
-    handles.Settings = input{1};
-    if handles.Settings.Ny == 1 %Line Scan
-        OutputTypesList = horzcat(OutputTypesList,'Line Scan Plots');
-    end
+    loadSettings(input{1},handles);
 end
 
 set(handles.OptionsPopup,'String',OutputTypesList);
@@ -137,7 +134,10 @@ set(handles.SettingsFileEdit,'String', NewFileName);
 if ~strcmp(PrevFileName,NewFileName)
     handles.matfileloaded = 0;
 end
-tempmat = load(NewFileName);
+loadSettings(NewFileName,handles);
+
+function loadSettings(SettingsPath,handles)
+tempmat = load(SettingsPath);
 if isfield(tempmat,'Settings')
     handles.Settings = tempmat.Settings;
     if handles.Settings.Ny == 1
@@ -148,7 +148,7 @@ if isfield(tempmat,'Settings')
 else
     warndlg('No Settings variable found in file')
 end
-guidata(hObject, handles);
+guidata(handles.SettingsFileBrowseButton, handles);
 
 
 

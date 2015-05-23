@@ -114,7 +114,7 @@ handles = guidata(hObject);
 ScreenSize = get(groot,'ScreenSize');
 set(hObject,'Units','pixels');
 GUIsize = get(hObject,'Position');
-set(handles.MainGUI,'Position',[(ScreenSize(3)-GUIsize(3))/2 (ScreenSize(4)-(500+GUIsize(4))) GUIsize(3) GUIsize(4)]);
+%set(handles.MainGUI,'Position',[(ScreenSize(3)-GUIsize(3))/2 (ScreenSize(4)-(500+GUIsize(4))) GUIsize(3) GUIsize(4)]);
 
 % Reset Run Button
 set(handles.RunButton,'String','Run');
