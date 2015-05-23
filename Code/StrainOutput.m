@@ -109,13 +109,13 @@ for i=1:3
             
         end
         if r == 1
-            epsijBand = repmat(epsij,50,1);
+            epsij = repmat(epsij,Settings.ScanLength,1);
         end
         
         AverageStrain = mean(epsij(:));
         if any(strcmp(['e' num2str(i) num2str(j)],Components))
             figure;
-            imagesc(epsijBand)
+            imagesc(epsij)
             title(['\epsilon_',num2str(i),'_',num2str(j) ' Average Strain: ' num2str(AverageStrain)],'fontsize',14)
             shading flat
             axis equal tight

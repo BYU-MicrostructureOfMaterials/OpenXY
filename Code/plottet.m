@@ -6,7 +6,7 @@ grid on
 set(gca,'fontsize',16)
 xlabel('Scan position (\mum)')
 ylabel('Strain (%)')
-axis([0 NN -1.5 1]);
+%axis([0 NN -1.5 1]);
 legend('\epsilon_1_1','\epsilon_2_2','\epsilon_3_3')
 tempF=zeros(3,3);for i=1:NN; tempF(:,:)=Settings.data.F{i};[tempR tempU]=poldec(tempF);temptet(i)=tempU(3,3)-(tempU(1,1)+tempU(2,2))/2;end
 figure;plot(temptet*100)

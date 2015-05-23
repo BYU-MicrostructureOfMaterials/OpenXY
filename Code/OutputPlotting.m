@@ -56,12 +56,17 @@ function OutputPlotting_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for OutputPlotting
 handles.output = hObject;
 
+OutputTypesList = {'Strain','Dislocation Density','Split Dislocation Density','Tetragonality'};
+
 if length(varargin) == 1
     input = varargin{1};
     set(handles.SettingsFileEdit,'String',input{1});
+    handles.Settings = input{1};
+    if handles.Settings.Ny == 1 %Line Scan
+        OutputTypesList = horzcat(OutputTypesList,'Line Scan Plots');
+    end
 end
 
-OutputTypesList = {'Strain','Dislocation Density','Split Dislocation Density','Tetragonality'};
 set(handles.OptionsPopup,'String',OutputTypesList);
 
 smin = -0.05; % range for colormap of strain
@@ -132,10 +137,18 @@ set(handles.SettingsFileEdit,'String', NewFileName);
 if ~strcmp(PrevFileName,NewFileName)
     handles.matfileloaded = 0;
 end
+tempmat = load(NewFileName);
+if isfield(tempmat,'Settings')
+    handles.Settings = tempmat.Settings;
+    if handles.Settings.Ny == 1
+        OutputTypesList = get(handles.OptionsPopup,'String');
+        OutputTypesList = vertcat(OutputTypesList,'Line Scan Plots');
+        set(handles.OptionsPopup,'String',OutputTypesList);
+    end
+else
+    warndlg('No Settings variable found in file')
+end
 guidata(hObject, handles);
-
-
-
 
 
 
@@ -388,6 +401,13 @@ end
 CalcMeasuresList = get(handles.CalculatedListBox,'String');
 if any(strcmp(CalcMeasuresList,'Tetragonality'))
     TetragonalityOutput(Settings);
+end
+
+%Check for LineScan plots
+Matches = [];
+Matches = intersect('Line Scan Plots',Calculations);
+if ~isempty(Matches)
+    PlotLineScan(Settings);
 end
 
 %Updates Settings structure in handles struct
