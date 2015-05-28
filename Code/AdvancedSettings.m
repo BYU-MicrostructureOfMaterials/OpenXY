@@ -58,10 +58,15 @@ Settings=stemp.Settings;
 clear stemp
 
 %Read Grain File and get material data
-GrainFileVals = ReadGrainFile(Settings.GrainFilePath);
-allMaterials = unique(lower(GrainFileVals{11}));
-handles.allMaterials = allMaterials;
-curMaterial=allMaterials{1};
+if strcmp(Settings.Material, 'grainfile')
+    GrainFileVals = ReadGrainFile(Settings.GrainFilePath);
+    allMaterials = unique(lower(GrainFileVals{11}));
+    handles.allMaterials = allMaterials;
+    curMaterial=allMaterials{1};
+else
+    handles.allMaterials = {Settings.Material};
+    curMaterial = Settings.Material;
+end
 guidata(hObject,handles);
 
 %Initialize NumROIs popup
