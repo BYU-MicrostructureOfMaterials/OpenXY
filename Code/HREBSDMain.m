@@ -2,6 +2,7 @@
 %based on these settings ( See GetHROIMDefaultSettings).
 %calls output display functionns on completion
 %Jay Basinger 3/11/2011
+%
 
 function Settings = HREBSDMain(Settings)
 % tic
