@@ -318,6 +318,29 @@ function RunButton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 Settings = handles.Settings;
+
+%Check ScanType
+[~,~,ext] = fileparts(Settings.ScanFilePath);
+if strcmp(ext,'.ang')
+    check = true;
+    if ~isempty(strfind(Settings.ScanParams.GridType,'Hex'))
+        AutoType = 'Hexagonal';
+    elseif ~isempty(strfind(Settings.ScanParams.GridType,'Sqr'))
+        AutoType = 'Square';
+    else
+        check = false;
+    end
+    if check && ~strcmp(Settings.ScanType,AutoType)
+        button = questdlg({'Scan type might be incorrect.';['Would you like to change it to ' AutoType '?']},'OpenXY');
+        switch button
+            case 'Yes'
+                Settings.ScanType = AutoType;
+                SetPopupValue(handles.ScanTypePopup,AutoType);
+            case 'Cancel'
+                return;
+        end
+    end
+end
 save('Settings.mat','Settings');
 
 %Set Settings fields

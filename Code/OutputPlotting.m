@@ -57,14 +57,13 @@ function OutputPlotting_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.output = hObject;
 
 OutputTypesList = {'Strain','Dislocation Density','Split Dislocation Density','Tetragonality'};
+set(handles.OptionsPopup,'String',OutputTypesList);
 
 if length(varargin) == 1
     input = varargin{1};
     set(handles.SettingsFileEdit,'String',input{1});
     loadSettings(input{1},handles);
 end
-
-set(handles.OptionsPopup,'String',OutputTypesList);
 
 smin = -0.05; % range for colormap of strain
 smax = 0.05;
