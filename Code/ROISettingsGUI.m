@@ -351,7 +351,7 @@ function NumROIPopup_Callback(hObject, eventdata, handles)
 % Hints: contents = cellstr(get(hObject,'String')) returns NumROIPopup contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from NumROIPopup
 contents = cellstr(get(hObject,'String'));
-handles.Settings.NumROIs = contents{get(hObject,'Value')};
+handles.Settings.NumROIs = str2double(contents{get(hObject,'Value')});
 guidata(hObject,handles);
 
 
