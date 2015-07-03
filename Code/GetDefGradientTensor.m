@@ -159,7 +159,9 @@ switch Settings.HROIMMethod
                 if ii == 1
                     display(['Didn''t make it in to the iteration loop for:' Settings.ImageNamesList{ImageInd}])
                 end
-                break
+                g = euler2gmat(Settings.Angles(ImageInd,1),Settings.Angles(ImageInd,2),Settings.Angles(ImageInd,3)); 
+                F = -eye(3); SSE = 101; U = -eye(3);
+                return;
             end
             [r1 u1]=poldec(F1);
             U1=u1;
