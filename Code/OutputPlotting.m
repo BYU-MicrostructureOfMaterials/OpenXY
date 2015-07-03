@@ -312,7 +312,7 @@ end
 
 %%Update File locations
 UpdateFileLocations=0;
-if ~strcmp(Settings.OutputPath,FilePath)
+if ~strcmp(Settings.OutputPath,FilePath) && ~exist(Settings.ScanFilePath,'file') && ~exist(Settings.FirstImagePath,'file')
     UpdateFileLocations=1;
 end
 
