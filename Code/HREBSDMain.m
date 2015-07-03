@@ -256,6 +256,12 @@ end
 %% Run Analysis
 %Use a parfor loop if allowed multiple processors.
 tic
+%Initialize Variables
+F = repmat({zeros(3)},1,Settings.ScanLength);
+g = repmat({zeros(3,1)},1,Settings.ScanLength);
+U = repmat({zeros(3)},1,Settings.ScanLength);
+SSE = repmat({0},1,Settings.ScanLength);
+
 if Settings.DoParallel > 1
     NumberOfCores = Settings.DoParallel;
     try
@@ -282,7 +288,7 @@ if Settings.DoParallel > 1
         %or a structure F.a F.b F.c of deformation gradient tensors for
         %each point in the L grid
         
-        [F{ImageInd} g{ImageInd} U{ImageInd} SSE{ImageInd}] = ...
+        [F{ImageInd}, g{ImageInd}, U{ImageInd}, SSE{ImageInd}] = ...
             GetDefGradientTensor(ImageInd,Settings,Settings.Phase{ImageInd});
         
         %{
@@ -299,13 +305,13 @@ if Settings.DoParallel > 1
     if Settings.DisplayGUI; ppm.delete(); end;
     
 else
-    if Settings.DispalyGUI; h = waitbar(0,'Single Processor Progress'); end;
+    if Settings.DisplayGUI; h = waitbar(0,'Single Processor Progress'); end;
     
-    for ImageInd = 1:length(ImageNamesList)
+    for ImageInd = 1:Settings.ScanLength
         %         tic
 %         disp(ImageInd)
         
-        [F{ImageInd} g{ImageInd} U{ImageInd} SSE{ImageInd}] = ...
+        [F{ImageInd}, g{ImageInd}, U{ImageInd}, SSE{ImageInd}] = ...
             GetDefGradientTensor(ImageInd,Settings,Settings.Phase{ImageInd});
         
         % commented out this (outputs strain matrix - I think - DTF 5/15/14)
@@ -315,7 +321,7 @@ else
 %             U{ImageInd} - eye(3)
 %         end
         
-        if Settings.DisplayGUI; waitbar(ImageInd/length(ImageNamesList),h); end;
+        if Settings.DisplayGUI; waitbar(ImageInd/Settings.ScanLength,h); end;
         %         IterTime(ImageInd) = toc
 %         if ImageInd>50
 %             keyboard
@@ -412,10 +418,7 @@ if Settings.CalcDerivatives
 end
 profile off
 profile viewer
-%% Output Plotting
-% save([OutputPathWithSlash 'Data_' FileName],'data');
-input{1} = [SaveFile '.mat'];
-OutputPlotting(input); %moved here due to error writing ang file for vaudin files ****
+
 %% Write Corrected Scan File
 [~,~,ext] = fileparts(Settings.ScanFilePath);
 if strcmp(ext,'.ang')
@@ -433,3 +436,7 @@ end
 %Call output display GUI for curvature, dislocation density, strain, etc.
 %output.
 
+%% Output Plotting
+% save([OutputPathWithSlash 'Data_' FileName],'data');
+input{1} = [SaveFile '.mat'];
+OutputPlotting(input); %moved here due to error writing ang file for vaudin files ****
