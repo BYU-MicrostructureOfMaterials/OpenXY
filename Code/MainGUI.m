@@ -168,7 +168,7 @@ if name ~= 0
     handles.FileDir = path;
     prevName = get(handles.ScanNameText,'String');
     prevFolder = get(handles.ScanFolderText,'String');
-    if ~strcmp(prevName,name) || ~strcmp(prevFolder,path)
+    if ~strcmp(prevName,name) || ~strcmp(prevFolder,path) || ~isfield(handles.Settings,'ScanParams')
         set(handles.ScanNameText,'String',name);
         set(handles.ScanNameText,'TooltipString',name);
         set(handles.ScanFolderText,'String',path);
@@ -188,7 +188,7 @@ if name ~= 0
         handles.Settings.YData = zeros(handles.Settings.ScanLength,1);
         handles.Settings.IQ = zeros(handles.Settings.ScanLength,1);
         handles.Settings.CI = zeros(handles.Settings.ScanLength,1);
-        handles.Settings.FIT = zeros(handles.Settings.ScanLength,1);
+        handles.Settings.Fit = zeros(handles.Settings.ScanLength,1);
         
         %Read ScanFile Data into Settings
         handles.Settings.Angles(:,1) = ScanFileData{1};
