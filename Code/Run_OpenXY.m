@@ -1,4 +1,4 @@
 function Run_OpenXY
 clear java
-BigGreenGUI();
+MainGUI;
 end
