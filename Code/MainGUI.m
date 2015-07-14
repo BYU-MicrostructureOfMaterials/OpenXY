@@ -88,17 +88,24 @@ SetPopupValue(handles.ScanTypePopup,handles.Settings.ScanType);
 MaterialList = GetMaterialsList;
 set(handles.MaterialPopup,'String',MaterialList);
 SetPopupValue(handles.MaterialPopup,handles.Settings.Material);
+%Display Shifts
+set(handles.DisplayShiftsBox,'Value',handles.Settings.DoShowPlot);
 %Processors
 NumberOfCores = feature('numCores');
 set(handles.ProcessorsPopup, 'String', 1:NumberOfCores);
-set(handles.ProcessorsPopup,'Value',NumberOfCores-1);
-if handles.Settings.DoParallel <= feature('numCores');
+if NumberOfCores > 1
+    DoParallel = NumberOfCores-1;
+else
+    DoParallel = NumberOfCores;
+end
+if handles.Settings.DoParallel > NumberOfCores
+    set(handles.ProcessorsPopup,'Value',DoParallel);
+else
     set(handles.ProcessorsPopup,'Value',handles.Settings.DoParallel);
 end
+ProcessorsPopup_Callback(handles.ProcessorsPopup,eventdata,handles);
 %PC Calibration
 set(handles.PCCalibrationBox,'Value',handles.Settings.DoPCStrainMin);
-%Display Shifts
-set(handles.DisplayShiftsBox,'Value',handles.Settings.DoShowPlot);
 %Files
 [path,name,ext] = fileparts(handles.Settings.ScanFilePath);
 SetScanFields(handles,[name ext],path);
@@ -454,7 +461,15 @@ function ProcessorsPopup_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns ProcessorsPopup contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from ProcessorsPopup
-handles.Settings.DoParallel = get(hObject,'Value');
+DoParallel = get(hObject,'Value');
+handles.Settings.DoParallel = DoParallel;
+if DoParallel > 1
+    set(handles.DisplayShiftsBox,'Enable','off');
+    set(handles.DisplayShiftsBox,'Value',false);
+else
+    set(handles.DisplayShiftsBox,'Enable','on');
+end
+DisplayShiftsBox_Callback(handles.DisplayShiftsBox,eventdata,handles);
 guidata(hObject, handles);
 
 
@@ -512,8 +527,10 @@ function SaveAnalysis_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 Settings = handles.Settings;
 [name, path] = uiputfile('*.mat','Save Analysis Settings');
-save(fullfile(path,name),'Settings');
-disp('Analysis Saved');
+if name ~= 0
+    save(fullfile(path,name),'Settings');
+    disp('Analysis Saved');
+end
 
 
 % --------------------------------------------------------------------
