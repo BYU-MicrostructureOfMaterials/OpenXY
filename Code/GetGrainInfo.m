@@ -40,21 +40,18 @@ if strcmp(ext,'.ang')
         Phase = cell(length(GrainFileVals{1}),1);
         Phase(:) = {Material};
     end
+    ValidatePhase(Phase);
+    
 elseif strcmp(ext,'.ctf')
     Phase = cell(length(Angles),1); 
     if strcmp(Material,'Auto-detect')
-        %Determine if material from .ctf/.cpr file is in list of known materials
-        MaterialsList = GetMaterialsList;
-        if strmatch(lower(ScanParams.material),MaterialsList,'exact')
-            MaterialData = ReadMaterial(ScanParams.material);
-            Phase(:)={lower(ScanParams.material)};
-        else
-            error(['Auto material detection failed. ' lower(ScanParams.material) ' not found in list of known materials']);
-        end
+        Phase(:)={lower(ScanParams.material)};
+        Material = ScanParams.material;
     else
         Phase(:) = {Material};
-        MaterialData = ReadMaterial(Material);
     end
+    ValidatePhase(Phase);
+    MaterialData = ReadMaterial(ScanParams.material);
     
     %Set up params for findgrains.m
     angles = reshape(Angles,ScanParams.NumColsOdd,ScanParams.NumRows,3);
@@ -62,6 +59,14 @@ elseif strcmp(ext,'.ctf')
     small = true;
     mistol = MaxMisorientation*pi/180;
     [grainID] = findgrains(angles, MaterialData.lattice, clean, small,mistol);
+end
+function ValidatePhase(Phase)
+    %Validate Material Detection
+    MaterialsList = GetMaterialsList;
+    if ~all(ismember(Phase,MaterialsList))
+        invalidMats = unique(Phase(~ismember(Phase,MaterialsList)));
+        error(['Auto material detection failed. ' strjoin(invalidMats,', ') ' not found in list of known materials']);
+    end
 end
 
 end
