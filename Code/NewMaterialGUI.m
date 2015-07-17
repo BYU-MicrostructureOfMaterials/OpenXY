@@ -756,7 +756,13 @@ set(handles.NumVal,'String',num2str(m));
 set(handles.fhkl,'Data',num2cell(MaterialStruct.Fhkl));
 MaterialStruct.dhkl = MaterialStruct.dhkl / (1*10^n_exp); %Convert to Angtroms
 set(handles.dhkl,'Data',num2cell(MaterialStruct.dhkl));
-set(handles.hkl,'Data',num2cell(MaterialStruct.hkl));
+if strcmp(MaterialStruct.lattice,'hexagonal')
+    set(handles.hkl,'Data',num2cell(MaterialStruct.hkl_hex));
+else
+    set(handles.hkl,'Data',num2cell(MaterialStruct.hkl));
+end
+handles.hkl.Position(3)=handles.hkl.Extent(3);
+handles.hkl.Position(4)=handles.hkl.Extent(4);
 if isfield(MaterialStruct,'C11')
     set(handles.C11,'String',num2str(MaterialStruct.C11));
 end

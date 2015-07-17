@@ -42,6 +42,7 @@ if exist(filename,'file')
                     hkl(i,2) = sqrt(3)/2*(hkil(i,1)+2*hkil(i,2));
                     hkl(i,3) = 3/2*1/(M.c1/M.a1)*hkil(i,4);
                 end
+                M.hkl_hex = M.hkl;
                 M.hkl = hkl;
         end
     end
