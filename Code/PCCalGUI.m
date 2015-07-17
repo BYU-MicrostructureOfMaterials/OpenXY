@@ -22,7 +22,7 @@ function varargout = PCCalGUI(varargin)
 
 % Edit the above text to modify the response to help PCCalGUI
 
-% Last Modified by GUIDE v2.5 24-Feb-2015 13:55:28
+% Last Modified by GUIDE v2.5 08-Jul-2015 12:01:01
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -119,6 +119,7 @@ handles.Settings = Settings;
 handles.ScanParams = Settings.ScanParams;
 handles.VanPont = 0;
 handles.calibrated = 0;
+handles.tiffread = 0;
 handles.IQPlot = IQPlot;
 guidata(hObject, handles);
 %uiwait(handles.figure1)
@@ -161,7 +162,7 @@ function savenclose_Callback(hObject, eventdata, handles)
 planefitpanel_SelectionChangeFcn(handles.planefitpanel, eventdata, handles);
 handles = guidata(hObject);
 YesNo = 'Yes';
-if ~handles.calibrated
+if ~handles.calibrated && ~handles.tiffread
     YesNo = questdlg({'No pattern center calibration has been performed.'; 'Are you sure you want to continue?'},'No Calibration');
 end
 if ~strcmp(YesNo,'No')
@@ -180,6 +181,11 @@ if ~strcmp(YesNo,'No')
         PCCal.NaiveXstar = handles.NaiveXstar;
         PCCal.NaiveYstar = handles.NaiveYstar;
         PCCal.NaiveZstar = handles.NaiveZstar;
+        if handles.tiffread
+            PCCal.TiffXstar = handles.TiffXstar;
+            PCCal.TiffYstar = handles.TiffYstar;
+            PCCal.TiffZstar = handles.TiffZstar;
+        end
         Settings.PCCal = PCCal;
     end
     if strcmp(YesNo,'Cancel')
@@ -576,10 +582,40 @@ if handles.calibrated
         plot3(Settings.CalibrationPointsPC(:,1),Settings.CalibrationPointsPC(:,2),Settings.CalibrationPointsPC(:,3),'ro')
         plot3(handles.MeanXstar,handles.MeanYstar,handles.MeanZstar,'go')
     end
+    
 
     handles.Settings = Settings;
     guidata(hObject, handles);
 
+end
+
+if handles.tiffread && get(handles.fromtiff,'Value')
+    Settings.Xstar = handles.TiffXstar;
+    Settings.Ystar = handles.TiffYstar;
+    Settings.Zstar = handles.TiffZstar;
+    
+    axes(handles.axes2)
+    plot3(handles.ScanParams.xstar,handles.ScanParams.ystar,handles.ScanParams.zstar,'bo')
+    hold on
+    try
+        plot3(Settings.CalibrationPointsPC(:,1),Settings.CalibrationPointsPC(:,2),Settings.CalibrationPointsPC(:,3),'ro')
+    catch me
+    end
+    
+    TiffXstar = reshape(handles.TiffXstar,Settings.Nx,Settings.Ny)';
+    TiffYstar = reshape(handles.TiffYstar,Settings.Nx,Settings.Ny)';
+    TiffZstar = reshape(handles.TiffZstar,Settings.Nx,Settings.Ny)';
+    
+    if Settings.Ny > 1
+        surf(TiffXstar,TiffYstar,TiffZstar,zeros(size(TiffZstar)))
+    else
+        plot3(TiffXstar,TiffYstar,TiffZstar)
+    end
+    shading flat
+    
+    handles.Settings = Settings;
+    guidata(hObject, handles);  
+    
 end
 
 % --- Executes during object creation, after setting all properties.
@@ -712,3 +748,86 @@ function SavePCCal_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of SavePCCal
 handles.SaveAllPC = get(hObject,'Value');
 guidata(hObject,handles);
+
+
+% --- Executes on button press in fromtiffbutton.
+function fromtiffbutton_Callback(hObject, eventdata, handles)
+% hObject    handle to fromtiffbutton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+handles = guidata(hObject);
+
+Settings = handles.Settings;
+
+info = imfinfo(Settings.ImageNamesList{1});
+
+go = 0;
+if isfield(info,'UnknownTags')
+    if ~isempty(strfind(info.UnknownTags.Value,'<pattern-center-x-pu>'))
+        go = 1;
+        VHRatio = info.Height/info.Width;
+    end
+end
+
+
+if go==1
+
+    handles.TiffXstar = zeros(size(Settings.XData));
+    handles.TiffYstar = handles.TiffXstar;
+    handles.TiffZstar = handles.TiffXstar;
+    
+    lscan = length(Settings.ImageNamesList);
+
+    h = waitbar(0,'Reading Tiff Files');
+    for i=1:lscan
+        try
+            info = imfinfo(Settings.ImageNamesList{i});
+
+            xistart = strfind(info.UnknownTags.Value,'<pattern-center-x-pu>');
+            xifinish = strfind(info.UnknownTags.Value,'</pattern-center-x-pu>');
+
+            thisx = str2double(info.UnknownTags.Value(xistart+length('<pattern-center-x-pu>'):xifinish-1));
+            handles.TiffXstar(i) = (thisx - (1-VHRatio)/2)/VHRatio;
+
+            yistart = strfind(info.UnknownTags.Value,'<pattern-center-y-pu>');
+            yifinish = strfind(info.UnknownTags.Value,'</pattern-center-y-pu>');
+
+            handles.TiffYstar(i) = str2double(info.UnknownTags.Value(yistart+length('<pattern-center-y-pu>'):yifinish-1));
+
+            zistart = strfind(info.UnknownTags.Value,'<detector-distance-pu>');
+            zifinish = strfind(info.UnknownTags.Value,'</detector-distance-pu>');
+
+            handles.TiffZstar(i) = str2double(info.UnknownTags.Value(zistart+length('<detector-distance-pu>'):zifinish-1))/VHRatio;
+        catch me
+            handles.TiffXstar(i) = handles.ScanParams.xstar;
+            handles.TiffYstar(i) = handles.ScanParams.ystar;
+            handles.TiffZstar(i) = handles.ScanParams.zstar;
+        end
+        
+        waitbar(i/lscan,h)
+    end
+    close(h)
+
+    handles.tiffread = 1;
+
+    
+    if ~handles.calibrated
+        Settings.Xstar = handles.TiffXstar;
+        Settings.Ystar = handles.TiffYstar;
+        Settings.Zstar = handles.TiffZstar;
+        
+        handles.Settings = Settings;
+
+    
+    end
+    
+    guidata(hObject, handles);
+    
+    planefitpanel_SelectionChangeFcn(handles.planefitpanel, eventdata, handles);
+    
+
+else
+    disp('Error: No PC data found in image files')
+end
+

@@ -59,6 +59,7 @@ elseif strcmp(ext,'.ctf')
     small = true;
     mistol = MaxMisorientation*pi/180;
     [grainID] = findgrains(angles, MaterialData.lattice, clean, small,mistol);
+    grainID = reshape(grainID, ScanParams.NumColsOdd*ScanParams.NumRows,1);
 end
 function ValidatePhase(Phase)
     %Validate Material Detection
