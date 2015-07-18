@@ -4,11 +4,14 @@ function M = ReadMaterial(Material)
 if strcmp(Material,'newphase')
     Material='iron-alpha';
 end
-if strcmp(Material,'Austenite') || strcmp(Material,'austenite')
+if strcmpi(Material,'Austenite')
     Material='iron-gamma';
 end
-if strcmp(Material,'Ferrite') || strcmp(Material,'ferrite')
+if strcmpi(Material,'Ferrite')
     Material='iron-alpha';
+end
+if strcmpi(Material,'aluminium')
+    Material = 'aluminum';
 end
 
 filename = fullfile(pwd,'Materials',[Material '.txt']);

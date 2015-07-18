@@ -5,4 +5,4 @@ for i = length(materials):-1:1
     [~,materials{i+1},~] = fileparts(materials{i});
 end
 materials{1} = 'Auto-detect';
-materials = [materials; {'ferrite';'austenite'}];
+materials = [materials; {'ferrite';'austenite';'aluminium'}];
