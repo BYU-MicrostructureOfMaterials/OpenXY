@@ -65,10 +65,8 @@ end
 %[SquareFileVals, ScanParams] = ReadScanFile(Settings.ScanFilePath);
 
 IQ = Settings.IQ;
-
 Nx = Settings.Nx;
 Ny = Settings.Ny;
-
 ScanType = Settings.ScanType;
 
 switch ScanType
@@ -110,6 +108,13 @@ end
 axes(handles.axes2)
 plot3(Settings.ScanParams.xstar,Settings.ScanParams.ystar,Settings.ScanParams.zstar,'bo')
 colormap jet
+
+if Settings.ImageTag
+    set(handles.fromtiffbutton,'Enable','on');
+else   
+    set(handles.fromtiffbutton,'Enable','off');
+end
+set(handles.fromtiff,'Enable','off');
 
 set(handles.SavePCCal,'Value',1);
 handles.SaveAllPC = 1;
@@ -757,27 +762,17 @@ function fromtiffbutton_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 handles = guidata(hObject);
-
 Settings = handles.Settings;
-
 info = imfinfo(Settings.ImageNamesList{1});
 
-go = 0;
-if isfield(info,'UnknownTags')
-    if ~isempty(strfind(info.UnknownTags.Value,'<pattern-center-x-pu>'))
-        go = 1;
-        VHRatio = info.Height/info.Width;
-    end
-end
-
-
-if go==1
+if Settings.ImageTag %See MainGUI.m SetImageFields
 
     handles.TiffXstar = zeros(size(Settings.XData));
     handles.TiffYstar = handles.TiffXstar;
     handles.TiffZstar = handles.TiffXstar;
     
-    lscan = length(Settings.ImageNamesList);
+    VHRatio = Settings.VHRatio;
+    lscan = Settings.ScanLength;
 
     h = waitbar(0,'Reading Tiff Files');
     for i=1:lscan
@@ -799,35 +794,37 @@ if go==1
             zifinish = strfind(info.UnknownTags.Value,'</detector-distance-pu>');
 
             handles.TiffZstar(i) = str2double(info.UnknownTags.Value(zistart+length('<detector-distance-pu>'):zifinish-1))/VHRatio;
-        catch me
+        catch
             handles.TiffXstar(i) = handles.ScanParams.xstar;
             handles.TiffYstar(i) = handles.ScanParams.ystar;
             handles.TiffZstar(i) = handles.ScanParams.zstar;
         end
-        
         waitbar(i/lscan,h)
     end
     close(h)
 
     handles.tiffread = 1;
+    set(handles.fromtiff,'Enable','on');
 
-    
     if ~handles.calibrated
         Settings.Xstar = handles.TiffXstar;
         Settings.Ystar = handles.TiffYstar;
         Settings.Zstar = handles.TiffZstar;
         
         handles.Settings = Settings;
-
-    
     end
     
     guidata(hObject, handles);
-    
+    if get(handles.autorunbox,'Value')
+        set(handles.fromtiff,'Value',1)
+    end
     planefitpanel_SelectionChangeFcn(handles.planefitpanel, eventdata, handles);
     
+    if get(handles.autorunbox,'Value')
+        savenclose_Callback(handles.savenclose,eventdata,handles);
+    end
 
 else
-    disp('Error: No PC data found in image files')
+    msgbox('No PC data found in image files','Read PC from TIFF')
 end
 

@@ -258,6 +258,15 @@ if name ~= 0
         SizeStr = [num2str(x) 'x' num2str(y) ' (' num2str(round(improp.bytes/1024)) ' KB)'];
         set(handles.ImageSizeText,'String',SizeStr);
         handles.Settings.FirstImagePath = fullfile(path,name);
+        
+        %Determine if the image has a custom tag in header
+        info = imfinfo(handles.Settings.FirstImagePath);
+        if isfield(info,'UnknownTags')
+            if ~isempty(strfind(info.UnknownTags.Value,'<pattern-center-x-pu>'))
+                handles.Settings.ImageTag = true;
+                handles.Settings.VHRatio = info.Height/info.Width;
+            end
+        end
     end
     handles.ImageLoaded = true;
 elseif ~handles.ImageLoaded
@@ -500,6 +509,7 @@ function LoadPrevAnalysis_Callback(hObject, eventdata, handles)
 temp = load('Settings.mat');
 PrevSettings = temp.Settings;
 clear temp
+RestoreDefaultSettings_Callback(hObject, eventdata, handles);
 MainGUI(PrevSettings);
 
 % --------------------------------------------------------------------
@@ -604,31 +614,7 @@ Value = IndList(strcmp(List,String));
 if isempty(Value); Value =1; end;
 set(Popup, 'Value', Value);
 
-function Settings = CropScan(Settings)
-%Unique x and y
-X = unique(Settings.XData);
-Y = unique(Settings.YData);
 
-%Number of steps in x and y
-Nx = length(X);
-Ny = length(Y);
-
-%Check if complete grid
-if (Nx * Ny) ~= Settings.ScanLength && ...
-        sum(Settings.YData == Y(end)) ~= sum(Settings.YData == Y(1)) && ...
-        sum(Settings.YData == Y(end-1)) == sum(Settings.YData == Y(1))
-    disp('Incomplete Grid, cropping last row...')
-    Ny = Ny - 1;
-    Settings.ScanLength = Nx * Ny;
-    Settings.Angles = Settings.Angles(1:Settings.ScanLength,:);
-    Settings.XData = Settings.XData(1:Settings.ScanLength,:);
-    Settings.YData = Settings.YData(1:Settings.ScanLength,:);
-    Settings.IQ = Settings.IQ(1:Settings.ScanLength,:);
-    Settings.CI = Settings.CI(1:Settings.ScanLength,:);
-    Settings.Fit = Settings.Fit(1:Settings.ScanLength,:);
-end
-Settings.X = X; Settings.Nx = Nx;
-Settings.Y = Y; Settings.Ny = Ny;
     
 
 
