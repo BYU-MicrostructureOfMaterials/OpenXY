@@ -1,33 +1,43 @@
-function ResizeScan()
-[filename filepath] = uigetfile('*.ang','Select .ang File');
-ScanFilePath = fullfile(filepath,filename);
+function ResizeScan(ScanFilePath)
+if nargin == 0
+    [filename filepath] = uigetfile('*.ang','Select .ang File');
+    ScanFilePath = fullfile(filepath,filename);
+end
 %ScanFilePath = 'K:\DROBO SHARED\TSL Scans of clear steel morphology\Steel Ferrite-Martensite 40000X w 1x1 Pats.ang';
 [SquareFileVals ScanParams] = ReadScanFile(ScanFilePath);
 
 %Extract variables from Ang Files
-ScanLength = size(SquareFileVals{1},1);       
-Angles1 = SquareFileVals{1};
-Angles2 = SquareFileVals{2};
-Angles3 = SquareFileVals{3};
-XData = SquareFileVals{4};
-YData = SquareFileVals{5};
-IQ = SquareFileVals{6};
-SSE = SquareFileVals{7};
-Nx = length(unique(XData));
-Ny = length(unique(YData));
+Settings.Angles(:,1) = SquareFileVals{1};
+Settings.Angles(:,2) = SquareFileVals{2};
+Settings.Angles(:,3) = SquareFileVals{3};
+Settings.XData = SquareFileVals{4};
+Settings.YData = SquareFileVals{5};
+Settings.IQ = SquareFileVals{6};
+Settings.CI = SquareFileVals{7};
+Settings.Fit = SquareFileVals{10};
+Settings.ScanLength = size(SquareFileVals{1},1);
+Settings = CropScan(Settings);
+
+%Unique x and y
+X = unique(Settings.XData);
+Y = unique(Settings.YData);
+
+%Number of steps in x and y
+Nx = length(X);
+Ny = length(Y);
 
 %Copy variables into correctly sized matrices
-Angles1New = reshape(Angles1,Nx,Ny);
-Angles2New = reshape(Angles2,Nx,Ny);
-Angles3New = reshape(Angles3,Nx,Ny);
-XDataNew = reshape(XData,Nx,Ny);
-YDataNew = reshape(YData,Nx,Ny);
-IQNew = reshape(IQ,Nx,Ny)';
-SSENew = reshape(SSE,Nx,Ny);
+Angles1New = reshape(Settings.Angles(:,1),Nx,Ny);
+Angles2New = reshape(Settings.Angles(:,2),Nx,Ny);
+Angles3New = reshape(Settings.Angles(:,3),Nx,Ny);
+XDataNew = reshape(Settings.XData,Nx,Ny);
+YDataNew = reshape(Settings.YData,Nx,Ny);
+IQNew = reshape(Settings.IQ,Nx,Ny)';
+CINew = reshape(Settings.CI,Nx,Ny);
 
 %Location Selection GUI
-XStep = XData(2)-XData(1);
-YStep = YData(YData > 0);
+XStep = Settings.XData(2)-Settings.XData(1);
+YStep = Settings.YData(Settings.YData > 0);
 YStep = YStep(1);
 indi = 1:1:Nx*Ny;
 indi = reshape(indi,Nx,Ny)';
@@ -61,7 +71,7 @@ while redo
             Xind(npoints) = round(x);
             Yind(npoints) = round(y);
             npoints = npoints + 1;
-        elseif isempty(button) && (npoints == 1) && (~isempty(X)) %RETURN key is pressed
+        elseif isempty(button) && (npoints == 1) && (~isempty(X)) %RETURN key is presed
             redo = 0;
             break;
         end   
@@ -91,7 +101,7 @@ Angles2New = Angles2New(X(1):X(2),Y(1):Y(2));
 Angles3New = Angles3New(X(1):X(2),Y(1):Y(2));
 XDataNew = XDataNew(X(1):X(2),Y(1):Y(2));
 YDataNew = YDataNew(X(1):X(2),Y(1):Y(2));
-SSENew = SSENew(X(1):X(2),Y(1):Y(2));
+CINew = CINew(X(1):X(2),Y(1):Y(2));
 
 %Reshape into vector arrays
 Angles1New = Angles1New(:);
@@ -99,8 +109,8 @@ Angles2New = Angles2New(:);
 Angles3New = Angles3New(:);
 XDataNew = XDataNew(:);
 YDataNew = YDataNew(:);
-SSENew = SSENew(:);
-SSENew = num2cell(SSENew);
+CINew = CINew(:);
+CINew = num2cell(CINew);
 
 [outpath, outname, outext] = fileparts(ScanFilePath);
 OutputPath = [outpath filesep outname '-Resize' outext];
@@ -125,7 +135,7 @@ for i=1:length(Angles1New)
     C = C{1};
     fprintf(fout,'%1.5f\t %1.5f %1.5f %1.5f %1.5f %5.1f\t %1.3f %i %i %1.3f \n', ...
         Angles1New(i), Angles2New(i), Angles3New(i), XDataNew(i), YDataNew(i), C(6), ...
-        SSENew{i}, C(8), C(9), C(10));
+        CINew{i}, C(8), C(9), C(10));
     curline=fgetl(fin);
 end
 fclose(fin);
