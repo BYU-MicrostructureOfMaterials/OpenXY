@@ -48,8 +48,8 @@ X = unique(Settings.XData);
 Y = unique(Settings.YData);
 
 %Number of steps in x and y
-Nx = length(X);
-Ny = length(Y);
+Nx = Settings.Nx;
+Ny = Settings.Ny;
 
 switch Settings.ScanType;   
     case 'Square'

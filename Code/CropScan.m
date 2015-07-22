@@ -1,11 +1,6 @@
 function Settings = CropScan(Settings)
-%Unique x and y
-X = unique(Settings.XData);
-Y = unique(Settings.YData);
-
-%Number of steps in x and y
-Nx = length(X);
-Ny = length(Y);
+Nx = Settings.Nx;
+Ny = Settings.Ny;
 
 %Check if complete grid
 if (Nx * Ny) ~= Settings.ScanLength && ...
@@ -21,5 +16,3 @@ if (Nx * Ny) ~= Settings.ScanLength && ...
     Settings.CI = Settings.CI(1:Settings.ScanLength,:);
     Settings.Fit = Settings.Fit(1:Settings.ScanLength,:);
 end
-Settings.X = X; Settings.Nx = Nx;
-Settings.Y = Y; Settings.Ny = Ny;

@@ -208,6 +208,33 @@ if name ~= 0
         handles.Settings.Fit = ScanFileData{10};
         handles.Settings.ScanFilePath = fullfile(path,name);
         
+        %Unique x and y
+        X = unique(handles.Settings.XData);
+        Y = unique(handles.Settings.YData);
+        %Number of steps in x and y
+        Nx = length(X);
+        Ny = length(Y);
+        
+        if Nx ~= handles.Settings.ScanParams.NumColsOdd || Ny ~= handles.Settings.ScanParams.NumRows
+            NumColsOdd = handles.Settings.ScanParams.NumColsOdd;
+            NumRows = handles.Settings.ScanParams.NumRows;
+            ScanP = [num2str(NumColsOdd) 'x' num2str(NumRows)];
+            Auto =  [num2str(Nx) 'x' num2str(Ny)];
+            choice = questdlg({'Scan dimensions do not agree:';
+                ['Scan File Header: ' ScanP];
+                ['Unique values: ' Auto];
+                'Select correct values'},'Scan Dimension Differ',ScanP,Auto,Auto);
+            if strcmp(choice,ScanP)
+                Nx = NumColsOdd;
+                Ny = NumRows;
+            else
+                handles.Settings.ScanParams.NumColsOdd = Nx;
+                handles.Settings.ScanParams.NumColsEven = Nx - 1;
+                handles.Settings.ScanParams.NumRows = Ny;
+            end
+        end
+        handles.Settings.Nx = Nx; handles.Settings.Ny = Ny;
+        
         handles.Settings = CropScan(handles.Settings);
         handles.ScanFileLoaded = true;
         MaterialPopup_Callback(handles.MaterialPopup, [], handles);

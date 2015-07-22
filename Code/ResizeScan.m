@@ -1,10 +1,14 @@
 function ResizeScan(ScanFilePath)
 if nargin == 0
-    [filename filepath] = uigetfile('*.ang','Select .ang File');
+    [filename, filepath] = uigetfile({'*.ang;*.ctf','Scan Files'},'Select Scan File');
+    if filename == 0
+        return;
+    end
     ScanFilePath = fullfile(filepath,filename);
 end
 %ScanFilePath = 'K:\DROBO SHARED\TSL Scans of clear steel morphology\Steel Ferrite-Martensite 40000X w 1x1 Pats.ang';
-[SquareFileVals ScanParams] = ReadScanFile(ScanFilePath);
+[~,~,ext] = fileparts(ScanFilePath);
+[SquareFileVals, ScanParams] = ReadScanFile(ScanFilePath);
 
 %Extract variables from Ang Files
 Settings.Angles(:,1) = SquareFileVals{1};
@@ -16,15 +20,15 @@ Settings.IQ = SquareFileVals{6};
 Settings.CI = SquareFileVals{7};
 Settings.Fit = SquareFileVals{10};
 Settings.ScanLength = size(SquareFileVals{1},1);
-Settings = CropScan(Settings);
 
 %Unique x and y
 X = unique(Settings.XData);
 Y = unique(Settings.YData);
 
 %Number of steps in x and y
-Nx = length(X);
-Ny = length(Y);
+Nx = length(X); Settings.Nx = Nx;
+Ny = length(Y); Settings.Ny = Ny;
+Settings = CropScan(Settings);
 
 %Copy variables into correctly sized matrices
 Angles1New = reshape(Settings.Angles(:,1),Nx,Ny);
@@ -121,21 +125,34 @@ fout=fopen(OutputPath,'wt+');
 curline=fgetl(fin);
 fprintf(fout,'%s\n',curline);
 curline=fgetl(fin);
-while curline(1)=='#'
-    fprintf(fout,'%s\n',curline);
-    curline=fgetl(fin);
-    while numel(curline)==0
+if strcmp(ext,'.ang')
+    while curline(1)=='#'
+        fprintf(fout,'%s\n',curline);
+        curline=fgetl(fin);
+        while numel(curline)==0
+            fprintf(fout,'%s\n',curline);
+            curline=fgetl(fin);
+        end
+    end
+elseif strcmp(ext,'.ctf')
+    while isempty(str2num(curline))
         fprintf(fout,'%s\n',curline);
         curline=fgetl(fin);
     end
 end
-
 for i=1:length(Angles1New)
     C = textscan(curline,'%f');
     C = C{1};
-    fprintf(fout,'%1.5f\t %1.5f %1.5f %1.5f %1.5f %5.1f\t %1.3f %i %i %1.3f \n', ...
-        Angles1New(i), Angles2New(i), Angles3New(i), XDataNew(i), YDataNew(i), C(6), ...
-        CINew{i}, C(8), C(9), C(10));
+    if strcmp(ext,'.ang')
+        fprintf(fout,'%1.5f\t %1.5f %1.5f %1.5f %1.5f %5.1f\t %1.3f %i %i %1.3f \n', ...
+            Angles1New(i), Angles2New(i), Angles3New(i), XDataNew(i), YDataNew(i), C(6), ...
+            CINew{i}, C(8), C(9), C(10));
+    elseif strcmp(ext,'.ctf')
+        fprintf(fout,'%i %#.5g %#.5g %i %i %#.5g %#.5g %#.5g %#.5g %i %i \n', ...
+            C(1), XDataNew(i), YDataNew(i), C(4), ...
+            CINew{i}, Angles1New(i), Angles2New(i), Angles3New(i),...
+            C(9),C(10),C(11));
+    end
     curline=fgetl(fin);
 end
 fclose(fin);
