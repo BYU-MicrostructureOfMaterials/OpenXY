@@ -51,7 +51,7 @@ elseif strcmp(ext,'.ctf')
         Phase(:) = {Material};
     end
     ValidatePhase(Phase);
-    MaterialData = ReadMaterial(ScanParams.material);
+    MaterialData = ReadMaterial(Phase{1});
     
     %Set up params for findgrains.m
     angles = reshape(Angles,ScanParams.NumColsOdd,ScanParams.NumRows,3);
