@@ -224,13 +224,17 @@ if name ~= 0
                 ['Scan File Header: ' ScanP];
                 ['Unique values: ' Auto];
                 'Select correct values'},'Scan Dimension Differ',ScanP,Auto,Auto);
+            
             if strcmp(choice,ScanP)
                 Nx = NumColsOdd;
                 Ny = NumRows;
+                set(handles.ScanSizeText,'String',ScanP);
             else
+                handles.Settings.ScanParams.OriginalSize = [NumColsOdd, NumRows];
                 handles.Settings.ScanParams.NumColsOdd = Nx;
                 handles.Settings.ScanParams.NumColsEven = Nx - 1;
                 handles.Settings.ScanParams.NumRows = Ny;
+                set(handles.ScanSizeText,'String',Auto);
             end
         end
         handles.Settings.Nx = Nx; handles.Settings.Ny = Ny;

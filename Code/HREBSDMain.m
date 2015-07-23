@@ -50,6 +50,10 @@ Y = unique(Settings.YData);
 %Number of steps in x and y
 Nx = Settings.Nx;
 Ny = Settings.Ny;
+Dimensions = [Nx, Ny];
+if isfield(Settings.ScanParams,'OriginalSize')
+    Dimensions = [Dimensions;Settings.ScanParams.OriginalSize];
+end
 
 switch Settings.ScanType;   
     case 'Square'
@@ -62,7 +66,7 @@ switch Settings.ScanType;
         end
         
         %Create image file name list
-        Settings.ImageNamesList = GetImageNamesList(Settings.ScanType, Settings.ScanLength,[Nx Ny], Settings.FirstImagePath, [X(1),Y(1)], [XStep, YStep]);
+        Settings.ImageNamesList = GetImageNamesList(Settings.ScanType, Settings.ScanLength,Dimensions, Settings.FirstImagePath, [X(1),Y(1)], [XStep, YStep]);
 %         ImageNamesList = GetImageNamesListHkl(Settings.ScanType, ScanLength,[Nx Ny], Settings.FirstImagePath); %*****TEMPORARY FOR VAUDIN FILES
 %         disp('using hkl naming in HREBSDMain.m at line 100')
         
@@ -71,7 +75,7 @@ switch Settings.ScanType;
         XStep = X(3)-X(1);
         YStep = Y(3)-Y(1);
         
-        Settings.ImageNamesList = GetImageNamesList(Settings.ScanType, Settings.ScanLength,[Nx Ny], Settings.FirstImagePath, [X(1),Y(1)], [XStep, YStep]);
+        Settings.ImageNamesList = GetImageNamesList(Settings.ScanType, Settings.ScanLength,Dimensions, Settings.FirstImagePath, [X(1),Y(1)], [XStep, YStep]);
         
     case 'L'
         CorrectedXYAngPath = LGridXYConvert(Settings.ScanFilePath,Settings.CustomFilePath);
