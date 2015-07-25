@@ -21,11 +21,18 @@ function ScanParamsData(FileStr, VarName)
 
     loc = strfind(tline, FileStr);
     if ~isempty(loc)
+        if strcmp(VarName,'material')
+            a = 1;
+        end
         val = strtok(tline(loc(end)+length(FileStr):end));
+        ind = 1;
+        if isfield(ScanParams,VarName)
+            ind = length(ScanParams.(VarName))+1;
+        end
         if ~isempty(str2num(val))
-            ScanParams.(VarName) = str2double(val);
+            ScanParams.(VarName)(ind) = str2double(val);
         else
-            ScanParams.(VarName) = val;
+            ScanParams.(VarName){ind} = val;
         end
     end
 end

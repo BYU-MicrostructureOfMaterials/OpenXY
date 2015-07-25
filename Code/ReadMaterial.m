@@ -52,6 +52,7 @@ if exist(filename,'file')
     fclose(fid);
 else
     warndlg('Material file not found');
+    M = {};
 end
 
 %SplitDD info

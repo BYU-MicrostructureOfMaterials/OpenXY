@@ -215,31 +215,35 @@ if name ~= 0
         Nx = length(X);
         Ny = length(Y);
         
-        if Nx ~= handles.Settings.ScanParams.NumColsOdd || Ny ~= handles.Settings.ScanParams.NumRows
-            NumColsOdd = handles.Settings.ScanParams.NumColsOdd;
-            NumRows = handles.Settings.ScanParams.NumRows;
-            ScanP = [num2str(NumColsOdd) 'x' num2str(NumRows)];
-            Auto =  [num2str(Nx) 'x' num2str(Ny)];
-            choice = questdlg({'Scan dimensions do not agree:';
-                ['Scan File Header: ' ScanP];
-                ['Unique values: ' Auto];
-                'Select correct values'},'Scan Dimension Differ',ScanP,Auto,Auto);
-            
-            if strcmp(choice,ScanP)
-                Nx = NumColsOdd;
-                Ny = NumRows;
-                set(handles.ScanSizeText,'String',ScanP);
-            else
-                handles.Settings.ScanParams.OriginalSize = [NumColsOdd, NumRows];
-                handles.Settings.ScanParams.NumColsOdd = Nx;
-                handles.Settings.ScanParams.NumColsEven = Nx - 1;
-                handles.Settings.ScanParams.NumRows = Ny;
-                set(handles.ScanSizeText,'String',Auto);
+        %Validate Scan Size
+        if isfield(handles.Settings.ScanParams,'NumColsOdd') && isfield(handles.Settings.ScanParams,'NumRows')
+            if Nx ~= handles.Settings.ScanParams.NumColsOdd || Ny ~= handles.Settings.ScanParams.NumRows
+                NumColsOdd = handles.Settings.ScanParams.NumColsOdd;
+                NumRows = handles.Settings.ScanParams.NumRows;
+                ScanP = [num2str(NumColsOdd) 'x' num2str(NumRows)];
+                Auto =  [num2str(Nx) 'x' num2str(Ny)];
+                choice = questdlg({'Scan dimensions do not agree:';
+                    ['Scan File Header: ' ScanP];
+                    ['Unique values: ' Auto];
+                    'Select correct values'},'Scan Dimension Differ',ScanP,Auto,Auto);
+
+                if strcmp(choice,ScanP)
+                    Nx = NumColsOdd;
+                    Ny = NumRows;
+                    set(handles.ScanSizeText,'String',ScanP);
+                else
+                    handles.Settings.ScanParams.OriginalSize = [NumColsOdd, NumRows];
+                    handles.Settings.ScanParams.NumColsOdd = Nx;
+                    handles.Settings.ScanParams.NumColsEven = Nx - 1;
+                    handles.Settings.ScanParams.NumRows = Ny;
+                    set(handles.ScanSizeText,'String',Auto);
+                end
             end
+            handles.Settings.Nx = Nx; handles.Settings.Ny = Ny;
         end
-        handles.Settings.Nx = Nx; handles.Settings.Ny = Ny;
         
         handles.Settings = CropScan(handles.Settings);
+        %Check if Material Read worked
         handles.ScanFileLoaded = true;
         MaterialPopup_Callback(handles.MaterialPopup, [], handles);
         handles = guidata(handles.MainGUI);
@@ -252,7 +256,6 @@ elseif ~handles.ScanFileLoaded
     set(handles.ScanSizeText,'String','Select a Scan');
 end
 guidata(handles.SelectScanButton, handles);
-
 enableRunButton(handles);
 
 
@@ -452,8 +455,12 @@ handles.Settings.Material = Material;
 if handles.ScanFileLoaded
     [handles.Settings.grainID, handles.Settings.Phase] = GetGrainInfo(...
         Settings.ScanFilePath, Material, Settings.ScanParams, Settings.Angles, Settings.MisoTol);
+    if isempty(handles.Settings.Phase)
+        handles.ScanFileLoaded = 0;
+    end
 end
 guidata(hObject, handles);
+enableRunButton(handles);
 
 
 % --- Executes during object creation, after setting all properties.
