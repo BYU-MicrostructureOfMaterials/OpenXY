@@ -40,33 +40,72 @@ if strcmp(ext,'.ang')
         Phase = cell(length(GrainFileVals{1}),1);
         Phase(:) = {Material};
     end
-    ValidatePhase(Phase);
+    Phase = ValidatePhase(Phase);
     
 elseif strcmp(ext,'.ctf')
     Phase = cell(length(Angles),1); 
     if strcmp(Material,'Auto-detect')
-        Phase(:)={lower(ScanParams.material)};
-        Material = ScanParams.material;
+        ind = 1;
+        if length(ScanParams.material) > 1
+            [ind,ok] = listdlg('ListString',ScanParams.material,'PromptString',...
+                {'More than one phase detected.';'Mutli-phase scans not currently supported.';'Select one:'},...
+                'SelectionMode','single','Name','Select Phase','ListSize',[180 100]);
+            if ~ok, ind = 1; end;
+        end
+        Phase(:)={lower(ScanParams.material{ind})};
+        Material = ScanParams.material{ind};
     else
         Phase(:) = {Material};
     end
-    ValidatePhase(Phase);
-    MaterialData = ReadMaterial(Phase{1});
-    
-    %Set up params for findgrains.m
-    angles = reshape(Angles,ScanParams.NumColsOdd,ScanParams.NumRows,3);
-    clean = true;
-    small = true;
-    mistol = MaxMisorientation*pi/180;
-    [grainID] = findgrains(angles, MaterialData.lattice, clean, small,mistol);
-    grainID = reshape(grainID, ScanParams.NumColsOdd*ScanParams.NumRows,1);
+    Phase = ValidatePhase(Phase);
+    if ~isempty(Phase)
+        MaterialData = ReadMaterial(Phase{1});
+
+        %Set up params for findgrains.m
+        angles = reshape(Angles,ScanParams.NumColsOdd,ScanParams.NumRows,3);
+        clean = true;
+        small = true;
+        mistol = MaxMisorientation*pi/180;
+        [grainID] = findgrains(angles, MaterialData.lattice, clean, small,mistol);
+        grainID = reshape(grainID, ScanParams.NumColsOdd*ScanParams.NumRows,1);
+    else
+        grainID = {};
+    end
 end
-function ValidatePhase(Phase)
+function Phase = ValidatePhase(Phase)
     %Validate Material Detection
-    MaterialsList = GetMaterialsList;
+    MaterialsList = GetMaterialsList(2);
     if ~all(ismember(Phase,MaterialsList))
         invalidMats = unique(Phase(~ismember(Phase,MaterialsList)));
-        error(['Auto material detection failed. ' strjoin(invalidMats,', ') ' not found in list of known materials']);
+        er = errordlg(['Auto material detection failed. "' strjoin(invalidMats,', ') '" not found in list of known materials'],'Material Detection');
+        uiwait(er)
+        op = questdlg('Select an option:','Material Detection Failed','Select Existing Material','Create a New Material','Cancel','Select Existing Material');
+        while true
+            switch op
+                case 'Select Existing Material'
+                    Materials = GetMaterialsList(3);
+                    [index, ok] = listdlg('PromptString','Select a Material','ListString',Materials,'SelectionMode','single','Name','Material Selection');
+                    if ok
+                        Phase(:) = {Materials{index}};
+                        break;
+                    else
+                        op = 'Cancel';
+                    end
+                case 'Create a New Material'
+                    material = NewMaterialGUI;
+                    if material ~= 0
+                        Phase(:) = {material};
+                        break;
+                    else
+                        op = 'Cancel';
+                    end
+                case 'Cancel'
+                    er = warndlg('Material selection failed. Select a new Scan File.','Material Selection');
+                    uiwait(er)
+                    Phase = {};
+                    break;
+            end
+        end
     end
 end
 
