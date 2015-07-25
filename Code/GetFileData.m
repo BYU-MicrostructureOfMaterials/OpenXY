@@ -12,8 +12,8 @@ if nargin == 0
     [FileName, FilePath] = uigetfile();
     FilePath = [FilePath FileName];
     commentchar = inputdlg('Input comment character', 'GetFileData');
-else
-    commentchar = '';
+elseif nargin == 1
+    commentchar = 1;
 end
 
 fid = fopen(FilePath);
@@ -29,8 +29,9 @@ while ~feof(fid)
     else
         if datacnt == 1
             filedata.headersize = cnt;
-            tmp = textscan(tline,'%s');
-            filedata.cols = length(tmp{1});
+            d_line = textscan(tline,'%s');
+            d_line = d_line{1};
+            filedata.cols = length(d_line);
         end
         datacnt = datacnt+ 1;
     end
@@ -38,12 +39,16 @@ end
 
 filedata.datarows = datacnt - 1;
 filedata.rows = datacnt + cnt;
-fmt = '%f';
-tmp = fmt;
-for i = 1:filedata.cols-1
-    tmp = [tmp ' ' fmt];
+format = '';
+for i = 1:filedata.cols
+    if isnan(str2double(d_line{i}));
+        fmt = '%s';
+    else
+        fmt = '%f';
+    end
+    format = [format ' ' fmt];
 end
-filedata.format = tmp;
+filedata.format = format;
 
 fclose(fid);
     

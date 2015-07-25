@@ -1,3 +1,4 @@
+
 function [ScanFileData, ScanParams] = ReadScanFile(ScanFilePath)
 [~, ~, ext] = fileparts(ScanFilePath);
 if strcmp(ext, '.ang')

@@ -9,16 +9,18 @@ function [GrainFileVals FileName FilePath ] = ReadGrainFile(FilePath,FileName)
 %if the file and pathname are known, pass those in.
 
 if nargin == 1
-    fid = fopen(FilePath);
+    GrainFilePath = FilePath;
 elseif nargin == 2
-    fid = fopen([FilePath FileName]);
+    GrainFilePath = [FilePath FileName];
 else
-    [FileName FilePath] = uigetfile('*.txt','grain file');
-    fid = fopen([FilePath FileName]);
+    [FileName, FilePath] = uigetfile('*.txt','grain file');
+    GrainFilePath = [FilePath FileName];
 end
 
 disp('Reading in the grain file . . . ')
 
+fid = fopen(GrainFilePath);
+data = GetFileData(GrainFilePath,'#');
 
 tline = '#';
 while ~feof(fid)
@@ -34,19 +36,18 @@ while ~feof(fid)
            errordlg('Error reading grainfile','Error')
            return;
         end
-        GrainFileVals = textscan(fid, '%f %f %f %f %f %f %f %f %f %f %s %s %s'); % commented out 5/15 for 11 column version
+        GrainFileVals = textscan(fid, data.format); % commented out 5/15 for 11 column version
         
         size(GrainFileVals{1},1);
-
-        for i=1:size(GrainFileVals{1},1) % commented out 5/15 for 11 column version
-            
-            GrainFileVals{11}(i)= strcat(GrainFileVals{11}(i),GrainFileVals{12}(i),GrainFileVals{13}(i));
-
+        
+        if data.cols == 13
+            for i=1:size(GrainFileVals{1},1) % commented out 5/15 for 11 column version
+                GrainFileVals{11}(i)= strcat(GrainFileVals{11}(i),GrainFileVals{12}(i),GrainFileVals{13}(i));
+                GrainFileVals{12}=[];
+                GrainFileVals{13}=[];
+            end
         end
         disp(unique(GrainFileVals{11}(:)));
-        GrainFileVals{13}=[];
-        GrainFileVals{12}=[];
-
     end
 end
 
