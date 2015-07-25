@@ -22,7 +22,7 @@ function varargout = NewMaterialGUI(varargin)
 
 % Edit the above text to modify the response to help NewMaterialGUI
 
-% Last Modified by GUIDE v2.5 03-Feb-2015 12:25:53
+% Last Modified by GUIDE v2.5 25-Jul-2015 07:10:03
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -133,12 +133,13 @@ handles.Buttonheight = handles.cancelbutton.Position(2) + handles.GUIbottom;
 handles.fhkl = fhkl;
 handles.dhkl = dhkl;
 handles.hkl = hkl;
+handles.output = 0;
 
 % Update handles structure
 guidata(hObject, handles);
 
 % UIWAIT makes NewMaterialGUI wait for user response (see UIRESUME)
-% uiwait(handles.NewMaterial);
+uiwait(handles.NewMaterial);
 
 
 % --- Outputs from this function are returned to the command line.
@@ -150,6 +151,29 @@ function varargout = NewMaterialGUI_OutputFcn(hObject, eventdata, handles)
 
 % Get default command line output from handles structure
 varargout{1} = handles.output;
+%varargout{1} = 'Test';
+delete(hObject);
+
+% --- Executes on button press in cancelbutton.
+function cancelbutton_Callback(hObject, eventdata, handles)
+% hObject    handle to cancelbutton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+NewMaterial_CloseRequestFcn(handles.NewMaterial,eventdata,handles);
+
+
+% --- Executes when user attempts to close NewMaterial.
+function NewMaterial_CloseRequestFcn(hObject, eventdata, handles)
+% hObject    handle to NewMaterial (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: delete(hObject) closes the figure
+if strcmp(get(hObject,'waitstatus'),'waiting')
+    uiresume(hObject);
+else
+    delete(hObject);
+end
 
 
 function C11_Callback(hObject, eventdata, handles)
@@ -533,7 +557,7 @@ if invalid
 elseif blank
     warndlg('Input error: tables must be complete');
 else
-    materials = GetMaterialsList;
+    materials = GetMaterialsList(2);
     addmaterial = false;
     if sum(strncmp(M.Material,materials,length(M.Material))) > 0
         %warndlg('Material with same name already exists');
@@ -546,9 +570,11 @@ else
     end
     if addmaterial
         NewMaterial(M);
+        handles.output = M.Material;
         msgbox([M.Material ' successfully added'],'Add new material');
     end
 end
+guidata(hObject,handles);
 
 function output = NumericInput(edit, handles)
 % Takes string from edit box and returns the number.
@@ -565,13 +591,6 @@ if ~isempty(temp) %Nothing in box
 else
     output = 0;
 end
-
-% --- Executes on button press in cancelbutton.
-function cancelbutton_Callback(hObject, eventdata, handles)
-% hObject    handle to cancelbutton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-delete(handles.NewMaterial);
 
 function NumVal_Callback(hObject, eventdata, handles)
 % hObject    handle to NumVal (see GCBO)
@@ -684,7 +703,7 @@ function loadbutton_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 buttonstring = get(hObject,'String');
 
-materials = GetMaterialsList;
+materials = GetMaterialsList(3);
 %Create GUI
 width = 210;
 height = 80;
@@ -713,6 +732,7 @@ if ishandle(gui.f)
         if strcmp(buttonstring,'Load Material')
             MaterialStruct = ReadMaterial(material);
             ImportMaterial(handles,eventdata,MaterialStruct);
+            handles.output = material;
         elseif strcmp(buttonstring,'Delete Material')
             fclose('all');            
             filename = fullfile(pwd,'Materials',[material '.txt']);
@@ -727,6 +747,7 @@ if ishandle(gui.f)
 else
     handles.loadbutton.String = 'Load Material';
 end
+guidata(handles.NewMaterial,handles);
 
 
 
