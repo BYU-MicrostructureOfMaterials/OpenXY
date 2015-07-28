@@ -22,7 +22,7 @@ function varargout = MainGUI(varargin)
 
 % Edit the above text to modify the response to help MainGUI
 
-% Last Modified by GUIDE v2.5 30-Apr-2015 09:41:53
+% Last Modified by GUIDE v2.5 28-Jul-2015 06:43:07
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -116,12 +116,6 @@ handles = guidata(hObject);
 [path,name,ext] = fileparts(handles.Settings.OutputPath);
 SetOutputFields(handles,[name ext],path);
 handles = guidata(hObject);
-
-%Set GUI Position
-ScreenSize = get(groot,'ScreenSize');
-set(hObject,'Units','pixels');
-GUIsize = get(hObject,'Position');
-%set(handles.MainGUI,'Position',[(ScreenSize(3)-GUIsize(3))/2 (ScreenSize(4)-(500+GUIsize(4))) GUIsize(3) GUIsize(4)]);
 
 % Reset Run Button
 set(handles.RunButton,'String','Run');
@@ -321,7 +315,7 @@ wd = pwd;
 if ~strcmp(handles.FileDir,pwd)
     cd(handles.FileDir);
 end
-[name, path] = uiputfile({'*.ang;*.ctf','Scan Files (*.ang,*.ctf)'},'Select a Scan File');
+[name, path] = uiputfile({'*.ang;*.ctf','Scan Files (*.ang,*.ctf)'},'Select a Scan File',handles.Settings.OutputPath);
 cd(wd);
 SetOutputFields(handles,name,path);
 
@@ -404,8 +398,18 @@ set(handles.RunButton,'String','Running...');
 set(handles.RunButton,'BackgroundColor',[1 0 0]);
 set(handles.RunButton,'Enable','off');
 
-% Run HREBSD Main
-Settings = HREBSDMain(Settings);
+% Run HREBSD Main with error catching
+try
+    Settings = HREBSDMain(Settings);
+catch ME
+    handles.ScanFileLoaded = false;
+    Reset_RunButton(handles);
+    enableRunButton(handles);
+    msg = 'OpenXY encountered an error. Re-select the scan file to reset.';
+    cause = MException('MATLAB:OpenXY',msg);
+    ME = addCause(ME,cause);
+    rethrow(ME)
+end
 
 %Check if terminated
 if Settings.Exit
@@ -413,9 +417,14 @@ if Settings.Exit
 end
 
 % Reset Run Button
+Reset_RunButton(handles);
+guidata(handles.MainGUI,handles);
+
+function Reset_RunButton(handles)
 set(handles.RunButton,'String','Run');
 set(handles.RunButton,'BackgroundColor',[0 1 0]);
 set(handles.RunButton,'Enable','on');
+
 
 
 % --- Executes on button press in PCCalibrationBox.
@@ -653,6 +662,20 @@ if isempty(Value); Value =1; end;
 set(Popup, 'Value', Value);
 
 
-    
 
+% --- Executes during object creation, after setting all properties.
+function MainGUI_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to MainGUI (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
 
+%Set GUI Position
+ScreenSize = get(groot,'ScreenSize');
+set(hObject,'Units','pixels');
+movegui(hObject,'center');
+GUIsize = get(hObject,'Position');
+%set(handles.MainGUI,'Position',[(ScreenSize(3)-GUIsize(3))/2 (ScreenSize(4)-(500+GUIsize(4))) GUIsize(3)*1.1 GUIsize(4)]);
+if ismac
+    GUIsize(3) = GUIsize(3)*1.1;
+    set(hObject,'Position',GUIsize);
+end
