@@ -11,7 +11,7 @@ elseif nargin == 3
     [FileName, FilePath] = uigetfile('*.ctf','HKL .ctf file');
 end
 ctf = fopen(fullfile(FilePath, FileName));
-data = GetFileData(fullfile(FilePath, FileName),'#');
+data = GetFileData(fullfile(FilePath, FileName));
 disp('Reading in the .ctf file . . . ')
 
 function ScanParamsData(FileStr, VarName)
