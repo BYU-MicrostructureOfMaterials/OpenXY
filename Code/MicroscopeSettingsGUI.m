@@ -82,6 +82,7 @@ if length(varargin) > 1
     set(hObject,'Units','pixels');
     GUIsize = get(hObject,'Position');
     set(hObject,'Position',[MainSize(1)+MainSize(3)+20 MainSize(2)+MainSize(4)-GUIsize(4) GUIsize(3) GUIsize(4)]);
+    movegui(hObject,'onscreen');
 end
 
 % Update handles structure

@@ -22,7 +22,7 @@ function varargout = AdvancedSettingsGUI(varargin)
 
 % Edit the above text to modify the response to help AdvancedSettingsGUI
 
-% Last Modified by GUIDE v2.5 30-Apr-2015 06:56:10
+% Last Modified by GUIDE v2.5 28-Jul-2015 06:40:00
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -116,6 +116,7 @@ if length(varargin) > 1
     set(hObject,'Units','pixels');
     GUIsize = get(hObject,'Position');
     set(hObject,'Position',[MainSize(1)-GUIsize(3)-20 MainSize(2) GUIsize(3) GUIsize(4)]);
+    movegui(hObject,'onscreen');
 end
 
 % Update handles structure
@@ -514,3 +515,4 @@ IndList = 1:length(List);
 Value = IndList(strcmp(List,String));
 if isempty(Value); Value =1; end;
 set(Popup, 'Value', Value);
+

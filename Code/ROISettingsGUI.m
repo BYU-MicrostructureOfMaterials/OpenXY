@@ -22,7 +22,7 @@ function varargout = ROISettingsGUI(varargin)
 
 % Edit the above text to modify the response to help ROISettingsGUI
 
-% Last Modified by GUIDE v2.5 30-Apr-2015 07:11:31
+% Last Modified by GUIDE v2.5 28-Jul-2015 06:16:36
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -43,6 +43,12 @@ else
 end
 % End initialization code - DO NOT EDIT
 
+% --- Executes during object creation, after setting all properties.
+function ROISettingsGUI_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to ROISettingsGUI (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
 
 % --- Executes just before ROISettingsGUI is made visible.
 function ROISettingsGUI_OpeningFcn(hObject, eventdata, handles, varargin)
@@ -59,6 +65,11 @@ handles.output = hObject;
 if isempty(varargin)
     stemp=load('Settings.mat');
     Settings = stemp.Settings;
+    if ~isfield(Settings,'Angles') || isempty(Settings.FirstImagePath)
+        warndlg('No data to load from Settings.mat');
+        delete(hObject);
+        return
+    end
     clear stemp
 else
     Settings = varargin{1};
@@ -72,10 +83,11 @@ if length(varargin) > 1
     GUIsize = get(hObject,'Position');
     ScreenSize = get(groot,'ScreenSize');
     height = MainSize(2)+MainSize(4)+70;
-    if height + GUIsize(4) > ScreenSize(4)
-        height = ScreenSize(4) - GUIsize(4)-30;
+    if ismac
+        GUIsize(3) = GUIsize(3)*1.2;
     end
     set(hObject,'Position',[MainSize(1) height GUIsize(3) GUIsize(4)]);
+    movegui(hObject,'onscreen')
 end
 
 %Set Images to Grayscale
@@ -159,8 +171,10 @@ function varargout = ROISettingsGUI_OutputFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Get default command line output from handles structure
-varargout{1} = handles.Settings;
-delete(handles.ROISettingsGUI);
+if isfield(handles,'Settings')
+    varargout{1} = handles.Settings;
+end
+delete(hObject);
 
 % --- Executes when user attempts to close ROISettingsGUI.
 function ROISettingsGUI_CloseRequestFcn(hObject, eventdata, handles)
@@ -609,3 +623,4 @@ function string = GetPopupString(Popup)
 List = get(Popup,'String');
 Value = get(Popup,'Value');
 string = List{Value};    
+
