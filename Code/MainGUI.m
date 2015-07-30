@@ -232,9 +232,9 @@ if name ~= 0
                     handles.Settings.ScanParams.NumRows = Ny;
                     set(handles.ScanSizeText,'String',Auto);
                 end
-            end
-            handles.Settings.Nx = Nx; handles.Settings.Ny = Ny;
+            end   
         end
+        handles.Settings.Nx = Nx; handles.Settings.Ny = Ny;
         
         handles.Settings = CropScan(handles.Settings);
         %Check if Material Read worked
