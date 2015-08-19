@@ -63,6 +63,14 @@ if ~isempty(varargin)
     handles.Settings = MergeSettings(handles.Settings,varargin{1});
 end
 
+%Change working directory
+XYpath = fileparts(mfilename('fullpath'));
+if ~strcmp(pwd,XYpath)
+    p = path;
+    cd(XYpath);
+    path(p);
+end
+
 %Visuals
 axes(handles.background);
 pic = imread('OpenXYLogo.png');
@@ -107,14 +115,14 @@ ProcessorsPopup_Callback(handles.ProcessorsPopup,eventdata,handles);
 %PC Calibration
 set(handles.PCCalibrationBox,'Value',handles.Settings.DoPCStrainMin);
 %Files
-[path,name,ext] = fileparts(handles.Settings.ScanFilePath);
-SetScanFields(handles,[name ext],path);
+[fpath,name,ext] = fileparts(handles.Settings.ScanFilePath);
+SetScanFields(handles,[name ext],fpath);
 handles = guidata(hObject);
-[path,name,ext] = fileparts(handles.Settings.FirstImagePath);
-SetImageFields(handles,[name ext],path);
+[fpath,name,ext] = fileparts(handles.Settings.FirstImagePath);
+SetImageFields(handles,[name ext],fpath);
 handles = guidata(hObject);
-[path,name,ext] = fileparts(handles.Settings.OutputPath);
-SetOutputFields(handles,[name ext],path);
+[fpath,name,ext] = fileparts(handles.Settings.OutputPath);
+SetOutputFields(handles,[name ext],fpath);
 handles = guidata(hObject);
 
 % Reset Run Button
@@ -281,11 +289,14 @@ if name ~= 0
         set(handles.FirstImageNameText,'TooltipString',name);
         set(handles.ImageFolderText,'String',path);
         set(handles.ImageFolderText,'TooltipString',path);
-        [x,y,~] = size(imread(fullfile(path,name)));
+        
+        [x,y] = size(ReadEBSDImage(fullfile(path,name),handles.Settings.ImageFilter));
         improp = dir(fullfile(path,name));
         SizeStr = [num2str(x) 'x' num2str(y) ' (' num2str(round(improp.bytes/1024)) ' KB)'];
         set(handles.ImageSizeText,'String',SizeStr);
         handles.Settings.FirstImagePath = fullfile(path,name);
+        handles.Settings.PixelSize = x;
+        handles.PhosphorSize = handles.Settings.PixelSize * handles.Settings.mperpix;
         
         %Determine if the image has a custom tag in header
         info = imfinfo(handles.Settings.FirstImagePath);
