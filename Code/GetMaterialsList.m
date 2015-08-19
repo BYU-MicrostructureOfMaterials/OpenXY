@@ -11,8 +11,8 @@ materials = {mats([mats.isdir] == 0).name}';
 for i = length(materials):-1:1
     [~,materials{i+1},~] = fileparts(materials{i});
 end
-materials = materials(2:end);
 if option == 1
+    materials = materials(2:end);
     materials{1} = 'Auto-detect';
 end
 if option == 1 || option == 2
