@@ -186,24 +186,27 @@ switch HROIMMethod
     case 'Simulated'
         set(handles.HROIMlabel,'String','Iteration Limit');
         set(handles.HROIMedit,'String',num2str(handles.Settings.IterationLimit));
+        set(handles.HROIMedit,'Enable','on');
         set(handles.GrainRefType,'Enable','off');
         set(handles.SelectKAM,'Enable','off');
         handles.Settings.HROIMMethod = HROIMMethod;
     case 'Real-Grain Ref'
         set(handles.HROIMlabel,'String','Ref Image Index');
+        handles.Settings.RefImageInd = 0;
         set(handles.HROIMedit,'String',num2str(handles.Settings.RefImageInd));
         set(handles.HROIMedit,'Enable','off');
         set(handles.GrainRefType,'Enable','on');
         GrainRefType_Callback(handles.GrainRefType, eventdata, handles);
-        handles.Settings.RefImageInd = 0;
         handles.Settings.HROIMMethod = 'Real';
     case 'Real-Single Ref'
         set(handles.HROIMlabel,'String','Ref Image Index');
+        if handles.Settings.RefImageInd == 0
+            handles.Settings.RefImageInd = 1;
+        end
         set(handles.HROIMedit,'String',num2str(handles.Settings.RefImageInd));
         set(handles.HROIMedit,'Enable','on');
         set(handles.GrainRefType,'Enable','on');
         GrainRefType_Callback(handles.GrainRefType, eventdata, handles);
-        HROIMedit_Callback(handles.HROIMedit, eventdata, handles);
         handles.Settings.HROIMMethod = 'Real';
 end
 
@@ -231,11 +234,23 @@ function HROIMedit_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of HROIMedit as text
 %        str2double(get(hObject,'String')) returns contents of HROIMedit as a double
-if strcmp(handles.Settings.HROIMMethod,'Simulated')
-    handles.Settings.IterationLimit = str2double(get(hObject,'String'));
-else
-    handles.Settings.RefImageInd = str2double(get(hObject,'String'));
-end   
+contents = cellstr(get(handles.HROIMMethod,'String'));
+HROIMMethod = contents{get(handles.HROIMMethod,'Value')};
+switch HROIMMethod
+    case 'Simulated'
+        handles.Settings.IterationLimit = str2double(get(hObject,'String'));
+    case 'Real-Grain Ref'
+        handles.Settings.RefImageInd = 0;
+    case 'Real-Single Ref'
+        input = str2double(get(hObject,'String'));
+        if isfield(handles.Settings,'ScanLength') && ...
+                input > 0 && input <= handles.Settings.ScanLength
+            handles.Settings.RefImageInd = input;
+        else
+            msgbox(['Invalid input. Must be between 1 and ' num2str(handles.Settings.ScanLength) '.'],'Invalid Image Index');
+            set(hObject,'String',num2str(handles.Settings.RefImageInd));
+        end
+end
 guidata(hObject,handles);
 
 
