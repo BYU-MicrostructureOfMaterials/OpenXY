@@ -53,6 +53,7 @@ Settings.SampleTilt = 70*pi/180; %degrees
 Settings.SampleAzimuthal = 0*pi/180; %degrees
 Settings.CameraElevation = 10*pi/180; %degrees
 Settings.CameraAzimuthal = 0*pi/180; %degrees
+Settings.mperpix = 25;
 
 %% Old Variables
 Settings.DoUsePCFile = 0;

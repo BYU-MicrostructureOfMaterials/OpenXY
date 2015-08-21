@@ -22,7 +22,7 @@ function varargout = MicroscopeSettingsGUI(varargin)
 
 % Edit the above text to modify the response to help MicroscopeSettingsGUI
 
-% Last Modified by GUIDE v2.5 30-Apr-2015 07:16:05
+% Last Modified by GUIDE v2.5 17-Aug-2015 07:12:20
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -243,6 +243,34 @@ guidata(hObject,handles);
 % --- Executes during object creation, after setting all properties.
 function CameraAzimuthal_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to CameraAzimuthal (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+function micronperpix_Callback(hObject, eventdata, handles)
+% hObject    handle to micronperpix (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of micronperpix as text
+%        str2double(get(hObject,'String')) returns contents of micronperpix as a double
+handles.Settings.mperpix = str2double(get(hObject,'String'));
+Put PhosphorSize in microscope settings gui:
+input mperpix=microns/pixel (set default to 25)
+if isfield(handles.Settings,'PixelSize')
+    Settings.PhosphorSize = handles.Settings.PixelSize*handles.mperpix;
+end
+guidata(hObject,handles);
+
+% --- Executes during object creation, after setting all properties.
+function micronperpix_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to micronperpix (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
