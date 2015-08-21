@@ -1,5 +1,5 @@
 % to plot data from analysis parameters - first load mat file
-NN=input('number of points? ')
+NN = Settings.ScanLength;
 tempF=zeros(3,3);for i=1:NN; tempF(:,:)=Settings.data.F{i};[tempR tempU]=poldec(tempF);tempU=tempU-eye(3);u33(i)=tempU(3,3); u22(i)=tempU(2,2);u11(i)=tempU(1,1);end
 figure; plot([1:NN],u11*100,'r',[1:NN],u22*100,'g',[1:NN],u33*100)
 grid on
