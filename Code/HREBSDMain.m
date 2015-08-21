@@ -239,9 +239,10 @@ elseif Settings.DoPCStrainMin
 end
 if ~Settings.DoPCStrainMin
     if Settings.DisplayGUI; disp('No PC calibration at all'); end;
-    Settings.XStar(1:length(Settings.ImageNamesList)) = Settings.ScanParams.xstar;
-    Settings.YStar(1:length(Settings.ImageNamesList)) = Settings.ScanParams.ystar;
-    Settings.ZStar(1:length(Settings.ImageNamesList)) = Settings.ScanParams.zstar;
+    %Default Naive Plane Fit
+    Settings.XStar(1:Settings.ScanLength) = Settings.ScanParams.xstar-Settings.XData/Settings.PhosphorSize;
+    Settings.YStar(1:Settings.ScanLength) = Settings.ScanParams.ystar+Settings.YData/Settings.PhosphorSize*sin(Settings.SampleTilt);
+    Settings.ZStar(1:Settings.ScanLength) = Settings.ScanParams.zstar+Settings.YData/Settings.PhosphorSize*cos(Settings.SampleTilt);
 end
 
      
