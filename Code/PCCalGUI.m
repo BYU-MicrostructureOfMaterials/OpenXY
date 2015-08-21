@@ -269,14 +269,15 @@ if handles.VanPont
     ppm.delete();
     Settings.CalibrationPointsPC = CalibrationPointsPC;
 
-    handles.MeanXstar = mean(Settings.CalibrationPointsPC(:,1));
-    handles.MeanYstar = mean(Settings.CalibrationPointsPC(:,2));
-    handles.MeanZstar = mean(Settings.CalibrationPointsPC(:,3));
+    psize = Settings.PhosphorSize;
+    
+    handles.MeanXstar = mean(Settings.CalibrationPointsPC(:,1)+(Settings.XData(CalibrationPointIndecies))/psize);
+    handles.MeanYstar = mean(Settings.CalibrationPointsPC(:,2)-(Settings.YData(CalibrationPointIndecies))/psize*sin(Settings.SampleTilt));
+    handles.MeanZstar = mean(Settings.CalibrationPointsPC(:,3)-(Settings.YData(CalibrationPointIndecies))/psize*cos(Settings.SampleTilt));
 %     disp(['xstar: ' num2str(handles.MeanXstar(1))]);
 %     disp(['ystar: ' num2str(handles.MeanYstar(1))]);
 %     disp(['zstar: ' num2str(handles.MeanZstar(1))]);
 
-    psize = str2double(get(handles.edit1,'String'));
     handles.NaiveXstar = handles.MeanXstar-(Settings.XData)/psize;
     handles.NaiveYstar = handles.MeanYstar+(Settings.YData)/psize*sin(Settings.SampleTilt);
     handles.NaiveZstar = handles.MeanZstar+(Settings.YData)/psize*cos(Settings.SampleTilt);

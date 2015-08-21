@@ -1,7 +1,7 @@
 function PCprime =  PCMinSinglePattern(Settings, ScanParams, Ind)
-xstar = ScanParams.xstar;
-ystar = ScanParams.ystar;
-zstar = ScanParams.zstar;
+xstar = ScanParams.xstar-Settings.XData(Ind)/Settings.PhosphorSize;
+ystar = ScanParams.ystar+Settings.YData(Ind)/Settings.PhosphorSize*sin(Settings.SampleTilt);
+zstar = ScanParams.zstar+Settings.YData(Ind)/Settings.PhorphorSize*cos(Settings.SampleTilt);
 
 PC0(1) = xstar;
 PC0(2) = ystar;
