@@ -210,6 +210,29 @@ if name ~= 0
         handles.Settings.Fit = ScanFileData{10};
         handles.Settings.ScanFilePath = fullfile(path,name);
         
+        %Check ScanType
+        [~,~,ext] = fileparts(fullfile(path,name));
+        if strcmp(ext,'.ang')
+            check = true;
+            if ~isempty(strfind(handles.Settings.ScanParams.GridType,'Hex'))
+                AutoType = 'Hexagonal';
+            elseif ~isempty(strfind(handls.Settings.ScanParams.GridType,'Sqr'))
+                AutoType = 'Square';
+            else
+                check = false;
+            end
+            if check && ~strcmp(handles.Settings.ScanType,AutoType)
+                button = questdlg({'Scan type might be incorrect.';['Would you like to change it to ' AutoType '?']},'OpenXY');
+                switch button
+                    case 'Yes'
+                        handles.Settings.ScanType = AutoType;
+                        SetPopupValue(handles.ScanTypePopup,AutoType);
+                    case 'Cancel'
+                        return;
+                end
+            end
+        end
+        
         %Unique x and y
         X = unique(handles.Settings.XData);
         Y = unique(handles.Settings.YData);
@@ -217,32 +240,42 @@ if name ~= 0
         Nx = length(X);
         Ny = length(Y);
         
-        %Validate Scan Size
-        if isfield(handles.Settings.ScanParams,'NumColsOdd') && isfield(handles.Settings.ScanParams,'NumRows')
-            if Nx ~= handles.Settings.ScanParams.NumColsOdd || Ny ~= handles.Settings.ScanParams.NumRows
-                NumColsOdd = handles.Settings.ScanParams.NumColsOdd;
-                NumRows = handles.Settings.ScanParams.NumRows;
-                ScanP = [num2str(NumColsOdd) 'x' num2str(NumRows)];
-                Auto =  [num2str(Nx) 'x' num2str(Ny)];
-                choice = questdlg({'Scan dimensions do not agree:';
-                    ['Scan File Header: ' ScanP];
-                    ['Unique values: ' Auto];
-                    'Select correct values'},'Scan Dimension Differ',ScanP,Auto,Auto);
+        if ~strcmp(handles.Settings.ScanType,'Hexagonal')
+            %Validate Scan Size
+            if isfield(handles.Settings.ScanParams,'NumColsOdd') && isfield(handles.Settings.ScanParams,'NumRows')
+                if Nx ~= handles.Settings.ScanParams.NumColsOdd || Ny ~= handles.Settings.ScanParams.NumRows
+                    NumColsOdd = handles.Settings.ScanParams.NumColsOdd;
+                    NumRows = handles.Settings.ScanParams.NumRows;
+                    ScanP = [num2str(NumColsOdd) 'x' num2str(NumRows)];
+                    Auto =  [num2str(Nx) 'x' num2str(Ny)];
+                    choice = questdlg({'Scan dimensions do not agree:';
+                        ['Scan File Header: ' ScanP];
+                        ['Unique values: ' Auto];
+                        'Select correct values'},'Scan Dimension Differ',ScanP,Auto,Auto);
 
-                if strcmp(choice,ScanP)
-                    Nx = NumColsOdd;
-                    Ny = NumRows;
-                    set(handles.ScanSizeText,'String',ScanP);
-                else
-                    handles.Settings.ScanParams.OriginalSize = [NumColsOdd, NumRows];
-                    handles.Settings.ScanParams.NumColsOdd = Nx;
-                    handles.Settings.ScanParams.NumColsEven = Nx - 1;
-                    handles.Settings.ScanParams.NumRows = Ny;
-                    set(handles.ScanSizeText,'String',Auto);
-                end
-            end   
+                    if strcmp(choice,ScanP)
+                        Nx = NumColsOdd;
+                        Ny = NumRows;
+                        set(handles.ScanSizeText,'String',ScanP);
+                    else
+                        handles.Settings.ScanParams.OriginalSize = [NumColsOdd, NumRows];
+                        handles.Settings.ScanParams.NumColsOdd = Nx;
+                        handles.Settings.ScanParams.NumColsEven = Nx - 1;
+                        handles.Settings.ScanParams.NumRows = Ny;
+                        set(handles.ScanSizeText,'String',Auto);
+                    end
+                end   
+            end
+            handles.Settings.Nx = Nx; handles.Settings.Ny = Ny;
+        else
+            if isfield(handles.Settings.ScanParams,'NumColsOdd') && isfield(handles.Settings.ScanParams,'NumRows')
+                handles.Settings.Nx = handles.Settings.ScanParams.NumColsOdd;
+                handles.Settings.Ny = handles.Settings.ScanParams.NumRows;
+            else
+                handles.Settings.Nx = ceil(Nx/2);
+                handles.Settings.Ny = Ny;
+            end
         end
-        handles.Settings.Nx = Nx; handles.Settings.Ny = Ny;
         
         handles.Settings = CropScan(handles.Settings);
         %Check if Material Read worked
@@ -296,7 +329,7 @@ if name ~= 0
         set(handles.ImageSizeText,'String',SizeStr);
         handles.Settings.FirstImagePath = fullfile(path,name);
         handles.Settings.PixelSize = x;
-        handles.PhosphorSize = handles.Settings.PixelSize * handles.Settings.mperpix;
+        handles.Settings.PhosphorSize = handles.Settings.PixelSize * handles.Settings.mperpix;
         
         %Determine if the image has a custom tag in header
         info = imfinfo(handles.Settings.FirstImagePath);
@@ -375,30 +408,6 @@ function RunButton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 Settings = handles.Settings;
-
-%Check ScanType
-[~,~,ext] = fileparts(Settings.ScanFilePath);
-if strcmp(ext,'.ang')
-    check = true;
-    if ~isempty(strfind(Settings.ScanParams.GridType,'Hex'))
-        AutoType = 'Hexagonal';
-    elseif ~isempty(strfind(Settings.ScanParams.GridType,'Sqr'))
-        AutoType = 'Square';
-    else
-        check = false;
-    end
-    if check && ~strcmp(Settings.ScanType,AutoType)
-        button = questdlg({'Scan type might be incorrect.';['Would you like to change it to ' AutoType '?']},'OpenXY');
-        switch button
-            case 'Yes'
-                Settings.ScanType = AutoType;
-                SetPopupValue(handles.ScanTypePopup,AutoType);
-            case 'Cancel'
-                return;
-        end
-    end
-end
-save('Settings.mat','Settings');
 
 %Set Settings fields
 Settings.Exit = false;

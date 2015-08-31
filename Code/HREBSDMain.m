@@ -13,9 +13,9 @@ if Settings.DisplayGUI; disp('Dont forget to change PC if the image is cropped b
 %are the same size and square.
 fftw('planner','exhaustive');
 
-FirstPic = ReadEBSDImage(Settings.FirstImagePath,Settings.ImageFilter);
+%FirstPic = ReadEBSDImage(Settings.FirstImagePath,Settings.ImageFilter);
 Settings.largefftmeth = fftw('wisdom');
-Settings.PixelSize = size(FirstPic,1);
+%Settings.PixelSize = size(FirstPic,1);
 Settings.ROISize = round((Settings.ROISizePercent * .01)*Settings.PixelSize);
 
 %% Add Sub-folder(s)

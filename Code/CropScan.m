@@ -2,6 +2,8 @@ function Settings = CropScan(Settings)
 Nx = Settings.Nx;
 Ny = Settings.Ny;
 
+Y = unique(Settings.YData);
+
 %Check if complete grid
 if (Nx * Ny) ~= Settings.ScanLength && ...
         sum(Settings.YData == Y(end)) ~= sum(Settings.YData == Y(1)) && ...
