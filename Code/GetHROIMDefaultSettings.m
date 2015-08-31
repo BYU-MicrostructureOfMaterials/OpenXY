@@ -24,7 +24,7 @@ Settings.ImageTag = false;
 %ROI Settings
 Settings.ROISizePercent = 25;
 Settings.NumROIs = 23;
-Settings.ROIStyle = 'Radial'; %{'Grid','Radial','Intensity'}
+Settings.ROIStyle = 'Grid'; %{'Grid','Radial','Intensity'}
 Settings.ROIFilter = [2 50 1 1];
 %Filter Settings
 Settings.ImageFilterType='standard'; %{'standard','localthresh'}
