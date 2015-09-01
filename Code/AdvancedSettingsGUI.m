@@ -68,10 +68,10 @@ handles.PrevSettings = Settings;
 %HROIM Method
 HROIMMethodList = {'Simulated-Kinematic','Simulated-Dynamic','Real-Grain Ref','Real-Single Ref'};
 set(handles.HROIMMethod, 'String', HROIMMethodList);
-if strcmp(Settings.HROIMMethod,'Simulated-Kinematic')
-    SetPopupValue(handles.HROIMMethod,'Simulated');
-elseif strcmp(Settings.HROIMMethod,'Simulated-Dynamic')
-    SetPopupValue(handles.HROIMMethod,'Dynamic Simulated');
+if strcmp(Settings.HROIMMethod,'Simulated')
+    SetPopupValue(handles.HROIMMethod,'Simulated-Kinematic');
+elseif strcmp(Settings.HROIMMethod,'Dynamic Simulated')
+    SetPopupValue(handles.HROIMMethod,'Simulated-Dynamic');
 else
     if Settings.RefImageInd == 0
         SetPopupValue(handles.HROIMMethod,'Real-Grain Ref');
@@ -185,13 +185,20 @@ function HROIMMethod_Callback(hObject, eventdata, handles)
 contents = cellstr(get(hObject,'String'));
 HROIMMethod = contents{get(hObject,'Value')};
 switch HROIMMethod
-    case 'Simulated'
+    case 'Simulated-Kinematic'
         set(handles.HROIMlabel,'String','Iteration Limit');
         set(handles.HROIMedit,'String',num2str(handles.Settings.IterationLimit));
         set(handles.HROIMedit,'Enable','on');
         set(handles.GrainRefType,'Enable','off');
         set(handles.SelectKAM,'Enable','off');
-        handles.Settings.HROIMMethod = HROIMMethod;
+        handles.Settings.HROIMMethod = 'Simulated';
+    case 'Simulated-Dynamic'
+        set(handles.HROIMlabel,'String','Iteration Limit');
+        set(handles.HROIMedit,'String',num2str(handles.Settings.IterationLimit));
+        set(handles.HROIMedit,'Enable','off');
+        set(handles.GrainRefType,'Enable','off');
+        set(handles.SelectKAM,'Enable','off');
+        handles.Settings.HROIMMethod = 'Dynamic Simulated';
     case 'Real-Grain Ref'
         set(handles.HROIMlabel,'String','Ref Image Index');
         handles.Settings.RefImageInd = 0;
