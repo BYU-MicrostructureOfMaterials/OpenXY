@@ -216,7 +216,7 @@ if name ~= 0
             check = true;
             if ~isempty(strfind(handles.Settings.ScanParams.GridType,'Hex'))
                 AutoType = 'Hexagonal';
-            elseif ~isempty(strfind(handls.Settings.ScanParams.GridType,'Sqr'))
+            elseif ~isempty(strfind(handles.Settings.ScanParams.GridType,'Sqr'))
                 AutoType = 'Square';
             else
                 check = false;
