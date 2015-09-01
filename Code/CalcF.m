@@ -732,7 +732,7 @@ if Settings.DoShowPlot
     drawnow
     U
     SSE
-
+%keyboard
 %     save shifts Rshift Cshift cx cy
     return
     

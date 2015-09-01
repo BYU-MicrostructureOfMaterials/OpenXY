@@ -66,10 +66,12 @@ end
 handles.PrevSettings = Settings;
 
 %HROIM Method
-HROIMMethodList = {'Simulated','Real-Grain Ref','Real-Single Ref'};
+HROIMMethodList = {'Simulated-Kinematic','Simulated-Dynamic','Real-Grain Ref','Real-Single Ref'};
 set(handles.HROIMMethod, 'String', HROIMMethodList);
-if strcmp(Settings.HROIMMethod,'Simulated')
+if strcmp(Settings.HROIMMethod,'Simulated-Kinematic')
     SetPopupValue(handles.HROIMMethod,'Simulated');
+elseif strcmp(Settings.HROIMMethod,'Simulated-Dynamic')
+    SetPopupValue(handles.HROIMMethod,'Dynamic Simulated');
 else
     if Settings.RefImageInd == 0
         SetPopupValue(handles.HROIMMethod,'Real-Grain Ref');

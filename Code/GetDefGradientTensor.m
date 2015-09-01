@@ -12,6 +12,7 @@ function [F, g, U, SSE] = GetDefGradientTensor(ImageInd,Settings,curMaterial)
 DoLGrid = strcmp(Settings.ScanType,'L');
 % fftw('wisdom',Settings.largefftmeth);
 % disp(curMaterial)
+
 if DoLGrid
     
     %the LImageNamesList field is a cell of length three containing the
@@ -122,6 +123,36 @@ gr=g;
 %either Simulated or Real. Plan on adding Sim/Real Hybrid
 switch Settings.HROIMMethod
     
+    case 'Dynamic Simulated'
+        
+        %         RefImage = genEBSDPatternHybrid_fromEMSoft(g,xstar,ystar,zstar,pixsize,mperpix,sampletilt,Material); % testing next line instead *****
+        RefImage = genEBSDPatternHybrid_fromEMSoft(g,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av);
+        %          RefImage = genEBSDPatternHybridMexHat(gr,paramspat,eye(3),lattice,al,bl,cl,axs);
+        
+        %use following line only for optical distortion correction
+        %    RefImage = RefImage(crpl:crpu,crpl:crpu);
+        %         RefImage = genEBSDPattern(gr,paramspat,eye(3),lattice,al,bl,cl,axs);
+        
+        %RefImage = custimfilt(RefImage,Settings.ImageFilter(1), ...
+            %Settings.PixelSize,Settings.ImageFilter(3),Settings.ImageFilter(4));
+
+        %Initialize
+        clear global rs cs Gs
+        [F1,SSE1] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial);
+        
+        %%%%New stuff to remove rotation error from strain measurement DTF  7/14/14
+        for iq=1:3
+            [rr,uu]=poldec(F1); % extract the rotation part of the deformation, rr
+            gr=rr'*gr; % correct the rotation component of the deformation so that it doesn't affect strain calc
+            RefImage = genEBSDPatternHybrid_fromEMSoft(g,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av);
+            %RefImage = custimfilt(RefImage,Settings.ImageFilter(1), ...
+                %Settings.PixelSize,Settings.ImageFilter(3),Settings.ImageFilter(4));
+            
+            clear global rs cs Gs
+            [F1,SSE1] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial);
+        end
+        %%%%%
+        
     case 'Simulated'
         
         %         RefImage = genEBSDPatternHybrid(gr,paramspat,eye(3),lattice,al,bl,cl,axs); % testing next line instead *****
@@ -137,18 +168,18 @@ switch Settings.HROIMMethod
 
         %Initialize
         clear global rs cs Gs
-        [F1 SSE1] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial);
+        [F1,SSE1] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial);
         
         %%%%New stuff to remove rotation error from strain measurement DTF  7/14/14
         for iq=1:2
-            [rr uu]=poldec(F1); % extract the rotation part of the deformation, rr
+            [rr,uu]=poldec(F1); % extract the rotation part of the deformation, rr
             gr=rr'*gr; % correct the rotation component of the deformation so that it doesn't affect strain calc
             RefImage = genEBSDPatternHybrid(gr,paramspat,eye(3),Material.lattice,Material.a1,Material.b1,Material.c1,Material.axs);
             RefImage = custimfilt(RefImage,Settings.ImageFilter(1), ...
                 Settings.PixelSize,Settings.ImageFilter(3),Settings.ImageFilter(4));
             
             clear global rs cs Gs
-            [F1 SSE1] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial);
+            [F1,SSE1] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial);
         end
         %%%%%
         
@@ -163,7 +194,7 @@ switch Settings.HROIMMethod
                 F = -eye(3); SSE = 101; U = -eye(3);
                 return;
             end
-            [r1 u1]=poldec(F1);
+            [r1,u1]=poldec(F1);
             U1=u1;
             R1=r1;
             FTemp=R1*U1; %**** isn't this just F1 - why did we bother doing this????
@@ -181,7 +212,7 @@ switch Settings.HROIMMethod
                 Settings.ImageFilter(3), Settings.ImageFilter(4));
             %         keyboard
             clear global rs cs Gs
-            [F1 SSE1] = CalcF(NewRefImage,ScanImage,gr,FTemp,ImageInd,Settings,curMaterial);
+            [F1,SSE1] = CalcF(NewRefImage,ScanImage,gr,FTemp,ImageInd,Settings,curMaterial);
             
         end
         
@@ -200,7 +231,7 @@ switch Settings.HROIMMethod
         
         clear global rs cs Gs
 %         disp(RefImagePath);
-        [F1 SSE1] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,RefInd);
+        [F1,SSE1] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,RefInd);
         
     case 'Hybrid'
         %Use simulated pattern method on one reference image then use
