@@ -1,0 +1,11 @@
+% changes to PC calibration
+
+PCCalGUI:
+move line 279 to line 271
+lines 272-274
+    handles.MeanXstar = mean(Settings.CalibrationPointsPC(:,1)+(Settings.XData(Settings.CalibrationPointIndecies(:)))/psize);
+    handles.MeanYstar = mean(Settings.CalibrationPointsPC(:,2))-(Settings.YData(Settings.CalibrationPointIndecies(:)))/psize*sin(Settings.SampleTilt);
+    handles.MeanZstar = mean(Settings.CalibrationPointsPC(:,3))-(Settings.YData(Settings.CalibrationPointIndecies(:)))/psize*cos(Settings.SampleTilt);;
+    
+    
+    
