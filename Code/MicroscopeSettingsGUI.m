@@ -263,10 +263,8 @@ function micronperpix_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of micronperpix as text
 %        str2double(get(hObject,'String')) returns contents of micronperpix as a double
 handles.Settings.mperpix = str2double(get(hObject,'String'));
-Put PhosphorSize in microscope settings gui:
-input mperpix=microns/pixel (set default to 25)
 if isfield(handles.Settings,'PixelSize')
-    Settings.PhosphorSize = handles.Settings.PixelSize*handles.mperpix;
+    handles.Settings.PhosphorSize = handles.Settings.PixelSize*handles.Settings.mperpix;
 end
 guidata(hObject,handles);
 

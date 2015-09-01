@@ -124,6 +124,7 @@ gr=g;
 switch Settings.HROIMMethod
     
     case 'Dynamic Simulated'
+        mperpix = Settings.mperpix;
         
         %         RefImage = genEBSDPatternHybrid_fromEMSoft(g,xstar,ystar,zstar,pixsize,mperpix,sampletilt,Material); % testing next line instead *****
         RefImage = genEBSDPatternHybrid_fromEMSoft(g,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av);

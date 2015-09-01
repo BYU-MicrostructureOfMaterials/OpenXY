@@ -54,7 +54,7 @@ copyParam('ImageFilterType',{'standard','localthresh'});
 
 %% Advanced Settings
 %HROIM Settings
-copyParam('HROIMMethod',{'Simulated', 'Real'});
+copyParam('HROIMMethod',{'Simulated', 'Real', 'Dynamic Simulated'});
 copyParam('IterationLimit');
 copyParam('RefImageInd');
 copyParam('StandardDeviation');
@@ -77,6 +77,7 @@ copyParam('SampleTilt');
 copyParam('SampleAzimuthal');
 copyParam('CameraElevation');
 copyParam('CameraAzimuthal');
+copyParam('mperpix');
 
 
 end
