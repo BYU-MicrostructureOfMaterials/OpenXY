@@ -75,6 +75,8 @@ set(handles.SampleAzimuthal,'String',num2str(Settings.SampleAzimuthal*180/pi)); 
 set(handles.CameraElevation,'String',num2str(Settings.CameraElevation*180/pi)); %degrees
 %Camera Azimuthal
 set(handles.CameraAzimuthal,'String',num2str(Settings.CameraAzimuthal*180/pi)); %degrees
+%Microns per Pixel
+set(handles.micronperpix,'String',num2str(Settings.mperpix));
 
 %Set Position
 if length(varargin) > 1
