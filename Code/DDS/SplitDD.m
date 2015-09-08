@@ -129,7 +129,7 @@ if length(phi1rn)==3*length(Fatemp)
 end
 
 
-betaderiv1 = Fatemp2;
+betaderiv1 = -Fatemp2;
 betaderiv2 = Fctemp2;
 
 
