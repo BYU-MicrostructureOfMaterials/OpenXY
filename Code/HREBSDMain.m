@@ -6,7 +6,7 @@
 
 function Settings = HREBSDMain(Settings)
 % tic
-profile on
+if Settings.EnableProfiler; profile on; end;
 if Settings.DisplayGUI; disp('Dont forget to change PC if the image is cropped by ReadEBSDImage.m'); end;
 %% Read in the first image and get the pixel size.
 %The assumption is made that all following images in the scan
@@ -421,8 +421,10 @@ if Settings.CalcDerivatives
         end
     end
 end
-profile off
-profile viewer
+if Settings.EnableProfiler
+    profile off
+    profile viewer
+end
 
 %% Write Corrected Scan File
 [~,~,ext] = fileparts(Settings.ScanFilePath);
