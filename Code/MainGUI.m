@@ -63,6 +63,14 @@ if ~isempty(varargin)
     handles.Settings = MergeSettings(handles.Settings,varargin{1});
 end
 
+%Load System Settings
+if exist('SystemSettings.mat','file')
+    load SystemSettings
+else
+    OpenXYPath = fileparts(which('MainGUI'));
+    save('SystemSettings','OpenXYPath');
+end 
+
 %Change working directory
 XYpath = fileparts(mfilename('fullpath'));
 if ~strcmp(pwd,XYpath)
