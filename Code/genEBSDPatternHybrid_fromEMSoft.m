@@ -8,19 +8,25 @@ numsy=numsx;
 xpc=(xstar-0.5)*pixsize; % in pixels measured from center of phosphor
 ypc=(ystar-0.5)*pixsize;
 
+%Get EMsoft Path
+if exist('SystemSettings.mat','file')
+    load SystemSettings
+    EMdataPath = fullfile(fileparts(EMsoftPath),'EMdata');
+end
+
 %added masterfile and energyfile to the code folder.  Is that right?
-masterfile=sprintf('%s_EBSDmaster.h5',Material);  
-energyfile=sprintf('%s_MCoutput.h5',Material);
-datafile='EBSDout.h5';
+masterfile=fullfile(EMdataPath,sprintf('%s_EBSDmaster.h5',Material));  
+energyfile=fullfile(EMdataPath,sprintf('%s_MCoutput.h5',Material));
+datafile=['temp' filesep 'EBSDout.h5'];
 beamcurrent=15; %Make variable later
 dwelltime=100;   %Make variable later
 binning=1;       %Make variable later
 gammavalue=.4;   %Make variable later
-filename= 'testeuler.txt';
+filename= ['temp' filesep 'testeuler.txt'];
 
 [phi1,PHI,phi2]=gmat2euler(g); % in radians
 
-%write testeuler.txt file
+%Write testeuler.txt file
 fid=fopen(filename,'w');
 
 fprintf(fid,'eu\n');
@@ -29,8 +35,8 @@ fprintf(fid,'%g,%g,%g\n',phi1*180/pi,PHI*180/pi,phi2*180/pi);% in degrees
 
 fclose(fid);
 
-%write EMEBSDexample.nml file
-fid=fopen('EMEBSDexample.nml','w');
+%Write EMEBSDexample.nml file
+fid=fopen(['temp' filesep 'EMEBSDexample.nml'],'w');
 
 fprintf(fid,'&EBSDdata\n');
 fprintf(fid,'! template file for the CTEMEBSD program\n');
@@ -95,7 +101,8 @@ fclose(fid);
 % !echo $PATH
 
 %run EMsoft
-!EMEBSD EMEBSDexample.nml
+system(['"' fullfile(EMsoftPath,'bin','EMEBSD') '" ' fullfile(OpenXYPath,'temp','EMEBSDexample.nml')]);
+%!EMEBSD EMEBSDexample.nml
 
 %generate pic
 h5infostruct=h5info('EBSDout.h5');
