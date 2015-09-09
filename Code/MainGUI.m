@@ -69,6 +69,11 @@ if exist('SystemSettings.mat','file')
 else
     OpenXYPath = fileparts(which('MainGUI'));
     save('SystemSettings','OpenXYPath');
+end
+
+%Add temp folder
+if ~exist('temp','dir')
+    mkdir('temp');
 end 
 
 %Change working directory
