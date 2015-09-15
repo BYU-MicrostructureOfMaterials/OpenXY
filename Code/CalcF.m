@@ -22,6 +22,7 @@ function [F, SSE] = CalcF(RefImage,ScanImage,g,Fo,Ind,Settings,curMaterial,RefIn
 %% handle inputs
 
 Material = ReadMaterial(curMaterial);
+g0 = g;
 
 if nargin < 8
     RefInd = 0;
@@ -695,7 +696,7 @@ if Settings.DoShowPlot
         figure(100);
     end
     [cx cy]=Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,roixc,roiyc,F,Settings.PixelSize,alpha);
-    clf
+    cla
     imagesc(RefImage);
     colormap gray
     hold on
@@ -709,14 +710,28 @@ if Settings.DoShowPlot
         plot([roixc(i) roixc(i)+cx(i)*10],[roiyc(i) roiyc(i)+cy(i)*10],'b.-')
     end
     drawnow
+    text = get(gca,'title');
+    if ~isempty(text.String)
+        [num,iter] = strtok(text.String(6:end));
+        num = str2num(num);
+        iter = str2num(iter);
+        if num == Ind
+            iter = iter + 1;
+        else
+            iter = 1;
+        end
+    else
+        iter = 1;
+    end
+    title(['Image ' num2str(Ind) ' (' num2str(iter) ')'])
     
-     try
+    try
         set(0,'currentfigure',101);
     catch
         figure(101);
     end
     [cx cy]=Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,roixc,roiyc,F,Settings.PixelSize,alpha);
-    clf
+    cla
     imagesc(ScanImage);
     colormap gray
     hold on
@@ -730,9 +745,10 @@ if Settings.DoShowPlot
         plot([roixc(i) roixc(i)+cx(i)],[roiyc(i) roiyc(i)+cy(i)],'b.-')
     end
     drawnow
+    title(['Image ' num2str(Ind) ' (' num2str(iter) ')'])
     U
     SSE
-%keyboard
+% keyboard
 %     save shifts Rshift Cshift cx cy
     return
     
