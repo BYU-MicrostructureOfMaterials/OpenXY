@@ -1,4 +1,5 @@
 function PCprime =  PCMinSinglePattern(Settings, ScanParams, Ind)
+%Apply Plane Fit
 xstar = ScanParams.xstar-Settings.XData(Ind)/Settings.PhosphorSize;
 ystar = ScanParams.ystar+Settings.YData(Ind)/Settings.PhosphorSize*sin(Settings.SampleTilt);
 zstar = ScanParams.zstar+Settings.YData(Ind)/Settings.PhosphorSize*cos(Settings.SampleTilt);
