@@ -30,3 +30,5 @@ set(gca,'fontsize',16)
 xlabel('Scan position (\mum)')
 ylabel('Tetragonality (%)')
 %axis([0 NN -0.5 2]);
+
+AnalyzeLineScan(Settings);

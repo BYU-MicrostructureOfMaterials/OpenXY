@@ -79,6 +79,11 @@ copyParam('CameraElevation');
 copyParam('CameraAzimuthal');
 copyParam('mperpix');
 
+%% Other
+if isfield(NewSettings,'ScanData')
+    Settings.ScanData = NewSettings.ScanData;
+end
+
 
 end
 
