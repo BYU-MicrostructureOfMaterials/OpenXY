@@ -22,7 +22,7 @@ function varargout = PCCalGUI(varargin)
 
 % Edit the above text to modify the response to help PCCalGUI
 
-% Last Modified by GUIDE v2.5 14-Sep-2015 15:00:02
+% Last Modified by GUIDE v2.5 17-Sep-2015 10:19:55
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -137,6 +137,7 @@ set(handles.SavePCCal,'Value',1);
 handles.SaveAllPC = 1;
 
 % Update handles structure
+handles.Algorithm = 'fminsearch';
 handles.Settings = Settings;
 handles.ScanParams = Settings.ScanParams;
 handles.VanPont = 0;
@@ -145,7 +146,7 @@ handles.tiffread = 0;
 handles.IQPlot = IQPlot;
 handles.isset = false;
 guidata(hObject, handles);
-%uiwait(handles.figure1)
+%uiwait(handles.PCCalGUI)
 pcmethod_SelectionChangedFcn(handles.pcmethod, eventdata, handles)
 
 
@@ -222,12 +223,12 @@ if ~strcmp(YesNo,'No')
         Settings.Exit = 1;
     end
     save('Settings.mat','Settings');
-    delete(handles.figure1);
+    delete(handles.PCCalGUI);
 end
 
-% --- Executes when user attempts to close figure1.
-function figure1_CloseRequestFcn(hObject, eventdata, handles)
-% hObject    handle to figure1 (see GCBO)
+% --- Executes when user attempts to close PCCalGUI.
+function PCCalGUI_CloseRequestFcn(hObject, eventdata, handles)
+% hObject    handle to PCCalGUI (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
@@ -244,7 +245,7 @@ try
             Settings = handles.Settings;
             Settings.Exit = 1;
             save('Settings.mat','Settings');
-            delete(handles.figure1);
+            delete(handles.PCCalGUI);
     end
 catch
     delete(hObject)
@@ -274,7 +275,7 @@ if handles.VanPont
     NumCores = Settings.DoParallel;
     try
         ppool = gcp('nocreate');
-        if isempty(ppool) && NumCores ~= 1
+        if isempty(ppool)
             parpool(NumCores);
         end
     catch
@@ -288,8 +289,9 @@ if handles.VanPont
     pctRunOnAll javaaddpath('java')
     ppm = ParforProgMon( 'Point Calibration ', npoints,1,400,50 );
 %     profile on
+    Algorithm = handles.Algorithm;
     parfor (i=1:npoints,M)
-        PCref = PCMinSinglePattern(Settings, ScanParams, Settings.CalibrationPointIndecies(i));
+        PCref = PCMinSinglePattern(Settings, ScanParams, Settings.CalibrationPointIndecies(i),Algorithm);
         disp(['Point: ' num2str(i)])
         CalibrationPointsPC(i,:) = PCref';
         ppm.increment();
@@ -1110,3 +1112,59 @@ handles.xstar_m = str2double(get(handles.xstar,'String'));
 handles.ystar_m = str2double(get(handles.ystar,'String'));
 handles.zstar_m = str2double(get(handles.zstar,'String'));
 guidata(handles.planefitpanel,handles);
+
+
+% --------------------------------------------------------------------
+function SettingsMenu_Callback(hObject, eventdata, handles)
+% hObject    handle to SettingsMenu (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --------------------------------------------------------------------
+function OptimizationMenu_Callback(hObject, eventdata, handles)
+% hObject    handle to OptimizationMenu (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+%Create GUI
+width = 280;
+height = 80;
+set(handles.PCCalGUI,'Units','pixels');
+guipos = get(handles.PCCalGUI,'Position');
+pos(1) = guipos(1) + (guipos(3)-width)/2;
+pos(2) = guipos(2) + (guipos(4)-height)/2;
+pos(3) = width;
+pos(4) = height;
+gui.f = figure('Visible','off','Position',pos,'MenuBar','none','Toolbar','none','name','Select Optimization Routine','NumberTitle','off');
+
+mwidth = 150;
+mheight = 25;
+pos = [(width - mwidth)/2 (height-mheight)*(0.75) mwidth mheight];
+gui.list = uicontrol(gui.f,'Style','popup','Position',pos,'String',{'fminsearch','pso'},'Tag','Optimization Routine');
+
+pos(2) = (height-mheight)*(0.25);
+guidata(gui.f,gui);
+gui.button = uicontrol(gui.f,'Style','pushbutton','Position',pos,'String','Select','Tag',...
+    'SelectionButton','Callback',{@OptSelect,guidata(gui.f)});
+gui.f.Visible = 'on';
+
+uiwait
+if ishandle(gui.f)
+    gui = guidata(gui.f);
+    if isfield(gui,'Algorithm')
+        handles.Algorithm = gui.Algorithm;
+    end
+    delete(gui.f);  
+else
+    handles.loadbutton.String = 'Load Material';
+end
+guidata(hObject,handles);
+
+function OptSelect(hObject,eventdata,gui)
+string = get(gui.list,'String');
+value = get(gui.list,'Value');
+gui.Algorithm = string{value};
+guidata(hObject,gui);
+gui.f.Visible = 'off';
+uiresume
