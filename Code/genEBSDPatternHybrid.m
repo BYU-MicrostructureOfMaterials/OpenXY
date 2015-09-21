@@ -164,18 +164,11 @@ for i = 1:length(dhkl)
             eco2=eco2/norm(eco2);
         end
         eco1=cross(eco2,eco3);
-        Qcos=[eco1' eco2' eco3'];
-        Qsco=Qcos';
-        Qpco=Qsco*Qps;
-        Qcop=Qsp*Qcos;
-        Qvco=Qpco*Qvp;
-        Q=Qvco;
-        Dpco=-Qpco*Dsp;
-        Dcop=-Qcop*Dpco;
-        Dcov=Qvp'*Dcop+-Qvp'*Dvp; % why +- *********?
-        Dvco=-Qvco*Dcov;
+        Qsco=[eco1; eco2; eco3];
+        Q = Qsco*Qps*Qvp;
+        
         %Equation of intersection
-        t=Dvco;
+        t=-Q*PC;
         ts=tan(theta)^2;
 %         keyboard
         a=ts*(Q(1,1)^2+Q(2,1)^2)-Q(3,1)^2;%x^2
