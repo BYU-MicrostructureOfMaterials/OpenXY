@@ -1,6 +1,11 @@
 function PlotLineScan(Settings)
 % to plot data from analysis parameters - first load mat file
-NN=Settings.ScanLength;
+if isfield(Settings,'ScanLength')
+    NN = Settings.ScanLength;
+else
+    NN = length(Settings.ImageNamesList);
+    Settings.ScanLength = NN;
+end
 tempF=zeros(3,3);
 for i=1:NN
     tempF(:,:)=Settings.data.F{i};
