@@ -272,7 +272,7 @@ if name ~= 0
                 handles.Settings.Nx = handles.Settings.ScanParams.NumColsOdd;
                 handles.Settings.Ny = handles.Settings.ScanParams.NumRows;
             else
-                handles.Settings.Nx = ceil(Nx/2);
+                handles.Settings.Nx = ceil(Nx/2); %NumRowsOdd
                 handles.Settings.Ny = Ny;
             end
         end

@@ -220,8 +220,8 @@ else
                 end
             end
         case 'Hexagonal'
-            NumColsOdd = ceil(Dimensions(1)/2);
-            NumColsEven = floor(Dimensions(1)/2);
+            NumColsOdd = Dimensions(1);
+            NumColsEven = Dimensions(1)-1;
             i = 1;
             for Y = 0:NumRows-1
                 if mod(Y,2) %Even
