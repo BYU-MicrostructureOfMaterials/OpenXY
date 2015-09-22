@@ -32,7 +32,7 @@ Settings.ImageFilter = [9 90 0 0];
 
 %% Advanced Settings
 %HROIM Settings
-Settings.HROIMMethod = 'Simulated'; %{'Simulated', 'Real'}, %Someday will add Hybrid
+Settings.HROIMMethod = 'Real'; %{'Simulated', 'Real'}, %Someday will add Hybrid
 Settings.IterationLimit = 6;
 Settings.RefImageInd = 0;
 Settings.StandardDeviation = 2;
