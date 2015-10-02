@@ -101,7 +101,7 @@ fclose(fid);
 % !echo $PATH
 
 %run EMsoft
-system(['"' fullfile(EMsoftPath,'bin','EMEBSD') '" ' fullfile(OpenXYPath,'temp','EMEBSDexample.nml')]);
+[status,cmdout] = system(['"' fullfile(EMsoftPath,'bin','EMEBSD') '" ' fullfile(OpenXYPath,'temp','EMEBSDexample.nml')]);
 %!EMEBSD EMEBSDexample.nml
 
 %generate pic
