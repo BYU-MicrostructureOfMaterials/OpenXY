@@ -788,6 +788,7 @@ if isfield(matfile,'Settings')
         handles.NaiveYstar = PCCal.NaiveYstar;
         handles.NaiveZstar = PCCal.NaiveZstar;
         handles.calibrated = 1;
+        handles.VanPont = 1;
         handles.Settings.CalibrationPointIndecies = loadedSettings.CalibrationPointIndecies;
         handles.Settings.CalibrationPointsPC = loadedSettings.CalibrationPointsPC;
         handles.Settings.PhosphorSize = loadedSettings.PhosphorSize;
