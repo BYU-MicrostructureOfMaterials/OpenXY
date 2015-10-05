@@ -86,26 +86,12 @@ fprintf(fid,'/\n');
 
 fclose(fid);
 
-% %Set up paths to run EMsoft **need to put some kind fo check to see if
-% the path is correct instead of making the path longer and
-% longer!!!!!!!!***
-% dylibpath=getenv('DYLD_LIBRARY_PATH');
-% setenv('DYLD_LIBRARY_PATH',['/opt/local/lib:/usr/local/lib:',dylibpath]);
-% clear dylibpath 
-% 
-% path1=getenv('PATH');
-% path1=[path1 ':/usr/local/bin'];
-% setenv('DYLD_LIBRARY_PATH',path1);
-% path1=[path1 ':/usr/local/bin:/Users/dfullwoo/EMsoft/bin'];
-% setenv('PATH',path1);
-% !echo $PATH
-
 %run EMsoft
 [status,cmdout] = system(['"' fullfile(EMsoftPath,'bin','EMEBSD') '" ' fullfile(OpenXYPath,'temp','EMEBSDexample.nml')]);
 %!EMEBSD EMEBSDexample.nml
 
 %generate pic
-h5infostruct=h5info('EBSDout.h5');
+h5infostruct=h5info(datafile);
 data1=h5read(h5infostruct.Filename,'/EMData/EBSDpatterns');
 pic=zeros(numsx,numsy);  
 pic(:,:)=data1(:,:,1);
