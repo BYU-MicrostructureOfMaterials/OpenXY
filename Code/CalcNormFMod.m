@@ -17,6 +17,7 @@ switch Settings.HROIMMethod
         pixsize=cell2mat(params2(4));
         Av=cell2mat(params2(5));
         elevang=cell2mat(params2(7));
+        mperpix = Settings.mperpix;
         curMaterial=cell2mat(Settings.Phase(ImageInd)); %****may need updating for material of this point - where is that info?
         for i = 1:3
             I1 = genEBSDPatternHybrid_fromEMSoft(g,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av);
