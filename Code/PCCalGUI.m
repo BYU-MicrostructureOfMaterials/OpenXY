@@ -290,6 +290,9 @@ if handles.VanPont
     ppm = ParforProgMon( 'Point Calibration ', npoints,1,400,50 );
 %     profile on
     Algorithm = handles.Algorithm;
+    ScanParams.xstar = Settings.XStar(1);
+    ScanParams.ystar = Settings.YStar(2);
+    ScanParams.zstar = Settings.ZStar(3);
     parfor (i=1:npoints,M)
         PCref = PCMinSinglePattern(Settings, ScanParams, Settings.CalibrationPointIndecies(i),Algorithm);
         disp(['Point: ' num2str(i)])
