@@ -393,8 +393,8 @@ Ny = Settings.Ny;
 IQ = Settings.IQ;
 XData = Settings.XData;
 YData = Settings.YData;
-NumColsEven = floor(Nx/2);
-NumColsOdd = ceil(Nx/2);
+NumColsEven = Nx-1;
+NumColsOdd = Nx;
 IQPlot = handles.IQPlot;
 XStep = XData(2)-XData(1);
 YStep = YData(YData > 0);
@@ -541,8 +541,8 @@ function planefitpanel_SelectionChangeFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 Settings = handles.Settings;
 Nx = Settings.Nx;
-NumColsEven = floor(Nx/2);
-NumColsOdd = ceil(Nx/2);
+NumColsEven = Nx-1;
+NumColsOdd = Nx;
 ScanType = Settings.ScanType;
 
 cla(handles.axes2)
@@ -581,30 +581,6 @@ if isset
         Settings.YStar = ystar+(Settings.YData)/psize*sin(Settings.SampleTilt);
         Settings.ZStar = zstar+(Settings.YData)/psize*cos(Settings.SampleTilt);
 
-        %Plot PC Calibration
-        
-        if ~ismanual && iscalibrated
-            plot3(Settings.CalibrationPointsPC(:,1),Settings.CalibrationPointsPC(:,2),Settings.CalibrationPointsPC(:,3),'ro')
-        end
-
-        switch ScanType
-            case 'Square'
-                NaiveXstar = reshape(Settings.XStar,Settings.Nx,Settings.Ny)';
-                NaiveYstar = reshape(Settings.YStar,Settings.Nx,Settings.Ny)';
-                NaiveZstar = reshape(Settings.ZStar,Settings.Nx,Settings.Ny)';
-            case 'Hexagonal'
-                NaiveXstar = Hex2Array(Settings.XStar(1:end-1), NumColsOdd, NumColsEven);
-                NaiveYstar = Hex2Array(Settings.YStar(1:end-1), NumColsOdd, NumColsEven);
-                NaiveZstar = Hex2Array(Settings.ZStar(1:end-1), NumColsOdd, NumColsEven);
-        end
-
-        if Settings.Ny > 1
-            surf(NaiveXstar,NaiveYstar,NaiveZstar,zeros(size(NaiveZstar)))
-        else
-            plot3(NaiveXstar,NaiveYstar,NaiveZstar)
-        end
-        %surf(reshape(handles.NaiveXstar,Settings.Nx,Settings.Ny)',reshape(handles.NaiveYstar,Settings.Nx,Settings.Ny)',reshape(handles.NaiveZstar,Settings.Nx,Settings.Ny)',zeros(Settings.Ny,Settings.Nx))
-        shading flat
     end
 
     % PC Data Fit
@@ -616,49 +592,17 @@ if isset
         Settings.YStar = handles.FitYstar;
         Settings.ZStar = handles.FitZstar;
 
-        %Plot PC
-        axes(handles.axes2)
-        plot3(handles.ScanParams.xstar,handles.ScanParams.ystar,handles.ScanParams.zstar,'bo')
-        hold on
-        plot3(Settings.CalibrationPointsPC(:,1),Settings.CalibrationPointsPC(:,2),Settings.CalibrationPointsPC(:,3),'ro')
-        switch ScanType
-            case 'Square'
-                FitXstar = reshape(handles.FitXstar,Settings.Nx,Settings.Ny)';
-                FitYstar = reshape(handles.FitYstar,Settings.Nx,Settings.Ny)';
-                FitZstar = reshape(handles.FitZstar,Settings.Nx,Settings.Ny)';
-            case 'Hexagonal'
-                FitXstar = Hex2Array(handles.FitXstar, NumColsOdd, NumColsEven);
-                FitYstar = Hex2Array(handles.FitYstar, NumColsOdd, NumColsEven);
-                FitZstar = Hex2Array(handles.FitZstar, NumColsOdd, NumColsEven);
-                FitXstar = FitXstar(1:length(FitXstar)-1,:);
-                FitYstar = FitYstar(1:length(FitYstar)-1,:);
-                FitZstar = FitZstar(1:length(FitZstar)-1,:);
-        end
-        if Settings.Ny > 1
-            surf(FitXstar,FitYstar,FitZstar,.5*ones(size(FitXstar)));
-        else
-            plot3(FitXstar,FitYstar,FitZstar);
-        end
-        shading flat
     end
-
-    if get(handles.nofit,'Value') && iscalibrated
+    
+    % No Fit
+    if get(handles.nofit,'Value')
         handles.planefit = 'No Fit';
         
         %Assign pc matrices
-        Settings.XStar = xstar*ones(size(handles.NaiveXstar));
-        Settings.YStar = ystar*ones(size(handles.NaiveXstar));
-        Settings.ZStar = zstar*ones(size(handles.NaiveXstar));
-
-        %Plot PC
-        axes(handles.axes2)
-        plot3(handles.ScanParams.xstar,handles.ScanParams.ystar,handles.ScanParams.zstar,'bo')
-        hold on
-        if ~ismanual && iscalibrated
-            plot3(Settings.CalibrationPointsPC(:,1),Settings.CalibrationPointsPC(:,2),Settings.CalibrationPointsPC(:,3),'ro')
-        end
-        plot3(handles.xstar,handles.ystar,handles.zstar,'go')
-        isset = true;
+        Settings.XStar = xstar*ones(size(Settings.XStar));
+        Settings.YStar = ystar*ones(size(Settings.XStar));
+        Settings.ZStar = zstar*ones(size(Settings.XStar));
+        
     end
 
     %Get PC Data from TIFF
@@ -668,28 +612,7 @@ if isset
         Settings.Xstar = handles.TiffXstar;
         Settings.Ystar = handles.TiffYstar;
         Settings.Zstar = handles.TiffZstar;
-
-        axes(handles.axes2)
-        plot3(handles.ScanParams.xstar,handles.ScanParams.ystar,handles.ScanParams.zstar,'bo')
-        hold on
-        try
-            plot3(Settings.CalibrationPointsPC(:,1),Settings.CalibrationPointsPC(:,2),Settings.CalibrationPointsPC(:,3),'ro')
-        catch
-        end
-
-        TiffXstar = reshape(handles.TiffXstar,Settings.Nx,Settings.Ny)';
-        TiffYstar = reshape(handles.TiffYstar,Settings.Nx,Settings.Ny)';
-        TiffZstar = reshape(handles.TiffZstar,Settings.Nx,Settings.Ny)';
-
-        if Settings.Ny > 1
-            surf(TiffXstar,TiffYstar,TiffZstar,zeros(size(TiffZstar)))
-        else
-            plot3(TiffXstar,TiffYstar,TiffZstar)
-        end
-        shading flat
-
-        handles.Settings = Settings;
-        guidata(hObject, handles);  
+ 
     end
 end
 
@@ -714,12 +637,23 @@ if isset
     
     %Plot new PC 1st point
     plot3(Settings.XStar(1),Settings.YStar(1),Settings.ZStar(1),'go');
-    %Plot plane
-    if Settings.Ny > 1
-        surf(Settings.XStar,Settings.YStar,Settings.ZStar,zeros(size(Settings.ZStar)))
-    else
-        plot3(Settings.XStar,Settings.YStar,Settings.ZStar,'g')
+    
+    switch ScanType
+        case 'Square'
+            XStar = reshape(Settings.XStar,Settings.Nx,Settings.Ny)';
+            YStar = reshape(Settings.YStar,Settings.Nx,Settings.Ny)';
+            ZStar = reshape(Settings.ZStar,Settings.Nx,Settings.Ny)';
+        case 'Hexagonal'
+            XStar = Hex2Array(Settings.XStar(1:end-1), NumColsOdd, NumColsEven);
+            YStar = Hex2Array(Settings.YStar(1:end-1), NumColsOdd, NumColsEven);
+            ZStar = Hex2Array(Settings.ZStar(1:end-1), NumColsOdd, NumColsEven);
     end
+    if Settings.Ny > 1
+        surf(XStar,YStar,ZStar,zeros(size(ZStar)))
+    else
+        plot3(XStar,YStar,ZStar)
+    end
+    shading flat
 else
     set(handles.xstar,'String','No PC Data');
     set(handles.ystar,'String','No PC Data');
@@ -839,8 +773,8 @@ if isfield(matfile,'Settings')
         IQ = Settings.IQ;
         XData = Settings.XData;
         YData = Settings.YData;
-        NumColsEven = floor(Nx/2);
-        NumColsOdd = ceil(Nx/2);
+        NumColsEven = Nx-1;
+        NumColsOdd = Nx;
         switch Settings.ScanType
             case 'Square'
                 indi = 1:1:Nx*Ny;

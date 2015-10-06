@@ -73,8 +73,8 @@ for i=1:3
     for j=i:3
         epsij=strain(i,j,:);
         if strcmp(Settings.ScanType,'Hexagonal')
-            NColsOdd = ceil(c/2);
-            NColsEven = floor(c/2);
+            NColsOdd = c;
+            NColsEven = c-1;
             NRows = r;
             count = 1;
             
