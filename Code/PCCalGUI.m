@@ -99,8 +99,8 @@ switch ScanType
         axis image %scales to natural width and height
         
     case 'Hexagonal'
-        NumColsEven = floor(Nx/2);
-        NumColsOdd = ceil(Nx/2);
+        NumColsEven = Nx-1;
+        NumColsOdd = Nx;
         x = Settings.XData;
         y = Settings.YData;
         x = Hex2Array(x,NumColsOdd,NumColsEven);
