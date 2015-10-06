@@ -129,7 +129,7 @@ if length(phi1rn)==3*length(Fatemp)
 end
 
 
-betaderiv1 = Fatemp2;
+betaderiv1 = -Fatemp2;
 betaderiv2 = Fctemp2;
 
 
@@ -202,13 +202,13 @@ parfor i = 1:m*n
         switch alphaorbeta
             case 'Nye-Kroner'
                 merp = alphavecp(1:3,i);
-                rhos(:,i)=resolvedisloc(merp,1,minscheme,matchoice,gmat,stress, stepsize^2, x0type);
+                rhos(:,i)=resolvedislocB(merp,0,minscheme,matchoice,gmat,1, x0type);
             case 'Distortion Matching'
                 merp = beta(:,i);
                 rhos(:,i)=resolvedisloc(merp,2,minscheme,matchoice,gmat,stress, stepsize^2, x0type); %CHANGE BACK TO 2
             case 'Nye-Kroner (Pantleon)'
                 merp = alphavecp(:,i);
-                rhos(:,i)=resolvedisloc(merp,9,minscheme,matchoice,gmat,stress, stepsize^2, x0type);
+                rhos(:,i)=resolvedislocB(merp,1,minscheme,matchoice,gmat,1, x0type);
             case 11
                 merp = zeros(6,1);
                 merp(1,1) = beta(1,i);

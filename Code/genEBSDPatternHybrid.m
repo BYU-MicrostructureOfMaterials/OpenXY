@@ -33,19 +33,15 @@ Fhkl = params{8};
 dhkl = params{9};
 hkl = params{10};
 sFhkl = Fhkl.^2;
-% sFhkl = Fhkl;
-%calculate wavelength
-Wa = 6.626e-34/sqrt(2*1.602e-19*9.109e-31*Av+(1.602e-19*Av/2.998e8)^2);
-%calculate cone angle
+Wa = 6.626e-34/sqrt(2*1.602e-19*9.109e-31*Av+(1.602e-19*Av/2.998e8)^2); %calculate wavelength
 
-alpha = pi/2 - sampletilt + elevang;
 simpat = zeros(pixsize,pixsize);
-% SinglePattern = zeros(pixsize,pixsize);
-% OnesMat = ones(pixsize,pixsize);
-% keyboard
+
+
 %Coordinate frame transformation
 Qvp=[-1 0 0; 0 -1 0; 0 0 1];
-Dvp=[(xstar)*pixsize;(1-ystar)*pixsize;0]; % pattern center in phosphor frame
+
+PC = [xstar*pixsize;(1-ystar)*pixsize;zstar*pixsize];
 % Sample to Crystal
 if length(g(:)) < 9
     phi1=g(1);
@@ -54,31 +50,18 @@ if length(g(:)) < 9
     Qsc=euler2gmat(phi1,PHI,phi2); %rotation sample to crystal
 else
     Qsc=g;
+    [R U] = poldec(Qsc);
+    if sum(sum(U-eye(3)))>1e-10
+        error('g must be a pure rotation')
+    end
 end
-[R U] = poldec(Qsc);
-if sum(sum(U-eye(3)))>1e-10
-    error('g must be a pure rotation')
-end
-% [R F]=poldec(F);
-% Qsc=Qsc*R';
 Qcs=Qsc';
 
+alpha = pi/2 - sampletilt + elevang;
 % Phospher to sample
 Qps=[0 -cos(alpha) -sin(alpha);...
     -1     0            0;...
     0   sin(alpha) -cos(alpha)];
-Qsp=Qps';
-% Qpc=Qsc*Qps;
-% Translation between frames
-% Dps=Qps*[0;0;-zstar*pixsize];%in pixels in sample frame
-Dsp=[0;0;zstar*pixsize];% position of sample described in phosphor frame
-% x=1:1000;
-% y=1:1000;
-% [Xv Yv]=meshgrid(x,y);
-% %phospher described in phospher frame
-%  xp=Qvp(1,1)*Xv+Qvp(1,2)*Yv+Dvp(1);
-%  yp=Qvp(2,1)*Xv+Qvp(2,2)*Yv+Dvp(2);
-%  zp=Qvp(3,1)*Xv+Qvp(3,2)*Yv+Dvp(3);
 
 UsePermHKL = 0; %can't get this working for anything non-cubic, so use old 
 %method for other symmetries. PermuteHKL does speed up cubic symmetries
@@ -164,18 +147,14 @@ for i = 1:length(dhkl)
             eco2=eco2/norm(eco2);
         end
         eco1=cross(eco2,eco3);
-        Qcos=[eco1' eco2' eco3'];
-        Qsco=Qcos';
-        Qpco=Qsco*Qps;
-        Qcop=Qsp*Qcos;
-        Qvco=Qpco*Qvp;
-        Q=Qvco;
-        Dpco=-Qpco*Dsp;
-        Dcop=-Qcop*Dpco;
-        Dcov=Qvp'*Dcop+-Qvp'*Dvp; % why +- *********?
-        Dvco=-Qvco*Dcov;
+        
+        Qsco=[eco1; eco2; eco3];
+        
+        Q = Qsco*Qps*Qvp;
+        
         %Equation of intersection
-        t=Dvco;
+        t=-Q*PC;
+        
         ts=tan(theta)^2;
 %         keyboard
         a=ts*(Q(1,1)^2+Q(2,1)^2)-Q(3,1)^2;%x^2
@@ -262,22 +241,5 @@ for i = 1:length(dhkl)
     end
     
 end
-simpatT=simpat;
-% This is to help pick out points that are good in actual patterns
-% bkgd=zeros(size(simpat));
-% bkgd(1,1)=150;
-% bkgd([1,1],[2,end])=-60;
-% bkgd([2,end],[1,1])=-60;
-% bkgd=real(ifft2(bkgd))*pixsize^2;
-% bkgd=(bkgd-min(bkgd(:)))/(max(bkgd(:))-min(bkgd(:)));
-% 
-% simpat=single(simpatT*255/max(simpatT(:)).*bkgd);
-% simpat=single(simpat*255/max(simpat(:)));
-% keyboard
-simpat=single(simpatT);
-% keyboard
-% for generating binary simulated patterns
-% simpat(simpat == min(min(simpat))) = 0;
-% simpat(simpat > min(min(simpat))) = 1;
-% simpat=(simpat~=0);
+simpat=single(simpat);
 
