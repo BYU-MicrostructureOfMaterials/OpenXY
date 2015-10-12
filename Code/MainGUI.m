@@ -64,9 +64,11 @@ if ~isempty(varargin)
 end
 
 %Load System Settings
+OpenXYPath = '';
 if exist('SystemSettings.mat','file')
     load SystemSettings
-else
+end
+if ~exist(OpenXYPath,'dir')
     OpenXYPath = fileparts(which('MainGUI'));
     save('SystemSettings','OpenXYPath');
 end

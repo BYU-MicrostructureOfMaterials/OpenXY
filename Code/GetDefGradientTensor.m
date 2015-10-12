@@ -127,7 +127,7 @@ switch Settings.HROIMMethod
         mperpix = Settings.mperpix;
         
         %         RefImage = genEBSDPatternHybrid_fromEMSoft(g,xstar,ystar,zstar,pixsize,mperpix,sampletilt,Material); % testing next line instead *****
-        RefImage = genEBSDPatternHybrid_fromEMSoft(g,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av);
+        RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av);
         %          RefImage = genEBSDPatternHybridMexHat(gr,paramspat,eye(3),lattice,al,bl,cl,axs);
         
         %use following line only for optical distortion correction
@@ -138,6 +138,8 @@ switch Settings.HROIMMethod
             %Settings.PixelSize,Settings.ImageFilter(3),Settings.ImageFilter(4));
 
         %Initialize
+        %RefImage = custimfilt(RefImage,Settings.ImageFilter(1), ...
+            %Settings.PixelSize,Settings.ImageFilter(3),Settings.ImageFilter(4));
         clear global rs cs Gs
         [F1,SSE1] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial);
         
@@ -148,7 +150,15 @@ switch Settings.HROIMMethod
             RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av);
             %RefImage = custimfilt(RefImage,Settings.ImageFilter(1), ...
                 %Settings.PixelSize,Settings.ImageFilter(3),Settings.ImageFilter(4));
+<<<<<<< Updated upstream
+
+=======
+                
+            RefImage = custimfilt(RefImage,Settings.ImageFilter(1), ...
+                Settings.PixelSize,Settings.ImageFilter(3),Settings.ImageFilter(4));
             
+            
+>>>>>>> Stashed changes
             clear global rs cs Gs
             [F1,SSE1] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial);
         end
@@ -164,8 +174,8 @@ switch Settings.HROIMMethod
         %    RefImage = RefImage(crpl:crpu,crpl:crpu);
         %         RefImage = genEBSDPattern(gr,paramspat,eye(3),lattice,al,bl,cl,axs);
         
-        RefImage = custimfilt(RefImage,Settings.ImageFilter(1), ...
-            Settings.PixelSize,Settings.ImageFilter(3),Settings.ImageFilter(4));
+        %RefImage = custimfilt(RefImage,Settings.ImageFilter(1), ...
+            %Settings.PixelSize,Settings.ImageFilter(3),Settings.ImageFilter(4));
 
         %Initialize
         clear global rs cs Gs

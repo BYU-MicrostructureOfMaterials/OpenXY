@@ -15,28 +15,29 @@ if exist('SystemSettings.mat','file')
 end
 
 %added masterfile and energyfile to the code folder.  Is that right?
-masterfile=fullfile(EMdataPath,sprintf('%s_EBSDmaster.h5',Material));  
-energyfile=fullfile(EMdataPath,sprintf('%s_MCoutput.h5',Material));
-datafile=['temp' filesep 'EBSDout.h5'];
+masterfile=(sprintf('%s_EBSDmaster.h5',Material));  
+energyfile=(sprintf('%s_MCoutput.h5',Material));
+datafile='EBSDout.h5';  
+datafilepath= fullfile(EMdataPath,'EBSDout.h5');%['temp' filesep 'EBSDout.h5'];
+inputfile = fullfile(EMdataPath,'EMEBSDexample.nml');
 beamcurrent=15; %Make variable later
 dwelltime=100;   %Make variable later
 binning=1;       %Make variable later
 gammavalue=.4;   %Make variable later
-filename= ['temp' filesep 'testeuler.txt'];
+anglefile='testeuler.txt';  %fullfile(OpenXYPath,'temp','testeuler.txt');%['temp' filesep 'testeuler.txt'];
 
 [phi1,PHI,phi2]=gmat2euler(g); % in radians
 
 %Write testeuler.txt file
-fid=fopen(filename,'w');
+fid=fopen(fullfile(EMdataPath,anglefile),'w');
 
 fprintf(fid,'eu\n');
 fprintf(fid,'1\n');
 fprintf(fid,'%g,%g,%g\n',phi1*180/pi,PHI*180/pi,phi2*180/pi);% in degrees
-
 fclose(fid);
 
 %Write EMEBSDexample.nml file
-fid=fopen(['temp' filesep 'EMEBSDexample.nml'],'w');
+fid=fopen(inputfile,'w');
 
 fprintf(fid,'&EBSDdata\n');
 fprintf(fid,'! template file for the CTEMEBSD program\n');
@@ -54,7 +55,7 @@ fprintf(fid,'! pattern center coordinates in units of pixels\n');
 fprintf(fid,'xpc=%g\n',xpc);
 fprintf(fid,'ypc=%g\n',ypc);
 fprintf(fid,'! name of angle file (euler angles or quaternions)\n');
-fprintf(fid,'anglefile=''%s''\n',filename);
+fprintf(fid,'anglefile=''%s''\n',anglefile);
 fprintf(fid,'! ''tsl'' or ''hkl'' Euler angle convention parameter\n');
 fprintf(fid,'eulerconvention=''tsl''\n');
 fprintf(fid,'! name of EBSD master output file\n');
@@ -87,11 +88,13 @@ fprintf(fid,'/\n');
 fclose(fid);
 
 %run EMsoft
-[status,cmdout] = system(['"' fullfile(EMsoftPath,'bin','EMEBSD') '" ' fullfile(OpenXYPath,'temp','EMEBSDexample.nml')]);
+cd(EMdataPath);
+[status,cmdout] = system(['"' fullfile(EMsoftPath,'bin','EMEBSD') '" ' inputfile]);
+cd(OpenXYPath);
 %!EMEBSD EMEBSDexample.nml
-
+cmdout
 %generate pic
-h5infostruct=h5info(datafile);
+h5infostruct=h5info(datafilepath);
 data1=h5read(h5infostruct.Filename,'/EMData/EBSDpatterns');
 pic=zeros(numsx,numsy);  
 pic(:,:)=data1(:,:,1);

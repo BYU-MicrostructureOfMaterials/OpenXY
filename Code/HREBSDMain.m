@@ -21,6 +21,30 @@ Settings.ROISize = round((Settings.ROISizePercent * .01)*Settings.PixelSize);
 %% Add Sub-folder(s)
 addpath('DDS');
 
+%Check if EMsoft is set up correctly
+if exist('SystemSettings.mat','file')
+    load SystemSettings
+    EMdataPath = fullfile(fileparts(EMsoftPath),'EMdata');
+    if ~exist(EMdataPath,'dir')
+        error('EMsoft path is incorrect. Re-select in Advanced Settings');
+    end
+else
+    error('EMsoft path is unknown. Re-select in Advanced Settings');
+end
+
+%Set up EMsoft Environment Variables
+if strcmp(Settings.HROIMMethod,'Dynamic Simulated')
+    PATH = getenv('PATH');
+    PATHcell = textscan(PATH,'%s','Delimiter',':');
+    if all(cellfun(@isempty,strfind(PATHcell{1},EMsoftPath)))
+        PATH = [PATH ':' EMsoftPath filesep 'bin'];
+        setenv('PATH',PATH);
+        setenv('DYLD_LIBRARY_PATH',PATH);
+        setenv('EMsoftpathname',[EMsoftPath filesep])
+        setenv('EMdatapathname',[EMdataPath filesep])
+    end
+end
+
 %Sets default color scheme for all figures and axes
 set(0,'DefaultFigureColormap',jet);
 
