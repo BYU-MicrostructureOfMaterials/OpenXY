@@ -150,15 +150,9 @@ switch Settings.HROIMMethod
             RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av);
             %RefImage = custimfilt(RefImage,Settings.ImageFilter(1), ...
                 %Settings.PixelSize,Settings.ImageFilter(3),Settings.ImageFilter(4));
-<<<<<<< Updated upstream
-
-=======
-                
             RefImage = custimfilt(RefImage,Settings.ImageFilter(1), ...
                 Settings.PixelSize,Settings.ImageFilter(3),Settings.ImageFilter(4));
             
-            
->>>>>>> Stashed changes
             clear global rs cs Gs
             [F1,SSE1] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial);
         end
