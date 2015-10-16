@@ -22,18 +22,18 @@ Settings.ROISize = round((Settings.ROISizePercent * .01)*Settings.PixelSize);
 addpath('DDS');
 
 %Check if EMsoft is set up correctly
-if exist('SystemSettings.mat','file')
-    load SystemSettings
-    EMdataPath = fullfile(fileparts(EMsoftPath),'EMdata');
-    if ~exist(EMdataPath,'dir')
-        error('EMsoft path is incorrect. Re-select in Advanced Settings');
-    end
-else
-    error('EMsoft path is unknown. Re-select in Advanced Settings');
-end
-
-%Set up EMsoft Environment Variables
 if strcmp(Settings.HROIMMethod,'Dynamic Simulated')
+    if exist('SystemSettings.mat','file')
+        load SystemSettings
+        EMdataPath = fullfile(fileparts(EMsoftPath),'EMdata');
+        if ~exist(EMdataPath,'dir')
+            error('EMsoft path is incorrect. Re-select in Advanced Settings');
+        end
+    else
+        error('EMsoft path is unknown. Re-select in Advanced Settings');
+    end
+    
+    %Set up EMsoft Environment Variables
     PATH = getenv('PATH');
     PATHcell = textscan(PATH,'%s','Delimiter',':');
     if all(cellfun(@isempty,strfind(PATHcell{1},EMsoftPath)))
