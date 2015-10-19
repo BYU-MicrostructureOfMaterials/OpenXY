@@ -168,8 +168,8 @@ switch Settings.HROIMMethod
         %    RefImage = RefImage(crpl:crpu,crpl:crpu);
         %         RefImage = genEBSDPattern(gr,paramspat,eye(3),lattice,al,bl,cl,axs);
         
-        %RefImage = custimfilt(RefImage,Settings.ImageFilter(1), ...
-            %Settings.PixelSize,Settings.ImageFilter(3),Settings.ImageFilter(4));
+        RefImage = custimfilt(RefImage,Settings.ImageFilter(1), ...
+            Settings.PixelSize,Settings.ImageFilter(3),Settings.ImageFilter(4));
 
         %Initialize
         clear global rs cs Gs
