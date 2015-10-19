@@ -1,11 +1,13 @@
 function MI = CalcMutualInformation(ImageA,ImageB)
+% Calculates the Mutual Information between two images
+% Mutual Information: MI = I_A + I_B - I_AB where
+%       I_A is the entropy of image A
+%       I_B is the entropy of image B
+%       I_AB is the entropy of the combined probability histograms for image A and B
+
 
 Ia = ConvertToInt8(ImageA);
 Ib = ConvertToInt8(ImageB);
-
-a = entropy(Ia);
-b = entropy(Ib);
-c = entropy(Ia+Ib);
 
 %Get Image Histograms
 Pa = imhist(Ia);
