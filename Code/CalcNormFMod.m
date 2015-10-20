@@ -27,7 +27,7 @@ switch Settings.HROIMMethod
             g=R'*g;
         end
         
-    case 'Simulated'
+    otherwise
         % Remove rotational error first DTF 7/15/14
         for i = 1:3
             I1 = genEBSDPatternHybrid(g,params2,eye(3),lattice,a1,b1,c1,axs);
