@@ -596,9 +596,9 @@ if handles.calibrated
 end
 
 if handles.tiffread && get(handles.fromtiff,'Value')
-    Settings.Xstar = handles.TiffXstar;
-    Settings.Ystar = handles.TiffYstar;
-    Settings.Zstar = handles.TiffZstar;
+    Settings.XStar = handles.TiffXstar;
+    Settings.YStar = handles.TiffYstar;
+    Settings.ZStar = handles.TiffZstar;
     
     axes(handles.axes2)
     plot3(handles.ScanParams.xstar,handles.ScanParams.ystar,handles.ScanParams.zstar,'bo')
@@ -808,9 +808,9 @@ if Settings.ImageTag %See MainGUI.m SetImageFields
     set(handles.fromtiff,'Enable','on');
 
     if ~handles.calibrated
-        Settings.Xstar = handles.TiffXstar;
-        Settings.Ystar = handles.TiffYstar;
-        Settings.Zstar = handles.TiffZstar;
+        Settings.XStar = handles.TiffXstar;
+        Settings.YStar = handles.TiffYstar;
+        Settings.ZStar = handles.TiffZstar;
         
         handles.Settings = Settings;
     end
