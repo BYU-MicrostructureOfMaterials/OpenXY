@@ -17,21 +17,6 @@ Allg=data.g;
 ImageNamesList=Settings.ImageNamesList;
 ImageFilter=Settings.ImageFilter;
 special=0;
-leftside=[];
-rightside=[];
-topside=[];
-NColsOdd=[];
-NColsEven=[];
-if strcmp(Settings.ScanType,'Hexagonal')
-    NColsOdd = c;
-    NColsEven = c-1;
-    c = NColsOdd+NColsEven;
-    leftside=1:c:length(ImageNamesList);
-    rightside=NColsOdd:c:length(ImageNamesList);
-    rightside=[rightside,c:c:length(ImageNamesList)];
-    rightside=sort(rightside);
-    topside=rightside(end-1)+1:length(ImageNamesList);
-end
 
 if strcmp(VaryStepSizeI,'a')
     numruntimes=floor(min(r,c)/2)-1;
@@ -138,20 +123,6 @@ if ~strcmp(Settings.ScanType,'L')
    % ScanType=Settings.ScanType;
    % intensityr=zeros(size(ImageNamesList));
 
-    NumberOfCores = Settings.DoParallel;
-    try
-        ppool = gcp('nocreate');
-        if isempty(ppool)
-            parpool(NumberOfCores);
-        end
-    catch
-        ppool = matlabpool('size');
-        if ~ppool
-            matlabpool('local',NumberOfCores); 
-        end
-    end
-    % addpath cd
-    pctRunOnAll javaaddpath('java')
     
     N = length(Settings.ImageNamesList);
     
@@ -164,172 +135,45 @@ if ~strcmp(Settings.ScanType,'L')
         Burgers(p)=Material.Burgers;
     end
     b = Burgers;
-
-    %Create standard lgrid style images   
-    ppm = ParforProgMon( 'Dislocation Density Progress ', N , 1, 400, 50);
-    parfor (cnt = 1:N)% Change for parallel computing
-%     h=waitbar(0,'start');
-%     for cnt=1:length(ImageNamesList)
-%         Allg{cnt}=data.g{cnt};% Change for parallel computing
-        
-        %Initialize Temporary Variables for parfor loop
-        image_a = 0;
-        image_a1 = 0;
-        image_a2= 0;
-        image_c = 0;
-        Amat = 0;
-        Cmat = 0;
-        RefIndA = 0;
-        RefIndA1 = 0;
-        RefIndA2 = 0;
-        RefIndC = 0;
-
-        ImagePath = ImageNamesList{cnt};% Change for parallel computing
-                 g_b = euler2gmat(Allg{cnt}(1),Allg{cnt}(2),Allg{cnt}(3));% is Allg in the same order as ImageNamesList?
-               
-        image_b = ReadEBSDImage(ImagePath,ImageFilter);% Change for parallel computing
-        if strcmp(ScanType,'Square') || strcmp(ScanType,'LtoSquare')% Change for parallel computing
-            
-            if r > 1 %No image_a for line scans
-                if cnt <= c*(skippts+1) % this is the first row(s)
-                    image_a = ReadEBSDImage(ImageNamesList{cnt+c*(skippts+1)},ImageFilter);
-                    Amat=euler2gmat(Allg{cnt+c*(skippts+1)}(1),Allg{cnt+c*(skippts+1)}(2),Allg{cnt+c*(skippts+1)}(3));
-                    RefIndA = cnt+c*(skippts+1);
-                else
-                    image_a = ReadEBSDImage(ImageNamesList{cnt-c*(skippts+1)},ImageFilter);% Change for parallel computing
-                    RefIndA = cnt-c*(skippts+1);
-                    Amat=euler2gmat(Allg{cnt-c*(skippts+1)}(1),Allg{cnt-c*(skippts+1)}(2),Allg{cnt-c*(skippts+1)}(3));
-                end
-            elseif r == 1
-                image_a = image_b;
-                Amat = eye(3);
-                RefIndA = cnt;
-            end 
-            if mod(cnt,c)==0 || (c-mod(cnt,c))<=skippts               
-                image_c = ReadEBSDImage(ImageNamesList{cnt-(skippts+1)},ImageFilter); 
-                RefIndC = cnt-(skippts+1);
-                Cmat=euler2gmat(Allg{cnt-(skippts+1)}(1),Allg{cnt-(skippts+1)}(2),Allg{cnt-(skippts+1)}(3));
-            else
-                image_c = ReadEBSDImage(ImageNamesList{cnt+(skippts+1)},ImageFilter);% Change for parallel computing
-                RefIndC = cnt+(skippts+1);
-                Cmat=euler2gmat(Allg{cnt+(skippts+1)}(1),Allg{cnt+(skippts+1)}(2),Allg{cnt+(skippts+1)}(3));
-            end
-
-        elseif strcmp(ScanType,'Hexagonal')% Change for parallel computing
-            % Current hexagonal grid analysis ignores edges and cannot
-            % handle skipping points (adding odd skip values)
-            
-            if sum([find(leftside==cnt),find(rightside==cnt),find(topside==cnt)])==0
-            
-                if skippts==0
-                    
-                    image_a1 = ReadEBSDImage(ImageNamesList{cnt+NColsEven},ImageFilter);
-                    RefIndA1 = cnt+NColsEven;
-                    image_a2 = ReadEBSDImage(ImageNamesList{cnt+NColsEven+1},ImageFilter);
-                    RefIndA2 = cnt+NColsEven+1;
-                    Amat=euler2gmat(Allg{cnt+NColsEven}(1),Allg{cnt+NColsEven}(2),Allg{cnt+NColsEven}(3));
-                    
-                    image_c = ReadEBSDImage(ImageNamesList{cnt+1},ImageFilter);% Change for parallel computing
-                    RefIndC = cnt+1;
-                    Cmat=euler2gmat(Allg{cnt+1}(1),Allg{cnt+1}(2),Allg{cnt+1}(3));
-                else
-                    if cnt <= c*(skippts+1)/2 % this is the first row(s) / top rows
-                                        
-                        image_a = ReadEBSDImage(ImageNamesList{cnt+c*(skippts+1)/2},ImageFilter);
-                        RefIndA = cnt+c*(skippts+1)/2;
-                        Amat=euler2gmat(Allg{cnt+c*(skippts+1)/2}(1),Allg{cnt+c*(skippts+1)/2}(2),Allg{cnt+c*(skippts+1)/2}(3));
-                    else
-                        
-                        image_a = ReadEBSDImage(ImageNamesList{cnt-c*(skippts+1)/2},ImageFilter);% Change for parallel computing
-                        RefIndA = cnt-c*(skippts+1)/2;
-                        Amat=euler2gmat(Allg{cnt-c*(skippts+1)/2}(1),Allg{cnt-c*(skippts+1)/2}(2),Allg{cnt-c*(skippts+1)/2}(3));
-                    end
-% keyboard
-                    if (mod(cnt,c)>NColsOdd-skippts && mod(cnt,c)<=NColsOdd) || (mod(cnt,c)>c-skippts && mod(cnt,c)<c) % distinguish even and odd rows then first look at points too close to right edge
-                        image_c = ReadEBSDImage(ImageNamesList{cnt-(skippts+1)},ImageFilter);
-                        RefIndC = cnt-(skippts+1);
-                        Cmat=euler2gmat(Allg{cnt-(skippts+1)}(1),Allg{cnt-(skippts+1)}(2),Allg{cnt-(skippts+1)}(3));
-                    else
-                        image_c = ReadEBSDImage(ImageNamesList{cnt+(skippts+1)},ImageFilter);% Change for parallel computing
-                        RefIndC = cnt+(skippts+1);
-                        Cmat=euler2gmat(Allg{cnt+(skippts+1)}(1),Allg{cnt+(skippts+1)}(2),Allg{cnt+(skippts+1)}(3));
-                    end   
-                end
-
-            else
-                image_a = image_b;
-                image_a1 = image_b;
-                image_a2 = image_b;
-                image_c = image_b;
-                
-                RefIndA = cnt;
-                RefIndA1 = cnt;
-                RefIndA2 = cnt;
-                RefIndC = cnt;
-                
-                Amat=g_b;
-                Cmat=g_b;
-            end
-        end
-        misanglea=GeneralMisoCalc(g_b,Amat,lattice{cnt});
-        misanglec=GeneralMisoCalc(g_b,Cmat,lattice{cnt});
-        misang(cnt)=max([misanglea misanglec]);
-        % evaluate points a and c using Wilk's method with point b as the
-        % reference pattern
-%         imgray=rgb2gray(imread(ImagePath)); % this can add significant time for large scans
-%         intensityr(cnt)=mean(imgray(:));
-        
-        if (isempty(image_b)) || (isempty(image_a) && (~strcmp(Settings.ScanType,'Hexagonal'))) || (isempty(image_c)) ||... 
-                (strcmp(Settings.ScanType,'Hexagonal') && skippts == 0 && (isempty(image_a1) || isempty(image_a2)))
-            AllFa{cnt}= -eye(3);
-            AllSSEa(cnt)=101;
-            AllFc{cnt}=-eye(3);
-            AllSSEc(cnt)=101;
-        else
-            % first, evaluate point a
-            if r > 1 %Not Line Scan
-            
-                clear global rs cs Gs
-                if ~strcmp(Settings.ScanType,'Hexagonal') || (strcmp(Settings.ScanType,'Hexagonal') && skippts>0)
-
-                        [AllFa{cnt},AllSSEa(cnt)] = CalcF(image_b,image_a,g_b,eye(3),cnt,Settings,Settings.Phase{cnt}, RefIndA);
-
-                else
-                    [AllFa1,AllSSEa1] = CalcF(image_b,image_a1,g_b,eye(3),cnt,Settings,Settings.Phase{cnt},RefIndA1);
-                    [AllFa2,AllSSEa2] = CalcF(image_b,image_a2,g_b,eye(3),cnt,Settings,Settings.Phase{cnt},RefIndA2);
-                    AllFa{cnt}=0.5*(AllFa1+AllFa2);
-                    AllSSEa(cnt)=0.5*(AllSSEa1+AllSSEa2);
-                end
-
-                % scale a direction step F tensor for different step size 
-                if strcmp(Settings.ScanType,'Hexagonal')
-                    AllFatemp=AllFa{cnt}-eye(3);
-                    AllFatemp=AllFatemp/sqrt(3)*2;
-                    AllFa{cnt}=AllFatemp+eye(3);
-                end
-            else
-                AllFa{cnt}= -eye(3);
-                AllSSEa(cnt)=101;
-            end
-
-            % then, evaluate point c
-            clear global rs cs Gs
-            if ~strcmp(Settings.ScanType,'Hexagonal') || (strcmp(Settings.ScanType,'Hexagonal') && skippts>0)
-
-                [AllFc{cnt},AllSSEc(cnt)] = CalcF(image_b,image_c,g_b,eye(3),cnt,Settings,Settings.Phase{cnt},RefIndC);
-
-            else
-                [AllFc{cnt},AllSSEc(cnt)] = CalcF(image_b,image_c,g_b,eye(3),cnt,Settings,Settings.Phase{cnt},RefIndC);
-
-            end
-        end
-%         waitbar(cnt/length(ImageNamesList),h,['cnt: ',num2str(cnt)]);% Change for parallel computing
-        ppm.increment();
+    
+    %Set up Parameters
+    for cnt = 1:N
+        DDSettings{cnt} = GetDDSettings(cnt,ImageNamesList,Allg,[r,c],ScanType,skippts);
     end
-    ppm.delete();
-%     if strcmp(Settings.ScanType,'LtoSquare')
-%         close(h)
-%     end
+    
+    %Perform Calculation
+    if Settings.DoParallel > 1  
+        ppm = ParforProgMon( 'Dislocation Density Progress ', N , 1, 400, 50);
+        
+        NumberOfCores = Settings.DoParallel;
+        try
+            ppool = gcp('nocreate');
+            if isempty(ppool)
+                parpool(NumberOfCores);
+            end
+        catch
+            ppool = matlabpool('size');
+            if ~ppool
+                matlabpool('local',NumberOfCores); 
+            end
+        end
+
+        parfor (cnt = 1:N)% Change for parallel computing
+            [AllFa{cnt},AllSSEa(cnt),AllFc{cnt},AllSSEc(cnt), misang(cnt)] = ...
+                DDCalc(DDSettings{cnt},lattice{cnt},ImageFilter,Settings);
+            ppm.increment();
+        end
+        ppm.delete();
+    else
+        h = waitbar(0,'Single Processor Progress');
+        for cnt = 1:N
+            [AllFa{cnt},AllSSEa(cnt),AllFc{cnt},AllSSEc(cnt), misang(cnt)] = ...
+                DDCalc(DDSettings{cnt},lattice{cnt},ImageFilter,Settings);
+            waitbar(cnt/N,h);
+        end
+        close(h);
+    end
+            
     data.Fa=AllFa;
     data.SSEa=AllSSEa;
     data.Fc=AllFc;
@@ -533,7 +377,6 @@ alpha_total5(1,:)=9/5.*(abs(alpha(1,3,:))+abs(alpha(2,3,:))+abs(alpha(3,3,:))+ab
 alpha_total9(1,:)=abs(alpha(1,3,:))+abs(alpha(2,3,:))+abs(alpha(3,3,:))+abs(alpha(1,1,:))+abs(alpha(2,1,:))+abs(alpha(3,1,:))+abs(alpha(1,2,:))+abs(alpha(2,2,:))+abs(alpha(3,2,:));
 
 
-
 %save averaged alphas to a file.
 % OutPath = Settings.OutputPath;
 % SlashInds = find(OutPath == '\');
@@ -569,7 +412,7 @@ end
 % pgnd=logspace(11,17);
 % Lupper=1./sqrt(pgnd);
 % Llower=1./(b*pgnd);
-% Lusafe=Lupper/3; 
+% Lusafe=Lupper/3;
 % Llsafe=Llower/3;
 % 
 % figure;loglog(pgnd,Lupper,'r',pgnd,Llower,'b',pgnd,Lusafe,'r',pgnd,Llsafe,'b')%,...
@@ -634,5 +477,213 @@ end
     end
     disp(Settings.OutputPath)
     disp(VaryStepSize)
+    
+end
+save(AnalysisParamsPath ,'alpha_data','-append'); 
 
+end
+
+function [AllFa,AllSSEa,AllFc,AllSSEc, misang] = DDCalc(DDSettings,lattice,ImageFilter,Settings)
+
+    image_a = 0;
+    image_a1 = 0;
+    image_a2= 0;
+    image_c = 0;
+    Amat = 0;
+    Cmat = 0;
+    RefIndA = 0;
+    RefIndA1 = 0;
+    RefIndA2 = 0;
+    RefIndC = 0;
+    
+    skippts = Settings.NumSkipPts;
+    
+    %Extract Dim variables
+    r = Settings.data.rows;%
+    
+    %Extract Image Variables
+    image_a = ReadEBSDImage(DDSettings{1,1},ImageFilter);
+    image_b = ReadEBSDImage(DDSettings{1,2},ImageFilter);
+    image_c = ReadEBSDImage(DDSettings{1,3},ImageFilter);
+    
+    RefIndA = DDSettings{2,1};
+    cnt = DDSettings{2,2};
+    RefIndC = DDSettings{2,3};
+    
+    Amat = DDSettings{3,1};
+    g_b = DDSettings{3,2};
+    Cmat = DDSettings{3,3};
+    
+    if size(DDSettings,2) > 3
+        image_a1 = image_a;
+        image_a2 = ReadEBSDImage(DDSettings{1,4},ImageFilter);
+        
+        RefIndA1 = RefIndA;
+        RefIndA2 = DDSettings{2,4};
+    end
+    
+    misanglea=GeneralMisoCalc(g_b,Amat,lattice);
+    misanglec=GeneralMisoCalc(g_b,Cmat,lattice);
+    misang=max([misanglea misanglec]);
+    % evaluate points a and c using Wilk's method with point b as the
+    % reference pattern
+    %         imgray=rgb2gray(imread(ImagePath)); % this can add significant time for large scans
+    %         intensityr(cnt)=mean(imgray(:));
+
+    if (isempty(image_b)) || (isempty(image_a) && (~strcmp(Settings.ScanType,'Hexagonal'))) || (isempty(image_c)) ||... 
+            (strcmp(Settings.ScanType,'Hexagonal') && skippts == 0 && (isempty(image_a1) || isempty(image_a2)))
+        AllFa= -eye(3);
+        AllSSEa=101;
+        AllFc=-eye(3);
+        AllSSEc=101;
+    else
+        % first, evaluate point a
+        if r > 1 %Not Line Scan
+
+            clear global rs cs Gs
+            if ~strcmp(Settings.ScanType,'Hexagonal') || (Settings.strcmp(ScanType,'Hexagonal') && skippts>0)
+
+                    [AllFa,AllSSEa] = CalcF(image_b,image_a,g_b,eye(3),cnt,Settings,Settings.Phase{cnt}, RefIndA);
+
+            else
+                [AllFa1,AllSSEa1] = CalcF(image_b,image_a1,g_b,eye(3),cnt,Settings,Settings.Phase{cnt},RefIndA1);
+                [AllFa2,AllSSEa2] = CalcF(image_b,image_a2,g_b,eye(3),cnt,Settings,Settings.Phase{cnt},RefIndA2);
+                AllFa=0.5*(AllFa1+AllFa2);
+                AllSSEa=0.5*(AllSSEa1+AllSSEa2);
+            end
+
+            % scale a direction step F tensor for different step size 
+            if strcmp(Settings.ScanType,'Hexagonal')
+                AllFatemp=AllFa-eye(3);
+                AllFatemp=AllFatemp/sqrt(3)*2;
+                AllFa=AllFatemp+eye(3);
+            end
+        else
+            AllFa= -eye(3);
+            AllSSEa(cnt)=101;
+        end
+
+        % then, evaluate point c
+        clear global rs cs Gs
+        if ~strcmp(Settings.ScanType,'Hexagonal') || (strcmp(Settings.ScanType,'Hexagonal') && skippts>0)
+
+            [AllFc,AllSSEc] = CalcF(image_b,image_c,g_b,eye(3),cnt,Settings,Settings.Phase{cnt},RefIndC);
+
+        else
+            [AllFc,AllSSEc] = CalcF(image_b,image_c,g_b,eye(3),cnt,Settings,Settings.Phase{cnt},RefIndC);
+        end
+    end
+end
+
+function DDSettings = GetDDSettings(cnt,ImageNamesList,Allg,Dims,ScanType,skippts)
+    extra_a = false;
+    
+    r = Dims(1);
+    c = Dims(2);
+    
+    ImagePath = ImageNamesList{cnt};% Change for parallel computing
+    g_b = euler2gmat(Allg{cnt}(1),Allg{cnt}(2),Allg{cnt}(3));% is Allg in the same order as ImageNamesList?
+
+    image_b = ImagePath;% Change for parallel computing
+    if strcmp(ScanType,'Square') || strcmp(ScanType,'LtoSquare')% Change for parallel computing
+        %Image A
+        if r > 1 %No image_a for line scans
+            if cnt <= c*(skippts+1) % this is the first row(s)
+                RefIndA = cnt+c*(skippts+1); 
+            else
+                RefIndA = cnt-c*(skippts+1);
+            end
+            image_a = ImageNamesList{RefIndA};
+            Amat=euler2gmat(Allg{RefIndA}(1),Allg{RefIndA}(2),Allg{RefIndA}(3));
+        elseif r == 1
+            image_a = image_b;
+            Amat = eye(3);
+            RefIndA = cnt;
+        end 
+        
+        %Image C
+        if mod(cnt,c)==0 || (c-mod(cnt,c))<=skippts               
+            RefIndC = cnt-(skippts+1);
+        else
+            RefIndC = cnt+(skippts+1);
+        end
+        image_c = ImageNamesList{RefIndC}; 
+        Cmat=euler2gmat(Allg{RefIndC}(1),Allg{RefIndC}(2),Allg{RefIndC}(3));
+
+    elseif strcmp(ScanType,'Hexagonal')% Change for parallel computing
+        % Current hexagonal grid analysis ignores edges and cannot
+        % handle skipping points (adding odd skip values)
+        
+        NColsOdd = c;
+        NColsEven = c-1;
+        c = NColsOdd+NColsEven;
+        leftside=1:c:length(ImageNamesList);
+        rightside=NColsOdd:c:length(ImageNamesList);
+        rightside=[rightside,c:c:length(ImageNamesList)];
+        rightside=sort(rightside);
+        topside=rightside(end-1)+1:length(ImageNamesList);
+
+        if sum([find(leftside==cnt),find(rightside==cnt),find(topside==cnt)])==0
+
+            if skippts==0
+                %Image A
+                RefIndA1 = cnt+NColsEven;
+                image_a1 = ImageNamesList{RefIndA1};
+                RefIndA2 = cnt+NColsEven+1;
+                image_a2 = ImageNamesList{RefIndA2};
+                Amat=euler2gmat(Allg{RefIndA1}(1),Allg{RefIndA1}(2),Allg{RefIndA1}(3));
+                
+                %Image C
+                RefIndC = cnt+1;
+                image_c = ImageNamesList{RefIndC};% Change for parallel computing
+                Cmat=euler2gmat(Allg{RefIndC}(1),Allg{RefIndC}(2),Allg{RefIndC}(3));
+                
+                extra_a = true;
+            else
+                %Image A
+                if cnt <= c*(skippts+1)/2 % this is the first row(s) / top rows
+                    RefIndA = cnt+c*(skippts+1)/2;
+                else
+                    RefIndA = cnt-c*(skippts+1)/2;
+                end
+                image_a = ImageNamesList{RefIndA};
+                Amat=euler2gmat(Allg{RefIndA}(1),Allg{RefIndA}(2),Allg{RefIndA}(3));
+                
+                %Image C
+                if (mod(cnt,c)>NColsOdd-skippts && mod(cnt,c)<=NColsOdd) || (mod(cnt,c)>c-skippts && mod(cnt,c)<c) % distinguish even and odd rows then first look at points too close to right edge
+                    RefIndC = cnt-(skippts+1);
+                else
+                    RefIndC = cnt+(skippts+1);
+                end 
+                image_c = ImageNamesList{RefIndC};
+                Cmat=euler2gmat(Allg{RefIndC}(1),Allg{RefIndC}(2),Allg{RefIndC}(3));
+            end
+        else
+            image_a = image_b;
+            image_a1 = image_b;
+            image_a2 = image_b;
+            image_c = image_b;
+
+            RefIndA = cnt;
+            RefIndA1 = cnt;
+            RefIndA2 = cnt;
+            RefIndC = cnt;
+
+            Amat=g_b;
+            Cmat=g_b;
+            
+        end
+       
+    end
+    if extra_a
+        DDSettings = {image_a1,image_b,image_c,image_a2;...
+                        RefIndA1,cnt,RefIndC,RefIndA2;...
+                        Amat,g_b,Cmat,[]};
+    else
+        DDSettings = {image_a,image_b,image_c;...
+                        RefIndA,cnt,RefIndC;...
+                        Amat,g_b,Cmat};
+    end
+    
+    
 end
