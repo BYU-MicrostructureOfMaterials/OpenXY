@@ -193,7 +193,7 @@ switch Settings.HROIMMethod
                 end
                 g = euler2gmat(Settings.Angles(ImageInd,1),Settings.Angles(ImageInd,2),Settings.Angles(ImageInd,3)); 
                 F = -eye(3); SSE = 101; U = -eye(3);
-                XX.XX = 0; XX.CS = 0; XX.MI = 0; XX.MI_total = 0;
+                XX.XX = zeros(1,length(roixc)); XX.CS = zeros(1,length(roixc)); XX.MI = zeros(1,length(roixc)); XX.MI_total = 0;
                 return;
             end
             [r1,u1]=poldec(F1);
