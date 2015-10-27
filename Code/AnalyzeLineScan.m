@@ -1,4 +1,4 @@
-function AnalyzeLineScan(Settings)
+function Results = AnalyzeLineScan(Settings)
 saved = 1;
 addpath('Line Scan Analysis');
 a = LineScanAnalysis;
