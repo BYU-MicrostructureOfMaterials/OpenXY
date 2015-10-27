@@ -136,6 +136,16 @@ classdef LineScanAnalysis < handle
                     title('Tetragonality')
                     legend(ht,[scan;'Expected Tetragonality']')
                     hold off
+                    
+                    figure
+                    hold on
+                end
+                
+                %Plot XX Params
+                for i = 1:NumCompare
+                    if plots
+                        plotXX(obj.Scans(scan{i}),'color',colors(i,:));
+                    end
                 end
                 
                 scan{1} = [scan{1} ' (Baseline)'];

@@ -109,6 +109,37 @@ classdef LineScanClass < handle
                 end
             end
         end
+        function h = plotXX(obj,varargin)
+            if isfield(obj.Settings,'XX')
+                holdon = ishold;
+                if holdon
+                    holdstate = 'on';
+                else
+                    holdstate = 'off';
+                end
+                XXtable = struct2table(obj.Settings.XX);
+                XX = obj.XXParams('XX',XXtable);
+                CS = obj.XXParams('CS',XXtable);
+                MI = obj.XXParams('MI',XXtable);
+                inds = (1:length(XX))';
+                
+                h(1) = subplot(3,1,1);
+                hold(holdstate)
+                plot(inds,XX,varargin{:});
+                title('Cross Correlation Coefficient')
+                
+                h(2) = subplot(3,1,2);
+                hold(holdstate)
+                plot(inds,CS,varargin{:});
+                title('Shift Confidence')
+                
+                h(3) = subplot(3,1,3);
+                hold(holdstate)
+                plot(inds,MI,varargin{:});
+                title('Mutual Information')
+            end
+        end
+              
         function NumSections = get.NumSections(obj)
             NumSections = size(obj.Sections,2);
         end
@@ -137,6 +168,21 @@ classdef LineScanClass < handle
             end
         end
             
+    end
+    methods(Static)
+        function Param2 = XXParams(Param,XXtable)
+            Param = XXtable.(Param);
+            if ~iscell(Param)
+                Param = num2cell(Param,2);
+            end
+            Param = cellfun(@mean,Param);
+
+            %Linear Interpolate Zero-points
+            pts = Param==0;
+            inds = (1:length(Param))';
+            Param2 = Param;
+            Param2(pts)=interp1(inds(~pts),Param(~pts),inds(pts));
+        end
     end
 end
         
