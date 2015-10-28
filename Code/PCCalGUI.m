@@ -22,7 +22,7 @@ function varargout = PCCalGUI(varargin)
 
 % Edit the above text to modify the response to help PCCalGUI
 
-% Last Modified by GUIDE v2.5 08-Jul-2015 12:01:01
+% Last Modified by GUIDE v2.5 21-Oct-2015 14:58:33
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -52,14 +52,51 @@ function PCCalGUI_OpeningFcn(hObject, eventdata, handles, varargin)
 % varargin   command line arguments to PCCalGUI (see VARARGIN)
 % Choose default command line output for PCCalGUI
 
+handles.VanPont = 0;
+handles.calibrated = 0;
+handles.tiffread = 0;
 
-%get Settings sent in if this was opened before and is being reopened.
-if length(varargin) == 1
-   Settings = varargin{1}; 
-
+if isempty(varargin)
+    stemp=load('Settings.mat');
+    Settings = stemp.Settings;
+    clear stemp
 else
-    %otherwise load the Settings(should be default)
-    load Settings
+    Settings = varargin{1};
+    Settings.ROISize = round((Settings.ROISizePercent * .01)*Settings.PixelSize);
+    if isfield(Settings,'CalibrationPointIndecies')
+        handles.VanPont = 1;
+    end
+    if isfield(Settings,'PCCal')
+        if isfield(Settings.PCCal,'MeanXstar')
+            handles.calibrated = 1;
+            handles.MeanXstar = Settings.PCCal.MeanXstar;
+            handles.MeanYstar = Settings.PCCal.MeanYstar;
+            handles.MeanZstar = Settings.PCCal.MeanZstar;
+            handles.NaiveXstar = Settings.PCCal.NaiveXstar;
+            handles.NaiveYstar = Settings.PCCal.NaiveYstar;
+            handles.NaiveZstar = Settings.PCCal.NaiveZstar;
+            handles.FitXstar = Settings.PCCal.FitXstar;
+            handles.FitYstar = Settings.PCCal.FitYstar;
+            handles.FitZstar = Settings.PCCal.FitZstar;
+        end
+        if isfield(Settings.PCCal,'TiffXstar')
+            handles.tiffread = 1;
+            handles.TiffXstar = Settings.PCCal.TiffXstar;
+            handles.TiffYstar = Settings.PCCal.TiffYstar;
+            handles.TiffZstar = Settings.PCCal.TiffZstar;
+        end
+        
+    end
+end
+handles.PrevSettings = Settings;
+
+%Set Position
+if length(varargin) > 1
+    MainSize = varargin{2};
+    set(hObject,'Units','pixels');
+    GUIsize = get(hObject,'Position');
+    set(hObject,'Position',[MainSize(1)+MainSize(3)+20 MainSize(2)+MainSize(4)-GUIsize(4) GUIsize(3) GUIsize(4)]);
+    movegui(hObject,'onscreen');
 end
 
 %[SquareFileVals, ScanParams] = ReadScanFile(Settings.ScanFilePath);
@@ -80,6 +117,19 @@ switch ScanType
         axes(handles.axes1)
         imagesc(IQPlot)
         axis image %scales to natural width and height
+        if handles.VanPont
+            indi = 1:1:Settings.Nx*Settings.Ny;
+            indi = reshape(indi, Settings.Nx,Settings.Ny)';
+            for i=1:length(Settings.CalibrationPointIndecies)
+                thisind = Settings.CalibrationPointIndecies(i);
+                [y,x] = find(indi==thisind);
+                Xind(i) = x;
+                Yind(i) = y;
+            end
+            hold on
+            plot(Xind,Yind,'kd','MarkerFaceColor','k');
+            hold off
+        end
         
     case 'Hexagonal'
         NumColsEven = floor(Nx/2);
@@ -103,11 +153,14 @@ switch ScanType
         IQPlot.y = y;
         IQPlot.iq = iq;
         IQPlot.Limits = Limits;
+        if handles.VanPont
+            hold on
+            height(1:length(CalibrationPointIndecies)) = max(IQ);
+            scatter3(Settings.XData(CalibrationPointIndecies),Settings.YData(CalibrationPointIndecies),height);
+            hold off
+        end
         
 end
-axes(handles.axes2)
-plot3(Settings.ScanParams.xstar,Settings.ScanParams.ystar,Settings.ScanParams.zstar,'bo')
-colormap jet
 
 if Settings.ImageTag
     set(handles.fromtiffbutton,'Enable','on');
@@ -122,12 +175,11 @@ handles.SaveAllPC = 1;
 % Update handles structure
 handles.Settings = Settings;
 handles.ScanParams = Settings.ScanParams;
-handles.VanPont = 0;
-handles.calibrated = 0;
-handles.tiffread = 0;
 handles.IQPlot = IQPlot;
 guidata(hObject, handles);
-%uiwait(handles.figure1)
+planefitpanel_SelectionChangeFcn(handles.planefitpanel, eventdata, handles);
+uiwait(handles.figure1)
+
 
 % --- Outputs from this function are returned to the command line.
 function varargout = PCCalGUI_OutputFcn(hObject, eventdata, handles) 
@@ -137,8 +189,8 @@ function varargout = PCCalGUI_OutputFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Get default command line output from handles structure
-
-varargout{1} = 1;
+varargout{1} = handles.Settings;
+delete(hObject);
 
 function edit1_Callback(hObject, eventdata, handles)
 % hObject    handle to edit1 (see GCBO)
@@ -191,13 +243,17 @@ if ~strcmp(YesNo,'No')
             PCCal.TiffYstar = handles.TiffYstar;
             PCCal.TiffZstar = handles.TiffZstar;
         end
+        PCCal.Settings = Settings;
+        
         Settings.PCCal = PCCal;
     end
     if strcmp(YesNo,'Cancel')
         Settings.Exit = 1;
     end
     save('Settings.mat','Settings');
-    delete(handles.figure1);
+    handles.Settings = Settings;
+    guidata(hObject, handles);
+    figure1_CloseRequestFcn(handles.figure1, eventdata, handles);
 end
 
 % --- Executes when user attempts to close figure1.
@@ -207,22 +263,10 @@ function figure1_CloseRequestFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: delete(hObject) closes the figure
-try
-    dlg = 'Continue';
-    if handles.calibrated
-        dlg = questdlg('Please select an option:', 'Continue','Cancel','Continue');
-    end
-    switch dlg
-        case 'Continue'
-            savenclose_Callback(handles.savenclose,eventdata,handles);
-        case 'Cancel'
-            Settings = handles.Settings;
-            Settings.Exit = 1;
-            save('Settings.mat','Settings');
-            delete(handles.figure1);
-    end
-catch
-    delete(hObject)
+if strcmp(get(hObject,'waitstatus'),'waiting')
+    uiresume(hObject);
+else
+    delete(hObject);
 end
 
 % --- Executes on button press in calibratebutton.
@@ -241,32 +285,47 @@ if handles.VanPont
 
     CalibrationPointsPC = zeros(npoints,3);
     
-    NumCores = Settings.DoParallel;
-    try
-        ppool = gcp('nocreate');
-        if isempty(ppool) && NumCores ~= 1
-            parpool(NumCores);
+    if Settings.DoParallel > 1
+        NumCores = Settings.DoParallel;
+        try
+            ppool = gcp('nocreate');
+            if isempty(ppool) && NumCores ~= 1
+                parpool(NumCores);
+            end
+        catch
+            ppool = matlabpool('size');
+            if ~ppool
+                matlabpool('local',NumCores); 
+            end
         end
-    catch
-        ppool = matlabpool('size');
-        if ~ppool
-            matlabpool('local',NumCores); 
+        M = NumCores;
+
+        pctRunOnAll javaaddpath('java')
+        ppm = ParforProgMon( 'Point Calibration ', npoints,1,400,50 );
+    %     profile on
+        parfor (i=1:npoints,M)
+            PCref = PCMinSinglePattern(Settings, ScanParams, Settings.CalibrationPointIndecies(i));
+            disp(['Point: ' num2str(i)])
+            CalibrationPointsPC(i,:) = PCref';
+            ppm.increment();
         end
-    end
-    M = NumCores;
+    %     profile off
+    %     profile viewer
+        ppm.delete();
     
-    pctRunOnAll javaaddpath('java')
-    ppm = ParforProgMon( 'Point Calibration ', npoints,1,400,50 );
-%     profile on
-    parfor (i=1:npoints,M)
-        PCref = PCMinSinglePattern(Settings, ScanParams, Settings.CalibrationPointIndecies(i));
-        disp(['Point: ' num2str(i)])
-        CalibrationPointsPC(i,:) = PCref';
-        ppm.increment();
+    else
+        h = waitbar(0,'Point Calibration');
+        for i=1:npoints
+            PCref = PCMinSinglePattern(Settings, ScanParams, Settings.CalibrationPointIndecies(i));
+            disp(['Point: ' num2str(i)])
+            CalibrationPointsPC(i,:) = PCref';
+            waitbar(i/npoints,h);
+        end
+        close(h);
     end
-%     profile off
-%     profile viewer
-    ppm.delete();
+    
+    
+    
     Settings.CalibrationPointsPC = CalibrationPointsPC;
 
     psize = Settings.PhosphorSize;
@@ -328,8 +387,9 @@ if handles.VanPont
     
     planefitpanel_SelectionChangeFcn(handles.planefitpanel, eventdata, handles);
     
-    handles = guidata(hObject);
     if get(handles.autorunbox,'Value')
+        handles.Settings.AutoRun =1;
+        guidata(hObject, handles);
         savenclose_Callback(handles.savenclose,eventdata,handles);
     end
     
@@ -475,6 +535,7 @@ switch Settings.ScanType
         end
         close (selectfig);
         hold off
+        
         axes(handles.axes1)
         surf(IQPlot.x,IQPlot.y,IQPlot.iq,'EdgeColor','none');
         view(2);
@@ -508,6 +569,9 @@ NumColsEven = floor(Nx/2);
 NumColsOdd = ceil(Nx/2);
 ScanType = Settings.ScanType;
 
+axes(handles.axes2)
+plot3(handles.ScanParams.xstar,handles.ScanParams.ystar,handles.ScanParams.zstar,'bo')
+
 if handles.calibrated
 
     cla(handles.axes2)
@@ -517,6 +581,7 @@ if handles.calibrated
         Settings.XStar = handles.NaiveXstar;
         Settings.YStar = handles.NaiveYstar;
         Settings.ZStar = handles.NaiveZstar;
+        Settings.PCFitMethod = 'Naive Plane Fit';
 
         max(handles.NaiveXstar);
         min(handles.NaiveXstar);
@@ -551,6 +616,7 @@ if handles.calibrated
         Settings.XStar = handles.FitXstar;
         Settings.YStar = handles.FitYstar;
         Settings.ZStar = handles.FitZstar;
+        Settings.PCFitMethod = 'Explicit Plane Fit';
 
         axes(handles.axes2)
         plot3(handles.ScanParams.xstar,handles.ScanParams.ystar,handles.ScanParams.zstar,'bo')
@@ -581,6 +647,7 @@ if handles.calibrated
         Settings.XStar = handles.MeanXstar*ones(size(handles.NaiveXstar));
         Settings.YStar = handles.MeanYstar*ones(size(handles.NaiveXstar));
         Settings.ZStar = handles.MeanZstar*ones(size(handles.NaiveXstar));
+        Settings.PCFitMethod = 'No Plane Fit (single point)';
 
         axes(handles.axes2)
         plot3(handles.ScanParams.xstar,handles.ScanParams.ystar,handles.ScanParams.zstar,'bo')
@@ -596,9 +663,10 @@ if handles.calibrated
 end
 
 if handles.tiffread && get(handles.fromtiff,'Value')
-    Settings.XStar = handles.TiffXstar;
-    Settings.YStar = handles.TiffYstar;
-    Settings.ZStar = handles.TiffZstar;
+    Settings.Xstar = handles.TiffXstar;
+    Settings.Ystar = handles.TiffYstar;
+    Settings.Zstar = handles.TiffZstar;
+    Settings.PCFitMethod = 'From TIFF';
     
     axes(handles.axes2)
     plot3(handles.ScanParams.xstar,handles.ScanParams.ystar,handles.ScanParams.zstar,'bo')
@@ -741,7 +809,7 @@ Settings.PCCal.FitZstar = handles.FitZstar;
 Settings.PCCal.NaiveXstar = handles.NaiveXstar;
 Settings.PCCal.NaiveYstar = handles.NaiveYstar;
 Settings.PCCal.NaiveZstar = handles.NaiveZstar;
-
+%Is this function even connected to a button?
 save(fullfile(path,name),'Settings');
 
 
@@ -808,9 +876,9 @@ if Settings.ImageTag %See MainGUI.m SetImageFields
     set(handles.fromtiff,'Enable','on');
 
     if ~handles.calibrated
-        Settings.XStar = handles.TiffXstar;
-        Settings.YStar = handles.TiffYstar;
-        Settings.ZStar = handles.TiffZstar;
+        Settings.Xstar = handles.TiffXstar;
+        Settings.Ystar = handles.TiffYstar;
+        Settings.Zstar = handles.TiffZstar;
         
         handles.Settings = Settings;
     end
@@ -829,3 +897,12 @@ else
     msgbox('No PC data found in image files','Read PC from TIFF')
 end
 
+
+% --- Executes on button press in SetGlobalPC.
+function SetGlobalPC_Callback(hObject, eventdata, handles)
+% hObject    handle to SetGlobalPC (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.Settings = SetXYZStarGUI(handles.Settings,get(handles.figure1,'Position'));
+guidata(hObject, handles);
+planefitpanel_SelectionChangeFcn(handles.planefitpanel, eventdata, handles);
