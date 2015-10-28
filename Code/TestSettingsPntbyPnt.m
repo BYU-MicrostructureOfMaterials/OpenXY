@@ -1,0 +1,84 @@
+function TestSettingsPntbyPnt(Settings)
+
+%Get Reference Image Names
+if ~strcmp(Settings.HROIMMethod,'Simulated')&& ~isfield(Settings,'RefImageNames')
+    RefImageInd = Settings.RefImageInd;
+    if RefImageInd~=0
+        datalength = Settings.ScanLength;
+        Settings.RefImageNames = cell(datalength,1);
+        Settings.RefImageNames(:)= Settings.ImageNamesList(RefImageInd);
+        Settings.Phi1Ref(1:datalength) = Settings.Angles(RefImageInd,1);
+        Settings.PHIRef(1:datalength) = Settings.Angles(RefImageInd,2);
+        Settings.Phi2Ref(1:datalength) = Settings.Angles(RefImageInd,3);
+        Settings.RefInd(1:datalength)= RefImageInd;
+    else
+        if strcmp(Settings.GrainRefImageType,'Min Kernel Avg Miso')
+            [Settings.RefImageNames, Settings.Phi1Ref, ...
+                Settings.PHIRef, Settings.Phi2Ref, Settings.RefInd] = GetRefImageNames(Settings.ImageNamesList, ...
+                {Settings.Angles;Settings.IQ;Settings.CI;Settings.Fit}, Settings.grainID, Settings.KernelAvgMisoPath);
+        else
+            [Settings.RefImageNames, Settings.Phi1Ref, ...
+                Settings.PHIRef, Settings.Phi2Ref, Settings.RefInd] = GetRefImageNames(Settings.ImageNamesList, ...
+                {Settings.Angles;Settings.IQ;Settings.CI;Settings.Fit}, Settings.grainID);
+        end
+    end  
+end
+
+
+Settings.ROISize = round((Settings.ROISizePercent * .01)*Settings.PixelSize);
+
+if ~isfield(Settings,'XStar')
+    disp('No PC calibration at all')
+    %Default Naive Plane Fit
+    Settings.XStar(1:Settings.ScanLength) = Settings.ScanParams.xstar-Settings.XData/Settings.PhosphorSize;
+    Settings.YStar(1:Settings.ScanLength) = Settings.ScanParams.ystar+Settings.YData/Settings.PhosphorSize*sin(Settings.SampleTilt);
+    Settings.ZStar(1:Settings.ScanLength) = Settings.ScanParams.zstar+Settings.YData/Settings.PhosphorSize*cos(Settings.SampleTilt);
+end
+
+n = Settings.Nx;
+m = Settings.Ny;
+
+iqRS = reshape(Settings.IQ,n,m)';
+
+Settings.DoShowPlot = 1;
+
+indi = 1:1:m*n;
+indi = reshape(indi, n,m)';
+button = 1;
+while(button==1)
+    
+    figure(99);
+    pos = get(figure(99),'Position');
+    imagesc(iqRS)
+    axis image
+    colormap('jet')
+    title({'\fontsize{14} Select a point to calculate the deformation tensor','\fontsize{10} Right-click to exit'},'HorizontalAlignment','center')
+    
+    [x,y, button] = ginput(1);
+    if button~=1
+        break;
+    end
+    
+    ind = indi(round(y),round(x));
+
+    tic
+    [F g U SSE] = GetDefGradientTensor(ind,Settings,Settings.Phase{ind});
+    toc
+    
+    set(figure(100),'Position',[pos(1)-pos(3)/2-10 pos(2)-pos(4) - 100 pos(3) pos(4)])
+    set(figure(101),'Position',[pos(1)+pos(3)/2+10 pos(2)-pos(4) - 100 pos(3) pos(4)])
+   
+    F
+    g
+    U
+    SSE
+    
+    Settings.ImageNamesList{ind}
+
+
+    
+end
+
+%Close figures
+close(findall(0,'Type','Figure','number',99,'-or','number',100,'-or','number',101))
+
