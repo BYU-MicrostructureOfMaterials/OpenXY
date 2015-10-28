@@ -697,27 +697,7 @@ if Settings.DoShowPlot
     [cx cy]=Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,roixc,roiyc,F,Settings.PixelSize,alpha);
     clf
     imagesc(RefImage);
-    colormap gray
-    hold on
-    for i=1:length(Cshift)
-        if ~isempty(find(tempind==i))
-            %Should probably make this factor "*10" a variable...
-            plot([roixc(i) roixc(i)+Cshift(i)*10],[roiyc(i) roiyc(i)+Rshift(i)*10],'g.-')
-        else
-            plot([roixc(i) roixc(i)+Cshift(i)*10],[roiyc(i) roiyc(i)+Rshift(i)*10],'r.-')
-        end
-        plot([roixc(i) roixc(i)+cx(i)*10],[roiyc(i) roiyc(i)+cy(i)*10],'b.-')
-    end
-    drawnow
-    
-     try
-        set(0,'currentfigure',101);
-    catch
-        figure(101);
-    end
-    [cx cy]=Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,roixc,roiyc,F,Settings.PixelSize,alpha);
-    clf
-    imagesc(ScanImage);
+    axis image
     colormap gray
     hold on
     for i=1:length(Cshift)
@@ -730,7 +710,28 @@ if Settings.DoShowPlot
         plot([roixc(i) roixc(i)+cx(i)],[roiyc(i) roiyc(i)+cy(i)],'b.-')
     end
     drawnow
-    U
+    
+     try
+        set(0,'currentfigure',101);
+    catch
+        figure(101);
+    end
+    [cx cy]=Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,roixc,roiyc,F,Settings.PixelSize,alpha);
+    clf
+    imagesc(ScanImage);
+    axis image
+    colormap gray
+    hold on
+    for i=1:length(Cshift)
+        if ~isempty(find(tempind==i))
+            %Should probably make this factor "*10" a variable...
+            plot([roixc(i) roixc(i)+Cshift(i)],[roiyc(i) roiyc(i)+Rshift(i)],'g.-')
+        else
+            plot([roixc(i) roixc(i)+Cshift(i)],[roiyc(i) roiyc(i)+Rshift(i)],'r.-')
+        end
+        plot([roixc(i) roixc(i)+cx(i)],[roiyc(i) roiyc(i)+cy(i)],'b.-')
+    end
+    drawnow
     SSE
 %keyboard
 %     save shifts Rshift Cshift cx cy
