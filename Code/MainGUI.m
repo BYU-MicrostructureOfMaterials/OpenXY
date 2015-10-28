@@ -22,7 +22,7 @@ function varargout = MainGUI(varargin)
 
 % Edit the above text to modify the response to help MainGUI
 
-% Last Modified by GUIDE v2.5 28-Jul-2015 06:43:07
+% Last Modified by GUIDE v2.5 20-Oct-2015 16:00:34
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -42,7 +42,6 @@ else
     gui_mainfcn(gui_State, varargin{:});
 end
 % End initialization code - DO NOT EDIT
-
 
 % --- Executes just before MainGUI is made visible.
 function MainGUI_OpeningFcn(hObject, eventdata, handles, varargin)
@@ -112,8 +111,6 @@ else
     set(handles.ProcessorsPopup,'Value',handles.Settings.DoParallel);
 end
 ProcessorsPopup_Callback(handles.ProcessorsPopup,eventdata,handles);
-%PC Calibration
-set(handles.PCCalibrationBox,'Value',handles.Settings.DoPCStrainMin);
 %Files
 [fpath,name,ext] = fileparts(handles.Settings.ScanFilePath);
 SetScanFields(handles,[name ext],fpath);
@@ -132,10 +129,8 @@ enableRunButton(handles);
 
 % Update handles structure
 guidata(hObject, handles);
-
 % UIWAIT makes MainGUI wait for user response (see UIRESUME)
 % uiwait(handles.MainGUI);
-
 
 % --- Outputs from this function are returned to the command line.
 function varargout = MainGUI_OutputFcn(hObject, eventdata, handles) 
@@ -236,12 +231,15 @@ if name ~= 0
         %Unique x and y
         X = unique(handles.Settings.XData);
         Y = unique(handles.Settings.YData);
+        XStep = X(2) - X(1);
+        YStep = Y(2) - Y(1);
+        
         %Number of steps in x and y
         Nx = length(X);
         Ny = length(Y);
         
+        %Validate Scan Size
         if ~strcmp(handles.Settings.ScanType,'Hexagonal')
-            %Validate Scan Size
             if isfield(handles.Settings.ScanParams,'NumColsOdd') && isfield(handles.Settings.ScanParams,'NumRows')
                 if Nx ~= handles.Settings.ScanParams.NumColsOdd || Ny ~= handles.Settings.ScanParams.NumRows
                     NumColsOdd = handles.Settings.ScanParams.NumColsOdd;
@@ -277,7 +275,16 @@ if name ~= 0
             end
         end
         
+        %Get Image Names
+        if handles.ImageLoaded
+            handles.Settings.ImageNamesList = GetImageNamesList(handles.Settings.ScanType, ...
+                handles.Settings.ScanLength,[Nx Ny], handles.Settings.FirstImagePath, ...
+                [X(1),Y(1)], [XStep, YStep]);
+        end
+        
+        %Crop Scan
         handles.Settings = CropScan(handles.Settings);
+        
         %Check if Material Read worked
         handles.ScanFileLoaded = true;
         MaterialPopup_Callback(handles.MaterialPopup, [], handles);
@@ -330,6 +337,22 @@ if name ~= 0
         handles.Settings.FirstImagePath = fullfile(path,name);
         handles.Settings.PixelSize = x;
         handles.Settings.PhosphorSize = handles.Settings.PixelSize * handles.Settings.mperpix;
+        
+        
+        if handles.ScanFileLoaded
+            X = unique(handles.Settings.XData);
+            Y = unique(handles.Settings.YData);
+            XStep = X(2) - X(1);
+            YStep = Y(2) - Y(1);
+
+            %Number of steps in x and y
+            Nx = length(X);
+            Ny = length(Y);
+            
+            handles.Settings.ImageNamesList = GetImageNamesList(handles.Settings.ScanType, ...
+                handles.Settings.ScanLength,[Nx Ny], handles.Settings.FirstImagePath, ...
+                [X(1),Y(1)], [XStep, YStep]);
+        end
         
         %Determine if the image has a custom tag in header
         info = imfinfo(handles.Settings.FirstImagePath);
@@ -401,7 +424,6 @@ end
 enableRunButton(handles);
 guidata(handles.SelectOutputButton, handles);
 
-
 % --- Executes on button press in RunButton.
 function RunButton_Callback(hObject, eventdata, handles)
 % hObject    handle to RunButton (see GCBO)
@@ -444,20 +466,6 @@ function Reset_RunButton(handles)
 set(handles.RunButton,'String','Run');
 set(handles.RunButton,'BackgroundColor',[0 1 0]);
 set(handles.RunButton,'Enable','on');
-
-
-
-% --- Executes on button press in PCCalibrationBox.
-function PCCalibrationBox_Callback(hObject, eventdata, handles)
-% hObject    handle to PCCalibrationBox (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of PCCalibrationBox
-handles.Settings.DoPCStrainMin = get(hObject,'Value');
-guidata(hObject, handles);
-
-
 
 % --- Executes on button press in DisplayShiftsBox.
 function DisplayShiftsBox_Callback(hObject, eventdata, handles)
@@ -596,7 +604,6 @@ if name ~= 0
     clear temp;
 end
 
-
 % --------------------------------------------------------------------
 function SaveAnalysis_Callback(hObject, eventdata, handles)
 % hObject    handle to SaveAnalysis (see GCBO)
@@ -608,7 +615,6 @@ if name ~= 0
     save(fullfile(path,name),'Settings');
     disp('Analysis Saved');
 end
-
 
 % --------------------------------------------------------------------
 function RestoreDefaultSettings_Callback(hObject, eventdata, handles)
@@ -624,13 +630,11 @@ function Close_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 MainGUI_CloseRequestFcn(handles.MainGUI, eventdata, handles)
 
-
 % --------------------------------------------------------------------
 function SettingsMenu_Callback(hObject, eventdata, handles)
 % hObject    handle to SettingsMenu (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
 
 % --------------------------------------------------------------------
 function ROISettings_Callback(hObject, eventdata, handles)
@@ -652,7 +656,6 @@ function AdvancedSettings_Callback(hObject, eventdata, handles)
 handles.Settings = AdvancedSettingsGUI(handles.Settings,get(handles.MainGUI,'Position'));
 guidata(hObject,handles);
 
-
 % --------------------------------------------------------------------
 function MicroscopeSettings_Callback(hObject, eventdata, handles)
 % hObject    handle to MicroscopeSettings (see GCBO)
@@ -660,6 +663,24 @@ function MicroscopeSettings_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 handles.Settings = MicroscopeSettingsGUI(handles.Settings,get(handles.MainGUI,'Position'));
 guidata(hObject,handles);
+
+% --------------------------------------------------------------------
+function PCCalSettings_Callback(hObject, eventdata, handles)
+% hObject    handle to PCCalSettings (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if handles.ScanFileLoaded && handles.ImageLoaded
+    handles.Settings = PCCalGUI(handles.Settings,get(handles.MainGUI,'Position'));
+else
+    warndlg({'Cannot open PC Calibration menu'; 'Must select scan file data and first image'},'OpenXY: Invalid Operation');
+end
+guidata(hObject,handles);
+if isfield(handles.Settings,'AutoRun')
+    if handles.Settings.AutoRun==1
+        disp('MainGUI line 677ish')
+        RunButton_Callback(handles.RunButton, eventdata, handles)
+    end
+end
 
 function enableRunButton(handles)
 if handles.ScanFileLoaded && handles.ImageLoaded && handles.OutputLoaded
@@ -681,8 +702,6 @@ Value = IndList(strcmp(List,String));
 if isempty(Value); Value =1; end;
 set(Popup, 'Value', Value);
 
-
-
 % --- Executes during object creation, after setting all properties.
 function MainGUI_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to MainGUI (see GCBO)
@@ -699,3 +718,16 @@ if ismac
     GUIsize(3) = GUIsize(3)*1.1;
     set(hObject,'Position',GUIsize);
 end
+
+
+% --- Executes on button press in TestButton.
+function TestButton_Callback(hObject, eventdata, handles)
+% hObject    handle to TestButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if handles.ScanFileLoaded && handles.ImageLoaded
+    TestSettingsPntbyPnt(handles.Settings);
+else
+    warndlg({'Cannot run test'; 'Must select scan file data and first image'},'OpenXY: Invalid Operation');
+end
+guidata(hObject,handles);
