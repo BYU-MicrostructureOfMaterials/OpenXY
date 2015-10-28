@@ -227,17 +227,7 @@ if Settings.DoUsePCFile
         errordlg('PC calibration file type is invalid','PC Calibration File Path Error');
     end
     
-elseif Settings.DoPCStrainMin
-    if Settings.DisplayGUI; disp('Running PC GUI'); end;
-    save('Settings.mat','Settings')
-    PCCalGUI();
-    uiwait;
-    load Settings;
-    if Settings.Exit
-        return;
-    end
-end
-if ~Settings.DoPCStrainMin
+elseif ~isfield(Settings,'XStar')
     if Settings.DisplayGUI; disp('No PC calibration at all'); end;
     %Default Naive Plane Fit
     Settings.XStar(1:Settings.ScanLength) = Settings.ScanParams.xstar-Settings.XData/Settings.PhosphorSize;
