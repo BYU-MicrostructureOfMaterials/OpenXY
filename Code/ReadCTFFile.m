@@ -93,11 +93,11 @@ fclose(cpr);
 %   Assumes square cropping
 %   Formula by DTF
 if ~isfield(ScanParams,'PCX') || ~isfield(ScanParams,'PCY') || ~isfield(ScanParams,'VHRatio') || ~isfield(ScanParams,'DD')
-    w = warndlg({'No Pattern Center data found. PC vals set to arbitrary value.';'Run PC Calibration'},'Missing Info in .CPR file');
+    w = warndlg({'No Pattern Center data found. PC vals set to zero.';'Run PC Calibration'},'Missing Info in .CPR file');
     uiwait(w)
-    ScanParams.xstar = 0.5;
-    ScanParams.ystar = 0.7;
-    ScanParams.zstar = 0.7;
+    ScanParams.xstar = 0.1;
+    ScanParams.ystar = 0.1;
+    ScanParams.zstar = 0.1;
 else
     ScanParams.xstar = (ScanParams.PCX-(1-ScanParams.VHRatio)/2)/ScanParams.VHRatio;
     ScanParams.ystar = ScanParams.PCY;
