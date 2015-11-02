@@ -46,8 +46,6 @@ switch Algorithm
         [PCprime,value,flag,iter] = fminsearch(@(PC)CalcNormFMod(PC,ScanImage,paramspat,Material.lattice,Material.a1,Material.b1,Material.c1,Material.axs,g,Settings.ImageFilter,Ind,Settings),PC0);
     case 'pso'
         disp('starting swarming')
-        addpath('psopt');
-        addpath(['psopt' filesep 'functions']);
         [PCprime,value,flag,iter] = pso(@(PC)CalcNormFMod(PC,ScanImage,paramspat,Material.lattice,Material.a1,Material.b1,Material.c1,Material.axs,g,Settings.ImageFilter,Ind,Settings),3,[],[],[],[],PC0-0.2,PC0+0.2);
 end
 %  keyboard

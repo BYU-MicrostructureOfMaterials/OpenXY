@@ -73,11 +73,6 @@ if ~exist(OpenXYPath,'dir')
     save('SystemSettings','OpenXYPath');
 end
 
-%Add temp folder
-if ~exist('temp','dir')
-    mkdir('temp');
-end 
-
 %Change working directory
 XYpath = fileparts(mfilename('fullpath'));
 if ~strcmp(pwd,XYpath)
@@ -85,6 +80,12 @@ if ~strcmp(pwd,XYpath)
     cd(XYpath);
     path(p);
 end
+addpath(genpath(XYpath));
+
+%Add sub folder(s)
+if ~exist('temp','dir')
+    mkdir('temp');
+end 
 
 %Visuals
 axes(handles.background);
