@@ -1,4 +1,4 @@
-function TestSettingsPntbyPnt(Settings)
+function TestSettingsPntbyPnt(Settings,MainGUI)
 
 %Get Reference Image Names
 if ~strcmp(Settings.HROIMMethod,'Simulated')&& ~isfield(Settings,'RefImageNames')
@@ -54,6 +54,7 @@ while(button==1)
     colormap('jet')
     title({'\fontsize{14} Select a point to calculate the deformation tensor','\fontsize{10} Right-click to exit'},'HorizontalAlignment','center')
     
+    figure(99)
     [x,y, button] = ginput(1);
     if button~=1
         break;
@@ -81,4 +82,9 @@ end
 
 %Close figures
 close(findall(0,'Type','Figure','number',99,'-or','number',100,'-or','number',101))
+
+%Bring up MainGUI again
+if nargin == 2
+    figure(MainGUI)
+end
 
