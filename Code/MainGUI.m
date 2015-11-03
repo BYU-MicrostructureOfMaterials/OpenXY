@@ -81,6 +81,9 @@ set(gca,'xtick',[]);
 BGColor = 0.94*[1 1 1];
 TextColor = 'black';
 
+%Sets default color scheme for all figures and axes
+set(0,'DefaultFigureColormap',jet);
+
 %Set Default handles values
 handles.FileDir = pwd;
 handles.ScanFileLoaded = false;
@@ -173,122 +176,30 @@ if name ~= 0
     prevName = get(handles.ScanNameText,'String');
     prevFolder = get(handles.ScanFolderText,'String');
     if ~strcmp(prevName,name) || ~strcmp(prevFolder,path) || ~isfield(handles.Settings,'ScanParams')
+        handles.Settings = ImportScanInfo(handles.Settings,name,path);
+        
+        %Update GUI labels
         set(handles.ScanNameText,'String',name);
         set(handles.ScanNameText,'TooltipString',name);
         set(handles.ScanFolderText,'String',path);
         set(handles.ScanFolderText,'TooltipString',path);
-        [ScanFileData,handles.Settings.ScanParams] = ReadScanFile(fullfile(path,name));
-        if isfield(handles.Settings.ScanParams,'NumColsOdd') && isfield(handles.Settings.ScanParams,'NumRows')
-            SizeStr = [num2str(handles.Settings.ScanParams.NumColsOdd) 'x' num2str(handles.Settings.ScanParams.NumRows)];
-        else
-            SizeStr = 'Size not included in Scan File';
-        end
-        set(handles.ScanSizeText,'String',SizeStr);
         
-        %Initialize Variables
-        handles.Settings.ScanLength = size(ScanFileData{1},1);
-        handles.Settings.Angles = zeros(handles.Settings.ScanLength,3);
-        handles.Settings.XData = zeros(handles.Settings.ScanLength,1);
-        handles.Settings.YData = zeros(handles.Settings.ScanLength,1);
-        handles.Settings.IQ = zeros(handles.Settings.ScanLength,1);
-        handles.Settings.CI = zeros(handles.Settings.ScanLength,1);
-        handles.Settings.Fit = zeros(handles.Settings.ScanLength,1);
-        
-        %Read ScanFile Data into Settings
-        handles.Settings.Angles(:,1) = ScanFileData{1};
-        handles.Settings.Angles(:,2) = ScanFileData{2};
-        handles.Settings.Angles(:,3) = ScanFileData{3};
-        handles.Settings.XData = ScanFileData{4};
-        handles.Settings.YData = ScanFileData{5};
-        handles.Settings.IQ = ScanFileData{6};
-        handles.Settings.CI = ScanFileData{7};
-        handles.Settings.Fit = ScanFileData{10};
-        handles.Settings.ScanFilePath = fullfile(path,name);
-        
-        %Check ScanType
-        [~,~,ext] = fileparts(fullfile(path,name));
-        if strcmp(ext,'.ang')
-            check = true;
-            if ~isempty(strfind(handles.Settings.ScanParams.GridType,'Hex'))
-                AutoType = 'Hexagonal';
-            elseif ~isempty(strfind(handles.Settings.ScanParams.GridType,'Sqr'))
-                AutoType = 'Square';
-            else
-                check = false;
-            end
-            if check && ~strcmp(handles.Settings.ScanType,AutoType)
-                button = questdlg({'Scan type might be incorrect.';['Would you like to change it to ' AutoType '?']},'OpenXY');
-                switch button
-                    case 'Yes'
-                        handles.Settings.ScanType = AutoType;
-                        SetPopupValue(handles.ScanTypePopup,AutoType);
-                    case 'Cancel'
-                        return;
-                end
-            end
-        end
-        
-        %Unique x and y
-        X = unique(handles.Settings.XData);
-        Y = unique(handles.Settings.YData);
-        XStep = X(2) - X(1);
-        YStep = Y(2) - Y(1);
-        
-        %Number of steps in x and y
-        Nx = length(X);
-        Ny = length(Y);
+        %Set ScanType
+        SetPopupValue(handles.ScanTypePopup,handles.Settings.ScanType);
         
         %Validate Scan Size
-        if ~strcmp(handles.Settings.ScanType,'Hexagonal')
-            if isfield(handles.Settings.ScanParams,'NumColsOdd') && isfield(handles.Settings.ScanParams,'NumRows')
-                if Nx ~= handles.Settings.ScanParams.NumColsOdd || Ny ~= handles.Settings.ScanParams.NumRows
-                    NumColsOdd = handles.Settings.ScanParams.NumColsOdd;
-                    NumRows = handles.Settings.ScanParams.NumRows;
-                    ScanP = [num2str(NumColsOdd) 'x' num2str(NumRows)];
-                    Auto =  [num2str(Nx) 'x' num2str(Ny)];
-                    choice = questdlg({'Scan dimensions do not agree:';
-                        ['Scan File Header: ' ScanP];
-                        ['Unique values: ' Auto];
-                        'Select correct values'},'Scan Dimension Differ',ScanP,Auto,Auto);
-
-                    if strcmp(choice,ScanP)
-                        Nx = NumColsOdd;
-                        Ny = NumRows;
-                        set(handles.ScanSizeText,'String',ScanP);
-                    else
-                        handles.Settings.ScanParams.OriginalSize = [NumColsOdd, NumRows];
-                        handles.Settings.ScanParams.NumColsOdd = Nx;
-                        handles.Settings.ScanParams.NumColsEven = Nx - 1;
-                        handles.Settings.ScanParams.NumRows = Ny;
-                        set(handles.ScanSizeText,'String',Auto);
-                    end
-                end   
-            end
-            handles.Settings.Nx = Nx; handles.Settings.Ny = Ny;
-        else
-            if isfield(handles.Settings.ScanParams,'NumColsOdd') && isfield(handles.Settings.ScanParams,'NumRows')
-                handles.Settings.Nx = handles.Settings.ScanParams.NumColsOdd;
-                handles.Settings.Ny = handles.Settings.ScanParams.NumRows;
-            else
-                handles.Settings.Nx = ceil(Nx/2); %NumRowsOdd
-                handles.Settings.Ny = Ny;
-            end
-        end
-        
-        %Get Image Names
-        if handles.ImageLoaded
-            handles.Settings.ImageNamesList = GetImageNamesList(handles.Settings.ScanType, ...
-                handles.Settings.ScanLength,[Nx Ny], handles.Settings.FirstImagePath, ...
-                [X(1),Y(1)], [XStep, YStep]);
-        end
-        
-        %Crop Scan
-        handles.Settings = CropScan(handles.Settings);
+        SizeStr =  [num2str(handles.Settings.Nx) 'x' num2str(handles.Settings.Ny)];
+        set(handles.ScanSizeText,'String',SizeStr);
         
         %Check if Material Read worked
         handles.ScanFileLoaded = true;
         MaterialPopup_Callback(handles.MaterialPopup, [], handles);
         handles = guidata(handles.MainGUI);
+        
+        %Get Image Names
+        if handles.ImageLoaded
+            handles.Settings.ImageNamesList = ImportImageNamesList(handles.Settings);
+        end
     end 
     handles.ScanFileLoaded = true;
 elseif ~handles.ScanFileLoaded
@@ -300,6 +211,28 @@ end
 guidata(handles.SelectScanButton, handles);
 enableRunButton(handles);
 
+function ImageNamesList = ImportImageNamesList(Settings)
+X = unique(Settings.XData);
+Y = unique(Settings.YData);
+
+%Step size in x and y
+if strcmp(Settings.ScanType,'Square')
+    XStep = X(2)-X(1);
+    if length(X) > 1
+        YStep = Y(2)-Y(1);
+    else
+        YStep = 0; %Line Scans
+    end
+else
+    XStep = X(3)-X(1);
+    YStep = Y(3)-Y(1);
+end
+%Get Image Names
+if ~isempty(Settings.FirstImagePath)
+    ImageNamesList = GetImageNamesList(Settings.ScanType, ...
+        Settings.ScanLength,[Settings.Nx Settings.Ny], Settings.FirstImagePath, ...
+        [Settings.XData(1),Settings.YData(1)], [XStep, YStep]);
+end
 
 % --- Executes on button press in SelectImageButton.
 function SelectImageButton_Callback(hObject, eventdata, handles)
@@ -338,20 +271,9 @@ if name ~= 0
         handles.Settings.PixelSize = x;
         handles.Settings.PhosphorSize = handles.Settings.PixelSize * handles.Settings.mperpix;
         
-        
+        %Get Image Names
         if handles.ScanFileLoaded
-            X = unique(handles.Settings.XData);
-            Y = unique(handles.Settings.YData);
-            XStep = X(2) - X(1);
-            YStep = Y(2) - Y(1);
-
-            %Number of steps in x and y
-            Nx = length(X);
-            Ny = length(Y);
-            
-            handles.Settings.ImageNamesList = GetImageNamesList(handles.Settings.ScanType, ...
-                handles.Settings.ScanLength,[Nx Ny], handles.Settings.FirstImagePath, ...
-                [X(1),Y(1)], [XStep, YStep]);
+            handles.Settings.ImageNamesList = ImportImageNamesList(handles.Settings);
         end
         
         %Determine if the image has a custom tag in header
@@ -726,7 +648,7 @@ function TestButton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 if handles.ScanFileLoaded && handles.ImageLoaded
-    TestSettingsPntbyPnt(handles.Settings);
+    TestSettingsPntbyPnt(handles.Settings,handles.MainGUI);
 else
     warndlg({'Cannot run test'; 'Must select scan file data and first image'},'OpenXY: Invalid Operation');
 end
