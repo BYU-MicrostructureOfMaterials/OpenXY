@@ -42,6 +42,9 @@ if strcmp(Settings.ScanType,'Square')
     iqRS = reshape(Settings.IQ,n,m)';
     indi = 1:1:m*n;
     indi = reshape(indi, n,m)';
+    if m == 1 %Lines Scans
+        iqRS = repmat(iqRS,floor(Settings.ScanLength/4),1);
+    end
 else
     NumColsEven = n-1;
     NumColsOdd = n;
@@ -78,8 +81,8 @@ while(button==1)
     x = round(x); y = round(y);
     if x < 0; x = 1; end;
     if y < 0; y = 1; end;
-    if x > size(indi,2); x = size(iqRS,2); end;
-    if y > size(indi,1); y = size(iqRS,1); end;
+    if x > n; x = n; end;
+    if y > m; y = m; end;
     
     ind = indi(y,x);
 
