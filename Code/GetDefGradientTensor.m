@@ -36,6 +36,7 @@ if DoLGrid
         F.a =  -eye(3); F.b = -eye(3); F.c = -eye(3); SSE.a = 101; SSE.b = 101;
         SSE.b = 101; U = -eye(3);
         g = euler2gmat(Angles(ImageInd,1),Angles(ImageInd,2),Angles(ImageInd,3));
+        XX = {};
         
         return;
     end
@@ -51,7 +52,7 @@ else
     g = euler2gmat(Settings.Angles(ImageInd,1) ...
         ,Settings.Angles(ImageInd,2),Settings.Angles(ImageInd,3));
     if isempty(ScanImage)
-        F = -eye(3); SSE = 101; U = -eye(3);
+        F = -eye(3); SSE = 101; U = -eye(3); XX = {};
         return;
     end
     
