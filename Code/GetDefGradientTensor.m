@@ -1,4 +1,4 @@
-function [F, g, U, SSE] = GetDefGradientTensor(ImageInd,Settings,curMaterial)
+function [F, g, U, SSE, XX] = GetDefGradientTensor(ImageInd,Settings,curMaterial)
 %GETDEFGRADIENTTENSOR
 %[F g U SSE] = GetDefGradientTensor(ImageInd,Settings)
 %Takes in the HREBSD Settings structure and the image index
@@ -127,7 +127,7 @@ switch Settings.HROIMMethod
         mperpix = Settings.mperpix;
         
         %         RefImage = genEBSDPatternHybrid_fromEMSoft(g,xstar,ystar,zstar,pixsize,mperpix,sampletilt,Material); % testing next line instead *****
-        RefImage = genEBSDPatternHybrid_fromEMSoft(g,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av);
+        RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av);
         %          RefImage = genEBSDPatternHybridMexHat(gr,paramspat,eye(3),lattice,al,bl,cl,axs);
         
         %use following line only for optical distortion correction
@@ -138,19 +138,19 @@ switch Settings.HROIMMethod
             %Settings.PixelSize,Settings.ImageFilter(3),Settings.ImageFilter(4));
 
         %Initialize
+        %RefImage = custimfilt(RefImage,Settings.ImageFilter(1), ...
+            %Settings.PixelSize,Settings.ImageFilter(3),Settings.ImageFilter(4));
         clear global rs cs Gs
-        [F1,SSE1] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial);
+        [F1,SSE1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial);
         
         %%%%New stuff to remove rotation error from strain measurement DTF  7/14/14
         for iq=1:3
             [rr,uu]=poldec(F1); % extract the rotation part of the deformation, rr
             gr=rr'*gr; % correct the rotation component of the deformation so that it doesn't affect strain calc
-            RefImage = genEBSDPatternHybrid_fromEMSoft(g,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av);
-            %RefImage = custimfilt(RefImage,Settings.ImageFilter(1), ...
-                %Settings.PixelSize,Settings.ImageFilter(3),Settings.ImageFilter(4));
+            RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av);
             
             clear global rs cs Gs
-            [F1,SSE1] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial);
+            [F1,SSE1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial);
         end
         %%%%%
         
@@ -169,7 +169,7 @@ switch Settings.HROIMMethod
 
         %Initialize
         clear global rs cs Gs
-        [F1,SSE1] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial);
+        [F1,SSE1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial);
         
         %%%%New stuff to remove rotation error from strain measurement DTF  7/14/14
         for iq=1:2
@@ -180,7 +180,7 @@ switch Settings.HROIMMethod
                 Settings.PixelSize,Settings.ImageFilter(3),Settings.ImageFilter(4));
             
             clear global rs cs Gs
-            [F1,SSE1] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial);
+            [F1,SSE1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial);
         end
         %%%%%
         
@@ -193,6 +193,7 @@ switch Settings.HROIMMethod
                 end
                 g = euler2gmat(Settings.Angles(ImageInd,1),Settings.Angles(ImageInd,2),Settings.Angles(ImageInd,3)); 
                 F = -eye(3); SSE = 101; U = -eye(3);
+                XX.XX = zeros(1,length(roixc)); XX.CS = zeros(1,length(roixc)); XX.MI = zeros(1,length(roixc)); XX.MI_total = 0;
                 return;
             end
             [r1,u1]=poldec(F1);
@@ -213,7 +214,7 @@ switch Settings.HROIMMethod
                 Settings.ImageFilter(3), Settings.ImageFilter(4));
             %         keyboard
             clear global rs cs Gs
-            [F1,SSE1] = CalcF(NewRefImage,ScanImage,gr,FTemp,ImageInd,Settings,curMaterial);
+            [F1,SSE1,XX] = CalcF(NewRefImage,ScanImage,gr,FTemp,ImageInd,Settings,curMaterial);
             
         end
         
@@ -232,7 +233,7 @@ switch Settings.HROIMMethod
         
         clear global rs cs Gs
 %         disp(RefImagePath);
-        [F1,SSE1] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,RefInd);
+        [F1,SSE1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,RefInd);
         
     case 'Hybrid'
         %Use simulated pattern method on one reference image then use
@@ -240,6 +241,9 @@ switch Settings.HROIMMethod
         
         
 end
+
+%Calculate Mutual Information over entire Image
+XX.MI_total = CalcMutualInformation(RefImage,ScanImage);
 
 if DoLGrid
     

@@ -1,6 +1,11 @@
-function PlotLineScan(Settings)
+function Results = PlotLineScan(Settings)
 % to plot data from analysis parameters - first load mat file
-NN=Settings.ScanLength;
+if isfield(Settings,'ScanLength')
+    NN = Settings.ScanLength;
+else
+    NN = length(Settings.ImageNamesList);
+    Settings.ScanLength = NN;
+end
 tempF=zeros(3,3);
 for i=1:NN
     tempF(:,:)=Settings.data.F{i};
@@ -30,3 +35,5 @@ set(gca,'fontsize',16)
 xlabel('Scan position (\mum)')
 ylabel('Tetragonality (%)')
 %axis([0 NN -0.5 2]);
+
+Results = AnalyzeLineScan(Settings);

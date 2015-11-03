@@ -6,7 +6,7 @@
 
 function Settings = HREBSDMain(Settings)
 % tic
-profile on
+if Settings.EnableProfiler; profile on; end;
 if Settings.DisplayGUI; disp('Dont forget to change PC if the image is cropped by ReadEBSDImage.m'); end;
 %% Set up Initial Params
 %The assumption is made that all following images in the scan
@@ -172,7 +172,7 @@ if Settings.DoParallel > 1
         %or a structure F.a F.b F.c of deformation gradient tensors for
         %each point in the L grid
         
-        [F{ImageInd}, g{ImageInd}, U{ImageInd}, SSE{ImageInd}] = ...
+        [F{ImageInd}, g{ImageInd}, U{ImageInd}, SSE{ImageInd}, XX(ImageInd)] = ...
             GetDefGradientTensor(ImageInd,Settings,Settings.Phase{ImageInd});
         
         %{
@@ -195,7 +195,7 @@ else
         %         tic
 %         disp(ImageInd)
         
-        [F{ImageInd}, g{ImageInd}, U{ImageInd}, SSE{ImageInd}] = ...
+        [F{ImageInd}, g{ImageInd}, U{ImageInd}, SSE{ImageInd}, XX(ImageInd)] = ...
             GetDefGradientTensor(ImageInd,Settings,Settings.Phase{ImageInd});
         
         % commented out this (outputs strain matrix - I think - DTF 5/15/14)
@@ -249,6 +249,7 @@ for jj = 1:Settings.ScanLength
         data.phi1rn{jj} = phi1;
         data.PHIrn{jj} = PHI;
         data.phi2rn{jj} = phi2;
+        Settings.XX = XX;
         
     end
     
@@ -299,8 +300,10 @@ if Settings.CalcDerivatives
         end
     end
 end
-profile off
-profile viewer
+if Settings.EnableProfiler
+    profile off
+    profile viewer
+end
 
 %% Write Corrected Scan File
 [~,~,ext] = fileparts(Settings.ScanFilePath);

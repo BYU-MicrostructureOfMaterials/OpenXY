@@ -62,6 +62,16 @@ if ~isempty(varargin)
     handles.Settings = MergeSettings(handles.Settings,varargin{1});
 end
 
+%Load System Settings
+OpenXYPath = '';
+if exist('SystemSettings.mat','file')
+    load SystemSettings
+end
+if ~exist(OpenXYPath,'dir')
+    OpenXYPath = fileparts(which('MainGUI'));
+    save('SystemSettings','OpenXYPath');
+end
+
 %Change working directory
 XYpath = fileparts(mfilename('fullpath'));
 if ~strcmp(pwd,XYpath)
@@ -69,6 +79,12 @@ if ~strcmp(pwd,XYpath)
     cd(XYpath);
     path(p);
 end
+addpath(genpath(XYpath));
+
+%Add sub folder(s)
+if ~exist('temp','dir')
+    mkdir('temp');
+end 
 
 %Visuals
 axes(handles.background);
@@ -218,7 +234,7 @@ Y = unique(Settings.YData);
 %Step size in x and y
 if strcmp(Settings.ScanType,'Square')
     XStep = X(2)-X(1);
-    if length(X) > 1
+    if length(Y) > 1
         YStep = Y(2)-Y(1);
     else
         YStep = 0; %Line Scans

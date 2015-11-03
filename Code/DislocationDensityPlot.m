@@ -15,8 +15,8 @@ ImageNamesList=Settings.ImageNamesList;
 NColsOdd=[];
 NColsEven=[];
 if strcmp(Settings.ScanType,'Hexagonal')
-    NColsOdd = ceil(c/2);
-    NColsEven = floor(c/2);
+    NColsOdd = c;
+    NColsEven = c-1;
     leftside=1:c:length(ImageNamesList);
     rightside=NColsOdd:c:length(ImageNamesList);
     rightside=[rightside,c:c:length(ImageNamesList)];

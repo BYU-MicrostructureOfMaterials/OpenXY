@@ -22,7 +22,7 @@ function varargout = AdvancedSettingsGUI(varargin)
 
 % Edit the above text to modify the response to help AdvancedSettingsGUI
 
-% Last Modified by GUIDE v2.5 28-Jul-2015 06:40:00
+% Last Modified by GUIDE v2.5 08-Sep-2015 16:21:32
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -79,6 +79,7 @@ else
         SetPopupValue(handles.HROIMMethod,'Real-Single Ref');
     end
 end
+
 %Standard Deviation
 set(handles.StandardDeviation,'String',num2str(Settings.StandardDeviation));
 %Misorientation Tolerance
@@ -111,6 +112,8 @@ else
     set(handles.KAMname,'String','No File Selected');
     set(handles.KAMpath,'String','No File Selected');
 end
+%Calculation Options
+set(handles.EnableProfiler,'Value',Settings.EnableProfiler);
 
 %Set Position
 if length(varargin) > 1
@@ -123,11 +126,14 @@ end
 
 % Update handles structure
 handles.Settings = Settings;
-guidata(hObject, handles);
 
 %Update Components
 HROIMMethod_Callback(handles.HROIMMethod,eventdata,handles);
+handles = guidata(hObject);
 DoDD_Callback(handles.DoDD, eventdata, handles);
+handles = guidata(hObject);
+
+guidata(hObject, handles);
 
 % UIWAIT makes AdvancedSettingsGUI wait for user response (see UIRESUME)
 uiwait(handles.AdvancedSettingsGUI);
@@ -193,12 +199,52 @@ switch HROIMMethod
         set(handles.SelectKAM,'Enable','off');
         handles.Settings.HROIMMethod = 'Simulated';
     case 'Simulated-Dynamic'
-        set(handles.HROIMlabel,'String','Iteration Limit');
-        set(handles.HROIMedit,'String',num2str(handles.Settings.IterationLimit));
-        set(handles.HROIMedit,'Enable','off');
-        set(handles.GrainRefType,'Enable','off');
-        set(handles.SelectKAM,'Enable','off');
-        handles.Settings.HROIMMethod = 'Dynamic Simulated';
+        %Check for EMsoft
+        EMsoftPath = GetEMsoftPath;
+        if isempty(EMsoftPath)
+            HROIMMethod = 'Simulated';
+            SetPopupValue(hObject,'Simulated-Kinematic');
+            handles.Settings.HROIMMethod = HROIMMethod;
+        end
+        
+        %Validate EMsoft setup
+        if ~isempty(EMsoftPath)  && strcmp(HROIMMethod,'Simulated-Dynamic')
+            %Check if Monte-Carlo Simulation data has been generated
+            valid = 1;
+            if isfield(handles.Settings,'Phase')
+                mats = unique(handles.Settings.Phase);
+            elseif strcmp(handles.Settings.Material,'Auto-detect')
+                valid = 0;
+                warndlgpause({'Material must be specified before selecting Simulation-Dynamic','Resetting to kinematic simulation'},'Select Material');
+                SetPopupValue(hObject,'Simulated-Kinematic');
+                handles.Settings.HROIMMethod = 'Simulated';
+                mats = {};
+            else
+                mats = handles.Settings.Material;
+            end
+            EMdataPath = fullfile(fileparts(EMsoftPath),'EMdata');
+            EMsoftMats = dir(EMdataPath);
+            EMsoftMats = {EMsoftMats(~cellfun(@isempty,strfind({EMsoftMats.name},'EBSDmaster'))).name}';
+            EMsoftMats = cellfun(@(x) x(1:strfind(x,'_EBSDmaster')-1),EMsoftMats,'UniformOutput',false);
+            inlist = ismember(mats,EMsoftMats);
+            if ~all(inlist)
+                valid = 0;
+                msg = {['No master EBSD files for: ' strjoin(mats(~inlist),', ')], ['Search path: ' EMdataPath],'Resetting to kinematic simulation'};
+                warndlgpause(msg,'No EMsoft data found');
+                SetPopupValue(hObject,'Simulated-Kinematic');
+                handles.Settings.HROIMMethod = 'Simulated';
+            end
+            
+            %Set method to simualated dynamic
+            if valid
+                set(handles.HROIMlabel,'String','Iteration Limit');
+                set(handles.HROIMedit,'String',num2str(handles.Settings.IterationLimit));
+                set(handles.HROIMedit,'Enable','off');
+                set(handles.GrainRefType,'Enable','off');
+                set(handles.SelectKAM,'Enable','off');
+                handles.Settings.HROIMMethod = 'Dynamic Simulated';
+            end
+        end
     case 'Real-Grain Ref'
         set(handles.HROIMlabel,'String','Ref Image Index');
         handles.Settings.RefImageInd = 0;
@@ -218,8 +264,12 @@ switch HROIMMethod
         GrainRefType_Callback(handles.GrainRefType, eventdata, handles);
         handles.Settings.HROIMMethod = 'Real';
 end
-
 guidata(hObject,handles);
+
+function warndlgpause(msg,title)
+h = warndlg(msg,title);
+uiwait(h,7);
+if isvalid(h); close(h); end;
 
 
 % --- Executes during object creation, after setting all properties.
@@ -539,4 +589,16 @@ IndList = 1:length(List);
 Value = IndList(strcmp(List,String));
 if isempty(Value); Value =1; end;
 set(Popup, 'Value', Value);
+
+
+
+% --- Executes on button press in EnableProfiler.
+function EnableProfiler_Callback(hObject, eventdata, handles)
+% hObject    handle to EnableProfiler (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of EnableProfiler
+handles.Settings.EnableProfiler = get(hObject,'Value');
+
 

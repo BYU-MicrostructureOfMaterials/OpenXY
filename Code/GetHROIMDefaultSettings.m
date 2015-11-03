@@ -45,6 +45,8 @@ Settings.IQCutoff = 0;
 Settings.DDSMethod = 'Nye-Kroner'; %{'Nye-Kroner', 'Nye-Kroner (Pantleon)','Distortion Matching'}
 %Kernel Average Misorientation
 Settings.KernelAvgMisoPath = '';
+%Calculation Options
+Settings.EnableProfiler = 0;
 
 %% Microscope Settings
 Settings.AccelVoltage = 20; %keV

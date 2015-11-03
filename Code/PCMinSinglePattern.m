@@ -1,4 +1,9 @@
-function PCprime =  PCMinSinglePattern(Settings, ScanParams, Ind)
+function PCprime =  PCMinSinglePattern(Settings, ScanParams, Ind, Algorithm)
+if nargin == 3
+    Algorithm = 'fminsearch';
+end
+
+%Apply Plane Fit
 xstar = ScanParams.xstar-Settings.XData(Ind)/Settings.PhosphorSize;
 ystar = ScanParams.ystar+Settings.YData(Ind)/Settings.PhosphorSize*sin(Settings.SampleTilt);
 zstar = ScanParams.zstar+Settings.YData(Ind)/Settings.PhosphorSize*cos(Settings.SampleTilt);
@@ -35,6 +40,13 @@ Settings.ZStar(1:Settings.ScanLength) = ScanParams.zstar;
 % g = euler2gmat(Settings.Phi1Ref(Ind),Settings.PHIRef(Ind),Settings.Phi2Ref(Ind));
 g = euler2gmat(Settings.Angles(Ind,1),Settings.Angles(Ind,2),Settings.Angles(Ind,3)); % DTF - don't use ref angles for grain as is done on previous line!!
 % keyboard
-[PCprime,value,flag,iter] = fminsearch(@(PC)CalcNormFMod(PC,ScanImage,paramspat,Material.lattice,Material.a1,Material.b1,Material.c1,Material.axs,g,Settings.ImageFilter,Ind,Settings),PC0);    
+switch Algorithm
+    case 'fminsearch'
+        disp('starting fminsearch')
+        [PCprime,value,flag,iter] = fminsearch(@(PC)CalcNormFMod(PC,ScanImage,paramspat,Material.lattice,Material.a1,Material.b1,Material.c1,Material.axs,g,Settings.ImageFilter,Ind,Settings),PC0);
+    case 'pso'
+        disp('starting swarming')
+        [PCprime,value,flag,iter] = pso(@(PC)CalcNormFMod(PC,ScanImage,paramspat,Material.lattice,Material.a1,Material.b1,Material.c1,Material.axs,g,Settings.ImageFilter,Ind,Settings),3,[],[],[],[],PC0-0.2,PC0+0.2);
+end
 %  keyboard
 
