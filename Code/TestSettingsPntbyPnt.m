@@ -38,19 +38,33 @@ end
 n = Settings.Nx;
 m = Settings.Ny;
 
-iqRS = reshape(Settings.IQ,n,m)';
+if strcmp(Settings.ScanType,'Square')
+    iqRS = reshape(Settings.IQ,n,m)';
+    indi = 1:1:m*n;
+    indi = reshape(indi, n,m)';
+else
+    NumColsEven = n-1;
+    NumColsOdd = n;
+    indi = 1:length(Settings.IQ);
+    indi = Hex2Array(indi,NumColsOdd,NumColsEven);
+    iqRS = Hex2Array(Settings.IQ,NumColsOdd,NumColsEven);
+end
+
+StdDev = std(iqRS(:));
+Mean = mean(iqRS(:));
+Limits(1) = Mean - 3*StdDev;
+Limits(2) = Mean + 3*StdDev;
 
 Settings.DoShowPlot = 1;
 
-indi = 1:1:m*n;
-indi = reshape(indi, n,m)';
+
 button = 1;
 while(button==1)
     
     figure(99);
-    pos = get(figure(99),'Position');
     imagesc(iqRS)
     axis image
+    caxis(Limits)
     colormap('jet')
     title({'\fontsize{14} Select a point to calculate the deformation tensor','\fontsize{10} Right-click to exit'},'HorizontalAlignment','center')
     
@@ -59,8 +73,15 @@ while(button==1)
     if button~=1
         break;
     end
+    pos = get(figure(99),'Position');
     
-    ind = indi(round(y),round(x));
+    x = round(x); y = round(y);
+    if x < 0; x = 1; end;
+    if y < 0; y = 1; end;
+    if x > size(indi,2); x = size(iqRS,2); end;
+    if y > size(indi,1); y = size(iqRS,1); end;
+    
+    ind = indi(y,x);
 
     tic
     [F g U SSE] = GetDefGradientTensor(ind,Settings,Settings.Phase{ind});
