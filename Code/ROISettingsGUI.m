@@ -340,6 +340,7 @@ function ROISizeEdit_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of ROISizeEdit as text
 %        str2double(get(hObject,'String')) returns contents of ROISizeEdit as a double
 handles.Settings.ROISizePercent = str2double(get(hObject,'String'));
+handles.Settings.ROISize = round((handles.Settings.ROISizePercent * .01)*handles.Settings.PixelSize);
 guidata(hObject,handles);
 
 

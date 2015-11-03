@@ -285,6 +285,7 @@ if name ~= 0
         set(handles.ImageSizeText,'String',SizeStr);
         handles.Settings.FirstImagePath = fullfile(path,name);
         handles.Settings.PixelSize = x;
+        handles.Settings.ROISize = round((handles.Settings.ROISizePercent * .01)*handles.Settings.PixelSize);
         handles.Settings.PhosphorSize = handles.Settings.PixelSize * handles.Settings.mperpix;
         
         %Get Image Names
