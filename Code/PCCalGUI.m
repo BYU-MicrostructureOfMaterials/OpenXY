@@ -22,7 +22,7 @@ function varargout = PCCalGUI(varargin)
 
 % Edit the above text to modify the response to help PCCalGUI
 
-% Last Modified by GUIDE v2.5 17-Sep-2015 10:19:55
+% Last Modified by GUIDE v2.5 05-Nov-2015 13:20:18
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -53,13 +53,15 @@ function PCCalGUI_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for PCCalGUI
 
 
-%Get Settings sent in if this was opened before and is being reopened.
-if ~isempty(varargin)
-   Settings = varargin{1}; 
+%Accept Settings from MainGUI or Load Settings.mat
+if isempty(varargin)
+    stemp=load('Settings.mat');
+    Settings = stemp.Settings;
+    clear stemp
 else
-    %otherwise load the Settings(should be default)
-    load Settings
+    Settings = varargin{1};
 end
+handles.PrevSettings = Settings;
 
 %[SquareFileVals, ScanParams] = ReadScanFile(Settings.ScanFilePath);
 
@@ -71,12 +73,22 @@ set(handles.xstar,'String',num2str(handles.xstar_file));
 set(handles.ystar,'String',num2str(handles.ystar_file));
 set(handles.zstar,'String',num2str(handles.zstar_file));
 set(handles.manualpc,'Value',0);
+set(handles.scanfilepc,'Value',0);
 set(handles.naivebutton,'Value',1);
-set(handles.scanfilepc,'Value',1);
 
-handles.xstar_m = handles.xstar_file;
-handles.ystar_m = handles.ystar_file;
-handles.zstar_m = handles.zstar_file;
+
+if isfield(Settings,'XStar')
+    handles.xstar_m = Settings.XStar(1);
+    handles.ystar_m = Settings.YStar(1);
+    handles.zstar_m = Settings.ZStar(1);
+    set(handles.manualpc,'Value',1);
+end
+if ~isfield(Settings,'XStar') || abs(Settings.XStar(1) - handles.xstar_file) < 1e-10
+    handles.xstar_m = handles.xstar_file;
+    handles.ystar_m = handles.ystar_file;
+    handles.zstar_m = handles.zstar_file;
+    set(handles.scanfilepc,'Value',1);
+end
 
 %Set up variables for plotting
 IQ = Settings.IQ;
@@ -145,8 +157,8 @@ handles.tiffread = 0;
 handles.IQPlot = IQPlot;
 handles.isset = false;
 guidata(hObject, handles);
-%uiwait(handles.PCCalGUI)
 pcmethod_SelectionChangedFcn(handles.pcmethod, eventdata, handles)
+uiwait(handles.PCCalGUI)
 
 
 % --- Outputs from this function are returned to the command line.
@@ -157,27 +169,8 @@ function varargout = PCCalGUI_OutputFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Get default command line output from handles structure
-
 varargout{1} = handles.Settings;
-
-function edit1_Callback(hObject, eventdata, handles)
-% hObject    handle to edit1 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-% Hints: get(hObject,'String') returns contents of edit1 as text
-%        str2double(get(hObject,'String')) returns contents of edit1 as a double
-
-% --- Executes during object creation, after setting all properties.
-function edit1_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit1 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
+delete(handles.PCCalGUI);
 
 % --- Executes on button press in savenclose.
 function savenclose_Callback(hObject, eventdata, handles)
@@ -218,12 +211,25 @@ if ~strcmp(YesNo,'No')
         Settings.DoPCStrainMin = 0;
     end
     
+    handles.Settings = Settings;
+    guidata(handles.PCCalGUI,handles);
+    
     if strcmp(YesNo,'Cancel')
         Settings.Exit = 1;
+        cancelbutton_Callback(handles.PCCalGUI, eventdata, handles);
+    else 
+        PCCalGUI_CloseRequestFcn(handles.PCCalGUI, eventdata, handles);
     end
-    save('Settings.mat','Settings');
-    delete(handles.PCCalGUI);
 end
+
+% --- Executes on button press in cancelbutton.
+function cancelbutton_Callback(hObject, eventdata, handles)
+% hObject    handle to cancelbutton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.Settings = handles.PrevSettings;
+guidata(hObject,handles);
+AdvancedSettingsGUI_CloseRequestFcn(handles.PCCalGUI, eventdata, handles);
 
 % --- Executes when user attempts to close PCCalGUI.
 function PCCalGUI_CloseRequestFcn(hObject, eventdata, handles)
@@ -232,22 +238,29 @@ function PCCalGUI_CloseRequestFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: delete(hObject) closes the figure
-try
-    dlg = 'Continue';
-    if handles.calibrated
-        dlg = questdlg('Please select an option:', 'Continue','Cancel','Continue');
-    end
-    switch dlg
-        case 'Continue'
-            savenclose_Callback(handles.savenclose,eventdata,handles);
-        case 'Cancel'
-            Settings = handles.Settings;
-            Settings.Exit = 1;
-            save('Settings.mat','Settings');
-            delete(handles.PCCalGUI);
-    end
-catch
-    delete(hObject)
+if strcmp(get(hObject,'waitstatus'),'waiting')
+    uiresume(hObject);
+else
+    delete(hObject);
+end
+
+function edit1_Callback(hObject, eventdata, handles)
+% hObject    handle to edit1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+% Hints: get(hObject,'String') returns contents of edit1 as text
+%        str2double(get(hObject,'String')) returns contents of edit1 as a double
+
+% --- Executes during object creation, after setting all properties.
+function edit1_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
 end
 
 % --- Executes on button press in calibratebutton.
@@ -637,9 +650,10 @@ hold on
 
 %Set PC boxes on GUI
 if isset
-    set(handles.xstar,'String',num2str(Settings.XStar(1)));
-    set(handles.ystar,'String',num2str(Settings.YStar(1)));
-    set(handles.zstar,'String',num2str(Settings.ZStar(1)));
+    
+    set(handles.xstar,'String',num2str(Settings.XStar(1),15));
+    set(handles.ystar,'String',num2str(Settings.YStar(1),15));
+    set(handles.zstar,'String',num2str(Settings.ZStar(1),15));
     setmanualpc(handles);
     handles = guidata(hObject);
     
@@ -1042,9 +1056,9 @@ if get(handles.manualpc,'Value')
     set(handles.xstar,'Enable','on');
     set(handles.ystar,'Enable','on');
     set(handles.zstar,'Enable','on');
-    set(handles.xstar,'String',num2str(handles.xstar_m));
-    set(handles.ystar,'String',num2str(handles.ystar_m));
-    set(handles.zstar,'String',num2str(handles.zstar_m));
+    set(handles.xstar,'String',num2str(handles.xstar_m,15));
+    set(handles.ystar,'String',num2str(handles.ystar_m,15));
+    set(handles.zstar,'String',num2str(handles.zstar_m,15));
     handles.pcmethod = 'Manual';
 else
     set(handles.xstar,'Enable','off');
@@ -1114,3 +1128,50 @@ gui.Algorithm = string{value};
 guidata(hObject,gui);
 gui.f.Visible = 'off';
 uiresume
+
+
+
+function edit5_Callback(hObject, eventdata, handles)
+% hObject    handle to edit5 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit5 as text
+%        str2double(get(hObject,'String')) returns contents of edit5 as a double
+a = get(hObject,'String');
+num2str(a)
+
+% --- Executes during object creation, after setting all properties.
+function edit5_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit5 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function edit6_Callback(hObject, eventdata, handles)
+% hObject    handle to edit6 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit6 as text
+%        str2double(get(hObject,'String')) returns contents of edit6 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit6_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit6 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
