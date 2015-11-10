@@ -386,7 +386,7 @@ catch ME
     handles.ScanFileLoaded = false;
     Reset_RunButton(handles);
     enableRunButton(handles);
-    save('temp/ErrorSettings.mat');
+    save('temp/ErrorSettings.mat','Settings');
     msg = 'OpenXY encountered an error. Re-select the scan file to reset.';
     cause = MException('MATLAB:OpenXY',msg);
     ME = addCause(ME,cause);
