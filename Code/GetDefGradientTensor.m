@@ -122,6 +122,13 @@ gr=g;
 
 %Get Reference Image depending on the chosen HROIM Method (so far these are
 %either Simulated or Real. Plan on adding Sim/Real Hybrid
+ITER = Settings.IterationLimit + 3;
+iter = 1;
+F_i = zeros(3,3,ITER);
+g_i = zeros(3,3,ITER);
+SSE_i = zeros(1,ITER);
+XX_i = zeros(Settings.NumROIs,3,ITER);
+
 switch Settings.HROIMMethod
     
     case 'Dynamic Simulated'
@@ -171,6 +178,11 @@ switch Settings.HROIMMethod
         %Initialize
         clear global rs cs Gs
         [F1,SSE1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial);
+        F_i(:,:,iter) = F1;
+        g_i(:,:,iter) = F1;
+        SSE_i(iter) = SSE1;
+        XX_i(:,:,iter) = XX;
+        iter = iter + 1;
         
         %%%%New stuff to remove rotation error from strain measurement DTF  7/14/14
         for iq=1:2
@@ -182,6 +194,11 @@ switch Settings.HROIMMethod
             
             clear global rs cs Gs
             [F1,SSE1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial);
+            F_i(:,:,iter) = F1;
+            g_i(:,:,iter) = gr;
+            SSE_i(iter) = SSE1;
+            XX_i(:,:,iter) = XX;
+            iter = iter + 1;
         end
         %%%%%
         
@@ -192,10 +209,11 @@ switch Settings.HROIMMethod
                 if ii == 1
                     display(['Didn''t make it in to the iteration loop for:' Settings.ImageNamesList{ImageInd}])
                 end
-                g = euler2gmat(Settings.Angles(ImageInd,1),Settings.Angles(ImageInd,2),Settings.Angles(ImageInd,3)); 
-                F = -eye(3); SSE = 101; U = -eye(3);
-                XX.XX = zeros(1,length(roixc)); XX.CS = zeros(1,length(roixc)); XX.MI = zeros(1,length(roixc)); XX.MI_total = 0;
-                return;
+%                 g = euler2gmat(Settings.Angles(ImageInd,1),Settings.Angles(ImageInd,2),Settings.Angles(ImageInd,3)); 
+%                 F = -eye(3); SSE = 101; U = -eye(3);
+%                 XX.XX = zeros(1,length(roixc)); XX.CS = zeros(1,length(roixc)); XX.MI = zeros(1,length(roixc)); XX.MI_total = 0;
+%                 return;
+                break;
             end
             [r1,u1]=poldec(F1);
             U1=u1;
@@ -216,6 +234,11 @@ switch Settings.HROIMMethod
             %         keyboard
             clear global rs cs Gs
             [F1,SSE1,XX] = CalcF(NewRefImage,ScanImage,gr,FTemp,ImageInd,Settings,curMaterial);
+            F_i(:,:,iter) = F1;
+            g_i(:,:,iter) = gr;
+            SSE_i(iter) = SSE1;
+            XX_i(:,:,iter) = XX;
+            iter = iter + 1;
             
         end
         
@@ -244,7 +267,7 @@ switch Settings.HROIMMethod
 end
 
 %Calculate Mutual Information over entire Image
-XX.MI_total = CalcMutualInformation(RefImage,ScanImage);
+%XX.MI_total = CalcMutualInformation(RefImage,ScanImage);
 
 if DoLGrid
     
@@ -290,6 +313,25 @@ else
 %     U(1,1)
 %     U(3,3)
 end
+F_f = F;
+g_f = g;
+U_f = U;
+SSE_f = SSE;
 
+F = cell(1,ITER);
+g = cell(1,ITER);
+U = cell(1,ITER);
+SSE = zeros(1,ITER);
+XX = cell(1,ITER);
+for i = 1:ITER
+    [r u]=poldec(F_i(:,:,i));
+    F{i} = r*u;
+    g{i} = r'*g_i(:,:,i);
+    U{i} = u-eye(3);
+    SSE(i) = SSE_i(i);
+    XX{i} = XX_i(:,:,i);
 end
-
+% F{end} - F_f
+% g{end} - g_f
+% U{end} - U_f
+% SSE(end) - SSE_f

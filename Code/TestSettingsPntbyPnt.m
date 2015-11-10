@@ -93,10 +93,10 @@ while(button==1)
     set(figure(100),'Position',[pos(1)-pos(3)/2-10 pos(2)-pos(4) - 100 pos(3) pos(4)])
     set(figure(101),'Position',[pos(1)+pos(3)/2+10 pos(2)-pos(4) - 100 pos(3) pos(4)])
    
-    F
-    g
-    U
-    SSE
+    F{end}
+    g{end}
+    U{end}
+    SSE(end)
     
     Settings.ImageNamesList{ind}
 
