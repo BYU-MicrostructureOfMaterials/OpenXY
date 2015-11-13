@@ -8,8 +8,12 @@ if ~exist([Settings.AnalysisParamsPath '.mat'],'file')
     [~,file] = fileparts(file);
     Settings.AnalysisParamsPath = fullfile(folder,file);
 end
+
+%Add Scan
 a.addScan('Scan',[Settings.AnalysisParamsPath '.mat']);
 a.SetBaseline('Scan');
+
+%Set up Baseline, if necessary
 if ~isfield(Settings,'ScanData') || ~isfield(Settings.ScanData,'SecInds')
     uiwait(msgbox('Select the baseline scan'))
     a.addScan('Baseline');
@@ -21,6 +25,8 @@ if ~isfield(Settings,'ScanData') || ~isfield(Settings.ScanData,'SecInds')
     saved = false;
 end
 a.SectionInds = Settings.ScanData.SecInds;
+
+%Get Expected Tetragonality
 if ~isfield(Settings,'ScanData') || ~isfield(Settings.ScanData,'ExpTet')
     a.SetTet;
     Settings.ScanData.ExpTet = a.ExpTet;
@@ -29,9 +35,18 @@ else
     a.ExpTet = Settings.ScanData.ExpTet;
     a.ExpTetTol = Settings.ScanData.ExpTetTol;
 end
+
+%Perform Comparison
 Comparison = a.CompareScans;
-figure;
-a.Scans('Scan').plotXX;
+
+%Iterations
+if ~isempty(a.Scans('Scan').IterData)
+    figure;
+    plotIterData(a.Scans('Scan'));
+end
+
+%figure;
+%a.Scans('Scan').plotXX;
 Results = Comparison(:,{'StrainStdDev','TetStdDev','SSE'});
 Results = [varfun(@(x) x(1),Results);varfun(@(x) x(2),Results)];
 Results.Properties.RowNames = {'Si','SiGe'};
