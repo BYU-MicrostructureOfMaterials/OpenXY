@@ -122,7 +122,9 @@ gr=g;
 
 %Get Reference Image depending on the chosen HROIM Method (so far these are
 %either Simulated or Real. Plan on adding Sim/Real Hybrid
-ITER = Settings.IterationLimit + 3;
+RotationIter = Settings.RotationIter;
+
+ITER = Settings.IterationLimit + RotationIter;
 iter = 1;
 F_i = zeros(3,3,ITER);
 g_i = zeros(3,3,ITER);
@@ -185,7 +187,7 @@ switch Settings.HROIMMethod
         iter = iter + 1;
         
         %%%%New stuff to remove rotation error from strain measurement DTF  7/14/14
-        for iq=1:2
+        for iq=1:RotationIter-1
             [rr,uu]=poldec(F1); % extract the rotation part of the deformation, rr
             gr=rr'*gr; % correct the rotation component of the deformation so that it doesn't affect strain calc
             RefImage = genEBSDPatternHybrid(gr,paramspat,eye(3),Material.lattice,Material.a1,Material.b1,Material.c1,Material.axs);

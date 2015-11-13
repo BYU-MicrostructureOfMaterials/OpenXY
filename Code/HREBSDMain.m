@@ -141,13 +141,15 @@ end
 %Use a parfor loop if allowed multiple processors.
 tic
 %Initialize Variables
-ITER = Settings.IterationLimit + 3;
+RotationIter = 9;
+ITER = Settings.IterationLimit + RotationIter;
 F = repmat({zeros(3)},Settings.ScanLength,ITER);
 g = repmat({zeros(3,1)},Settings.ScanLength,ITER);
 U = repmat({zeros(3)},Settings.ScanLength,ITER);
 %SSE = repmat({0},Settings.ScanLength,ITER);
 SSE = zeros(Settings.ScanLength,ITER);
 XX = repmat({zeros(Settings.NumROIs,3)},Settings.ScanLength,ITER);
+Settings.RotationIter = RotationIter;
 
 if Settings.DoParallel > 1
     NumberOfCores = Settings.DoParallel;
@@ -198,6 +200,8 @@ else
         %         tic
 %         disp(ImageInd)
         
+        %[F1, g1, U1, SSE1, XX1] = ...
+            %GetDefGradientTensor(ImageInd,Settings,Settings.Phase{ImageInd});
         [F(ImageInd,:), g(ImageInd,:), U(ImageInd,:), SSE(ImageInd,:), XX(ImageInd,:)] = ...
             GetDefGradientTensor(ImageInd,Settings,Settings.Phase{ImageInd});
         
