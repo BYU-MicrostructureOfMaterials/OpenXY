@@ -192,6 +192,9 @@ if name ~= 0
     prevName = get(handles.ScanNameText,'String');
     prevFolder = get(handles.ScanFolderText,'String');
     if ~strcmp(prevName,name) || ~strcmp(prevFolder,path) || ~isfield(handles.Settings,'ScanParams')
+        if isfield(handles.Settings,'Angles')
+            handles.Settings = rmfield(handles.Settings,'Angles');
+        end
         handles.Settings = ImportScanInfo(handles.Settings,name,path);
         
         %Update GUI labels
