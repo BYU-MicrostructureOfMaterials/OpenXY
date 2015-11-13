@@ -8,7 +8,7 @@ function Settings = HREBSDMain(Settings)
 % tic
 if Settings.EnableProfiler; profile on; end;
 if Settings.DisplayGUI; disp('Dont forget to change PC if the image is cropped by ReadEBSDImage.m'); end;
-%% Set up Initial Params
+%% Read in the first image and get the pixel size.
 %The assumption is made that all following images in the scan
 %are the same size and square.
 fftw('planner','exhaustive');
@@ -18,9 +18,144 @@ Settings.largefftmeth = fftw('wisdom');
 %Settings.PixelSize = size(FirstPic,1);
 Settings.ROISize = round((Settings.ROISizePercent * .01)*Settings.PixelSize);
 
+%% Add Sub-folder(s)
+addpath('DDS');
+
+%Check if EMsoft is set up correctly
+if strcmp(Settings.HROIMMethod,'Dynamic Simulated')
+    if exist('SystemSettings.mat','file')
+        load SystemSettings
+        EMdataPath = fullfile(fileparts(EMsoftPath),'EMdata');
+        if ~exist(EMdataPath,'dir')
+            error('EMsoft path is incorrect. Re-select in Advanced Settings');
+        end
+    else
+        error('EMsoft path is unknown. Re-select in Advanced Settings');
+    end
+    
+    %Set up EMsoft Environment Variables
+    PATH = getenv('PATH');
+    PATHcell = textscan(PATH,'%s','Delimiter',':');
+    if all(cellfun(@isempty,strfind(PATHcell{1},EMsoftPath)))
+        PATH = [PATH ':' EMsoftPath filesep 'bin'];
+        setenv('PATH',PATH);
+        setenv('DYLD_LIBRARY_PATH',PATH);
+        setenv('EMsoftpathname',[EMsoftPath filesep])
+        setenv('EMdatapathname',[EMdataPath filesep])
+    end
+end
+
+%Sets default color scheme for all figures and axes
+set(0,'DefaultFigureColormap',jet);
+
+%% Check Scan Type
+%Options: 'L', Square, Hexagonal
+%Check to see if it is an L-grid scan, apply xycorrection and generate a
+%square-grid equivalent for later display. These call slightly modified
+%versions of Sadegh's original Step0 and Step1 code.
+LImageNamesList = [];
+if ~isfield(Settings,'Angles')
+    [SquareFileVals, ScanParams] = ReadScanFile(Settings.ScanFilePath); 
+    Settings.ScanLength = size(SquareFileVals{1},1);
+    Settings.Angles(:,1) = SquareFileVals{1};
+    Settings.Settings.Angles(:,2) = SquareFileVals{2};
+    Settings.Angles(:,3) = SquareFileVals{3};
+    Settings.XData = SquareFileVals{4};
+    Settings.YData = SquareFileVals{5};
+    Settings.IQ = SquareFileVals{6};
+    Settings.CI = SquareFileVals{7};
+    Settings.Fit = SquareFileVals{10};
+end
+
+%Unique x and y
+X = unique(Settings.XData);
+Y = unique(Settings.YData);
+
+%Number of steps in x and y
+Nx = Settings.Nx;
+Ny = Settings.Ny;
+Dimensions = [Nx, Ny];
+if isfield(Settings.ScanParams,'OriginalSize')
+    Dimensions = [Dimensions;Settings.ScanParams.OriginalSize];
+end
+
+switch Settings.ScanType;   
+    case 'Square'
+        %Step size in x and y
+        XStep = X(2)-X(1);
+        if length(Y) > 1
+            YStep = Y(2)-Y(1);
+        else
+            YStep = 0; %Line Scans
+        end
+        
+        %Create image file name list
+        Settings.ImageNamesList = GetImageNamesList(Settings.ScanType, Settings.ScanLength,Dimensions, Settings.FirstImagePath, [X(1),Y(1)], [XStep, YStep]);
+%         ImageNamesList = GetImageNamesListHkl(Settings.ScanType, ScanLength,[Nx Ny], Settings.FirstImagePath); %*****TEMPORARY FOR VAUDIN FILES
+%         disp('using hkl naming in HREBSDMain.m at line 100')
+        
+    case 'Hexagonal'
+        %Step size in x and y
+        XStep = X(3)-X(1);
+        YStep = Y(3)-Y(1);
+        
+        Settings.ImageNamesList = GetImageNamesList(Settings.ScanType, Settings.ScanLength,Dimensions, Settings.FirstImagePath, [X(1),Y(1)], [XStep, YStep]);
+        
+    case 'L'
+        CorrectedXYAngPath = LGridXYConvert(Settings.ScanFilePath,Settings.CustomFilePath);
+        if isempty(CorrectedXYAngPath)
+            errordlg('Error reading .ang file in LGridXYConvert','Error','modal')
+            return;
+        end
+        
+        SquareGridAngPath = LGrid2SquareConvert(Settings.ScanFilePath,Settings.CustomFilePath);
+        if isempty(SquareGridAngPath)
+            errordlg('Error reading .ang file in LGrid2SquareConvert','Error','modal')
+            return;
+        end
+        
+        %For L-grid, we need to use the corrected XY and may use
+        %SquareGrid-converted file
+        [LFileVals ScanParams] = ReadScanFile(CorrectedXYAngPath);
+        
+        LAngles(:,1) = LFileVals{1};
+        LAngles(:,2) = LFileVals{2};
+        LAngles(:,3) = LFileVals{3};
+        LXData = LFileVals{4};
+        LYData = LFileVals{5};
+        
+        
+        [SquareFileVals, ScanParams] = ReadScanFile(SquareGridAngPath); 
+        ScanLength = size(SquareFileVals{1},1);
+        Angles(:,1) = SquareFileVals{1};
+        Angles(:,2) = SquareFileVals{2};
+        Angles(:,3) = SquareFileVals{3};
+        XData = SquareFileVals{4};
+        YData = SquareFileVals{5};
+        
+        %Unique x and y
+        X = unique(XData);
+        Y = unique(YData);
+
+        %Number of steps in x and y
+        Nx = length(X);
+        Ny = length(Y);
+        
+        ScanLength = size(LFileVals{1},1);
+        ConvertedLength = size(SquareFileVals{1},1);
+        
+        %Create image file name list
+        %Get names for L-Grid and then just the main points for a square grid.
+        LImageNamesList = GetImageNamesList(Settings.ScanType, ScanLength, Ny, Settings.FirstImagePath);
+        ImageNamesList = LImageNamesList(:,2);
+        Settings.LImageNamesList = LImageNamesList;
+end
+
 %Common to all scan types
-data.cols = Settings.Nx;
-data.rows = Settings.Ny;
+data.cols = Nx;
+data.rows = Ny;
+Settings.Nx = Nx;
+Settings.Ny = Ny;
 
 %% Get Grain ID's
 if ~isfield(Settings,'grainID') || ~isfield(Settings,'Phase')
@@ -31,12 +166,12 @@ end
 %% Get Reference Image(s) when not Simulated Method
 % Get reference images and assign the name to each scan image (or main
 % image - image b in the case of an L-grid scan)
-if ~strcmp(Settings.HROIMMethod,'Simulated')&& ~isfield(Settings,'RefImageNames')
-    RefImageInd = Settings.RefImageInd;
+if ~strcmp(Settings.HROIMMethod,'Simulated')
+    RefImageInd = Settings.RefImageInd;  
     if RefImageInd~=0
         datalength = Settings.ScanLength;
         Settings.RefImageNames = cell(datalength,1);
-        Settings.RefImageNames(:)= Settings.ImageNamesList(RefImageInd);
+        Settings.RefImageNames(:)= {Settings.ImageNamesList{RefImageInd}};
         Settings.Phi1Ref(1:datalength) = Settings.Angles(RefImageInd,1);
         Settings.PHIRef(1:datalength) = Settings.Angles(RefImageInd,2);
         Settings.Phi2Ref(1:datalength) = Settings.Angles(RefImageInd,3);
@@ -116,7 +251,17 @@ if Settings.DoUsePCFile
         errordlg('PC calibration file type is invalid','PC Calibration File Path Error');
     end
     
-elseif ~isfield(Settings,'XStar')
+elseif Settings.DoPCStrainMin
+    if Settings.DisplayGUI; disp('Running PC GUI'); end;
+    save('Settings.mat','Settings')
+    PCCalGUI();
+    uiwait;
+    load Settings;
+    if Settings.Exit
+        return;
+    end
+end
+if ~Settings.DoPCStrainMin
     if Settings.DisplayGUI; disp('No PC calibration at all'); end;
     %Default Naive Plane Fit
     Settings.XStar(1:Settings.ScanLength) = Settings.ScanParams.xstar-Settings.XData/Settings.PhosphorSize;
@@ -239,6 +384,7 @@ for jj = 1:Settings.ScanLength
         data.F{jj} = F{jj}.b;
         data.Fa{jj} = F{jj}.a;
         data.Fc{jj} = F{jj}.c;
+        
     else
         
         [phi1 PHI phi2] = gmat2euler(g{jj});
