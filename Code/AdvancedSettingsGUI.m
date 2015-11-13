@@ -296,8 +296,6 @@ function HROIMedit_Callback(hObject, eventdata, handles)
 contents = cellstr(get(handles.HROIMMethod,'String'));
 HROIMMethod = contents{get(handles.HROIMMethod,'Value')};
 switch HROIMMethod
-    case 'Simulated'
-        handles.Settings.IterationLimit = str2double(get(hObject,'String'));
     case 'Real-Grain Ref'
         handles.Settings.RefImageInd = 0;
     case 'Real-Single Ref'
@@ -309,6 +307,8 @@ switch HROIMMethod
             msgbox(['Invalid input. Must be between 1 and ' num2str(handles.Settings.ScanLength) '.'],'Invalid Image Index');
             set(hObject,'String',num2str(handles.Settings.RefImageInd));
         end
+    otherwise
+        handles.Settings.IterationLimit = str2double(get(hObject,'String'));
 end
 guidata(hObject,handles);
 
