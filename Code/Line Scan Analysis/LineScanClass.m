@@ -12,6 +12,7 @@ classdef LineScanClass < handle
         StrainStdDev
         TetStdDev
         SSE
+        IterData
     end
     methods
         function obj = LineScanClass(Folder,Filename)
@@ -73,6 +74,93 @@ classdef LineScanClass < handle
                     SecInds = obj.SecInds;
                 end
                 obj.Sections = struct2table(AnalyzeSections(obj.Strain,SecInds,ExpTet));
+            end
+            if isfield(obj.Settings,'Iterations')
+                obj.CalcIterData(SecInds,ExpTet)
+            end
+        end
+        function CalcIterData(obj,SecInds,ExpTet)
+            if ~isempty(obj.Settings)
+                
+                %Get all strain data
+                strain = cellfun(@(x) CalcStrain(x),obj.Settings.Iterations.F,'UniformOutput',false);
+                strain = cell2mat(strain);
+                strain = reshape(strain,obj.Settings.ScanLength,3,'');
+                
+                %Get SSE for each iteration
+                IterSSE = zeros(size(strain,3),2);
+                IterStrainStdDev = zeros(size(strain,3),2);
+                IterTetStdDev = zeros(size(strain,3),2);
+                for i = 1:size(strain,3)
+                    SectionData = struct2table(AnalyzeSections(strain(:,:,i),SecInds,ExpTet));
+                    IterSSE(i,1) = mean(SectionData{SectionData.ExpTet == 0,'SSE'});
+                    IterSSE(i,2) = mean(SectionData{SectionData.ExpTet ~= 0,'SSE'});
+                    IterStrainStdDev(i,1) = mean(mean(SectionData{SectionData.ExpTet == 0,'Std'}));
+                    IterStrainStdDev(i,2) = mean(mean(SectionData{SectionData.ExpTet ~= 0,'Std'}));
+                    IterTetStdDev(i,1) = mean(SectionData{SectionData.ExpTet == 0,'TetStd'});
+                    IterTetStdDev(i,2) = mean(SectionData{SectionData.ExpTet ~= 0,'TetStd'});
+                    
+                end
+                obj.IterData.SSE = IterSSE;
+                obj.IterData.StrainStdDev = IterStrainStdDev;
+                obj.IterData.TetStdDev = IterTetStdDev;
+            end
+        end
+        function plotIterData(obj,varargin)
+            if ~isempty(obj.IterData)
+                holdstate = ishold;
+                if ~holdstate
+                    cla
+                end
+                hold on
+                %SSE
+                s1 = subplot(3,2,1);
+                p1 = plot(s1,obj.IterData.SSE,varargin{:});
+                legend(s1,'Si','SiGe')
+                title(s1,'SSE')
+                %Strain StdDev
+                s2 = subplot(3,2,3);
+                p2 = plot(s2,obj.IterData.StrainStdDev,varargin{:});
+                legend(s2,'Si','SiGe')
+                title(s2,'Strain StdDev')
+                %Tet StdDev
+                s3 = subplot(3,2,5);
+                p3 = plot(s3,obj.IterData.TetStdDev,varargin{:});
+                legend(s3,'Si','SiGe')
+                title(s3,'Tet StdDev')
+                
+                %Calculate Approximate Error for SSE
+                error = zeros(length(obj.IterData.SSE),1);
+                for i = 2:length(obj.IterData.SSE)
+                    error(i-1) = abs(obj.IterData.SSE(i,2)-obj.IterData.SSE(i-1,2))/obj.IterData.SSE(i,2);
+                end
+                subplot(1,2,2);
+                plot(error)
+                title('SSE Approximate Error')
+                xlabel('Iterations')
+            end
+        end
+        function hg = plotSSEIter(obj,varargin)
+            hg = 0;
+            if ~isempty(obj.IterData)
+                gcf;
+                holdstate = ishold;
+                if ~holdstate
+                    cla
+                end
+                hold on
+                hg = hggroup;
+                %Calculate Approximate Error for SSE
+                error = zeros(length(obj.IterData.SSE),1);
+                for i = 2:length(obj.IterData.SSE)
+                    error(i-1) = abs(obj.IterData.SSE(i,2)-obj.IterData.SSE(i-1,2))/obj.IterData.SSE(i,2);
+                end
+                plot(error,varargin{:},'Parent',hg)
+                title('SSE Approximate Error')
+                xlabel('Iterations')
+                if ~holdstate
+                    hold off
+                end
             end
         end
         function hg = plot(obj,varargin)
@@ -167,7 +255,7 @@ classdef LineScanClass < handle
                 SSE = [];
             end
         end
-            
+        
     end
     methods(Static)
         function Param2 = XXParams(Param,XXtable)

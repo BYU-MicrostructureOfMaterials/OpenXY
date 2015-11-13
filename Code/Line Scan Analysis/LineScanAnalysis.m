@@ -59,6 +59,20 @@ classdef LineScanAnalysis < handle
                 obj.I(obj.NumScans,:) = {Name,obj.NumScans};
             end
         end
+        function removeScan(obj,Key)
+            if isKey(obj.Scans,Key)
+                remove(obj.Scans,Key);
+                [~,ind] = intersect(obj.I(:,1),Key);
+                Index = obj.I(ind,2);
+                obj.I(ind,:) = [];
+                BaseInd = find([obj.I{:,2}] == 1);
+                if isempty(BaseInd)
+                    BaseInd = 1;
+                    obj.Baseline = '';
+                end
+                obj.I(:,2) = num2cell([(2:BaseInd)';1;(BaseInd+1:obj.NumScans)']);
+            end
+        end
         function Comparison = CompareScans(obj,SelectScans,showplots)
         %Compares the scans. Generates a plot and returns a table of data.
             OpenSelection = 0;
@@ -77,9 +91,10 @@ classdef LineScanAnalysis < handle
                     scan{i} = obj.I{[obj.I{:,2}]'==i,1};
                 end
                 if OpenSelection
-                    [Selection,ok] = listdlg('ListString',scan(2:end),'PromptString','Select scans to compare','Name','Compare Scans');
+                    sortscan = sort(scan(2:end));
+                    [Selection,ok] = listdlg('ListString',sortscan,'PromptString','Select scans to compare','Name','Compare Scans');
                     if ok
-                        scan = scan([1,Selection+1]);
+                        scan = [scan(1);sortscan(Selection)];
                         NumCompare = length(scan);
                     end
                 end
@@ -144,7 +159,7 @@ classdef LineScanAnalysis < handle
                 %Plot XX Params
                 for i = 1:NumCompare
                     if plots
-                        plotXX(obj.Scans(scan{i}),'color',colors(i,:));
+                        %plotXX(obj.Scans(scan{i}),'color',colors(i,:));
                     end
                 end
                 
@@ -158,6 +173,27 @@ classdef LineScanAnalysis < handle
                 Comparison = struct2table(Comparison);
             end
         end
+        function CompareIter(obj)
+            scan = cell(obj.NumScans,1);
+            for i = 1:obj.NumScans
+                scan{i} = obj.I{[obj.I{:,2}]'==i,1};
+            end
+            sortscan = sort(scan);
+            [Selection,ok] = listdlg('ListString',sortscan,'PromptString','Select scans to compare','Name','Compare Scans');
+            if ok
+                scan = sortscan(Selection);
+                NumCompare = length(scan);
+            end
+            
+            hs = zeros(NumCompare,1);
+            figure;
+            hold on
+            for i = 1:NumCompare
+                hs(i) = obj.Scans(scan{i}).plotSSEIter;
+            end
+            legend(hs,scan')
+        end 
+            
         function NumScans = get.NumScans(obj)
             NumScans = length(obj.Scans.keys);
         end
