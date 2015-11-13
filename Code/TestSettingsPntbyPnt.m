@@ -59,7 +59,7 @@ Limits(1) = Mean - 3*StdDev;
 Limits(2) = Mean + 3*StdDev;
 
 Settings.DoShowPlot = 1;
-
+Settings.RotationIter = 9;
 
 button = 1;
 while(button==1)
