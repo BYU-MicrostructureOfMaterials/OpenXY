@@ -174,17 +174,17 @@ for i=1:length(roixc)
     
     RefROI = RefROI - mean(RefROI(:));
     ScanROI = ScanROI - mean(ScanROI(:));
-    XX.XX(i) = sum(sum(RefROI.*ScanROI/(std(RefROI(:))*std(ScanROI))))/numel(RefROI);
+    XX(i,1) = sum(sum(RefROI.*ScanROI/(std(RefROI(:))*std(ScanROI))))/numel(RefROI);
     
     %Perform Cross-Correlation
     [rimage, dxshift, dyshift] = custfftxc((RefImage(rrange,crange)),...
         (ScanImage(rrange,crange)),0,RefImage,rc,cc,custfilt,windowfunc);%this is the screen shift in the F(i-1) frame
      
     %Calculate Confidence of Shift
-    XX.CS(i) = (max(rimage(:))-mean(rimage(:)))/std(rimage(:));
+    XX(i,2) = (max(rimage(:))-mean(rimage(:)))/std(rimage(:));
     
     %Calculate Mutual Information
-    XX.MI(i) = CalcMutualInformation(RefROI,ScanROI);
+    XX(i,3) = CalcMutualInformation(RefROI,ScanROI);
     
     if RefInd~=0 % new if statement for when there is a single ref image DTF 7/16/14 this is to adjust PC in Wilkinson method for that single ref case ***need to do it for all wilkinson cases***
          tx=(xstar-Settings.XStar(RefInd))*Settings.PixelSize; % vector on phosphor between PC of ref and PC of measured; uses notation from PCsensitivity paper

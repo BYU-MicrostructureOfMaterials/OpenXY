@@ -117,7 +117,7 @@ classdef LineScanClass < handle
                 else
                     holdstate = 'off';
                 end
-                XXtable = struct2table(obj.Settings.XX);
+                XXtable = array2table(obj.Settings.XX,'VariableNames',{'XX','CS','MI'});
                 XX = obj.XXParams('XX',XXtable);
                 CS = obj.XXParams('CS',XXtable);
                 MI = obj.XXParams('MI',XXtable);
