@@ -202,7 +202,7 @@ if Settings.DoParallel > 1
         %or a structure F.a F.b F.c of deformation gradient tensors for
         %each point in the L grid
         
-        [F{ImageInd}, g{ImageInd}, U{ImageInd}, SSE{ImageInd}, XX(ImageInd)] = ...
+        [F{ImageInd}, g{ImageInd}, U{ImageInd}, SSE{ImageInd}, XX{ImageInd}] = ...
             GetDefGradientTensor(ImageInd,Settings,Settings.Phase{ImageInd});
         
         %{
@@ -225,7 +225,7 @@ else
         %         tic
 %         disp(ImageInd)
         
-        [F{ImageInd}, g{ImageInd}, U{ImageInd}, SSE{ImageInd}, XX(ImageInd)] = ...
+        [F{ImageInd}, g{ImageInd}, U{ImageInd}, SSE{ImageInd}, XX{ImageInd}] = ...
             GetDefGradientTensor(ImageInd,Settings,Settings.Phase{ImageInd});
         
         % commented out this (outputs strain matrix - I think - DTF 5/15/14)

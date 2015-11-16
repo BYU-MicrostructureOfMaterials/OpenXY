@@ -13,6 +13,8 @@ DoLGrid = strcmp(Settings.ScanType,'L');
 % fftw('wisdom',Settings.largefftmeth);
 % disp(curMaterial)
 
+XX = zeros(Settings.NumROIs,3);
+
 if DoLGrid
     
     %the LImageNamesList field is a cell of length three containing the
@@ -36,7 +38,6 @@ if DoLGrid
         F.a =  -eye(3); F.b = -eye(3); F.c = -eye(3); SSE.a = 101; SSE.b = 101;
         SSE.b = 101; U = -eye(3);
         g = euler2gmat(Angles(ImageInd,1),Angles(ImageInd,2),Angles(ImageInd,3));
-        XX = {};
         
         return;
     end
@@ -52,7 +53,7 @@ else
     g = euler2gmat(Settings.Angles(ImageInd,1) ...
         ,Settings.Angles(ImageInd,2),Settings.Angles(ImageInd,3));
     if isempty(ScanImage)
-        F = -eye(3); SSE = 101; U = -eye(3); XX = {};
+        F = -eye(3); SSE = 101; U = -eye(3);
         return;
     end
     
@@ -194,7 +195,6 @@ switch Settings.HROIMMethod
                 end
                 g = euler2gmat(Settings.Angles(ImageInd,1),Settings.Angles(ImageInd,2),Settings.Angles(ImageInd,3)); 
                 F = -eye(3); SSE = 101; U = -eye(3);
-                XX.XX = zeros(1,length(roixc)); XX.CS = zeros(1,length(roixc)); XX.MI = zeros(1,length(roixc)); XX.MI_total = 0;
                 return;
             end
             [r1,u1]=poldec(F1);
@@ -244,7 +244,7 @@ switch Settings.HROIMMethod
 end
 
 %Calculate Mutual Information over entire Image
-XX.MI_total = CalcMutualInformation(RefImage,ScanImage);
+%XX.MI_total = CalcMutualInformation(RefImage,ScanImage);
 
 if DoLGrid
     
