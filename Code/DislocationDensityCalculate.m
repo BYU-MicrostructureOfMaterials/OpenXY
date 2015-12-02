@@ -396,7 +396,7 @@ alpha_data.b=b;
 if special==1
     disp('special')
     disp(num2str(stepsize))
-    Settings.OutputPath=[AnalysisParamsPath(1:end-8),'Skip',num2str(skippts),'.ang.mat']; 
+    Settings.OutputPath=[AnalysisParamsPath,' Skip',num2str(skippts),'.ang.mat']; 
     save(Settings.OutputPath,'Settings');
     save(Settings.OutputPath ,'alpha_data','-append'); 
 elseif strcmp(Settings.ScanType,'LtoSquare')

@@ -198,6 +198,7 @@ classdef LineScanClass < handle
             end
         end
         function h = plotXX(obj,varargin)
+            h = zeros(3,0);
             if isfield(obj.Settings,'XX')
                 holdon = ishold;
                 if holdon
@@ -205,7 +206,19 @@ classdef LineScanClass < handle
                 else
                     holdstate = 'off';
                 end
-                XXtable = array2table(obj.Settings.XX,'VariableNames',{'XX','CS','MI'});
+                if isstruct(obj.Settings.XX)
+                    XXtable = struct2table(obj.Settings.XX);
+                    XXtable = varfun(@(x) mean(x,2),XXtable(:,1:3));
+                    XXtable.Properties.VariableNames = {'XX','CS','MI'};
+                elseif iscell(obj.Settings.XX)
+                    return;
+                elseif isfield(obj.Settings,'Iterations')
+                    XXtable = obj.Settings.Iterations.XX(:,end);
+                    XXtable = cell2mat(cellfun(@(x) mean(x,1),XXtable,'UniformOutput',false));
+                    XXtable = array2table(XXtable,'VariableNames',{'XX','CS','MI'});
+                else
+                    XXtable = array2table(obj.Settings.XX,'VariableNames',{'XX','CS','MI'});
+                end
                 XX = obj.XXParams('XX',XXtable);
                 CS = obj.XXParams('CS',XXtable);
                 MI = obj.XXParams('MI',XXtable);

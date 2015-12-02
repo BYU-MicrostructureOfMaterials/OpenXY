@@ -57,6 +57,9 @@ classdef LineScanAnalysis < handle
             if isKey(obj.Scans,Name) && ~isempty(obj.Scans(Name).Folder)
                 ReadScan(obj.Scans(Name));
                 obj.I(obj.NumScans,:) = {Name,obj.NumScans};
+            else
+                remove(obj.Scans,Name);
+                disp([Name ' not added']);
             end
         end
         function removeScan(obj,Key)
@@ -157,11 +160,18 @@ classdef LineScanAnalysis < handle
                 end
                 
                 %Plot XX Params
+                j = 1;
+                XXlegend = cell(size(scan));
                 for i = 1:NumCompare
                     if plots
-                        %plotXX(obj.Scans(scan{i}),'color',colors(i,:));
+                        h = plotXX(obj.Scans(scan{i}),'color',colors(i,:));
+                        if ~isempty(h)
+                            XXlegend{j} = scan{i};
+                            j = j + 1;
+                        end
                     end
                 end
+                legend(XXlegend(1:j-1));
                 
                 scan{1} = [scan{1} ' (Baseline)'];
                 Comparison.Scans = scan;

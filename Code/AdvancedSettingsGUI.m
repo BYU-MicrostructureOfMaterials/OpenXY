@@ -296,6 +296,10 @@ function HROIMedit_Callback(hObject, eventdata, handles)
 contents = cellstr(get(handles.HROIMMethod,'String'));
 HROIMMethod = contents{get(handles.HROIMMethod,'Value')};
 switch HROIMMethod
+    case 'Simulated-Kinematic'
+        handles.Settings.IterationLimit = str2double(get(hObject,'String'));
+    case 'Simulated-Dynamic'
+        handles.Settings.IterationLimit = str2double(get(hObject,'String'));
     case 'Real-Grain Ref'
         handles.Settings.RefImageInd = 0;
     case 'Real-Single Ref'
