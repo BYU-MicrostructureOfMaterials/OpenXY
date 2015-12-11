@@ -138,6 +138,40 @@ classdef LineScanClass < handle
                 plot(error)
                 title('SSE Approximate Error')
                 xlabel('Iterations')
+                
+                XXtable = obj.Settings.Iterations.XX;
+                XXtable = permute(reshape(cell2mat(cellfun(@(x) mean(x,1),XXtable,'UniformOutput',false)),obj.Settings.ScanLength,3,9),[1 3 2]);
+                f = figure;
+                pos = f.Position;
+                f.Position = [pos(1) pos(2)-pos(4) pos(3)*2 pos(4)*2]; 
+                s(1) = subplot(3,1,1);
+                t{1} = 'Cross Correlation Coefficient';
+                c{1} = 'green';
+                s(2) = subplot(3,1,2);
+                t{2} = 'Shift Confidence';
+                c{2} = 'blue';
+                s(3) = subplot(3,1,3);
+                t{3} = 'Mutual Information';
+                c{3} = 'magenta';
+                for i = 1:size(XXtable,2)
+                    for j = 1:3
+                        cla(s(j))
+                        hold(s(j),'on')
+                        plot(s(j),XXtable(:,1:i-1,j),':','Color',c{j})
+                        plot(s(j),XXtable(:,i,j),'Color',c{j});
+                        title(s(j),t{j})
+                    end
+                    frame = getframe(f);
+                    im = frame2im(frame);
+                    [imind,cm] = rgb2ind(im,256);
+                    if i == 1
+                        imwrite(imind,cm,'iterations_s01.gif','gif','Loopcount',inf);
+                    else
+                        imwrite(imind,cm,'iterations_s01.gif','gif','WriteMode','append');
+                    end
+                    pause(0.5)
+                end
+                save('s01_Iter.mat','XXtable');
             end
         end
         function hg = plotSSEIter(obj,varargin)

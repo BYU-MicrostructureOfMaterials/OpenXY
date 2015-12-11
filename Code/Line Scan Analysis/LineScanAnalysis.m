@@ -201,7 +201,7 @@ classdef LineScanAnalysis < handle
             for i = 1:NumCompare
                 hs(i) = obj.Scans(scan{i}).plotSSEIter;
             end
-            legend(hs,scan')
+            %legend(hs,scan')
         end 
             
         function NumScans = get.NumScans(obj)
