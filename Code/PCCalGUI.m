@@ -1101,7 +1101,7 @@ gui.f = figure('Visible','off','Position',pos,'MenuBar','none','Toolbar','none',
 mwidth = 150;
 mheight = 25;
 pos = [(width - mwidth)/2 (height-mheight)*(0.75) mwidth mheight];
-gui.list = uicontrol(gui.f,'Style','popup','Position',pos,'String',{'fminsearch','pso'},'Tag','Optimization Routine');
+gui.list = uicontrol(gui.f,'Style','popup','Position',pos,'String',{'fminsearch','pso','crosscor'},'Tag','Optimization Routine');
 
 pos(2) = (height-mheight)*(0.25);
 guidata(gui.f,gui);
