@@ -872,46 +872,63 @@ Settings = handles.Settings;
 info = imfinfo(Settings.ImageNamesList{1});
 
 if Settings.ImageTag %See MainGUI.m SetImageFields
-
-    handles.TiffXstar = zeros(size(Settings.XData));
-    handles.TiffYstar = handles.TiffXstar;
-    handles.TiffZstar = handles.TiffXstar;
     
     VHRatio = Settings.VHRatio;
     lscan = Settings.ScanLength;
 
-    h = waitbar(0,'Reading Tiff Files');
-    for i=1:lscan
-        try
-            info = imfinfo(Settings.ImageNamesList{i});
-
-            xistart = strfind(info.UnknownTags.Value,'<pattern-center-x-pu>');
-            xifinish = strfind(info.UnknownTags.Value,'</pattern-center-x-pu>');
-
-            thisx = str2double(info.UnknownTags.Value(xistart+length('<pattern-center-x-pu>'):xifinish-1));
-            handles.TiffXstar(i) = (thisx - (1-VHRatio)/2)/VHRatio;
-
-            yistart = strfind(info.UnknownTags.Value,'<pattern-center-y-pu>');
-            yifinish = strfind(info.UnknownTags.Value,'</pattern-center-y-pu>');
-
-            handles.TiffYstar(i) = str2double(info.UnknownTags.Value(yistart+length('<pattern-center-y-pu>'):yifinish-1));
-
-            zistart = strfind(info.UnknownTags.Value,'<detector-distance-pu>');
-            zifinish = strfind(info.UnknownTags.Value,'</detector-distance-pu>');
-
-            handles.TiffZstar(i) = str2double(info.UnknownTags.Value(zistart+length('<detector-distance-pu>'):zifinish-1))/VHRatio;
-        catch
-            handles.TiffXstar(i) = handles.ScanParams.xstar;
-            handles.TiffYstar(i) = handles.ScanParams.ystar;
-            handles.TiffZstar(i) = handles.ScanParams.zstar;
-        end
-        waitbar(i/lscan,h)
+    Nx = handles.Settings.Nx;
+    Ny = handles.Settings.Ny;
+    
+    if Ny>1
+        getdat = [1 2 Nx+1];
+    else
+        getdat = [1 2];
     end
-    close(h)
+    for loopvar=1:length(getdat)
+        i = getdat(loopvar);
+        info = imfinfo(Settings.ImageNamesList{i});
 
+        xistart = strfind(info.UnknownTags.Value,'<pattern-center-x-pu>');
+        xifinish = strfind(info.UnknownTags.Value,'</pattern-center-x-pu>');
+
+        thisx = str2double(info.UnknownTags.Value(xistart+length('<pattern-center-x-pu>'):xifinish-1));
+        xread(loopvar) = (thisx - (1-VHRatio)/2)/VHRatio;
+
+        yistart = strfind(info.UnknownTags.Value,'<pattern-center-y-pu>');
+        yifinish = strfind(info.UnknownTags.Value,'</pattern-center-y-pu>');
+
+        yread(loopvar) = str2double(info.UnknownTags.Value(yistart+length('<pattern-center-y-pu>'):yifinish-1));
+
+        zistart = strfind(info.UnknownTags.Value,'<detector-distance-pu>');
+        zifinish = strfind(info.UnknownTags.Value,'</detector-distance-pu>');
+
+        zread(loopvar) = str2double(info.UnknownTags.Value(zistart+length('<detector-distance-pu>'):zifinish-1))/VHRatio;
+    end
+    
+    PTX = mod((1:Nx*Ny) - 1,Nx);
+    PTY = floor(((1:Nx*Ny) - 1)/Nx);
+    
+    xxstep = xread(2) - xread(1);
+    xystep = yread(2) - yread(1);
+    xzstep = zread(2) - zread(1);
+    
+    if Ny>1
+        yxstep = xread(3) - xread(1);
+        yystep = yread(3) - yread(1);
+        yzstep = zread(3) - zread(1);
+
+        handles.TiffXstar = xread(1) + PTX*xxstep + PTY*yxstep;
+        handles.TiffYstar = yread(1) + PTX*xystep + PTY*yystep;
+        handles.TiffZstar = zread(1) + PTX*xzstep + PTY*yzstep;
+    else
+        handles.TiffXstar = xread(1) + PTX*xxstep;
+        handles.TiffYstar = yread(1) + PTX*xystep;
+        handles.TiffZstar = zread(1) + PTX*xzstep;
+    end
+    
+    
     handles.tiffread = 1;
     set(handles.fromtiff,'Enable','on');
-
     if ~handles.calibrated
         Settings.XStar = handles.TiffXstar;
         Settings.YStar = handles.TiffYstar;
@@ -919,6 +936,7 @@ if Settings.ImageTag %See MainGUI.m SetImageFields
         
         handles.Settings = Settings;
     end
+    
     
     guidata(hObject, handles);
     if get(handles.autorunbox,'Value')
