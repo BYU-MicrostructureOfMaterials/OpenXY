@@ -60,6 +60,9 @@ Limits(2) = Mean + 3*StdDev;
 
 Settings.DoShowPlot = 1;
 Settings.RotationIter = 9;
+if strcmp(Settings.HROIMMethod,'Dynamic Simulated')
+    Settings.IterationLimit = 0;
+end
 
 button = 1;
 while(button==1)
@@ -97,6 +100,14 @@ while(button==1)
     disp('g'); disp(g{end})
     disp('U'); disp(U{end})
     disp('SSE'); disp(SSE(end))
+    
+    [tempR, tempU]=poldec(F{end});
+    tempU=tempU-eye(3);
+    u33=tempU(3,3); 
+    u22=tempU(2,2);
+    u11=tempU(1,1);
+    disp(['Strain: ' num2str(u11) ' ' num2str(u22) ' ' num2str(u33)])
+    disp(['Tet: ' num2str(u33 - (u11+u22)/2)]);
     
     Settings.ImageNamesList{ind}
 
