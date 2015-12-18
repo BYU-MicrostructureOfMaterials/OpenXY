@@ -106,8 +106,8 @@ while(button==1)
     u33=tempU(3,3); 
     u22=tempU(2,2);
     u11=tempU(1,1);
-    disp(['Strain: ' num2str(u11) ' ' num2str(u22) ' ' num2str(u33)])
-    disp(['Tet: ' num2str(u33 - (u11+u22)/2)]);
+    disp(['Strain: ' num2str(u11*100) ' ' num2str(u22*100) ' ' num2str(u33*100)])
+    disp(['Tet: ' num2str((u33 - (u11+u22)/2)*100)]);
     
     Settings.ImageNamesList{ind}
 
