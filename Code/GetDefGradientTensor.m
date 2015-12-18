@@ -152,21 +152,33 @@ switch Settings.HROIMMethod
             %Settings.PixelSize,Settings.ImageFilter(3),Settings.ImageFilter(4));
         clear global rs cs Gs
         [F1,SSE1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial);
+        F_i(:,:,iter) = F1;
+        g_i(:,:,iter) = F1;
+        SSE_i(iter) = SSE1;
+        XX_i(:,:,iter) = XX;
+        iter = iter + 1;
         
         %%%%New stuff to remove rotation error from strain measurement DTF  7/14/14
-        for iq=1:3
+        for iq=1:RotationIter-1
             [rr,uu]=poldec(F1); % extract the rotation part of the deformation, rr
             gr=rr'*gr; % correct the rotation component of the deformation so that it doesn't affect strain calc
             RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av);
             
             clear global rs cs Gs
             [F1,SSE1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial);
+            F_i(:,:,iter) = F1;
+            g_i(:,:,iter) = gr;
+            SSE_i(iter) = SSE1;
+            XX_i(:,:,iter) = XX;
+            iter = iter + 1;
         end
         %%%%%
         
     case 'Simulated'
         
-        %         RefImage = genEBSDPatternHybrid(gr,paramspat,eye(3),lattice,al,bl,cl,axs); % testing next line instead *****
+        %         RefImage = g
+        
+        genEBSDPatternHybrid(gr,paramspat,eye(3),lattice,al,bl,cl,axs); % testing next line instead *****
         RefImage = genEBSDPatternHybrid(gr,paramspat,eye(3),Material.lattice,Material.a1,Material.b1,Material.c1,Material.axs);
         %          RefImage = genEBSDPatternHybridMexHat(gr,paramspat,eye(3),lattice,al,bl,cl,axs);
         

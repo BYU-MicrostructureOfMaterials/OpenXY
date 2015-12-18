@@ -69,11 +69,11 @@ while(button==1)
     axis image
     caxis(Limits)
     colormap('jet')
-    title({'\fontsize{14} Select a point to calculate the deformation tensor','\fontsize{10} Right-click to exit'},'HorizontalAlignment','center')
+    title({'\fontsize{14} Select a point to calculate the deformation tensor','\fontsize{10} Right-click or RETURN to exit'},'HorizontalAlignment','center')
     
     figure(99)
     [x,y, button] = ginput(1);
-    if button~=1
+    if isempty(button) || button~=1
         break;
     end
     pos = get(figure(99),'Position');
@@ -85,18 +85,18 @@ while(button==1)
     if y > m; y = m; end;
     
     ind = indi(y,x);
+    
+    set(figure(100),'Position',[pos(1)-pos(3)/2-10 pos(2)-pos(4) - 100 pos(3) pos(4)])
+    set(figure(101),'Position',[pos(1)+pos(3)/2+10 pos(2)-pos(4) - 100 pos(3) pos(4)])
 
     tic
     [F g U SSE] = GetDefGradientTensor(ind,Settings,Settings.Phase{ind});
     toc
     
-    set(figure(100),'Position',[pos(1)-pos(3)/2-10 pos(2)-pos(4) - 100 pos(3) pos(4)])
-    set(figure(101),'Position',[pos(1)+pos(3)/2+10 pos(2)-pos(4) - 100 pos(3) pos(4)])
-   
-    F{end}
-    g{end}
-    U{end}
-    SSE(end)
+    disp('F'); disp(F{end})
+    disp('g'); disp(g{end})
+    disp('U'); disp(U{end})
+    disp('SSE'); disp(SSE(end))
     
     Settings.ImageNamesList{ind}
 
