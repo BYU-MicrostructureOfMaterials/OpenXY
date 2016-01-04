@@ -12,6 +12,7 @@ if ~exist('EMsoftPath','var') || isempty(EMsoftPath)
         EMsoftPath = uigetdir(OpenXYPath,'Select EMsoft root directory');
     else
         warndlgpause('Cannot use dyamically simulated patterns. Resetting to kinematic simulation.','EMsoft not found');
+        return;
     end
 end
 %Check if EMEBSD command exists
