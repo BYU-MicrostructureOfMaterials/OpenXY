@@ -128,33 +128,26 @@ switch Settings.HROIMMethod
     case 'Dynamic Simulated'
         mperpix = Settings.mperpix;
         
-        %         RefImage = genEBSDPatternHybrid_fromEMSoft(g,xstar,ystar,zstar,pixsize,mperpix,sampletilt,Material); % testing next line instead *****
-        RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av);
-        %          RefImage = genEBSDPatternHybridMexHat(gr,paramspat,eye(3),lattice,al,bl,cl,axs);
-        
-        %use following line only for optical distortion correction
-        %    RefImage = RefImage(crpl:crpu,crpl:crpu);
-        %         RefImage = genEBSDPattern(gr,paramspat,eye(3),lattice,al,bl,cl,axs);
-        
-        %RefImage = custimfilt(RefImage,Settings.ImageFilter(1), ...
-            %Settings.PixelSize,Settings.ImageFilter(3),Settings.ImageFilter(4));
-
-        %Initialize
-        %RefImage = custimfilt(RefImage,Settings.ImageFilter(1), ...
-            %Settings.PixelSize,Settings.ImageFilter(3),Settings.ImageFilter(4));
-        clear global rs cs Gs
-        [F1,SSE1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial);
-        
-        %%%%New stuff to remove rotation error from strain measurement DTF  7/14/14
-        for iq=1:3
-            [rr,uu]=poldec(F1); % extract the rotation part of the deformation, rr
-            gr=rr'*gr; % correct the rotation component of the deformation so that it doesn't affect strain calc
+        if Settings.SinglePattern
+            RefImage = Settings.RefImage;
+            clear global rs cs Gs
+            [F1,SSE1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,RefInd);
+        else
             RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av);
-            
+
             clear global rs cs Gs
             [F1,SSE1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial);
+
+            for iq=1:3
+                [rr,uu]=poldec(F1); % extract the rotation part of the deformation, rr
+                gr=rr'*gr; % correct the rotation component of the deformation so that it doesn't affect strain calc
+                RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av);
+
+                clear global rs cs Gs
+                [F1,SSE1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial);
+            end
+            %%%%%
         end
-        %%%%%
         
     case 'Simulated'
         

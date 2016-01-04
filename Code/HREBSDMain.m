@@ -43,6 +43,48 @@ if strcmp(Settings.HROIMMethod,'Dynamic Simulated')
         setenv('EMsoftpathname',[EMsoftPath filesep])
         setenv('EMdatapathname',[EMdataPath filesep])
     end
+    
+    %Single Pattern Option
+    Settings.SinglePattern = 0;
+    if Settings.SinglePattern
+        Settings.RefImageInd = 4;
+        
+        %Read Image
+        ImagePath = Settings.ImageNamesList{Settings.RefImageInd};
+        if strcmp(Settings.ImageFilterType,'standard')
+            ScanImage = ReadEBSDImage(ImagePath,Settings.ImageFilter);
+        else
+            ScanImage = localthresh(ImagePath);
+        end
+        gr = euler2gmat(Settings.Angles(Settings.RefImageInd,1) ...
+            ,Settings.Angles(Settings.RefImageInd,2),Settings.Angles(Settings.RefImageInd,3));
+        if isempty(ScanImage)
+            error('Reference Image not found')
+        end
+        
+        %Extract Variables
+        curMaterial = Settings.Phase{Settings.RefImageInd};
+        xstar = Settings.XStar(Settings.RefImageInd);
+        ystar = Settings.YStar(Settings.RefImageInd);
+        zstar = Settings.ZStar(Settings.RefImageInd);
+        pixsize = Settings.PixelSize;
+        mperpix = Settings.mperpix;
+        elevang = Settings.CameraElevation;
+        Av = Settings.AccelVoltage*1000; %put it in eV from KeV
+        
+        RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av);
+        clear global rs cs Gs
+        [F1,~,~] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial);
+        for iq=1:3
+            [rr,~]=poldec(F1); % extract the rotation part of the deformation, rr
+            gr=rr'*gr; % correct the rotation component of the deformation so that it doesn't affect strain calc
+            RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av);
+            
+            clear global rs cs Gs
+            [F1,~,~] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial);
+        end
+        Settings.RefImage = RefImage;
+    end
 end
 
 %Sets default color scheme for all figures and axes
