@@ -35,7 +35,7 @@ paramspat={xstar;ystar;zstar;pixsize;Av;sampletilt;elevang;Material.Fhkl;Materia
 
 Settings.XStar(1:Settings.ScanLength) = ScanParams.xstar;
 Settings.YStar(1:Settings.ScanLength) = ScanParams.ystar;
-Settings.ZStar(1:Settings.ScanLength) = ScanParams.zstar;            
+Settings.ZStar(1:Settings.ScanLength) = ScanParams.zstar;
             
 % g = euler2gmat(Settings.Phi1Ref(Ind),Settings.PHIRef(Ind),Settings.Phi2Ref(Ind));
 g = euler2gmat(Settings.Angles(Ind,1),Settings.Angles(Ind,2),Settings.Angles(Ind,3)); % DTF - don't use ref angles for grain as is done on previous line!!
@@ -51,7 +51,7 @@ switch Algorithm
     case 'crosscor'
         disp('starting cross correlation minimization')
         PCprime=PC0;
-        for i=1:1 % number of iterations to find best
+        for ii=1:1 % number of iterations to find best
             if strcmp(Settings.HROIMMethod,'Dynamic Simulated')
                 xstar=PCprime(1);
                 ystar=PCprime(2);
