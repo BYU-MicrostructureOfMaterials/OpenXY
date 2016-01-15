@@ -6,7 +6,9 @@ if isempty(Settings.ScanFilePath)
 end
 
 %% Set up Settings
-Settings.HROIMMethod = 'Simulated'; %{'Simulated', 'Real', 'Dynamic Simulated'}
+Settings.HROIMMethod = 'Dynamic Simulated'; %{'Simulated', 'Real', 'Dynamic Simulated'}
+Settings.DisplayGUI = 1;
+Settings.Material = 'silicon_BEJ';
 Algorithms = {'fminsearch','crosscor'};  %{'fminsearch','pso','crosscor'};
 AlgorithmNames = {'StrainMin','Crosscor'};
 scans = {'i02','S01'};
@@ -25,7 +27,10 @@ for sc = 1:2
         for cal = 1:2
             CalPoints = Cals{cal,2};
             CalName = Cals{cal,1};
-            Settings.OutputPath = fullfile(ScanData.(scan).folder,[scan ' BEJ Dyn ' AlgorithmName ' ' CalName '.ctf']);
+            ScanName = [scan ' BEJ Dyn ' AlgorithmName ' ' CalName '.ctf'];
+            Settings.OutputPath = fullfile(ScanData.(scan).folder,ScanName);
+            
+            disp(['Starting Scan ' ScanName])
 
             %% PC Calibration
             S01Points = [4 22 28;... S01 1st band
@@ -43,19 +48,26 @@ for sc = 1:2
             Settings.CalibrationPointsPC = zeros(length(CalPoints),3);
             psize = Settings.PhosphorSize;
 
-            Settings.CalibrationPointsPC = PCCalibration(Settings,ScanParams,Algorithm);
-
-            %Apply Naive Plane Fit
-            MeanXstar = mean(Settings.CalibrationPointsPC(:,1)+(Settings.XData(Settings.CalibrationPointIndecies))/psize);
-            MeanYstar = mean(Settings.CalibrationPointsPC(:,2)-(Settings.YData(Settings.CalibrationPointIndecies))/psize*sin(Settings.SampleTilt));
-            MeanZstar = mean(Settings.CalibrationPointsPC(:,3)-(Settings.YData(Settings.CalibrationPointIndecies))/psize*cos(Settings.SampleTilt));
+            if 1
+                Settings.CalibrationPointsPC = PCCalibration(Settings,ScanParams,Algorithm);
+                
+                %Apply Naive Plane Fit
+                MeanXstar = mean(Settings.CalibrationPointsPC(:,1)+(Settings.XData(Settings.CalibrationPointIndecies))/psize);
+                MeanYstar = mean(Settings.CalibrationPointsPC(:,2)-(Settings.YData(Settings.CalibrationPointIndecies))/psize*sin(Settings.SampleTilt));
+                MeanZstar = mean(Settings.CalibrationPointsPC(:,3)-(Settings.YData(Settings.CalibrationPointIndecies))/psize*cos(Settings.SampleTilt));
+            else
+                MeanXstar = Settings.PCCal.MeanXstar;
+                MeanYstar = Settings.PCCal.MeanYstar;
+                MeanZstar = Settings.PCCal.MeanZstar;
+            end
 
             Settings.XStar = MeanXstar-(Settings.XData)/psize;
             Settings.YStar = MeanYstar+(Settings.YData)/psize*sin(Settings.SampleTilt);
             Settings.ZStar = MeanZstar+(Settings.YData)/psize*cos(Settings.SampleTilt);
 
             %% Run OpenXY
-            Settings = HREBSDMain(Settings);
+            disp('Starting Analysis')
+            HREBSDMain(Settings);
         end
     end
 end

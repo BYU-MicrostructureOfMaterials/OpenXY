@@ -93,7 +93,7 @@ setenv('DYLD_LIBRARY_PATH',['/opt/local/lib/libgcc/']);
 [status,cmdout] = system(['"' fullfile(EMsoftPath,'bin','EMEBSD') '" ' inputfile]);
 cd(OpenXYPath);
 %!EMEBSD EMEBSDexample.nml
-cmdout
+%disp(cmdout)
 %generate pic
 h5infostruct=h5info(datafilepath);
 data1=h5read(h5infostruct.Filename,'/EMData/EBSDpatterns');
