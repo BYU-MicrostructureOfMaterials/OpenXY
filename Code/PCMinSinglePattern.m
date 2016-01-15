@@ -52,25 +52,53 @@ switch Algorithm
         disp('starting cross correlation minimization')
         PCprime=PC0;
         for i=1:1 % number of iterations to find best
-        xstar=PCprime(1);
-        ystar=PCprime(2);
-        zstar=PCprime(3);
-        pixsize=cell2mat(paramspat(4));
-        Av=cell2mat(paramspat(5));
-        elevang=cell2mat(paramspat(7));
-        mperpix = Settings.mperpix;
-        curMaterial=cell2mat(Settings.Phase(Ind)); %****may need updating for material of this point - where is that info?
-        for i = 1:3
-            I1 = genEBSDPatternHybrid_fromEMSoft(g,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av);
-            
-            clear global rs cs Gs
-            %     [F SSE] = CalcF(I1,I0,g,F,ImageInd,Settings,Settings.Material); % old version
-            [F SSE] = CalcF(I1,ScanImage,g,eye(3),Ind,Settings,Settings.Phase{Ind}); % new DTF
-            [R U] = poldec(F);
-            g=R'*g;
-        end
-        
-        [PCprime,value,flag,iter] = fminsearch(@(PC)CalcCross(PC,ScanImage,paramspat,Material.lattice,Material.a1,Material.b1,Material.c1,Material.axs,g,Settings.ImageFilter,Ind,Settings),PC0);
+            if strcmp(Settings.HROIMMethod,'Dynamic Simulated')
+                xstar=PCprime(1);
+                ystar=PCprime(2);
+                zstar=PCprime(3);
+                pixsize=cell2mat(paramspat(4));
+                Av=cell2mat(paramspat(5));
+                elevang=cell2mat(paramspat(7));
+                mperpix = Settings.mperpix;
+                curMaterial=cell2mat(Settings.Phase(Ind)); %****may need updating for material of this point - where is that info?
+                for i = 1:3
+                    I1 = genEBSDPatternHybrid_fromEMSoft(g,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av);
+
+                    clear global rs cs Gs
+                    %     [F SSE] = CalcF(I1,I0,g,F,ImageInd,Settings,Settings.Material); % old version
+                    [F SSE] = CalcF(I1,ScanImage,g,eye(3),Ind,Settings,Settings.Phase{Ind}); % new DTF
+                    [R U] = poldec(F);
+                    g=R'*g;
+                end
+            else
+                % Remove rotational error first DTF 7/15/14
+                X = Settings.ImageFilter;
+                for i = 1:3
+                    I1 = genEBSDPatternHybrid(g,paramspat,eye(3),Material.lattice,Material.a1,Material.b1,Material.c1,Material.axs);
+                    I1 = custimfilt(I1,X(1),Settings.PixelSize,X(3),X(4));
+                    clear global rs cs Gs
+                    %     [F SSE] = CalcF(I1,I0,g,F,ImageInd,Settings,Settings.Material); % old version
+                    [F SSE] = CalcF(I1,ScanImage,g,eye(3),Ind,Settings,Settings.Phase{Ind}); % new DTF
+                    [R U] = poldec(F);
+                    g=R'*g;
+                end
+                F=eye(3);
+                for i = 1:Settings.IterationLimit
+                %for i = 1:3    
+                    I1 = genEBSDPatternHybrid(g,paramspat,F,Material.lattice,Material.a1,Material.b1,Material.c1,Material.axs);
+                    I1 = custimfilt(I1,X(1),Settings.PixelSize,X(3),X(4));
+
+                    %Optical Distortion Only
+                    %  crpl=206; crpu=824;
+                    %  I1 = I1(crpl:crpu,crpl:crpu);
+                    clear global rs cs Gs
+                    %     [F SSE] = calcFnew(I1,I0,g,F,paramsF,standev,6);
+                    %     [F SSE] = CalcF(I1,I0,g,F,ImageInd,Settings,Settings.Material);% ** same change as above DTF 7/21/14
+                    [F SSE] = CalcF(I1,ScanImage,g,F,Ind,Settings,Settings.Phase{Ind});
+                end
+            end
+
+            [PCprime,value,flag,iter] = fminsearch(@(PC)CalcCross(PC,ScanImage,paramspat,Material.lattice,Material.a1,Material.b1,Material.c1,Material.axs,g,F,Settings.ImageFilter,Ind,Settings),PC0);
         end
 end
 %  keyboard
