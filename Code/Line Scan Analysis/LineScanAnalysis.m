@@ -99,6 +99,7 @@ classdef LineScanAnalysis < handle
                 StrainStdDev = zeros(NumCompare,2);
                 TetStdDev = zeros(NumCompare,2);
                 SSE = zeros(NumCompare,2);
+                TetDiff = zeros(NumCompare,1);
                 
                 %Analyze and plot each section
                 for i = 1:NumCompare
@@ -125,6 +126,7 @@ classdef LineScanAnalysis < handle
                     end
                     TetStdDev(i,:) = obj.Scans(scan{i}).TetStdDev;
                     SSE(i,:) = obj.Scans(scan{i}).SSE;
+                    TetDiff(i) = obj.Scans(scan{i}).TetDiff - obj.ExpTet;
                 end
                 if plots
                     Len = obj.Scans(obj.Baseline).Length;
@@ -156,13 +158,16 @@ classdef LineScanAnalysis < handle
                         end
                     end
                 end
-                legend(XXlegend(1:j-1));
+                if plots
+                    legend(XXlegend(1:j-1));
+                end
                 
                 scan{1} = [scan{1} ' (Baseline)'];
                 Comparison.Scans = scan;
                 Comparison.StrainStdDev = StrainStdDev;
                 Comparison.TetStdDev = TetStdDev;
                 Comparison.SSE = SSE;
+                Comparison.TetDiff = TetDiff;
                 %Comparison.StdDev_Percent = (StrainStdDev(1)-StrainStdDev)/StrainStdDev(1);
                 %Comparison.SSE_Percent = (SSE(1)-SSE)/SSE(1);
                 Comparison = struct2table(Comparison);
