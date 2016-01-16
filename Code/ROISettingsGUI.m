@@ -392,7 +392,12 @@ function ROIStylePopup_Callback(hObject, eventdata, handles)
 % Hints: contents = cellstr(get(hObject,'String')) returns ROIStylePopup contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from ROIStylePopup
 contents = cellstr(get(hObject,'String'));
-handles.Settings.ROIStyle = contents{get(hObject,'Value')};
+ROIStyle = contents{get(hObject,'Value')};
+handles.Settings.ROIStyle = ROIStyle;
+if strcmp(ROIStyle,'Grid')
+    SetPopupValue(handles.NumROIPopup,num2str(48));
+    handles.Settings.NumROIs = 48;
+end
 guidata(hObject,handles);
 
 % --- Executes during object creation, after setting all properties.
