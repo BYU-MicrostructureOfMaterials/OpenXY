@@ -6,7 +6,7 @@ if isempty(Settings.ScanFilePath)
 end
 
 %% Set up Settings
-Settings.HROIMMethod = 'Dynamic Simulated'; %{'Simulated', 'Real', 'Dynamic Simulated'}
+Settings.HROIMMethod = 'Simulated'; %{'Simulated', 'Real', 'Dynamic Simulated'}
 Settings.DisplayGUI = 1;
 Settings.Material = 'silicon_BEJ';
 Algorithms = {'fminsearch','crosscor'};  %{'fminsearch','pso','crosscor'};
@@ -20,6 +20,8 @@ for sc = 1:2
     Settings.ScanFilePath = ScanData.(scan).ScanFilePath;
     Settings.FirstImagePath = ScanData.(scan).FirstImagePath;
     
+    
+    
     for al = 1:2
         Algorithm = Algorithms{al};
         AlgorithmName = AlgorithmNames{al};
@@ -27,7 +29,7 @@ for sc = 1:2
         for cal = 1:2
             CalPoints = Cals{cal,2};
             CalName = Cals{cal,1};
-            ScanName = [scan ' BEJ Dyn ' AlgorithmName ' ' CalName '.ctf'];
+            ScanName = [scan ' BEJ Kin ' AlgorithmName ' ' CalName '.ctf'];
             Settings.OutputPath = fullfile(ScanData.(scan).folder,ScanName);
             
             disp(['Starting Scan ' ScanName])
