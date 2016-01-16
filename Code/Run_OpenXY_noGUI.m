@@ -11,6 +11,8 @@ Settings.DisplayGUI = 1;
 Settings.Material = 'silicon_BEJ';
 Algorithms = {'fminsearch','crosscor'};  %{'fminsearch','pso','crosscor'};
 AlgorithmNames = {'StrainMin','Crosscor'};
+PCs = [0.524882875, 0.888725907,0.613331067;
+        0.526360583, 0.922586955, 0.614599788];
 scans = {'i02','S01'};
 Cals = {'003',7:9; '333',1:9};
 load LineScanData
@@ -19,6 +21,8 @@ for sc = 1:2
     scan = scans{sc};
     Settings.ScanFilePath = ScanData.(scan).ScanFilePath;
     Settings.FirstImagePath = ScanData.(scan).FirstImagePath;
+    [path, name, ext] = fileparts(Settings.ScanFilePath);
+    Settings = ImportScanInfo(Settings,[name ext],path);
     
     for al = 1:2
         Algorithm = Algorithms{al};
@@ -42,9 +46,15 @@ for sc = 1:2
             Settings.CalibrationPointIndecies = CalPoints;
 
             ScanParams = Settings.ScanParams;
-            ScanParams.xstar = Settings.XStar(1);
-            ScanParams.ystar = Settings.YStar(2);
-            ScanParams.zstar = Settings.ZStar(3);
+            if 0
+                ScanParams.xstar = Settings.ScanParams.xstar;
+                ScanParams.ystar = Settings.ScanParams.ystar;
+                ScanParams.zstar = Settings.ScanParams.zstar;
+            else
+                ScanParams.xstar = PCs(sc,1);
+                ScanParams.ystar = PCs(sc,2);
+                ScanParams.zstar = PCs(sc,3);
+            end
             Settings.CalibrationPointsPC = zeros(length(CalPoints),3);
             psize = Settings.PhosphorSize;
 
