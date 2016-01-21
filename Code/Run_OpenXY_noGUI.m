@@ -16,9 +16,10 @@ PCs = [0.524882875, 0.888725907,0.613331067;
         0.526360583, 0.922586955, 0.614599788];
 scans = {'i02','S01'};
 Cals = {'003',7:9; '333',1:9};
+Settings = rmfield(Settings,'ScanData');
 load LineScanData
 
-for sc = 1:2
+for sc = 2:2
     scan = scans{sc};
     Settings.ScanFilePath = ScanData.(scan).ScanFilePath;
     Settings.FirstImagePath = ScanData.(scan).FirstImagePath;
