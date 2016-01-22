@@ -302,7 +302,15 @@ classdef LineScanClass < handle
                 SSE = [];
             end
         end
-        
+
+        function TetDiff = TetDiff(obj)
+            if ~isempty(obj.Sections)
+                SiTet = mean((obj.Sections{obj.Sections.ExpTet == 0,'TetMean'}));
+                SiGeTet = mean((obj.Sections{obj.Sections.ExpTet ~= 0,'TetMean'}));
+                TetDiff = SiGeTet - SiTet;
+            end
+        end
+
     end
     methods(Static)
         function Param2 = XXParams(Param,XXtable)
