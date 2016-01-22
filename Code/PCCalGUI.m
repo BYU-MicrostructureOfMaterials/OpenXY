@@ -229,7 +229,7 @@ function cancelbutton_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 handles.Settings = handles.PrevSettings;
 guidata(hObject,handles);
-AdvancedSettingsGUI_CloseRequestFcn(handles.PCCalGUI, eventdata, handles);
+PCCalGUI_CloseRequestFcn(handles.PCCalGUI, eventdata, handles);
 
 % --- Executes when user attempts to close PCCalGUI.
 function PCCalGUI_CloseRequestFcn(hObject, eventdata, handles)
@@ -386,7 +386,7 @@ if handles.VanPont
     handles.calibrated = 1;
     
     planefitpanel_SelectionChangeFcn(handles.planefitpanel, eventdata, handles);
-    
+    keyboard %PUT HERE BY Derrik Adams on 12/3/15
     handles = guidata(hObject);
     if get(handles.autorunbox,'Value')
         savenclose_Callback(handles.savenclose,eventdata,handles);
