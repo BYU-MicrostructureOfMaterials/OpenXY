@@ -65,6 +65,9 @@ if strcmp(Settings.HROIMMethod,'Dynamic Simulated')
 end
 
 button = 1;
+
+figure(100);
+figure(101);
 while(button==1)
     
     figure(99);
@@ -92,9 +95,14 @@ while(button==1)
     set(figure(100),'Position',[pos(1)-pos(3)/2-10 pos(2)-pos(4) - 100 pos(3) pos(4)])
     set(figure(101),'Position',[pos(1)+pos(3)/2+10 pos(2)-pos(4) - 100 pos(3) pos(4)])
 
+    set(figure(100),'Position',[pos(1)-pos(3)/2-10 pos(2)-pos(4) - 100 pos(3) pos(4)])
+    set(figure(101),'Position',[pos(1)+pos(3)/2+10 pos(2)-pos(4) - 100 pos(3) pos(4)])
+    
+    profile on
     tic
     [F g U SSE] = GetDefGradientTensor(ind,Settings,Settings.Phase{ind});
     toc
+    profile viewer
     
     disp('F'); disp(F{end})
     disp('g'); disp(g{end})

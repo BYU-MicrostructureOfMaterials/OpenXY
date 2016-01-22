@@ -18,6 +18,78 @@ Settings.largefftmeth = fftw('wisdom');
 %Settings.PixelSize = size(FirstPic,1);
 Settings.ROISize = round((Settings.ROISizePercent * .01)*Settings.PixelSize);
 
+%% Add Sub-folder(s)
+addpath('DDS');
+
+%Check if EMsoft is set up correctly
+if strcmp(Settings.HROIMMethod,'Dynamic Simulated')
+    if exist('SystemSettings.mat','file')
+        load SystemSettings
+        EMdataPath = fullfile(fileparts(EMsoftPath),'EMdata');
+        if ~exist(EMdataPath,'dir')
+            error('EMsoft path is incorrect. Re-select in Advanced Settings');
+        end
+    else
+        error('EMsoft path is unknown. Re-select in Advanced Settings');
+    end
+    
+    %Set up EMsoft Environment Variables
+    PATH = getenv('PATH');
+    PATHcell = textscan(PATH,'%s','Delimiter',':');
+    if all(cellfun(@isempty,strfind(PATHcell{1},EMsoftPath)))
+        PATH = [PATH ':' EMsoftPath filesep 'bin'];
+        setenv('PATH',PATH);
+        setenv('DYLD_LIBRARY_PATH',PATH);
+        setenv('EMsoftpathname',[EMsoftPath filesep])
+        setenv('EMdatapathname',[EMdataPath filesep])
+    end
+    
+    %Single Pattern Option
+    Settings.SinglePattern = 0;
+    if Settings.SinglePattern
+        Settings.RefImageInd = 4;
+        
+        %Read Image
+        ImagePath = Settings.ImageNamesList{Settings.RefImageInd};
+        if strcmp(Settings.ImageFilterType,'standard')
+            ScanImage = ReadEBSDImage(ImagePath,Settings.ImageFilter);
+        else
+            ScanImage = localthresh(ImagePath);
+        end
+        gr = euler2gmat(Settings.Angles(Settings.RefImageInd,1) ...
+            ,Settings.Angles(Settings.RefImageInd,2),Settings.Angles(Settings.RefImageInd,3));
+        if isempty(ScanImage)
+            error('Reference Image not found')
+        end
+        
+        %Extract Variables
+        curMaterial = Settings.Phase{Settings.RefImageInd};
+        xstar = Settings.XStar(Settings.RefImageInd);
+        ystar = Settings.YStar(Settings.RefImageInd);
+        zstar = Settings.ZStar(Settings.RefImageInd);
+        pixsize = Settings.PixelSize;
+        mperpix = Settings.mperpix;
+        elevang = Settings.CameraElevation;
+        Av = Settings.AccelVoltage*1000; %put it in eV from KeV
+        
+        RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av);
+        clear global rs cs Gs
+        [F1,~,~] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial);
+        for iq=1:3
+            [rr,~]=poldec(F1); % extract the rotation part of the deformation, rr
+            gr=rr'*gr; % correct the rotation component of the deformation so that it doesn't affect strain calc
+            RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av);
+            
+            clear global rs cs Gs
+            [F1,~,~] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial);
+        end
+        Settings.RefImage = RefImage;
+    end
+end
+
+%Sets default color scheme for all figures and axes
+set(0,'DefaultFigureColormap',jet);
+
 %Common to all scan types
 data.cols = Settings.Nx;
 data.rows = Settings.Ny;
@@ -118,10 +190,11 @@ if Settings.DoUsePCFile
     
 elseif ~isfield(Settings,'XStar')
     if Settings.DisplayGUI; disp('No PC calibration at all'); end;
-    %Default Naive Plane Fit
+    %Default Naive Plane Fit *****need to include Settings.SampleAzimuthal
+    %and Settings.CameraAzimuthal ******
     Settings.XStar(1:Settings.ScanLength) = Settings.ScanParams.xstar-Settings.XData/Settings.PhosphorSize;
-    Settings.YStar(1:Settings.ScanLength) = Settings.ScanParams.ystar+Settings.YData/Settings.PhosphorSize*sin(Settings.SampleTilt);
-    Settings.ZStar(1:Settings.ScanLength) = Settings.ScanParams.zstar+Settings.YData/Settings.PhosphorSize*cos(Settings.SampleTilt);
+    Settings.YStar(1:Settings.ScanLength) = Settings.ScanParams.ystar+Settings.YData/Settings.PhosphorSize*sin(Settings.SampleTilt-Settings.CameraElevation);
+    Settings.ZStar(1:Settings.ScanLength) = Settings.ScanParams.zstar+Settings.YData/Settings.PhosphorSize*cos(Settings.SampleTilt-Settings.CameraElevation);
 end
 
      
@@ -179,7 +252,7 @@ if Settings.DoParallel > 1
         %Returns F as either a cell array of deformation gradient tensors
         %or a structure F.a F.b F.c of deformation gradient tensors for
         %each point in the L grid
-        
+
         [F(ImageInd,:), g(ImageInd,:), U(ImageInd,:), SSE(ImageInd,:), XX(ImageInd,:)] = ...
             GetDefGradientTensor(ImageInd,Settings,Settings.Phase{ImageInd});
         
@@ -202,7 +275,7 @@ else
     for ImageInd = 1:Settings.ScanLength
         %         tic
 %         disp(ImageInd)
-        
+
         %[F1, g1, U1, SSE1, XX1] = ...
             %GetDefGradientTensor(ImageInd,Settings,Settings.Phase{ImageInd});
         [F(ImageInd,:), g(ImageInd,:), U(ImageInd,:), SSE(ImageInd,:), XX(ImageInd,:)] = ...

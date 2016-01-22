@@ -44,8 +44,8 @@ end
 if ~exist(ImagePath,'file')
     
     Image = [];
-    ImagePath
-    warndlg('Error reading EBSD Image', 'Warning in ReadEBSDImage.m','replace');
+    disp(['Error reading : ' ImagePath])
+    %warndlg('Error reading EBSD Image', 'Warning in ReadEBSDImage.m','replace');
     return;
 end
 

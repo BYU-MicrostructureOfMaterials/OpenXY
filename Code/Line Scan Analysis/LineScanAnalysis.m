@@ -57,6 +57,9 @@ classdef LineScanAnalysis < handle
             if isKey(obj.Scans,Name) && ~isempty(obj.Scans(Name).Folder)
                 ReadScan(obj.Scans(Name));
                 obj.I(obj.NumScans,:) = {Name,obj.NumScans};
+            else
+                remove(obj.Scans,Name);
+                disp([Name ' not added']);
             end
         end
         function removeScan(obj,Key)
@@ -111,6 +114,7 @@ classdef LineScanAnalysis < handle
                 StrainStdDev = zeros(NumCompare,2);
                 TetStdDev = zeros(NumCompare,2);
                 SSE = zeros(NumCompare,2);
+                TetDiff = zeros(NumCompare,1);
                 
                 %Analyze and plot each section
                 for i = 1:NumCompare
@@ -137,6 +141,7 @@ classdef LineScanAnalysis < handle
                     end
                     TetStdDev(i,:) = obj.Scans(scan{i}).TetStdDev;
                     SSE(i,:) = obj.Scans(scan{i}).SSE;
+                    TetDiff(i) = obj.Scans(scan{i}).TetDiff - obj.ExpTet;
                 end
                 if plots
                     Len = obj.Scans(obj.Baseline).Length;
@@ -157,10 +162,19 @@ classdef LineScanAnalysis < handle
                 end
                 
                 %Plot XX Params
+                j = 1;
+                XXlegend = cell(size(scan));
                 for i = 1:NumCompare
                     if plots
-                        %plotXX(obj.Scans(scan{i}),'color',colors(i,:));
+                        h = plotXX(obj.Scans(scan{i}),'color',colors(i,:));
+                        if ~isempty(h)
+                            XXlegend{j} = scan{i};
+                            j = j + 1;
+                        end
                     end
+                end
+                if plots
+                    legend(XXlegend(1:j-1));
                 end
                 
                 scan{1} = [scan{1} ' (Baseline)'];
@@ -168,6 +182,7 @@ classdef LineScanAnalysis < handle
                 Comparison.StrainStdDev = StrainStdDev;
                 Comparison.TetStdDev = TetStdDev;
                 Comparison.SSE = SSE;
+                Comparison.TetDiff = TetDiff;
                 %Comparison.StdDev_Percent = (StrainStdDev(1)-StrainStdDev)/StrainStdDev(1);
                 %Comparison.SSE_Percent = (SSE(1)-SSE)/SSE(1);
                 Comparison = struct2table(Comparison);

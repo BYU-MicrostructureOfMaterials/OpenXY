@@ -89,6 +89,7 @@ fclose(fid);
 
 %run EMsoft
 cd(EMdataPath);
+setenv('DYLD_LIBRARY_PATH',['/opt/local/lib/libgcc/']);
 [status,cmdout] = system(['"' fullfile(EMsoftPath,'bin','EMEBSD') '" ' inputfile]);
 cd(OpenXYPath);
 %!EMEBSD EMEBSDexample.nml

@@ -4,7 +4,12 @@ function WriteHROIMCtfFile(CtfFilePath,OutputFilePath,phi1List,PhiList,phi2List,
 %Replaces Euler angle and IQ data in the .ctf file with new HROIM Euler  
 %angles and IQ with the SSE (HROIM per-point quality measure)
 
-%Write corrected version of the .ang file
+%Convert angles to .ctf
+phi1List = phi1List*180/pi-90;
+PhiList = PhiList*180/pi;
+phi2List = phi2List*180/pi;
+
+%Write corrected version of the .ctf file
 fin=fopen(CtfFilePath,'r');
 fout=fopen(OutputFilePath,'wt+');
 curline=fgetl(fin);

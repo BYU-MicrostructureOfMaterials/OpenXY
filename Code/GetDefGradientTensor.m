@@ -13,6 +13,8 @@ DoLGrid = strcmp(Settings.ScanType,'L');
 % fftw('wisdom',Settings.largefftmeth);
 % disp(curMaterial)
 
+XX = zeros(Settings.NumROIs,3);
+
 if DoLGrid
     
     %the LImageNamesList field is a cell of length three containing the
@@ -36,11 +38,9 @@ if DoLGrid
         F.a =  -eye(3); F.b = -eye(3); F.c = -eye(3); SSE.a = 101; SSE.b = 101;
         SSE.b = 101; U = -eye(3);
         g = euler2gmat(Angles(ImageInd,1),Angles(ImageInd,2),Angles(ImageInd,3));
-        XX = {};
         
         return;
     end
-    
 else
     
     ImagePath = Settings.ImageNamesList{ImageInd};
@@ -52,7 +52,7 @@ else
     g = euler2gmat(Settings.Angles(ImageInd,1) ...
         ,Settings.Angles(ImageInd,2),Settings.Angles(ImageInd,3));
     if isempty(ScanImage)
-        F = -eye(3); SSE = 101; U = -eye(3); XX = {};
+        F = -eye(3); SSE = 101; U = -eye(3);
         return;
     end
     
@@ -136,43 +136,55 @@ switch Settings.HROIMMethod
     case 'Dynamic Simulated'
         mperpix = Settings.mperpix;
         
-        %         RefImage = genEBSDPatternHybrid_fromEMSoft(g,xstar,ystar,zstar,pixsize,mperpix,sampletilt,Material); % testing next line instead *****
-        RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av);
-        %          RefImage = genEBSDPatternHybridMexHat(gr,paramspat,eye(3),lattice,al,bl,cl,axs);
-        
-        %use following line only for optical distortion correction
-        %    RefImage = RefImage(crpl:crpu,crpl:crpu);
-        %         RefImage = genEBSDPattern(gr,paramspat,eye(3),lattice,al,bl,cl,axs);
-        
-        %RefImage = custimfilt(RefImage,Settings.ImageFilter(1), ...
-            %Settings.PixelSize,Settings.ImageFilter(3),Settings.ImageFilter(4));
-
-        %Initialize
-        %RefImage = custimfilt(RefImage,Settings.ImageFilter(1), ...
-            %Settings.PixelSize,Settings.ImageFilter(3),Settings.ImageFilter(4));
-        clear global rs cs Gs
-        [F1,SSE1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial);
-        F_i(:,:,iter) = F1;
-        g_i(:,:,iter) = F1;
-        SSE_i(iter) = SSE1;
-        XX_i(:,:,iter) = XX;
-        iter = iter + 1;
-        
-        %%%%New stuff to remove rotation error from strain measurement DTF  7/14/14
-        for iq=1:RotationIter-1
-            [rr,uu]=poldec(F1); % extract the rotation part of the deformation, rr
-            gr=rr'*gr; % correct the rotation component of the deformation so that it doesn't affect strain calc
-            RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av);
+        if Settings.SinglePattern
+            RefImage = Settings.RefImage;
+            clear global rs cs Gs
+            [F1,SSE1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,RefInd);
             
+            RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av);
+
+            clear global rs cs Gs
+            [F1,SSE1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial);
+        else
+            %         RefImage = genEBSDPatternHybrid_fromEMSoft(g,xstar,ystar,zstar,pixsize,mperpix,sampletilt,Material); % testing next line instead *****
+            RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av);
+            %          RefImage = genEBSDPatternHybridMexHat(gr,paramspat,eye(3),lattice,al,bl,cl,axs);
+
+            %use following line only for optical distortion correction
+            %    RefImage = RefImage(crpl:crpu,crpl:crpu);
+            %         RefImage = genEBSDPattern(gr,paramspat,eye(3),lattice,al,bl,cl,axs);
+
+            %RefImage = custimfilt(RefImage,Settings.ImageFilter(1), ...
+                %Settings.PixelSize,Settings.ImageFilter(3),Settings.ImageFilter(4));
+
+            %Initialize
+            %RefImage = custimfilt(RefImage,Settings.ImageFilter(1), ...
+                %Settings.PixelSize,Settings.ImageFilter(3),Settings.ImageFilter(4));
             clear global rs cs Gs
             [F1,SSE1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial);
             F_i(:,:,iter) = F1;
-            g_i(:,:,iter) = gr;
+            g_i(:,:,iter) = F1;
             SSE_i(iter) = SSE1;
             XX_i(:,:,iter) = XX;
             iter = iter + 1;
+
+            %%%%New stuff to remove rotation error from strain measurement DTF  7/14/14
+            for iq=1:RotationIter-1
+                [rr,uu]=poldec(F1); % extract the rotation part of the deformation, rr
+                gr=rr'*gr; % correct the rotation component of the deformation so that it doesn't affect strain calc
+
+                RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av);
+
+                clear global rs cs Gs
+                [F1,SSE1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial);
+
+                F_i(:,:,iter) = F1;
+                g_i(:,:,iter) = gr;
+                SSE_i(iter) = SSE1;
+                XX_i(:,:,iter) = XX;
+                iter = iter + 1;
+            end
         end
-        %%%%%
         
     case 'Simulated'
         
@@ -223,11 +235,9 @@ switch Settings.HROIMMethod
                 if ii == 1
                     display(['Didn''t make it in to the iteration loop for:' Settings.ImageNamesList{ImageInd}])
                 end
-%                 g = euler2gmat(Settings.Angles(ImageInd,1),Settings.Angles(ImageInd,2),Settings.Angles(ImageInd,3)); 
-%                 F = -eye(3); SSE = 101; U = -eye(3);
-%                 XX.XX = zeros(1,length(roixc)); XX.CS = zeros(1,length(roixc)); XX.MI = zeros(1,length(roixc)); XX.MI_total = 0;
-%                 return;
-                break;
+                g = euler2gmat(Settings.Angles(ImageInd,1),Settings.Angles(ImageInd,2),Settings.Angles(ImageInd,3)); 
+                F = -eye(3); SSE = 101; U = -eye(3);
+                return;
             end
             [r1,u1]=poldec(F1);
             U1=u1;
