@@ -31,7 +31,8 @@ else
 end
 Comparison = a.CompareScans;
 figure;
-a.Scans('Scan').plotXX;
+
+%a.Scans('Scan').plotXX;
 Results = Comparison(:,{'StrainStdDev','TetStdDev','SSE'});
 Results = [varfun(@(x) x(1),Results);varfun(@(x) x(2),Results)];
 Results.Properties.RowNames = {'Si','SiGe'};
