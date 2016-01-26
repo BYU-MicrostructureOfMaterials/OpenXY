@@ -135,12 +135,13 @@ classdef LineScanClass < handle
                     error(i-1) = abs(obj.IterData.SSE(i,2)-obj.IterData.SSE(i-1,2))/obj.IterData.SSE(i,2);
                 end
                 subplot(1,2,2);
+                %subplot(1,1,1);
                 plot(error)
                 title('SSE Approximate Error')
                 xlabel('Iterations')
                 
                 XXtable = obj.Settings.Iterations.XX;
-                XXtable = permute(reshape(cell2mat(cellfun(@(x) mean(x,1),XXtable,'UniformOutput',false)),obj.Settings.ScanLength,3,9),[1 3 2]);
+                XXtable = permute(reshape(cell2mat(cellfun(@(x) mean(x,1),XXtable,'UniformOutput',false)),obj.Settings.ScanLength,3,[]),[1 3 2]);
                 f = figure;
                 pos = f.Position;
                 f.Position = [pos(1) pos(2)-pos(4) pos(3)*2 pos(4)*2]; 
@@ -169,7 +170,7 @@ classdef LineScanClass < handle
                     else
                         imwrite(imind,cm,'iterations_s01.gif','gif','WriteMode','append');
                     end
-                    pause(0.5)
+                    %pause(0.5)
                 end
                 save('s01_Iter.mat','XXtable');
             end
