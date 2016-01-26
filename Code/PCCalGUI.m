@@ -22,7 +22,7 @@ function varargout = PCCalGUI(varargin)
 
 % Edit the above text to modify the response to help PCCalGUI
 
-% Last Modified by GUIDE v2.5 05-Nov-2015 13:20:18
+% Last Modified by GUIDE v2.5 20-Jan-2016 11:11:03
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -408,6 +408,8 @@ function selectpointsbutton_Callback(hObject, eventdata, handles)
 
 %Right-click last point or use RETURN key to exit.
 
+buttonstring = get(handles.selectpointsbutton,'String');
+
 Settings = handles.Settings;
 Nx = Settings.Nx;
 Ny = Settings.Ny;
@@ -431,6 +433,7 @@ elseif Settings.Ny == 1
     MinPoints = 1;
 end
 
+if strcmp(buttonstring,'Select Points')
 %Create Correct Indice Matrix
 switch Settings.ScanType
     case 'Square'
@@ -542,6 +545,9 @@ switch Settings.ScanType
         height(1:length(CalibrationPointIndecies)) = max(IQ);
         scatter3(XData(CalibrationPointIndecies),YData(CalibrationPointIndecies),height);
                 
+end
+elseif strcmp(buttonstring,'Enter Points')
+    CalibrationPointIndecies = input('Enter indices as an array: ');
 end
 Settings.CalibrationPointIndecies = CalibrationPointIndecies;
 handles.Settings = Settings;
@@ -1192,4 +1198,32 @@ function edit6_CreateFcn(hObject, eventdata, handles)
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on key press with focus on PCCalGUI and none of its controls.
+function PCCalGUI_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to PCCalGUI (see GCBO)
+% eventdata  structure with the following fields (see MATLAB.UI.FIGURE)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+switch eventdata.Key
+    case 'shift'
+        set(handles.selectpointsbutton,'String','Enter Points'); 
+end
+
+
+% --- Executes on key release with focus on PCCalGUI and none of its controls.
+function PCCalGUI_KeyReleaseFcn(hObject, eventdata, handles)
+% hObject    handle to PCCalGUI (see GCBO)
+% eventdata  structure with the following fields (see MATLAB.UI.FIGURE)
+%	Key: name of the key that was released, in lower case
+%	Character: character interpretation of the key(s) that was released
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) released
+% handles    structure with handles and user data (see GUIDATA)
+switch eventdata.Key
+    case 'shift'
+        set(handles.selectpointsbutton,'String','Select Points');  
 end
