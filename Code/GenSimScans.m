@@ -46,34 +46,34 @@ pixsize = Settings.PixelSize;
 mperpix = Settings.mperpix;
 
 %Set Folder
-folder = '\\CB165-NAS\Shared\MarkVaudin-Line Scans\S01 Simulated Tet';
+folder = '/Volumes/Shared/MarkVaudin-Line Scans/S01 Simulated Tet';
 
-for ScanNum = 1:length(tet)
+%Convert Angles to .ang format
+Angles = Angles*pi/180;
+
+for ScanNum = 1:1%length(tet)
     %Create Folder Structure
     ScanName = [scan '_Sim_' num2str(ScanNum)];
-    ImageFolder = fullfile(folder,[ScanName ' Images']);
+    ImageFolder = fullfile(folder,[ScanName '_Images']);
     if ~isdir(ImageFolder)
         mkdir(ImageFolder);
     end
     
     %Silicon Images
-    Material = ['Si_' num2str(ScanNum)];
-    g = euler2gmat(orientation_si(1),orientation_si(2),orientation_si(3));
+    Material = Settings.Phase{1};
+    g = euler2gmat(Angles(Si(1),1),Angles(Si(1),2),Angles(Si(1),3));
     RefImage = genEBSDPatternHybrid_fromEMSoft(g,xstar,ystar,zstar,pixsize,mperpix,elevang,Material,Av);
     for i = 1:length(Si)
-        imwrite(RefImage,fullfile(ImageFolder,[ScanName '_' sprintf('%03d',Si(i))]));
+        %imwrite(RefImage,gray(256),fullfile(ImageFolder,[ScanName '_' sprintf('%03d',Si(i)) '.jpg']),'jpg');
     end
     
     %Silicon Germanium Images
-    Material = Settings.Phase{1};
-    g = euler2gmat(orientation_sige(1),orientation_sige(2),orientation_sige(3));
+    Material = ['Si_' num2str(ScanNum)];
+    g = euler2gmat(Angles(SiGe(1),1),Angles(SiGe(1),2),Angles(SiGe(1),3));
     RefImage = genEBSDPatternHybrid_fromEMSoft(g,xstar,ystar,zstar,pixsize,mperpix,elevang,Material,Av);
     for i = 1:length(SiGe)
-        imwrite(RefImage,fullfile(ImageFolder,[ScanName '_' sprintf('%03d',Si(i))]));
+        imwrite(RefImage,gray(256),fullfile(ImageFolder,[ScanName '_' sprintf('%03d',SiGe(i)) '.jpg']),'jpg');
     end
-    
-    %Convert Angles to .ang format
-    Angles = Angles*pi/180;
     
     %Write .ctf File
     OutputFile = fullfile(folder,[ScanName '.ctf']);
