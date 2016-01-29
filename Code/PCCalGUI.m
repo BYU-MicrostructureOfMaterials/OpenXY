@@ -286,8 +286,8 @@ if handles.VanPont
     
     Algorithm = handles.Algorithm;
     ScanParams.xstar = Settings.XStar(1);
-    ScanParams.ystar = Settings.YStar(2);
-    ScanParams.zstar = Settings.ZStar(3);
+    ScanParams.ystar = Settings.YStar(1);
+    ScanParams.zstar = Settings.ZStar(1);
     
     %Perform Calibration
     if Settings.DoParallel > 1
