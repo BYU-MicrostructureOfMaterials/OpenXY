@@ -21,6 +21,7 @@ set(gca,'fontsize',16)
 xlabel('Scan position (\mum)')
 ylabel('Strain (%)')
 ylim([-1.5 1])
+xlim([0 Settings.ScanLength])
 %axis([0 NN -1.5 1]);
 legend('\epsilon_1_1','\epsilon_2_2','\epsilon_3_3')
 
@@ -36,10 +37,14 @@ set(gca,'fontsize',16)
 xlabel('Scan position (\mum)')
 ylabel('Tetragonality (%)')
 ylim([-.5 2])
+xlim([0 Settings.ScanLength])
 if isfield(Settings,'ScanData')
     hold on
     ExpTet = ones(1,Settings.ScanLength)*Settings.ScanData.ExpTet;
+    TetTol = Settings.ScanData.ExpTetTol;
     plot(ExpTet,'--','Color',[1 1 1]*0.5);
+    plot(ExpTet+TetTol,':','Color',[1 1 1]*0.5);
+    plot(ExpTet-TetTol,':','Color',[1 1 1]*0.5);
 end
     
 %axis([0 NN -0.5 2]);
