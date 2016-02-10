@@ -98,8 +98,7 @@ switch Algorithm
                 end
             end
 
-            [PCprime,value,flag,iter] = fminsearch(@(PC)CalcCross(PC,ScanImage,paramspat,Material.lattice,Material.a1,Material.b1,Material.c1,Material.axs,g,F,Settings.ImageFilter,Ind,Settings),PC0);
+            [PCprime,value,flag,iter] = fminsearch(@(PC)CalcCross(PC,ScanImage,paramspat,Material.lattice,Material.a1,Material.b1,Material.c1,Material.axs,g,F,Settings.ImageFilter,Ind,Settings),PC0);         
         end
 end
-%  keyboard
 
