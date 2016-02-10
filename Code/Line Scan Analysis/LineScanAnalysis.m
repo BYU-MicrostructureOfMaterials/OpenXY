@@ -94,10 +94,11 @@ classdef LineScanAnalysis < handle
                     scan{i} = obj.I{[obj.I{:,2}]'==i,1};
                 end
                 if OpenSelection
-                    sortscan = sort(scan(2:end));
+                    sortscan = sort(scan(1:end));
                     [Selection,ok] = listdlg('ListString',sortscan,'PromptString','Select scans to compare','Name','Compare Scans');
                     if ok
-                        scan = [scan(1);sortscan(Selection)];
+                        %scan = [scan(1);sortscan(Selection)];
+                        scan = sortscan(Selection);
                         NumCompare = length(scan);
                     end
                 end
@@ -152,9 +153,10 @@ classdef LineScanAnalysis < handle
                     plot(X,Y-obj.ExpTetTol,'r--');
                     plot(X,Y0+obj.ExpTetTol,'r--');
                     plot(X,Y0-obj.ExpTetTol,'r--');
+                    ylim([-0.5 2])
                     ylabel('Tetragonality (%)')
                     title('Tetragonality')
-                    legend(ht,[scan;'Expected Tetragonality']')
+                    legend(ht,[scan;'Expected Tetragonality']','Location','best')
                     hold off
                     
                     figure
