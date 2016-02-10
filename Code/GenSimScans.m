@@ -60,16 +60,16 @@ for ScanNum = 1:1%length(tet)
     end
     
     %Silicon Images
-    Material = Settings.Phase{1};
-    g = euler2gmat(Angles(Si(1),1),Angles(Si(1),2),Angles(Si(1),3));
+    Material = 'SiTet_0_0';
+    g = euler2gmat(Angles(Si(1),1),Angles(Si(1),2),Angles(Si(1),3)-45*pi/180);
     RefImage = genEBSDPatternHybrid_fromEMSoft(g,xstar,ystar,zstar,pixsize,mperpix,elevang,Material,Av);
     for i = 1:length(Si)
-        %imwrite(RefImage,gray(256),fullfile(ImageFolder,[ScanName '_' sprintf('%03d',Si(i)) '.jpg']),'jpg');
+        imwrite(RefImage,gray(256),fullfile(ImageFolder,[ScanName '_' sprintf('%03d',Si(i)) '.jpg']),'jpg');
     end
     
     %Silicon Germanium Images
-    Material = ['Si_' num2str(ScanNum)];
-    g = euler2gmat(Angles(SiGe(1),1),Angles(SiGe(1),2),Angles(SiGe(1),3));
+    Material = ['SiTet_19_' num2str(ScanNum)];
+    g = euler2gmat(Angles(SiGe(1),1),Angles(SiGe(1),2),Angles(SiGe(1),3)-45*pi/180);
     RefImage = genEBSDPatternHybrid_fromEMSoft(g,xstar,ystar,zstar,pixsize,mperpix,elevang,Material,Av);
     for i = 1:length(SiGe)
         imwrite(RefImage,gray(256),fullfile(ImageFolder,[ScanName '_' sprintf('%03d',SiGe(i)) '.jpg']),'jpg');
