@@ -46,14 +46,18 @@ pixsize = Settings.PixelSize;
 mperpix = Settings.mperpix;
 
 %Set Folder
-folder = '/Volumes/Shared/MarkVaudin-Line Scans/S01 Simulated Tet';
+if ispc
+    folder = '\\CB165-NAS\Shared\MarkVaudin-Line Scans\Simulated Silicon';
+else
+    folder = '/Volumes/Shared/MarkVaudin-Line Scans/S01 Simulated Tet';
+end
 
 %Convert Angles to .ang format
 Angles = Angles*pi/180;
 
 for ScanNum = 1:1%length(tet)
     %Create Folder Structure
-    ScanName = [scan '_Sim_' num2str(ScanNum)];
+    ScanName = [scan '_SiTet_19_' num2str(ScanNum)];
     ImageFolder = fullfile(folder,[ScanName '_Images']);
     if ~isdir(ImageFolder)
         mkdir(ImageFolder);
@@ -75,10 +79,24 @@ for ScanNum = 1:1%length(tet)
         imwrite(RefImage,gray(256),fullfile(ImageFolder,[ScanName '_' sprintf('%03d',SiGe(i)) '.jpg']),'jpg');
     end
     
-    %Write .ctf File
-    OutputFile = fullfile(folder,[ScanName '.ctf']);
-    WriteHROIMCtfFile(Settings.ScanFilePath, OutputFile,...
-        Angles(:,1),Angles(:,2),Angles(:,3)...
-        ,Settings.SSE);
+    
 end
+%Add Angle Error
+angle_error = 0.5; %degrees
+angle_error = angle_error*pi/180; %convert to radians
+rand_sign = ones(size(Angles));
+rand_sign(rand(size(Angles))>0.5) = -1;
+Angles_er = Angles + rand(size(Angles))*angle_error.*rand_sign;
+
+%Write .ctf File
+OutputFile = fullfile(folder,['S01 Sim' '.ctf']);
+WriteHROIMCtfFile(Settings.ScanFilePath, OutputFile,...
+    Angles(:,1),Angles(:,2),Angles(:,3)...
+    ,Settings.SSE);
+
+%Write .ctf File With Angle Errors
+OutputFile = fullfile(folder,['S01 Sim Mod' '.ctf']);
+WriteHROIMCtfFile(Settings.ScanFilePath, OutputFile,...
+    Angles_er(:,1),Angles_er(:,2),Angles_er(:,3)...
+    ,Settings.SSE);
 
