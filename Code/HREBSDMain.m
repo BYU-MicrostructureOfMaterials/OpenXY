@@ -324,9 +324,10 @@ if Settings.CalcDerivatives
         temp = load([Settings.AnalysisParamsPath '.mat']);
         alpha_data = temp.alpha_data;
         clear temp
-        rhos = SplitDD(Settings, alpha_data, Settings.DDSMethod);
-        if ~isempty(rhos)
+        [rhos, DDSettings] = SplitDD(Settings, alpha_data, Settings.DDSMethod);
+        if ~isempty(rhos) || ~isempty(DDSettings)
             save(Settings.AnalysisParamsPath,'rhos','-append');
+            save(Settings.AnalysisParamsPath,'DDSettings','-append')
         end
     end
 end

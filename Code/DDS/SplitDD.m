@@ -1,4 +1,4 @@
-function rhos = SplitDD( Settings, alpha_data, alphaorbeta)
+function [rhos,DDSettings] = SplitDD( Settings, alpha_data, alphaorbeta)
 % Written by Tim Ruggles
 % Implemented by Brian Jackson March 2015
 allMaterials = unique(Settings.Phase);
@@ -32,6 +32,7 @@ if (matchoose==1)||(matchoose==3)||(matchoose==6)
 else
     lattype = 'cubic';
 end
+DDSettings.matchoice = matchoice;
 
 % [alphaorbeta,vv] = listdlg('PromptString','Select the target','SelectionMode','single','ListString',{'Alpha(i,3)','Betas','Pantleon 5'});
 % % if 1, use only 3rd column of alpha to resolve; otherwise use all measurable betas
@@ -39,19 +40,25 @@ end
 
 force = 0;
 stress = 0;
-[minscheme,vv] = listdlg('PromptString','Select minimization scheme','SelectionMode','single','ListString',{'Min. density','Min. energy','CRSSfactor','Schmid+CRSS', 'CRSS + l'});
+minscheme_list = {'Min. density','Min. energy','CRSSfactor','Schmid+CRSS', 'CRSS + l'};
+[minscheme,vv] = listdlg('PromptString','Select minimization scheme','SelectionMode','single','ListString',minscheme_list);
 if vv==0
     warndlg('Nothing selected: skipping split dislocation density calculation','Split Dislocation Density')
     rhos = [];
     return;
 end
+DDSettings.Minimization_Scheme = minscheme_list{minscheme};
+DDSettings.minscheme = minscheme;
 
-[x0type,vv] = listdlg('PromptString','Select optimization startpoint','SelectionMode','single','ListString',{'Least squares','Origin'});
+op_list = {'Least squares','Origin'};
+[x0type,vv] = listdlg('PromptString','Select optimization startpoint','SelectionMode','single','ListString',op_list);
 if vv==0
     warndlg('Nothing selected: skipping split dislocation density calculation','Split Dislocation Density')
     rhos = [];
     return;
 end
+DDSettings.Opt_Start = op_list{x0type};
+DDSettings.x0type = x0type;
 
 if minscheme == 4
     [loadtype,vv] = listdlg('PromptString','Select load type','SelectionMode','single','ListString',{'Axial','Plane strain','Plane stress'});

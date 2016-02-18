@@ -281,6 +281,9 @@ if handles.matfileloaded
     if isfield(handles,'rhos')
         rhos = handles.rhos;
     end
+    if isfield(handles,'DDSettings')
+        DDSettings = handles.DDSettings;
+    end
 %Exits if file no file is selected
 elseif ~exist(FilePath,'file')
    warndlg(['Warning, the file: ' FilePath ', was not found'],'Warning');
@@ -293,6 +296,10 @@ else
     if isfield(matfile,'alpha_data')
         handles.alpha_data = matfile.alpha_data;
         alpha_data = handles.alpha_data;
+    end
+    if isfield(matfile,'DDSettings')
+        handles.DDSettings = matfile.DDSettings;
+        DDSettings = matfile.DDSettings;
     end
     if isfield(matfile,'rhos')
         handles.rhos = matfile.rhos;
@@ -390,7 +397,11 @@ Matches = [];
 Matches = intersect('Split Dislocation Density',Calculations);
 if ~isempty(Matches)
     if exist('alpha_data','var') && exist('rhos','var')
-        plotrhosplusminus(Settings,alpha_data,rhos)
+        if exist('DDSettings','var')
+            plotrhosplusminus(Settings,alpha_data,rhos,DDSettings)
+        else
+            plotrhosplusminus(Settings,alpha_data,rhos)
+        end
     else
         warndlg(['Warning, the file: ' FilePath ', does not contain alpha_data and rhos files'],'Warning');
     end
@@ -617,6 +628,9 @@ elseif ~strcmp(FilePath, 'Analysis Params')
     if isfield(matfile,'alpha_data')
         handles.alpha_data = matfile.alpha_data;
         alpha_data = handles.alpha_data;
+        if isfield(matfile,'DDSettings')
+            handles.DDSettings = matfile.DDSettings;
+        end
     end
     if isfield(matfile,'Settings')
         handles.Settings = matfile.Settings;
