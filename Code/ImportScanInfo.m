@@ -1,7 +1,7 @@
 function Settings = ImportScanInfo(Settings,name,path)
 
 %Read Scan File
-if ~isfield(Settings,'Angles')
+if ~isfield(Settings,'Angles') || ~strcmp(Settings.ScanFilePath,fullfile(path,name))
 
     [ScanFileData,Settings.ScanParams] = ReadScanFile(fullfile(path,name));
 
