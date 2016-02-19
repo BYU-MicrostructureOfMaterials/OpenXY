@@ -706,6 +706,7 @@ end
 
 %% for visualizing process
 if Settings.DoShowPlot
+    DoPlotROIs = 0;
     try
         set(0,'currentfigure',100);
     catch
@@ -717,6 +718,10 @@ if Settings.DoShowPlot
     axis image
     colormap gray
     hold on
+    if DoPlotROIs
+        set(0,'currentfigure',100);
+        PlotROIs(Settings,RefImage);
+    end
     for i=1:length(Cshift)
         if ~isempty(find(tempind==i))
             %Should probably make this factor "*10" a variable...
@@ -753,6 +758,10 @@ if Settings.DoShowPlot
     axis image
     colormap gray
     hold on
+    if DoPlotROIs
+        set(0,'currentfigure',101);
+        PlotROIs(Settings,RefImage);
+    end
     for i=1:length(Cshift)
         if ~isempty(find(tempind==i))
             %Should probably make this factor "*10" a variable...
@@ -771,4 +780,3 @@ if Settings.DoShowPlot
     return
     
 end
-
