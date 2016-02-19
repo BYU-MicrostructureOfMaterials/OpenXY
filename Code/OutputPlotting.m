@@ -315,6 +315,10 @@ UpdateFileLocations=0;
 if ~strcmp(Settings.OutputPath,FilePath) && ~exist(Settings.ScanFilePath,'file') && ~exist(Settings.FirstImagePath,'file')
     UpdateFileLocations=1;
 end
+if ~strcmp(Settings.AnalysisParamsPath,FilePath)
+    [path,name] = fileparts(FilePath);
+    Settings.AnalysisParamsPath = fullfile(path,name);
+end
 
 %Update current location of the Settings .mat file
 Settings.OutputPath = FilePath;

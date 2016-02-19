@@ -41,7 +41,7 @@ Comparison = a.CompareScans;
 
 %Iterations
 if ~isempty(a.Scans('Scan').IterData)
-    figure;
+figure;
     plotIterData(a.Scans('Scan'));
 end
 

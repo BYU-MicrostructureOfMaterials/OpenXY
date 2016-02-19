@@ -15,7 +15,11 @@ if exist('SystemSettings.mat','file')
 end
 
 %added masterfile and energyfile to the code folder.  Is that right?
-masterfile=(sprintf('%s_EBSDmaster.h5',Material));  
+if ~exist(fullfile(EMdataPath,sprintf('%s_EBSDmaster.h5',Material)),'file')
+    masterfile=(sprintf('%s_EBSDmasterout.h5',Material));
+else
+    masterfile=(sprintf('%s_EBSDmaster.h5',Material)); 
+end
 energyfile=(sprintf('%s_MCoutput.h5',Material));
 datafile='EBSDout.h5';  
 datafilepath= fullfile(EMdataPath,'EBSDout.h5');%['temp' filesep 'EBSDout.h5'];
@@ -93,14 +97,13 @@ setenv('DYLD_LIBRARY_PATH',['/opt/local/lib/libgcc/']);
 [status,cmdout] = system(['"' fullfile(EMsoftPath,'bin','EMEBSD') '" ' inputfile]);
 cd(OpenXYPath);
 %!EMEBSD EMEBSDexample.nml
-cmdout
+disp(cmdout)
 %generate pic
 h5infostruct=h5info(datafilepath);
 data1=h5read(h5infostruct.Filename,'/EMData/EBSDpatterns');
-pic=zeros(numsx,numsy);  
+pic=zeros(numsx,numsy);
 pic(:,:)=data1(:,:,1);
 pic=flipud(pic');   % flip to correct OIM reference frame (swap TD and RD)
 %imagesc(pic)
 %colormap 'gray'
 end
-

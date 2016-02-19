@@ -11,7 +11,7 @@ for i=1:NN
     tempF(:,:)=Settings.data.F{i};
     [tempR, tempU]=poldec(tempF);
     tempU=tempU-eye(3);
-    u33(i)=tempU(3,3);
+    u33(i)=tempU(3,3); 
     u22(i)=tempU(2,2);
     u11(i)=tempU(1,1);
 end
