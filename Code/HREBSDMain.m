@@ -44,6 +44,13 @@ if strcmp(Settings.HROIMMethod,'Dynamic Simulated')
         setenv('EMdatapathname',[EMdataPath filesep])
     end
     
+    %Tet Patterns
+    if 1
+        %Settings.Material = 'SiTet_19_0';
+        Settings.Phase(:) = {Settings.Material};
+        Settings.Angles(:,3) = Settings.Angles(:,3)-pi/4; %Rotate crystal by 45 degrees
+    end
+    
     %Single Pattern Option
     Settings.SinglePattern = 0;
     if Settings.SinglePattern

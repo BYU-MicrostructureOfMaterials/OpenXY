@@ -130,17 +130,31 @@ classdef LineScanClass < handle
                 title(s3,'Tet StdDev')
                 
                 %Calculate Approximate Error for SSE
-                error = zeros(length(obj.IterData.SSE),1);
+                Iter = length(obj.IterData.SSE);
+                error = zeros(Iter,1);
                 for i = 2:length(obj.IterData.SSE)
                     error(i-1) = abs(obj.IterData.SSE(i,2)-obj.IterData.SSE(i-1,2))/obj.IterData.SSE(i,2);
                 end
-                subplot(1,2,2);
-                plot(error)
-                title('SSE Approximate Error')
+                %subplot(1,2,2);
+                subplot(1,1,1);
+                [ax,l1,l2] = plotyy(1:Iter,error,1:Iter,obj.IterData.SSE,'semilogy','plot');
+                ax(1).YAxis.Color = 'red';
+                l1.Color = 'red';
+                l2(1).Color = 'blue';
+                l2(2).Color = 'green';
+                %semilogy(error)
+                hold on
+                Thresh = ones(1,length(error)+1)*0.1;
+                plot(Thresh,'--','Color',[1 1 1]*0.5);
+                legend({'e_{apprx}','10% Threshold','Si','SiGe'})
+                ylabel('SSE Approximate Error')
+                ylabel(ax(2),'SSE')
                 xlabel('Iterations')
+                xlim([1,length(error)])
+                ylim([1e-3,1e2])
                 
                 XXtable = obj.Settings.Iterations.XX;
-                XXtable = permute(reshape(cell2mat(cellfun(@(x) mean(x,1),XXtable,'UniformOutput',false)),obj.Settings.ScanLength,3,9),[1 3 2]);
+                XXtable = permute(reshape(cell2mat(cellfun(@(x) mean(x,1),XXtable,'UniformOutput',false)),obj.Settings.ScanLength,3,[]),[1 3 2]);
                 f = figure;
                 pos = f.Position;
                 f.Position = [pos(1) pos(2)-pos(4) pos(3)*2 pos(4)*2]; 
@@ -169,7 +183,7 @@ classdef LineScanClass < handle
                     else
                         imwrite(imind,cm,'iterations_s01.gif','gif','WriteMode','append');
                     end
-                    pause(0.5)
+                    %pause(0.5)
                 end
                 save('s01_Iter.mat','XXtable');
             end

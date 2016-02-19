@@ -98,11 +98,9 @@ while(button==1)
     set(figure(100),'Position',[pos(1)-pos(3)/2-10 pos(2)-pos(4) - 100 pos(3) pos(4)])
     set(figure(101),'Position',[pos(1)+pos(3)/2+10 pos(2)-pos(4) - 100 pos(3) pos(4)])
     
-    profile on
     tic
     [F g U SSE] = GetDefGradientTensor(ind,Settings,Settings.Phase{ind});
     toc
-    profile viewer
     
     disp('F'); disp(F{end})
     disp('g'); disp(g{end})
@@ -130,4 +128,3 @@ close(findall(0,'Type','Figure','number',99,'-or','number',100,'-or','number',10
 if nargin == 2
     figure(MainGUI)
 end
-
