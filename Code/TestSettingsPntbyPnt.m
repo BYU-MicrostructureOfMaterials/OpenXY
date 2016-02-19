@@ -59,7 +59,7 @@ Limits(1) = Mean - 3*StdDev;
 Limits(2) = Mean + 3*StdDev;
 
 Settings.DoShowPlot = 1;
-
+Settings.SinglePattern = 0;
 
 button = 1;
 
