@@ -12,8 +12,9 @@ for i = length(materials):-1:1
     [~,materials{i+1},~] = fileparts(materials{i});
 end
 if option == 1
-    materials = materials(2:end);
     materials{1} = 'Auto-detect';
+else
+    materials = materials(2:end);
 end
 if option == 1 || option == 2
     materials = [materials; {'ferrite';'austenite';'aluminium'}];
