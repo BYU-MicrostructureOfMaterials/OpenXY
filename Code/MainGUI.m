@@ -435,6 +435,10 @@ if handles.ScanFileLoaded
     if isempty(handles.Settings.Phase)
         handles.ScanFileLoaded = 0;
     end
+    if length(handles.Settings.Phase) > handles.Settings.ScanLength %Cropped Scan
+        handles.Settings.Phase = handles.Settings.Phase(1:handles.Settings.ScanLength);
+        handles.Settings.grainID = handles.Settings.grainID(1:handles.Settings.ScanLength);
+    end
 end
 guidata(hObject, handles);
 enableRunButton(handles);
