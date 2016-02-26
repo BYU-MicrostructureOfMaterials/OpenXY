@@ -18,3 +18,5 @@ if (Nx * Ny) ~= Settings.ScanLength && ...
     Settings.CI = Settings.CI(1:Settings.ScanLength,:);
     Settings.Fit = Settings.Fit(1:Settings.ScanLength,:);
 end
+Settings.Nx = Nx;
+Settings.Ny = Ny;
