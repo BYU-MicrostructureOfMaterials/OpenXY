@@ -386,7 +386,7 @@ if handles.VanPont
     handles.calibrated = 1;
     
     planefitpanel_SelectionChangeFcn(handles.planefitpanel, eventdata, handles);
-    keyboard %PUT HERE BY Derrik Adams on 12/3/15
+    %keyboard %PUT HERE BY Derrik Adams on 12/3/15
     handles = guidata(hObject);
     if get(handles.autorunbox,'Value')
         savenclose_Callback(handles.savenclose,eventdata,handles);
