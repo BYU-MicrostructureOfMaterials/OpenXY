@@ -560,7 +560,7 @@ function [AllFa,AllSSEa,AllFc,AllSSEc, misang] = DDCalc(DDSettings,lattice,Image
             end
         else
             AllFa= -eye(3);
-            AllSSEa(cnt)=101;
+            AllSSEa=101;
         end
 
         % then, evaluate point c
