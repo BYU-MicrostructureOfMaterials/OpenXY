@@ -224,7 +224,7 @@ tic
 if strcmp(Settings.HROIMMethod,'Dynamic Simulated')
     Settings.IterationLimit = 0;
 end
-RotationIter = 10;
+RotationIter = 6;
 ITER = Settings.IterationLimit + RotationIter;
 F = repmat({zeros(3)},Settings.ScanLength,ITER);
 g = repmat({zeros(3,1)},Settings.ScanLength,ITER);
