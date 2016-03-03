@@ -123,7 +123,6 @@ gr=g;
 %Get Reference Image depending on the chosen HROIM Method (so far these are
 %either Simulated or Real. Plan on adding Sim/Real Hybrid
 RotationIter = Settings.RotationIter;
-
 ITER = Settings.IterationLimit + RotationIter;
 iter = 1;
 F_i = zeros(3,3,ITER);
@@ -279,6 +278,10 @@ switch Settings.HROIMMethod
         clear global rs cs Gs
 %         disp(RefImagePath);
         [F1,SSE1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,RefInd);
+        F_i = F1;
+        g_i = gr;
+        SSE_i = SSE1;
+        XX_i = XX;
         
     case 'Hybrid'
         %Use simulated pattern method on one reference image then use

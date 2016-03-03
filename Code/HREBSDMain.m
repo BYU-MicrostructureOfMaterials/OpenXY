@@ -221,10 +221,13 @@ end
 %Use a parfor loop if allowed multiple processors.
 tic
 %Initialize Variables
+RotationIter = 6;
 if strcmp(Settings.HROIMMethod,'Dynamic Simulated')
     Settings.IterationLimit = 0;
+elseif strcmp(Settings.HROIMMethod,'Real')
+    Settings.IterationLimit = 1;
+    RotationIter = 0;
 end
-RotationIter = 6;
 ITER = Settings.IterationLimit + RotationIter;
 F = repmat({zeros(3)},Settings.ScanLength,ITER);
 g = repmat({zeros(3,1)},Settings.ScanLength,ITER);
