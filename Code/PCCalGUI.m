@@ -72,9 +72,23 @@ handles.zstar_file = Settings.ScanParams.zstar;
 set(handles.xstar,'String',num2str(handles.xstar_file));
 set(handles.ystar,'String',num2str(handles.ystar_file));
 set(handles.zstar,'String',num2str(handles.zstar_file));
-set(handles.manualpc,'Value',0);
 set(handles.scanfilepc,'Value',0);
-set(handles.naivebutton,'Value',1);
+set(handles.manualpc,'Value',0);
+if isfield(Settings,'PlaneFit')
+    switch Settings.PlaneFit
+        case 'Naive'
+            set(handles.naivebutton,'Value',1);
+        case 'PCPlaneFit'
+            set(handles.pcplanefit,'Value',1);
+        case 'From Tiff Images'
+            set(handles.fromtiff,'Value',1);
+        case 'No Fit'
+            set(handles.nofit,'Value',1);
+    end
+else
+    set(handles.naivebutton,'Value',1);
+end
+        
 
 
 if isfield(Settings,'XStar')
@@ -148,6 +162,7 @@ set(handles.SavePCCal,'Value',1);
 handles.SaveAllPC = 1;
 
 % Update handles structure
+handles.planefit = 'Naive';
 handles.Algorithm = 'fminsearch';
 handles.Settings = Settings;
 handles.ScanParams = Settings.ScanParams;
@@ -327,9 +342,15 @@ if handles.VanPont
     
     psize = Settings.PhosphorSize;
     
-    handles.MeanXstar = mean(Settings.CalibrationPointsPC(:,1)+(Settings.XData(Settings.CalibrationPointIndecies))/psize);
-    handles.MeanYstar = mean(Settings.CalibrationPointsPC(:,2)-(Settings.YData(Settings.CalibrationPointIndecies))/psize*sin(Settings.SampleTilt));
-    handles.MeanZstar = mean(Settings.CalibrationPointsPC(:,3)-(Settings.YData(Settings.CalibrationPointIndecies))/psize*cos(Settings.SampleTilt));
+    if strcmp(Settings.PlaneFit, 'No Fit')
+        handles.MeanXstar = mean(Settings.CalibrationPointsPC(:,1));
+        handles.MeanYstar = mean(Settings.CalibrationPointsPC(:,2));
+        handles.MeanZstar = mean(Settings.CalibrationPointsPC(:,3));
+    else
+        handles.MeanXstar = mean(Settings.CalibrationPointsPC(:,1)+(Settings.XData(Settings.CalibrationPointIndecies))/psize);
+        handles.MeanYstar = mean(Settings.CalibrationPointsPC(:,2)-(Settings.YData(Settings.CalibrationPointIndecies))/psize*sin(Settings.SampleTilt));
+        handles.MeanZstar = mean(Settings.CalibrationPointsPC(:,3)-(Settings.YData(Settings.CalibrationPointIndecies))/psize*cos(Settings.SampleTilt));
+    end
 %     disp(['xstar: ' num2str(handles.MeanXstar(1))]);
 %     disp(['ystar: ' num2str(handles.MeanYstar(1))]);
 %     disp(['zstar: ' num2str(handles.MeanZstar(1))]);
@@ -601,7 +622,7 @@ end
 if isset
     % Naive Plane Fit
     if get(handles.naivebutton,'Value')
-        handles.planefit = 'Naive';
+        Settings.PlaneFit = 'Naive';
         
         %Calculate Naive Plane Fit
         Settings.XStar = xstar-(Settings.XData)/psize;
@@ -612,7 +633,7 @@ if isset
 
     % PC Data Fit
     if get(handles.pcplanefit,'Value') && iscalibrated
-        handles.planefit = 'PCPlaneFit';
+        Settings.PlaneFit = 'PCPlaneFit';
         
         %Assign pc matrices
         Settings.XStar = handles.FitXstar;
@@ -623,7 +644,7 @@ if isset
     
     % No Fit
     if get(handles.nofit,'Value')
-        handles.planefit = 'No Fit';
+        Settings.PlaneFit = 'No Fit';
         
         %Assign pc matrices
         Settings.XStar = xstar*ones(size(Settings.XStar));
@@ -634,7 +655,7 @@ if isset
 
     %Get PC Data from TIFF
     if handles.tiffread && get(handles.fromtiff,'Value')
-        handles.planefit = 'From Tiff Images';
+        Settings.PlaneFit = 'From Tiff Images';
         
         Settings.Xstar = handles.TiffXstar;
         Settings.Ystar = handles.TiffYstar;

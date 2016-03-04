@@ -4,9 +4,21 @@ if nargin == 3
 end
 
 %Apply Plane Fit
-xstar = ScanParams.xstar-Settings.XData(Ind)/Settings.PhosphorSize;
-ystar = ScanParams.ystar+Settings.YData(Ind)/Settings.PhosphorSize*sin(Settings.SampleTilt-Settings.CameraElevation);
-zstar = ScanParams.zstar+Settings.YData(Ind)/Settings.PhosphorSize*cos(Settings.SampleTilt-Settings.CameraElevation);
+if isfield(Settings,'XStar')
+    xstar = Settings.XStar(Ind);
+    ystar = Settings.YStar(Ind);
+    zstar = Settings.ZStar(Ind);
+else
+    if strcmp(Settings.PlaneFit,'Naive')
+        xstar = ScanParams.xstar-Settings.XData(Ind)/Settings.PhosphorSize;
+        ystar = ScanParams.ystar+Settings.YData(Ind)/Settings.PhosphorSize*sin(Settings.SampleTilt-Settings.CameraElevation);
+        zstar = ScanParams.zstar+Settings.YData(Ind)/Settings.PhosphorSize*cos(Settings.SampleTilt-Settings.CameraElevation);
+    else
+        xstar = ScanParams.xstar;
+        ystar = ScanParams.ystar;
+        zstar = ScanParams.zstar;
+    end
+end
 
 PC0(1) = xstar;
 PC0(2) = ystar;

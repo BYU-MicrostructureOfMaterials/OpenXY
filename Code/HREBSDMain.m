@@ -199,9 +199,15 @@ elseif ~isfield(Settings,'XStar')
     if Settings.DisplayGUI; disp('No PC calibration at all'); end;
     %Default Naive Plane Fit *****need to include Settings.SampleAzimuthal
     %and Settings.CameraAzimuthal ******
-    Settings.XStar(1:Settings.ScanLength) = Settings.ScanParams.xstar-Settings.XData/Settings.PhosphorSize;
-    Settings.YStar(1:Settings.ScanLength) = Settings.ScanParams.ystar+Settings.YData/Settings.PhosphorSize*sin(Settings.SampleTilt-Settings.CameraElevation);
-    Settings.ZStar(1:Settings.ScanLength) = Settings.ScanParams.zstar+Settings.YData/Settings.PhosphorSize*cos(Settings.SampleTilt-Settings.CameraElevation);
+    if isfield(Settings,'PlaneFit') && strcmp(Settings.PlaneFit,'Naive')
+        Settings.XStar(1:Settings.ScanLength) = Settings.ScanParams.xstar-Settings.XData/Settings.PhosphorSize;
+        Settings.YStar(1:Settings.ScanLength) = Settings.ScanParams.ystar+Settings.YData/Settings.PhosphorSize*sin(Settings.SampleTilt-Settings.CameraElevation);
+        Settings.ZStar(1:Settings.ScanLength) = Settings.ScanParams.zstar+Settings.YData/Settings.PhosphorSize*cos(Settings.SampleTilt-Settings.CameraElevation);
+    else
+        Settings.XStar(1:Settings.ScanLength) = Settings.ScanParams.xstar;
+        Settings.YStar(1:Settings.ScanLength) = Settings.ScanParams.ystar;
+        Settings.ZStar(1:Settings.ScanLegnth) = Settings.ScanParams.zstar;
+    end
 end
 
      

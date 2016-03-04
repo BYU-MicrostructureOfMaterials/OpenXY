@@ -48,6 +48,9 @@ Settings.KernelAvgMisoPath = '';
 %Calculation Options
 Settings.EnableProfiler = 0;
 
+%% PC Calibration
+Settings.PlaneFit = 'Naive';
+
 %% Microscope Settings
 Settings.AccelVoltage = 20; %keV
 Settings.SampleTilt = 70*pi/180; %degrees
