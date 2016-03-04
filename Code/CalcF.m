@@ -183,8 +183,12 @@ for i=1:length(roixc)
     %Calculate Confidence of Shift
     XX(i,2) = (max(rimage(:))-mean(rimage(:)))/std(rimage(:));
     
-    %Calculate Mutual Information
-    XX(i,3) = CalcMutualInformation(RefROI,ScanROI);
+    %Calculate Mutual Information (Requires Image Processing Toolbox)
+    if Settings.CalcMI
+        XX(i,3) = CalcMutualInformation(RefROI,ScanROI);
+    else
+        XX(i,3) = 0;
+    end
     
     if RefInd~=0 % new if statement for when there is a single ref image DTF 7/16/14 this is to adjust PC in Wilkinson method for that single ref case ***need to do it for all wilkinson cases***
          tx=(xstar-Settings.XStar(RefInd))*Settings.PixelSize; % vector on phosphor between PC of ref and PC of measured; uses notation from PCsensitivity paper
