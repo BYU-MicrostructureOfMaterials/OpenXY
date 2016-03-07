@@ -20,7 +20,7 @@ Settings.ROISize = round((Settings.ROISizePercent * .01)*Settings.PixelSize);
 
 %% Check for Required Matlab Toolboxes
 tb = ver;
-if ~any(strcmp({tb.Name},'Image Processing Toolbox1'))
+if ~any(strcmp({tb.Name},'Image Processing Toolbox'))
     w = warndlg({'Image Processing Toolbox not installed.','Mutual Information won''t be calculated'});
     uiwait(w,5);
     Settings.CalcMI = 0;
