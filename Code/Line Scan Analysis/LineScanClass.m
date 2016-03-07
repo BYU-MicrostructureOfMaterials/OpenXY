@@ -138,7 +138,7 @@ classdef LineScanClass < handle
                 %subplot(1,2,2);
                 subplot(1,1,1);
                 [ax,l1,l2] = plotyy(1:Iter,error,1:Iter,obj.IterData.SSE,'semilogy','plot');
-                ax(1).YAxis.Color = 'red';
+                set(ax(1),'ycolor','red');
                 l1.Color = 'red';
                 l2(1).Color = 'blue';
                 l2(2).Color = 'green';
