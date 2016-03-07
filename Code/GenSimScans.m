@@ -30,10 +30,13 @@ end
 PC = [Settings.XStar(1) ,Settings.YStar(1),Settings.ZStar(1)];
 Angles = zeros(Settings.ScanLength,3);
 Angles(Si,:) = repmat(orientation_si,length(Si),1);
-Angles(SiGe,:) = repmat(orientation_sige,length(SiGe),1);
+Angles(SiGe,:) = repmat(orientation_si,length(SiGe),1);
 
 %Predicted Tetragonality
-tet = (1:0.5:3)/100;
+tet = (1:1:5)/100;
+
+%Composition
+x = 0;
 
 %Get Parameters from Settings Structure
 xstar = PC(1);
@@ -49,15 +52,15 @@ mperpix = Settings.mperpix;
 if ispc
     folder = '\\CB165-NAS\Shared\MarkVaudin-Line Scans\Simulated Silicon';
 else
-    folder = '/Volumes/Shared/MarkVaudin-Line Scans/S01 Simulated Tet';
+    folder = '/Users/Adams/Jordan/Mark Vaudin/Simulated Silicon'; %'/Volumes/Shared/MarkVaudin-Line Scans/S01 Simulated Tet';
 end
 
 %Convert Angles to .ang format
 Angles = Angles*pi/180;
 
-for ScanNum = 1:1%length(tet)
+for ScanNum = 1:length(tet)
     %Create Folder Structure
-    ScanName = [scan '_SiTet_19_' num2str(ScanNum)];
+    ScanName = [scan '_SiTet_' num2str(x) '_' num2str(ScanNum)];
     ImageFolder = fullfile(folder,[ScanName '_Images']);
     if ~isdir(ImageFolder)
         mkdir(ImageFolder);
@@ -72,7 +75,7 @@ for ScanNum = 1:1%length(tet)
     end
     
     %Silicon Germanium Images
-    Material = ['SiTet_19_' num2str(ScanNum)];
+    Material = ['DTF_SiTet_' num2str(x) '_' num2str(ScanNum)];
     g = euler2gmat(Angles(SiGe(1),1),Angles(SiGe(1),2),Angles(SiGe(1),3)-45*pi/180);
     RefImage = genEBSDPatternHybrid_fromEMSoft(g,xstar,ystar,zstar,pixsize,mperpix,elevang,Material,Av);
     for i = 1:length(SiGe)
@@ -81,6 +84,8 @@ for ScanNum = 1:1%length(tet)
     
     
 end
+
+return;
 %Add Angle Error
 angle_error = 0.5; %degrees
 angle_error = angle_error*pi/180; %convert to radians
