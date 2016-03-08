@@ -153,7 +153,7 @@ classdef LineScanAnalysis < handle
                     plot(X,Y-obj.ExpTetTol,'r--');
                     plot(X,Y0+obj.ExpTetTol,'r--');
                     plot(X,Y0-obj.ExpTetTol,'r--');
-                    ylim([-0.5 2])
+                    ylim([-0.5 5.5])
                     ylabel('Tetragonality (%)')
                     title('Tetragonality')
                     legend(ht,[scan;'Expected Tetragonality']','Location','best')

@@ -119,7 +119,8 @@ if IsSerial
         if Index ~= Xval
             testname = fullfile(path,[preStr sprintf(numFormat,Index) endStr ext]);
             if exist(testname, 'file')
-                button = questdlg(['Accept "' testname '" as new First Image?'],'OpenXY');
+                %button = questdlg(['Accept "' testname '" as new First Image?'],'OpenXY');
+                button = 'Yes';
                 if strcmp(button,'Yes')
                     Xval = Index;
                 else
