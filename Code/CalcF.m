@@ -184,7 +184,7 @@ for i=1:length(roixc)
     XX(i,2) = (max(rimage(:))-mean(rimage(:)))/std(rimage(:));
     
     %Calculate Mutual Information (Requires Image Processing Toolbox)
-    if Settings.CalcMI
+    if isfield(Settings,'CalcMI') && Settings.CalcMI
         XX(i,3) = CalcMutualInformation(RefROI,ScanROI);
     else
         XX(i,3) = 0;

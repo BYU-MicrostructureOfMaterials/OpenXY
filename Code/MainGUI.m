@@ -86,6 +86,24 @@ if ~exist('temp','dir')
     mkdir('temp');
 end 
 
+
+% Check for Required Matlab Toolboxes
+tb = ver;
+if ~any(strcmp({tb.Name},'Image Processing Toolbox'))
+    w = warndlg({'Image Processing Toolbox not installed.','Mutual Information won''t be calculated'});
+    uiwait(w,5);
+    Settings.CalcMI = 0;
+else
+    Settings.CalcMI = 1;
+end
+
+if ~any(strcmp({tb.Name},'Parallel Computing Toolbox')) && Settings.DoParallel > 1
+    w = warndlg({'Parallel Computing Toolbox not installed';'Switching to serial processing'});
+    uiwait(w,5);
+    Settings.DoParallel = 1;
+end
+
+
 %Visuals
 axes(handles.background);
 pic = imread('OpenXYLogo.png');
