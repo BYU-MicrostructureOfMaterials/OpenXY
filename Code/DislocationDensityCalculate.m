@@ -250,26 +250,26 @@ disp(['UpperCutoff: ',num2str(UpperCutoff)])
 
 % Beta(i,j,k(Fc=1 or Fa=2),point number)=0;
 
-Beta(1,1,2,:)=(FcSample(1,1,:)-1)/stepsize;
-% Beta(1,2,2,:)=FcSample(1,2,:)/stepsize;
-Beta(1,3,2,:)=FcSample(1,3,:)/stepsize;
-% Beta(1,1,1,:)=-(FaSample(1,1,:)-1)/stepsize;
-Beta(1,2,1,:)=-FaSample(1,2,:)/stepsize;
-Beta(1,3,1,:)=-FaSample(1,3,:)/stepsize;
+Beta(1,1,2,:)=-(FaSample(1,1,:)-1)/stepsize;
+% Beta(1,2,2,:)=-FaSample(1,2,:)/stepsize;
+Beta(1,3,2,:)=-FaSample(1,3,:)/stepsize;
+% Beta(1,1,1,:)=(FcSample(1,1,:)-1)/stepsize;
+Beta(1,2,1,:)=FcSample(1,2,:)/stepsize;
+Beta(1,3,1,:)=FcSample(1,3,:)/stepsize;
 
-Beta(2,1,2,:)=(FcSample(2,1,:))/stepsize;
-% Beta(2,2,2,:)=(FcSample(2,2,:)-1)/stepsize;
-Beta(2,3,2,:)=FcSample(2,3,:)/stepsize;
-Beta(2,2,1,:)=-(FaSample(2,2,:)-1)/stepsize;
-% Beta(2,1,1,:)=-FaSample(2,1,:)/stepsize;
-Beta(2,3,1,:)=-FaSample(2,3,:)/stepsize;
+Beta(2,1,2,:)=-(FaSample(2,1,:))/stepsize;
+% Beta(2,2,2,:)=-(FaSample(2,2,:)-1)/stepsize;
+Beta(2,3,2,:)=-FaSample(2,3,:)/stepsize;
+Beta(2,2,1,:)=(FcSample(2,2,:)-1)/stepsize;
+% Beta(2,1,1,:)=FcSample(2,1,:)/stepsize;
+Beta(2,3,1,:)=FcSample(2,3,:)/stepsize;
 
-Beta(3,1,2,:)=FcSample(3,1,:)/stepsize;
-% Beta(3,2,2,:)=FcSample(3,2,:)/stepsize;
-Beta(3,3,2,:)=(FcSample(3,3,:)-1)/stepsize;
-% Beta(3,1,1,:)=-FaSample(3,1,:)/stepsize;
-Beta(3,2,1,:)=-FaSample(3,2,:)/stepsize;
-Beta(3,3,1,:)=-(FaSample(3,3,:)-1)/stepsize;
+Beta(3,1,2,:)=-FaSample(3,1,:)/stepsize;
+% Beta(3,2,2,:)=-FaSample(3,2,:)/stepsize;
+Beta(3,3,2,:)=-(FaSample(3,3,:)-1)/stepsize;
+% Beta(3,1,1,:)=FcSample(3,1,:)/stepsize;
+Beta(3,2,1,:)=FcSample(3,2,:)/stepsize;
+Beta(3,3,1,:)=(FcSample(3,3,:)-1)/stepsize;
 % keyboard
 alpha(1,1,:)=shiftdim(Beta(1,2,3,:)-Beta(1,3,2,:))./shiftdim(b);
 alpha(1,2,:)=shiftdim(Beta(1,3,1,:)-Beta(1,1,3,:))./shiftdim(b);
