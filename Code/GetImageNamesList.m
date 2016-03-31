@@ -93,7 +93,7 @@ if IsSerial
     Xval = str2double(PositionPart(ii+1:i));
     numFormat = ['%0' num2str(numberLength) 'd'];
     
-    %Check Starting number for resized scans
+    %Check Starting number for resized scans (not finished)
     if size(Dimensions,1) == 2
         col = StartLocation(1)/XStepData+1;
         row = StartLocation(2)/YStepData;
@@ -112,7 +112,25 @@ if IsSerial
             end
         end
     end   
-
+    
+    %Check starting position for line scans
+    if NumRows == 1 
+        Index = StartLocation(1)/XStepData+1;
+        if Index ~= Xval
+            testname = fullfile(path,[preStr sprintf(numFormat,Index) endStr ext]);
+            if exist(testname, 'file')
+                button = questdlg(['Accept "' testname '" as new First Image?'],'OpenXY');
+                if strcmp(button,'Yes')
+                    Xval = Index;
+                else
+                    error('Start Image Path doesn''t match data starting location');
+                end
+            else
+                error('Start Image Path doesn''t match data starting location');
+            end
+        end
+    end
+    
     %Write ImageNamesList
     for i = 1:ScanLength
         ImageNamesList{i} = fullfile(path,[preStr sprintf(numFormat,Xval+i-1) endStr ext]);

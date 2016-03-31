@@ -81,14 +81,14 @@ if strcmp(Settings.HROIMMethod,'Dynamic Simulated')
         
         RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av);
         clear global rs cs Gs
-        [F1,~,~] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial);
+        [F1,~,~] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,Settings.RefImageInd);
         for iq=1:3
             [rr,~]=poldec(F1); % extract the rotation part of the deformation, rr
             gr=rr'*gr; % correct the rotation component of the deformation so that it doesn't affect strain calc
             RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av);
             
             clear global rs cs Gs
-            [F1,~,~] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial);
+            [F1,~,~] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,Settings.RefImageInd);
         end
         Settings.RefImage = RefImage;
     end
@@ -199,9 +199,15 @@ elseif ~isfield(Settings,'XStar')
     if Settings.DisplayGUI; disp('No PC calibration at all'); end;
     %Default Naive Plane Fit *****need to include Settings.SampleAzimuthal
     %and Settings.CameraAzimuthal ******
-    Settings.XStar(1:Settings.ScanLength) = Settings.ScanParams.xstar-Settings.XData/Settings.PhosphorSize;
-    Settings.YStar(1:Settings.ScanLength) = Settings.ScanParams.ystar+Settings.YData/Settings.PhosphorSize*sin(Settings.SampleTilt-Settings.CameraElevation);
-    Settings.ZStar(1:Settings.ScanLength) = Settings.ScanParams.zstar+Settings.YData/Settings.PhosphorSize*cos(Settings.SampleTilt-Settings.CameraElevation);
+    if isfield(Settings,'PlaneFit') && strcmp(Settings.PlaneFit,'Naive')
+        Settings.XStar(1:Settings.ScanLength) = Settings.ScanParams.xstar-Settings.XData/Settings.PhosphorSize;
+        Settings.YStar(1:Settings.ScanLength) = Settings.ScanParams.ystar+Settings.YData/Settings.PhosphorSize*sin(Settings.SampleTilt-Settings.CameraElevation);
+        Settings.ZStar(1:Settings.ScanLength) = Settings.ScanParams.zstar+Settings.YData/Settings.PhosphorSize*cos(Settings.SampleTilt-Settings.CameraElevation);
+    else
+        Settings.XStar(1:Settings.ScanLength) = Settings.ScanParams.xstar;
+        Settings.YStar(1:Settings.ScanLength) = Settings.ScanParams.ystar;
+        Settings.ZStar(1:Settings.ScanLegnth) = Settings.ScanParams.zstar;
+    end
 end
 
      
