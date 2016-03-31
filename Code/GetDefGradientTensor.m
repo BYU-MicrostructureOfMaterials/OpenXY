@@ -143,7 +143,7 @@ switch Settings.HROIMMethod
         %RefImage = custimfilt(RefImage,Settings.ImageFilter(1), ...
             %Settings.PixelSize,Settings.ImageFilter(3),Settings.ImageFilter(4));
         clear global rs cs Gs
-        [F1,SSE1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial);
+        [F1,SSE1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
         
         %%%%New stuff to remove rotation error from strain measurement DTF  7/14/14
         for iq=1:3
@@ -152,7 +152,7 @@ switch Settings.HROIMMethod
             RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av);
             
             clear global rs cs Gs
-            [F1,SSE1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial);
+            [F1,SSE1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
         end
         %%%%%
         
@@ -171,7 +171,7 @@ switch Settings.HROIMMethod
 
         %Initialize
         clear global rs cs Gs
-        [F1,SSE1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial);
+        [F1,SSE1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
         
         %%%%New stuff to remove rotation error from strain measurement DTF  7/14/14
         for iq=1:2
@@ -182,7 +182,7 @@ switch Settings.HROIMMethod
                 Settings.PixelSize,Settings.ImageFilter(3),Settings.ImageFilter(4));
             
             clear global rs cs Gs
-            [F1,SSE1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial);
+            [F1,SSE1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
         end
         %%%%%
         
@@ -215,7 +215,7 @@ switch Settings.HROIMMethod
                 Settings.ImageFilter(3), Settings.ImageFilter(4));
             %         keyboard
             clear global rs cs Gs
-            [F1,SSE1,XX] = CalcF(NewRefImage,ScanImage,gr,FTemp,ImageInd,Settings,curMaterial);
+            [F1,SSE1,XX] = CalcF(NewRefImage,ScanImage,gr,FTemp,ImageInd,Settings,curMaterial,0);
             
         end
         

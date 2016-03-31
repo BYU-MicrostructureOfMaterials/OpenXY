@@ -1,4 +1,4 @@
-function [F, SSE, XX] = CalcF(RefImage,ScanImage,g,Fo,Ind,Settings,curMaterial,RefInd)
+function [F, SSE, XX] = CalcF(RefImage,ScanImage,g,Fo,Ind,Settings,curMaterial,RefInd,PC)
 %Desc: This function can be used to calculate the deformation tensor F (in the crystal frame) that
 %describes the deformation to move the pattern RefImage onto the pattern ScanImage.
 % modified 10/28/14 by DTF to correctly change Pattern Center when using
@@ -23,19 +23,20 @@ function [F, SSE, XX] = CalcF(RefImage,ScanImage,g,Fo,Ind,Settings,curMaterial,R
 
 Material = ReadMaterial(curMaterial);
 g0 = g;
-
-if nargin < 8
-    RefInd = 0;
-end
-
 RefImage=double(RefImage);
 ScanImage=double(ScanImage);
 
 roixc = Settings.roixc;
 roiyc = Settings.roiyc;
-xstar = Settings.XStar(Ind);
-ystar = Settings.YStar(Ind);
-zstar = Settings.ZStar(Ind);
+if nargin < 9
+    xstar = Settings.XStar(Ind);
+    ystar = Settings.YStar(Ind);
+    zstar = Settings.ZStar(Ind);
+else
+    xstar=PC(1);
+    ystar=PC(2);
+    zstar=PC(3);
+end
 standev = Settings.StandardDeviation;
 
 %% set up filter for ROI filtering
@@ -179,7 +180,7 @@ for i=1:length(roixc)
     %Perform Cross-Correlation
     [rimage, dxshift, dyshift] = custfftxc((RefImage(rrange,crange)),...
         (ScanImage(rrange,crange)),0,RefImage,rc,cc,custfilt,windowfunc);%this is the screen shift in the F(i-1) frame
-     
+    
     %Calculate Confidence of Shift
     XX(i,2) = (max(rimage(:))-mean(rimage(:)))/std(rimage(:));
     
@@ -191,13 +192,13 @@ for i=1:length(roixc)
     end
     
     if RefInd~=0 % new if statement for when there is a single ref image DTF 7/16/14 this is to adjust PC in Wilkinson method for that single ref case ***need to do it for all wilkinson cases***
-         tx=(xstar-Settings.XStar(RefInd))*Settings.PixelSize; % vector on phosphor between PC of ref and PC of measured; uses notation from PCsensitivity paper
-         ty=(ystar-Settings.YStar(RefInd))*Settings.PixelSize;
-%          tantheta=atan2(sqrt((cc-Settings.YStar(Settings.RefImageInd))^2+(rc-Settings.XStar(Settings.RefImageInd))^2),Settings.ZStar(Settings.RefImageInd));
-         spminussx=(zstar-Settings.ZStar(RefInd))*(rc-Settings.XStar(RefInd)*Settings.PixelSize)/Settings.ZStar(RefInd); % difference of vectors from PC to ROI center for ref and scan pattern
-         spminussy=(zstar-Settings.ZStar(RefInd))*(cc-Settings.YStar(RefInd)*Settings.PixelSize)/Settings.ZStar(RefInd);
-         dxshift=dxshift-tx-spminussx; % corrected ROI shift taking into account PC shift
-         dyshift=dyshift-ty-spminussy; %****NOT SURE ABOUT SIGN ON THIS
+        tx=(xstar-Settings.XStar(RefInd))*Settings.PixelSize; % vector on phosphor between PC of ref and PC of measured; uses notation from PCsensitivity paper
+        ty=(ystar-Settings.YStar(RefInd))*Settings.PixelSize;
+        %          tantheta=atan2(sqrt((cc-Settings.YStar(Settings.RefImageInd))^2+(rc-Settings.XStar(Settings.RefImageInd))^2),Settings.ZStar(Settings.RefImageInd));
+        spminussx=(zstar-Settings.ZStar(RefInd))*(rc-Settings.XStar(RefInd)*Settings.PixelSize)/Settings.ZStar(RefInd); % difference of vectors from PC to ROI center for ref and scan pattern
+        spminussy=(zstar-Settings.ZStar(RefInd))*(cc-Settings.YStar(RefInd)*Settings.PixelSize)/Settings.ZStar(RefInd);
+        dxshift=dxshift-tx-spminussx; % corrected ROI shift taking into account PC shift
+        dyshift=dyshift-ty-spminussy; %****NOT SURE ABOUT SIGN ON THIS
     end
     [xshift0,yshift0] = Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,cc,rc,Fo,Settings.PixelSize,alpha);%this is the screen shift in the g (hough) frame *****not used***
     
@@ -215,7 +216,7 @@ for i=1:length(roixc)
     Xcp=Fo*Xcp;
     Xsp=Qsc'*Xcp;
     nXsp=Xsp/norm(Xsp);
-%     nXcp=Qsc'*nXsp; % old erroneous code - messed up Colin Crystal
+    %     nXcp=Qsc'*nXsp; % old erroneous code - messed up Colin Crystal
     nXcp=Xcp/norm(Xcp); %new code  gives correct F for deformed simulated pattern to ~0.0005 dtf 8/25/14
     %find intersection of Xsp and phosphor
     lambdap=(n'*c)./(n'*nXsp);
@@ -585,9 +586,9 @@ switch Settings.FCalcMethod
         % Using only the final traction free condition: ************
         % doesn't make significant difference  that I could see DTF 8/25/14
         % but see 8/26/ results - show that full BC is maybe 10% better
-%         b4 = [b1;b2;b3;b7];
-%         A4 = [A1;A2;A3;A7];
-%         
+        %         b4 = [b1;b2;b3;b7];
+        %         A4 = [A1;A2;A3;A7];
+        %
         %solve for variables
         X3=A4\b4;
         %variables
@@ -666,8 +667,8 @@ switch Settings.FCalcMethod
         
         % Using only the last of the traction free conditions (see
         % Wilkinson methods above): **********************
-%         b4 = [b1;b2;b3;b7];
-%         A4 = [A1;A2;A3;A7];
+        %         b4 = [b1;b2;b3;b7];
+        %         A4 = [A1;A2;A3;A7];
         
         %solve for variables
         X3=A4\b4;
@@ -770,8 +771,8 @@ if Settings.DoShowPlot
     title(['Image ' num2str(Ind) ' (' num2str(iter) ')'])
     U
     SSE
-% keyboard
-%     save shifts Rshift Cshift cx cy
+    % keyboard
+    %     save shifts Rshift Cshift cx cy
     return
     
 end
