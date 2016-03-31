@@ -153,6 +153,21 @@ classdef LineScanClass < handle
                 xlim([1,length(error)])
                 ylim([1e-3,1e2])
                 
+                %Get Indices for Si and SiGe points
+                SecInds = obj.SecInds;
+                if abs(SecInds(end)-obj.Length)<5
+                    SecInds(end) = obj.Length;
+                end
+                Si = []; SiGe = [];
+                for i = 1:2:length(SecInds)
+                    if i < length(SecInds)
+                        Si = [Si,SecInds(i):SecInds(i+1)];
+                    end
+                    if i > 1
+                        SiGe = [SiGe,SecInds(i-1):SecInds(i)];
+                    end
+                end
+                
                 XXtable = obj.Settings.Iterations.XX;
                 XXtable = permute(reshape(cell2mat(cellfun(@(x) mean(x,1),XXtable,'UniformOutput',false)),obj.Settings.ScanLength,3,[]),[1 3 2]);
                 f = figure;
@@ -185,6 +200,52 @@ classdef LineScanClass < handle
                     end
                     %pause(0.5)
                 end
+                
+                figure('Position',[500,500,900,300])
+                numIter = size(XXtable,2);
+                XX(:,1) = mean(XXtable(SiGe,:,1),1); %Cross Correlation Coefficient
+                XX(:,2) = mean(XXtable(Si,:,1),1);
+                SC(:,1) = mean(XXtable(SiGe,:,2),1); %Shift Confidence
+                SC(:,2) = mean(XXtable(Si,:,2),1);
+                MI(:,1) = mean(XXtable(SiGe,:,3),1); %Mutual Information
+                MI(:,2) = mean(XXtable(Si,:,3),1);
+                SM(:,1) = mean(obj.Settings.Iterations.SSE(SiGe,:),1); %Shift Magnitude (SSE)
+                SM(:,2) = mean(obj.Settings.Iterations.SSE(Si,:),1); 
+                
+                subplot(1,3,1)
+                plot(XX)
+                ylabel('Cross Correlation Coefficient')
+                xlim([0,numIter])
+                yl = ylim;
+                hold on
+                stem(obj.Settings.RotationIter,100,'LineStyle','--','Color',[1 1 1]*0.5,'BaseValue',-100)
+                ylim(yl)
+                
+                subplot(1,3,2)
+                plot(SM)
+                ylabel('Shift Magnitude')
+                xlim([0,numIter])
+                yl = ylim;
+                hold on
+                stem(obj.Settings.RotationIter,100,'LineStyle','--','Color',[1 1 1]*0.5,'BaseValue',-100)
+                ylim(yl)
+                ylabel('Iteration Number')
+                
+                subplot(1,3,3)
+                plot(obj.IterData.SSE)
+                ylabel('SSE')
+                xlim([0,numIter])
+                yl = ylim;
+                hold on
+                stem(obj.Settings.RotationIter,100,'LineStyle','--','Color',[1 1 1]*0.5,'BaseValue',-100)
+                ylim(yl)
+                
+                IterPlots.XX = XX;
+                IterPlots.SM = SM;
+                IterPlots.SSE = obj.IterData.SSE;
+                IterPlots.SC = SC;
+                IterPlots.MI = MI;
+                
                 save('s01_Iter.mat','XXtable');
             end
         end
