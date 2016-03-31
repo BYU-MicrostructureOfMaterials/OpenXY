@@ -1,8 +1,18 @@
-function [normF U] = CalcNormFMod(PC,I0,params2,lattice,a1,b1,c1,axs,g,X,ImageInd,Settings)
+function [normF U] = CalcNormFMod2(PC,I0,params2,lattice,a1,b1,c1,axs,g,X,ImageInd,Settings)
 
 params2{1} = PC(1);
 params2{2} = PC(2);
 params2{3} = PC(3);
+mperpix=PC(4);
+PhosphorSize=mperpix*Settings.PixelSize;
+
+normF=0;
+for kk=1:length(ImageInd)
+    Ind=ImageInd(kk);
+    params2{1} = PC(1)-(Settings.XData(Ind)-Settings.XData(ImageInd(1)))/PhosphorSize;
+params2{2} = PC(2)+(Settings.YData(Ind)-Settings.YData(ImageInd(1)))/PhosphorSize*sin(Settings.SampleTilt-Settings.CameraElevation);
+params2{3} = PC(3)+(Settings.YData(Ind)-Settings.YData(ImageInd(1)))/PhosphorSize*cos(Settings.SampleTilt-Settings.CameraElevation);
+
 F = eye(3);
 
 clear global rs cs Gs
@@ -18,13 +28,13 @@ switch Settings.HROIMMethod
         Av=cell2mat(params2(5));
         elevang=cell2mat(params2(7));
         mperpix = Settings.mperpix;
-        curMaterial=cell2mat(Settings.Phase(ImageInd)); %****may need updating for material of this point - where is that info?
+        curMaterial=cell2mat(Settings.Phase(Ind)); %****may need updating for material of this point - where is that info?
         for i = 1:3
             I1 = genEBSDPatternHybrid_fromEMSoft(g,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av);
             
             clear global rs cs Gs
             %     [F SSE] = CalcF(I1,I0,g,F,ImageInd,Settings,Settings.Material); % old version
-            [F SSE] = CalcF(I1,I0,g,eye(3),ImageInd,Settings,Settings.Phase{ImageInd},0,PC); % new DTF
+            [F SSE] = CalcF(I1,I0,g,eye(3),Ind,Settings,Settings.Phase{Ind},0,PC); % new DTF
             [R U] = poldec(F);
             g=R'*g;
         end
@@ -36,7 +46,7 @@ switch Settings.HROIMMethod
             I1 = custimfilt(I1,X(1),Settings.PixelSize,X(3),X(4));
             clear global rs cs Gs
             %     [F SSE] = CalcF(I1,I0,g,F,ImageInd,Settings,Settings.Material); % old version
-            [F SSE] = CalcF(I1,I0,g,eye(3),ImageInd,Settings,Settings.Phase{ImageInd},0,PC); % new DTF
+            [F SSE] = CalcF(I1,I0,g,eye(3),Ind,Settings,Settings.Phase{Ind},0,PC); % new DTF
             [R U] = poldec(F);
             g=R'*g;
         end
@@ -52,7 +62,7 @@ switch Settings.HROIMMethod
             clear global rs cs Gs
             %     [F SSE] = calcFnew(I1,I0,g,F,paramsF,standev,6);
             %     [F SSE] = CalcF(I1,I0,g,F,ImageInd,Settings,Settings.Material);% ** same change as above DTF 7/21/14
-            [F SSE] = CalcF(I1,I0,g,F,ImageInd,Settings,Settings.Phase{ImageInd},0,PC);
+            [F SSE] = CalcF(I1,I0,g,F,Ind,Settings,Settings.Phase{Ind},0,PC);
         end
         
         [R U] = poldec(F);
@@ -68,7 +78,7 @@ U = triu(U);
 %     normF = sum(sum((D.*D)));
 % else
 %normF = sum(sum((U.*U))); experimentally removed by Craig and Tim and replaced by below, Aug27 2014
-normF=sum(sum((U.*U)));
+normFtemp=sum(sum((U.*U)));
 % end
 
 % disp(F)
@@ -79,3 +89,5 @@ normF=sum(sum((U.*U)));
 
 % save I2 I2
 % keyboard
+normF=normF+normFtemp;
+end

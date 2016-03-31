@@ -1,4 +1,4 @@
-function [rho]=resolvedislocBritton(alphavec,threeorsix, minscheme,matchoose,gmat, L1, x0type)
+function [rho]=resolvedislocB(alphavec,threeorsix, minscheme,matchoose,gmat, L1, x0type)
 % if alphaorbeta==1 then the algorithm will try and match the final column of alpha, and alpha is input in form
 % [alpha(1,3);alpha(2,3);alpha(3,3)]
 % otherwise the algorithm will try and match the measurable betas and beta is input in form
