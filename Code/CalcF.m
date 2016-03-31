@@ -706,7 +706,8 @@ end
 
 %% for visualizing process
 if Settings.DoShowPlot
-    DoPlotROIs = 0;
+    DoPlotROIs = 1;
+    width = 2;
     try
         set(0,'currentfigure',100);
     catch
@@ -725,11 +726,11 @@ if Settings.DoShowPlot
     for i=1:length(Cshift)
         if ~isempty(find(tempind==i))
             %Should probably make this factor "*10" a variable...
-            plot([roixc(i) roixc(i)+Cshift(i)],[roiyc(i) roiyc(i)+Rshift(i)],'g.-')
+            plot([roixc(i) roixc(i)+Cshift(i)],[roiyc(i) roiyc(i)+Rshift(i)],'g.-','LineWidth',width)
         else
-            plot([roixc(i) roixc(i)+Cshift(i)],[roiyc(i) roiyc(i)+Rshift(i)],'r.-')
+            plot([roixc(i) roixc(i)+Cshift(i)],[roiyc(i) roiyc(i)+Rshift(i)],'r.-','LineWidth',width)
         end
-        plot([roixc(i) roixc(i)+cx(i)],[roiyc(i) roiyc(i)+cy(i)],'b.-')
+        plot([roixc(i) roixc(i)+cx(i)],[roiyc(i) roiyc(i)+cy(i)],'c.-','LineWidth',width)
     end
     drawnow
     text = get(gca,'title');
@@ -765,16 +766,24 @@ if Settings.DoShowPlot
     for i=1:length(Cshift)
         if ~isempty(find(tempind==i))
             %Should probably make this factor "*10" a variable...
-            plot([roixc(i) roixc(i)+Cshift(i)],[roiyc(i) roiyc(i)+Rshift(i)],'g.-')
+            plot([roixc(i) roixc(i)+Cshift(i)],[roiyc(i) roiyc(i)+Rshift(i)],'g.-','LineWidth',width)
         else
-            plot([roixc(i) roixc(i)+Cshift(i)],[roiyc(i) roiyc(i)+Rshift(i)],'r.-')
+            plot([roixc(i) roixc(i)+Cshift(i)],[roiyc(i) roiyc(i)+Rshift(i)],'r.-','LineWidth',width)
         end
-        plot([roixc(i) roixc(i)+cx(i)],[roiyc(i) roiyc(i)+cy(i)],'b.-')
+        plot([roixc(i) roixc(i)+cx(i)],[roiyc(i) roiyc(i)+cy(i)],'c.-','LineWidth',width)
     end
     drawnow
     title(['Image ' num2str(Ind) ' (' num2str(iter) ')'])
     U
     SSE
+    
+    [~, tempU]=poldec(F);
+    tempU=tempU-eye(3);
+    u33=tempU(3,3); 
+    u22=tempU(2,2);
+    u11=tempU(1,1);
+    disp(['Strain: ' num2str(u11*100) ' ' num2str(u22*100) ' ' num2str(u33*100)])
+    disp(['Tet: ' num2str((u33 - (u11+u22)/2)*100)]);
 % keyboard
 %     save shifts Rshift Cshift cx cy
     return
