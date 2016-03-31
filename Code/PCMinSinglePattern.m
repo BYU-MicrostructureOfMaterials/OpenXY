@@ -4,7 +4,7 @@ if nargin == 3
 end
 
 %Apply Plane Fit
-if strcmp(Settings.PlaneFit,'Naive')
+if isfield(Settings,'PlaneFit') && strcmp(Settings.PlaneFit,'Naive')
     xstar = ScanParams.xstar-Settings.XData(Ind)/Settings.PhosphorSize;
     ystar = ScanParams.ystar+Settings.YData(Ind)/Settings.PhosphorSize*sin(Settings.SampleTilt-Settings.CameraElevation);
     zstar = ScanParams.zstar+Settings.YData(Ind)/Settings.PhosphorSize*cos(Settings.SampleTilt-Settings.CameraElevation);
@@ -41,7 +41,7 @@ paramspat={xstar;ystar;zstar;pixsize;Av;sampletilt;elevang;Material.Fhkl;Materia
 Settings.XStar(1:Settings.ScanLength) = ScanParams.xstar;
 Settings.YStar(1:Settings.ScanLength) = ScanParams.ystar;
 Settings.ZStar(1:Settings.ScanLength) = ScanParams.zstar;
-            
+
 % g = euler2gmat(Settings.Phi1Ref(Ind),Settings.PHIRef(Ind),Settings.Phi2Ref(Ind));
 g = euler2gmat(Settings.Angles(Ind,1),Settings.Angles(Ind,2),Settings.Angles(Ind,3)); % DTF - don't use ref angles for grain as is done on previous line!!
 % keyboard
