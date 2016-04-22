@@ -142,7 +142,10 @@ if ~strcmp(Settings.ScanType,'L')
     end
     
     %Perform Calculation
-    if Settings.DoParallel > 1  
+    if Settings.DoParallel > 1
+        if any(strcmp(javaclasspath,fullfile(pwd,'java')))
+            pctRunOnAll javaaddpath('java')
+        end
         ppm = ParforProgMon( 'Dislocation Density Progress ', N , 1, 400, 50);
         
         NumberOfCores = Settings.DoParallel;
