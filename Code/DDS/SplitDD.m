@@ -177,8 +177,9 @@ catch
         matlabpool('local',NumberOfCores); 
     end
 end
-% addpath cd
+if any(strcmp(javaclasspath,fullfile(pwd,'java')))
 pctRunOnAll javaaddpath('java')
+end
 
 disp(['Starting cross-correlation: ' num2str(m*n) ' points']);
 ppm = ParforProgMon( 'Split Dislocation Density ', m*n,1,400,50 );
