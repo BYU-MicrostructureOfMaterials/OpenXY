@@ -18,6 +18,8 @@ switch mat
         [bedge,ledge, bscrew,lscrew,v, normals, crssfactor, type]=nisystemsSLICK;
     case 'Al-18ss'
         [bedge,ledge, bscrew,lscrew,v, normals, crssfactor, type]=alsystems;
+        case 'Fe'
+        [bedge,ledge, bscrew,lscrew,v, normals, crssfactor, type]=ferritesystems;
     otherwise
         error('No other crystal systems defined');
 end

@@ -13,7 +13,7 @@ end
 if length(matList) > 1
     [matchoose,vv] = listdlg('PromptString','Select the material type','SelectionMode','single','ListString',matList);
     if vv==0
-        warndlg('Nothing selected: skipping split dislocation density calculation','Split Dislocation Density'); 
+        warndlg('Nothing selected: skipping split dislocation density calculation','Split Dislocation Density');
         rhos = [];
         return;
     end
@@ -67,7 +67,7 @@ if minscheme == 4
     if vv==0; error('Exited by user'); end
     switch loadtype
         case 1
-           stress = [1 0 0;0 0 0;0 0 0]; 
+            stress = [1 0 0;0 0 0;0 0 0];
         case 2
             a = input('Ratio of shear to axial: ');
             stress = [1 a 0;a -1 0;0 0 0];
@@ -107,18 +107,6 @@ else
     PHIrn =  real((Settings.data.PHIrn));
     phi2rn =  real((Settings.data.phi2rn));
 end
-
-Fatemp2 = zeros(3,3,length(Fatemp));
-Fctemp2 = zeros(3,3,length(Fatemp));
-
-for i = 1:length(Fatemp)
-    Fatemp2(:,:,i) = ((Fatemp(:,:,i)) - [1 0 0;0 1 0;0 0 1])./stepsize;
-    Fctemp2(:,:,i) = ((Fctemp(:,:,i)) - [1 0 0;0 1 0;0 0 1])./stepsize;
-end
-
-n = Settings.data.cols;
-m = Settings.data.rows;
-
 if length(phi1rn)==3*length(Fatemp)
     temp1 = zeros(length(Fatemp),1);
     temp2 = zeros(length(Fatemp),1);
@@ -134,114 +122,181 @@ if length(phi1rn)==3*length(Fatemp)
     PHIrn = temP;
     
 end
+n = Settings.data.cols;
+m = Settings.data.rows;
+% reorient the reference orientation for each grain as close as possible to
+% origin, and then each point in the grain as close as possible to this to
+% make the reference frames for slip systems consistent
+bestgmat=zeros(3,3,n*m);
+for i=1:m*n
+    if bestgmat(:,:,Settings.RefInd(i))==0
+        gmat = euler2gmat(phi1rn(Settings.RefInd(i)),PHIrn(Settings.RefInd(i)), phi2rn(Settings.RefInd(i)));
+        [angle,Axis,deltaG, symclose]=GeneralMisoCalcSym(gmat,eye(3),lattype);
+        newgmat = symclose*gmat;
+        bestgmat(:,:,Settings.RefInd(i))=newgmat(:,:);
+    end
+    if bestgmat(:,:,i)==0
+        gmat = euler2gmat(phi1rn(i),PHIrn(i), phi2rn(i));
+        [angle,Axis,deltaG, symclose]=GeneralMisoCalcSym(gmat,squeeze(bestgmat(:,:,Settings.RefInd(i))),lattype);
+        newgmat = symclose*gmat;
+        bestgmat(:,:,i)=newgmat(:,:);
+    end
+end
 
 
-betaderiv1 = -Fatemp2;
-betaderiv2 = Fctemp2;
 
-
-beta(1,:)=betaderiv2(1,1,:);
-beta(2,:)=betaderiv1(1,2,:);
-beta(3,:)=betaderiv1(1,3,:);
-beta(4,:)=betaderiv2(1,3,:);
-beta(5,:)=betaderiv2(2,1,:);
-beta(6,:)=betaderiv1(2,2,:);
-beta(7,:)=betaderiv1(2,3,:);
-beta(8,:)=betaderiv2(2,3,:);
-beta(9,:)=betaderiv2(3,1,:);
-beta(10,:)=betaderiv1(3,2,:);
-beta(11,:)=betaderiv1(3,3,:);
-beta(12,:)=betaderiv2(3,3,:);
-
-alphavecp(1,:)=betaderiv2(1,1,:) - betaderiv1(1,2,:);
-alphavecp(2,:)=betaderiv2(2,1,:) - betaderiv1(2,2,:);
-alphavecp(3,:)=betaderiv2(3,1,:) - betaderiv1(3,2,:);
-alphavecp(4,:)=betaderiv1(1,3,:);
-alphavecp(5,:)=-betaderiv2(2,3,:);
-alphavecp(6,:)=-betaderiv2(1,3,:) - betaderiv1(2,3,:);%.5*(betaderiv1(3,2,:,:) - betaderiv1(2,3,:,:) - betaderiv2(1,3,:,:) + betaderiv2(3,1,:,:));
-
+if (alphaorbeta==11) | (strcmp(alphaorbeta, 'Distortion Matching'))
+    Fatemp2 = zeros(3,3,length(Fatemp));
+    Fctemp2 = zeros(3,3,length(Fatemp));
+    
+    for i = 1:length(Fatemp)
+        Fatemp2(:,:,i) = ((Fatemp(:,:,i)) - [1 0 0;0 1 0;0 0 1])./stepsize;
+        Fctemp2(:,:,i) = ((Fctemp(:,:,i)) - [1 0 0;0 1 0;0 0 1])./stepsize;
+    end
+    
+    betaderiv1 = -Fatemp2;
+    betaderiv2 = Fctemp2;
+    
+    beta(1,:)=betaderiv2(1,1,:);
+    beta(2,:)=betaderiv1(1,2,:);
+    beta(3,:)=betaderiv1(1,3,:);
+    beta(4,:)=betaderiv2(1,3,:);
+    beta(5,:)=betaderiv2(2,1,:);
+    beta(6,:)=betaderiv1(2,2,:);
+    beta(7,:)=betaderiv1(2,3,:);
+    beta(8,:)=betaderiv2(2,3,:);
+    beta(9,:)=betaderiv2(3,1,:);
+    beta(10,:)=betaderiv1(3,2,:);
+    beta(11,:)=betaderiv1(3,3,:);
+    beta(12,:)=betaderiv2(3,3,:);
+    
+    alphavecp(1,:)=betaderiv2(1,1,:) - betaderiv1(1,2,:);
+    alphavecp(2,:)=betaderiv2(2,1,:) - betaderiv1(2,2,:);
+    alphavecp(3,:)=betaderiv2(3,1,:) - betaderiv1(3,2,:);
+    alphavecp(4,:)=betaderiv1(1,3,:);
+    alphavecp(5,:)=-betaderiv2(2,3,:);
+    alphavecp(6,:)=-betaderiv2(1,3,:) - betaderiv1(2,3,:);%.5*(betaderiv1(3,2,:,:) - betaderiv1(2,3,:,:) - betaderiv2(1,3,:,:) + betaderiv2(3,1,:,:));
+else
+    beta=[];
+    alpha=alpha_data.alpha_filt;
+    alphavecp(1,:)=squeeze(alpha(1,3,:)).*alpha_data.b;
+    alphavecp(2,:)=squeeze(alpha(2,3,:)).*alpha_data.b;
+    alphavecp(3,:)=squeeze(alpha(3,3,:)).*alpha_data.b;
+    alphavecp(4,:)=squeeze(alpha(1,2,:)).*alpha_data.b;
+    alphavecp(5,:)=squeeze(alpha(2,1,:)).*alpha_data.b;
+    alphavecp(6,:)=squeeze(alpha(1,1,:)).*alpha_data.b-squeeze(alpha(2,2,:)).*alpha_data.b;
+end
 
 %% Resolving slip, parallel processing
-rhos = zeros(length(bedge) + length(bscrew),m,n);
+rhos = zeros(length(bedge) + length(bscrew),m*n);
 
 
 NumberOfCores = Settings.DoParallel;
-try
-    ppool = gcp('nocreate');
-    if isempty(ppool)
-        parpool(NumberOfCores);
+if NumberOfCores>1 %if parallel processing
+    try
+        ppool = gcp('nocreate');
+        if isempty(ppool)
+            parpool(NumberOfCores);
+        end
+    catch
+        ppool = matlabpool('size');
+        if ~ppool
+            matlabpool('local',NumberOfCores);
+        end
     end
-catch
-    ppool = matlabpool('size');
-    if ~ppool
-        matlabpool('local',NumberOfCores); 
+    if any(strcmp(javaclasspath,fullfile(pwd,'java')))
+        pctRunOnAll javaaddpath('java')
     end
-end
-if any(strcmp(javaclasspath,fullfile(pwd,'java')))
-pctRunOnAll javaaddpath('java')
-end
-
-disp(['Starting cross-correlation: ' num2str(m*n) ' points']);
-ppm = ParforProgMon( 'Split Dislocation Density ', m*n,1,400,50 );
     
-% matlabpool close force;
-% %Determine the number of available cores and use one less
-% %(Keeps Matlab from near-freezing the computer if it is not
-% % entirely dedicated to running HROIM)
-% NumberOfCores = feature('numCores');
-% if NumberOfCores > 1
-%         
-%    NumberOfCores = NumberOfCores - 1;
-% %  NumberOfCores = 4; % just for my computer or multi-threaded i7's
-% %, otherwise use the previous line
-%         
-% end
-% %     matlabpool('open', NumberOfCores);
-% matlabpool('local',NumberOfCores)
-% % addpath cd
-% pctRunOnAll javaaddpath(cd)
-
-
-parfor i = 1:m*n
+    disp(['Starting cross-correlation: ' num2str(m*n) ' points']);
+    ppm = ParforProgMon( 'Split Dislocation Density ', m*n,1,400,50 );
     
-        
-        gmat = euler2gmat(phi1rn(i),PHIrn(i), phi2rn(i));     
+    parfor i = 1:m*n
+        gmat = squeeze(bestgmat(:,:,i));
         
         switch alphaorbeta
             case 'Nye-Kroner'
-                merp = alphavecp(1:3,i);
-                rhos(:,i)=resolvedislocB(merp,0,minscheme,matchoice,gmat,1, x0type);
+                if alphavecp(1:3,i)==0;
+                    rhos(:,i)=0;
+                else
+                    merp = alphavecp(1:3,i);
+                    rhos(:,i)=resolvedislocB(merp,0,minscheme,matchoice,gmat,1, x0type);
+                end
             case 'Distortion Matching'
-                merp = beta(:,i);
-                rhos(:,i)=resolvedisloc(merp,2,minscheme,matchoice,gmat,stress, stepsize^2, x0type); %CHANGE BACK TO 2
+                if beta(:,i)==0;
+                    rhos(:,i)=0;
+                else
+                    merp = beta(:,i);
+                    rhos(:,i)=resolvedisloc(merp,2,minscheme,matchoice,gmat,stress, stepsize^2, x0type); %CHANGE BACK TO 2
+                end
             case 'Nye-Kroner (Pantleon)'
-                merp = alphavecp(:,i);
-                rhos(:,i)=resolvedislocB(merp,1,minscheme,matchoice,gmat,1, x0type);
+                if alphavecp(:,i)==0;
+                    rhos(:,i)=0;
+                else
+                    merp = alphavecp(:,i);
+                    rhos(:,i)=resolvedislocB(merp,1,minscheme,matchoice,gmat,1, x0type);
+                end
             case 11
-                merp = zeros(6,1);
-                merp(1,1) = beta(1,i);
-                merp(2,1) = beta(2,i);
-                merp(3,1) = beta(5,i);
-                merp(4,1) = beta(6,i);
-                merp(5,1) = beta(9,i);
-                merp(6,1) = beta(10,i);
-                rhos(:,i)=resolvedisloc(merp,11,minscheme,matchoice,gmat,stress, stepsize^2, x0type);
+                if beta(:,i)==0;
+                    rhos(:,i)=0;
+                else
+                    merp = zeros(6,1);
+                    merp(1,1) = beta(1,i);
+                    merp(2,1) = beta(2,i);
+                    merp(3,1) = beta(5,i);
+                    merp(4,1) = beta(6,i);
+                    merp(5,1) = beta(9,i);
+                    merp(6,1) = beta(10,i);
+                    rhos(:,i)=resolvedisloc(merp,11,minscheme,matchoice,gmat,stress, stepsize^2, x0type);
+                end
         end
-        ppm.increment();        
+        ppm.increment();
+    end
+else
+    h = waitbar(0.1,'splitting')
+    for i = 1:m*n
         
+        gmat = squeeze(bestgmat(:,:,i));
         
-
-
-    
+        switch alphaorbeta
+            case 'Nye-Kroner'
+                if alphavecp(1:3,i)==0;
+                    rhos(:,i)=0;
+                else
+                    merp = alphavecp(1:3,i);
+                    rhos(:,i)=resolvedislocB(merp,0,minscheme,matchoice,gmat,1, x0type);
+                end
+            case 'Distortion Matching'
+                if beta(:,i)==0;
+                    rhos(:,i)=0;
+                else
+                    merp = beta(:,i);
+                    rhos(:,i)=resolvedisloc(merp,2,minscheme,matchoice,gmat,stress, stepsize^2, x0type); %CHANGE BACK TO 2
+                end
+            case 'Nye-Kroner (Pantleon)'
+                if alphavecp(:,i)==0;
+                    rhos(:,i)=0;
+                else
+                    merp = alphavecp(:,i);
+                    rhos(:,i)=resolvedislocB(merp,1,minscheme,matchoice,gmat,1, x0type);
+                end
+            case 11
+                if beta(:,i)==0;
+                    rhos(:,i)=0;
+                else
+                    merp = zeros(6,1);
+                    merp(1,1) = beta(1,i);
+                    merp(2,1) = beta(2,i);
+                    merp(3,1) = beta(5,i);
+                    merp(4,1) = beta(6,i);
+                    merp(5,1) = beta(9,i);
+                    merp(6,1) = beta(10,i);
+                    rhos(:,i)=resolvedisloc(merp,11,minscheme,matchoice,gmat,stress, stepsize^2, x0type);
+                end
+        end
+        waitbar(i/m/m);
+    end
+    close(h);
 end
-
-% alpha_data.rhos = rhos;
-% splitparams.x0type = x0type;
-% splitparams.minscheme = minscheme;
-% splitparams.matchoose = matchoose;
-% splitparams.alphaorbeta = alphaorbeta;
-% splitparams.stress = stress;
-% 
-% alpha_data.splitparams = splitparams;
 end
 
