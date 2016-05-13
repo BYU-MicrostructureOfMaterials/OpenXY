@@ -294,7 +294,7 @@ else
                     rhos(:,i)=resolvedisloc(merp,11,minscheme,matchoice,gmat,stress, stepsize^2, x0type);
                 end
         end
-        waitbar(i/m/m);
+        waitbar(i/m/n);
     end
     close(h);
 end
