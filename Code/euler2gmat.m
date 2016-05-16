@@ -3,7 +3,11 @@ function [g]=euler2gmat(phi1,PHI,phi2)
 %radians
 %
 %
-
+if nargin == 1 && length(phi1) == 3
+    phi2 = phi1(3);
+    PHI = phi1(2);
+    phi1 = phi1(1);
+end
 
 cp1 = cos(phi1);
 sp1 = sin(phi1);

@@ -70,12 +70,10 @@ if ~exist(CprFilePath,'file')
         cd(w);
         if ctfName == 0
             error('No .cpr file found');
-            return;
         end
         CprFilePath = fullfile(ctfPath,ctfName);
     else
         error('No .cpr file found');
-        return;
     end
 end
 cpr = fopen(CprFilePath);
