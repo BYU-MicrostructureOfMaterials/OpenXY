@@ -3,7 +3,6 @@ leftWin = 5;
 rightWin = 2;
 NN = length(Strain);
 ind = 1:NN;
-Strain = Strain;
 ExpTet = ExpTet*1;
 
 u11 = Strain(:,1)*100;

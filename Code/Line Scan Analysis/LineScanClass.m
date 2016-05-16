@@ -40,11 +40,22 @@ classdef LineScanClass < handle
         function CalcStrain(obj)
         %Extracts the strain components from the F-matrix
             if ~isempty(obj.Settings)
+                DynStrain = 0;
+                ref_tet = zeros(obj.Settings.ScanLength,1);
+                if length(unique(obj.Settings.Phase)) > 1
+                    ref_tet = cellfun(@(x) str2double(x(end))/100,obj.Settings.Phase);
+                end
+                
                 u11 = zeros(obj.Settings.ScanLength,1);
                 u22 = zeros(obj.Settings.ScanLength,1);
                 u33 = zeros(obj.Settings.ScanLength,1);
                 for i=1:obj.Settings.ScanLength
                     tempF(:,:)=obj.Settings.data.F{i};
+                    Fref(1,1) = -ref_tet(i)/2;
+                    Fref(2,2) = -ref_tet(i)/2;
+                    Fref(3,3) = ref_tet(i)/2;
+                    Fref = Fref + eye(3);
+                    tempF = tempF*Fref;
                     [~, tempU]=poldec(tempF);
                     tempU=tempU-eye(3);
                     u33(i)=tempU(3,3); 
@@ -77,6 +88,7 @@ classdef LineScanClass < handle
         end
         function hg = plot(obj,varargin)
         %Overloaded plot function to plot the u11 strain in each section
+            hg = [];
             if ~isempty(obj.Sections)
                 holdstate = ishold;
                 if ~holdstate
@@ -95,6 +107,7 @@ classdef LineScanClass < handle
             end
         end
         function h = plottet(obj,varargin)
+            h = [];
             if ~isempty(obj.Sections)
                 holdstate = ishold;
                 if ~holdstate
