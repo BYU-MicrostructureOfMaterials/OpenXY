@@ -189,7 +189,7 @@ end
 
 %% Resolving slip, parallel processing
 rhos = zeros(length(bedge) + length(bscrew),m*n);
-
+warning off;
 
 NumberOfCores = Settings.DoParallel;
 if NumberOfCores>1 %if parallel processing
@@ -253,7 +253,7 @@ if NumberOfCores>1 %if parallel processing
         ppm.increment();
     end
 else
-    h = waitbar(0.1,'splitting')
+    h = waitbar(0.1,'splitting');
     for i = 1:m*n
         
         gmat = squeeze(bestgmat(:,:,i));
