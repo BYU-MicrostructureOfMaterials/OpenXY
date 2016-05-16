@@ -18,6 +18,7 @@ Settings.Material = 'Auto-detect'; %Options from GetMaterialsList.m
 Settings.DoParallel = NumberOfCores - 1;
 Settings.DoShowPlot = false;
 Settings.ImageTag = false;
+Settings.DisplayGUI = true;
 
 %% ROI/Filter Settings
 %ROI Settings
