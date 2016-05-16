@@ -66,7 +66,7 @@ elseif run==2 && strcmp(Settings.ScanType,'LtoSquare')
     stepsize_orig = abs((data.xpos(5)-data.xpos(2))/1e6);
 end
 ScanType=Settings.ScanType;
-intensityr=zeros(size(ImageNamesList));
+% intensityr=zeros(size(ImageNamesList));
 alpha_data.r=r;
 alpha_data.c=c;
 
@@ -330,11 +330,11 @@ if strcmp(Settings.ScanType,'Square') ||  strcmp(Settings.ScanType,'LtoSquare') 
             alpha_filt(:,:,i)=0;
         end
         
-        if intensityr(i)<50
-%   Find the best way to threshold images with
-%         little or no pattern.
-            alpha_filt(:,:,i)=0;
-        end
+%         if intensityr(i)<50
+% %   Find the best way to threshold images with
+% %         little or no pattern.
+%             alpha_filt(:,:,i)=0;
+%         end
         
         if alpha_filt(:,:,i)==0
             discount=discount+1;
@@ -375,9 +375,9 @@ if strcmp(Settings.ScanType,'L') % L grid
     end
 end
 
-alpha_total3(1,:)=3.*(abs(alpha(1,3,:))+abs(alpha(2,3,:))+abs(alpha(3,3,:)));
-alpha_total5(1,:)=9/5.*(abs(alpha(1,3,:))+abs(alpha(2,3,:))+abs(alpha(3,3,:))+abs(alpha(2,1,:))+abs(alpha(1,2,:)));
-alpha_total9(1,:)=abs(alpha(1,3,:))+abs(alpha(2,3,:))+abs(alpha(3,3,:))+abs(alpha(1,1,:))+abs(alpha(2,1,:))+abs(alpha(3,1,:))+abs(alpha(1,2,:))+abs(alpha(2,2,:))+abs(alpha(3,2,:));
+alpha_total3(1,:)=3.*(abs(alpha_filt(1,3,:))+abs(alpha_filt(2,3,:))+abs(alpha_filt(3,3,:)));
+alpha_total5(1,:)=9/5.*(abs(alpha_filt(1,3,:))+abs(alpha_filt(2,3,:))+abs(alpha_filt(3,3,:))+abs(alpha_filt(2,1,:))+abs(alpha_filt(1,2,:)));
+alpha_total9(1,:)=abs(alpha_filt(1,3,:))+abs(alpha_filt(2,3,:))+abs(alpha_filt(3,3,:))+abs(alpha_filt(1,1,:))+abs(alpha_filt(2,1,:))+abs(alpha_filt(3,1,:))+abs(alpha_filt(1,2,:))+abs(alpha_filt(2,2,:))+abs(alpha_filt(3,2,:));
 
 
 %save averaged alphas to a file.
@@ -392,7 +392,7 @@ alpha_data.alpha=alpha;
 alpha_data.alpha_filt=alpha_filt;
 alpha_data.misang=misang;
 alpha_data.discount=discount;
-alpha_data.intensityr=intensityr;
+% alpha_data.intensityr=intensityr;
 alpha_data.stepsize=stepsize;
 alpha_data.b=b;
 
@@ -563,7 +563,7 @@ function [AllFa,AllSSEa,AllFc,AllSSEc, misang] = DDCalc(DDSettings,lattice,Image
             end
         else
             AllFa= -eye(3);
-            AllSSEa(cnt)=101;
+            AllSSEa=101;
         end
 
         % then, evaluate point c

@@ -1,6 +1,6 @@
 function TestSettingsPntbyPnt(Settings,MainGUI)
 
-%Get Reference Image Names
+%% Get Reference Image Names
 if ~strcmp(Settings.HROIMMethod,'Simulated')&& ~isfield(Settings,'RefImageNames')
     RefImageInd = Settings.RefImageInd;
     if RefImageInd~=0
@@ -24,6 +24,7 @@ if ~strcmp(Settings.HROIMMethod,'Simulated')&& ~isfield(Settings,'RefImageNames'
     end  
 end
 
+%% Set up Variables
 
 Settings.ROISize = round((Settings.ROISizePercent * .01)*Settings.PixelSize);
 
@@ -60,6 +61,8 @@ Limits(2) = Mean + 3*StdDev;
 
 Settings.DoShowPlot = 1;
 Settings.SinglePattern = 0;
+
+%% Open GUI and Run Test
 
 button = 1;
 

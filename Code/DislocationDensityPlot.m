@@ -35,6 +35,8 @@ alpha = alpha_data.alpha;
 %cmin=MinCutoff;
 %cmax=UpperCutoff;
 
+ind = alpha_data.misang < 8.5;
+ind = reshape(ind,[c r])';
 if strcmp(Settings.ScanType,'Square') ||  strcmp(Settings.ScanType,'LtoSquare')
     alpha_total3=reshape(alpha_total3, [c r])';
     
@@ -42,7 +44,7 @@ if strcmp(Settings.ScanType,'Square') ||  strcmp(Settings.ScanType,'LtoSquare')
 
     qq=reshape(alpha(1,3,:),[c r])';
     if r == 1; qq=repmat(qq,floor(Settings.ScanLength/4),1); end;
-    figure;imagesc(log10(abs(qq)))
+    figure;imagesc(log10(abs(qq.*ind)))
     title('Alpha_1_3','fontsize',14)
     shading flat
     axis equal tight
@@ -52,7 +54,7 @@ if strcmp(Settings.ScanType,'Square') ||  strcmp(Settings.ScanType,'LtoSquare')
 
     qq=reshape(alpha(2,3,:),[c r])';
     if r == 1; qq=repmat(qq,floor(Settings.ScanLength/4),1); end;
-    figure;imagesc(log10(abs(qq)))
+    figure;imagesc(log10(abs(qq.*ind)))
     title('Alpha_2_3','fontsize',14)
     shading flat
     axis equal tight
@@ -62,7 +64,7 @@ if strcmp(Settings.ScanType,'Square') ||  strcmp(Settings.ScanType,'LtoSquare')
 
     qq=reshape(alpha(3,3,:),[c r])';
     if r == 1; qq=repmat(qq,floor(Settings.ScanLength/4),1); end;
-    figure;imagesc(log10(abs(qq)))
+    figure;imagesc(log10(abs(qq.*ind)))
     title('Alpha_3_3','fontsize',14)
     shading flat
     axis equal tight
@@ -73,7 +75,7 @@ if strcmp(Settings.ScanType,'Square') ||  strcmp(Settings.ScanType,'LtoSquare')
     % colormapeditor % change scaling of colorbar
     qq = alpha_total3;
     if r == 1; qq=repmat(qq,floor(Settings.ScanLength/4),1); end;
-    figure;imagesc(log10(abs(qq)))
+    figure;imagesc(log10(abs(qq.*ind)))
     title('Alpha Total','fontsize',14)
     shading flat
     axis equal tight

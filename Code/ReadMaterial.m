@@ -67,6 +67,8 @@ switch lower(Material)
         M.SplitDD = {'Ta','Ta (with 112 planes)'};
     case 'aluminum'
         M.SplitDD = {'Al-18ss'};
+    case 'iron-alpha'
+        M.SplitDD = {'Fe'};
 end
         
         
