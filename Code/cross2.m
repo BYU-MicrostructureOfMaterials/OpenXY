@@ -58,7 +58,7 @@ function c = cross2(a, b, idA, idB)
 % -------------------------------------------------------------------------
 
 % Allow 2 to 4 input arguments
-error( nargchk(2, 4, nargin) ); 
+narginchk(2, 4); 
 
 % Setting IDA and/or IDB
 sizeA = size(a);
