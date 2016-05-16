@@ -100,7 +100,7 @@ if ~isfield(ScanParams,'PCX') || ~isfield(ScanParams,'PCY') || ~isfield(ScanPara
     ScanParams.zstar = 0.1;
 else
     ScanParams.xstar = (ScanParams.PCX-(1-ScanParams.VHRatio)/2)/ScanParams.VHRatio;
-    ScanParams.ystar = ScanParams.PCY;
+    ScanParams.ystar = ScanParams.PCY/ScanParams.VHRatio;
     ScanParams.zstar = ScanParams.DD/ScanParams.VHRatio;
 end
 
