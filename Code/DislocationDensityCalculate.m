@@ -143,6 +143,10 @@ if ~strcmp(Settings.ScanType,'L')
     
     %Perform Calculation
     if Settings.DoParallel > 1
+        pool = gcp('nocreate');
+        if isempty(pool)
+            pool = parpool(Settings.DoParallel);
+        end
         if any(strcmp(javaclasspath,fullfile(pwd,'java')))
             pctRunOnAll javaaddpath('java')
         end
@@ -544,7 +548,7 @@ function [AllFa,AllSSEa,AllFc,AllSSEc, misang] = DDCalc(DDSettings,lattice,Image
         if r > 1 %Not Line Scan
 
             clear global rs cs Gs
-            if ~strcmp(Settings.ScanType,'Hexagonal') || (Settings.strcmp(ScanType,'Hexagonal') && skippts>0)
+            if ~strcmp(Settings.ScanType,'Hexagonal') || (strcmp(Settings.ScanType,'Hexagonal') && skippts>0)
 
                     [AllFa,AllSSEa] = CalcF(image_b,image_a,g_b,eye(3),cnt,Settings,Settings.Phase{cnt}, RefIndA);
 
@@ -675,6 +679,9 @@ function DDSettings = GetDDSettings(cnt,ImageNamesList,Allg,Dims,ScanType,skippt
             Amat=g_b;
             Cmat=g_b;
             
+            if skippts==0
+                extra_a = true;
+            end
         end
        
     end
