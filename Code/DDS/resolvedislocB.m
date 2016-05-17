@@ -61,8 +61,8 @@ if L1
             error('only types 1-3 defined')
     end
 
-    options = optimset('TolCon', 1e3, 'Algorithm', 'active-set', 'display','off');%'MaxFunEvals',3000, 
-
+    %options = optimset('TolCon', 1e3, 'Algorithm', 'active-set', 'display','off');%'MaxFunEvals',3000, 
+    options = optimoptions(@linprog,'Algorithm', 'interior-point', 'display','off','OptimalityTolerance',1e3);
     
     if x0type
         x0 = A\alphavec;
