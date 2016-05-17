@@ -22,7 +22,7 @@ function varargout = AdvancedSettingsGUI(varargin)
 
 % Edit the above text to modify the response to help AdvancedSettingsGUI
 
-% Last Modified by GUIDE v2.5 08-Sep-2015 16:21:32
+% Last Modified by GUIDE v2.5 17-May-2016 08:16:51
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -66,6 +66,11 @@ end
 handles.PrevSettings = Settings;
 
 %HROIM Method
+if ~isfield(Settings,'DoStrain')
+    Settings.DoStrain = 1;
+end
+set(handles.DoStrain,'Value',Settings.DoStrain);
+
 HROIMMethodList = {'Simulated-Kinematic','Simulated-Dynamic','Real-Grain Ref','Real-Single Ref'};
 set(handles.HROIMMethod, 'String', HROIMMethodList);
 if strcmp(Settings.HROIMMethod,'Simulated')
@@ -129,6 +134,7 @@ handles.Settings = Settings;
 
 %Update Components
 HROIMMethod_Callback(handles.HROIMMethod,eventdata,handles);
+DoStrain_Callback(handles.DoStrain, eventdata, handles);
 handles = guidata(hObject);
 DoDD_Callback(handles.DoDD, eventdata, handles);
 handles = guidata(hObject);
@@ -602,5 +608,29 @@ function EnableProfiler_Callback(hObject, eventdata, handles)
 
 % Hint: get(hObject,'Value') returns toggle state of EnableProfiler
 handles.Settings.EnableProfiler = get(hObject,'Value');
+guidata(hObject,handles);
 
+% --- Executes on button press in DoStrain.
+function DoStrain_Callback(hObject, eventdata, handles)
+% hObject    handle to DoStrain (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of DoStrain
+if get(hObject,'Value')
+    set(handles.HROIMMethod,'Enable','on');
+    set(handles.HROIMedit,'Enable','on');
+    set(handles.StandardDeviation,'Enable','on');
+    set(handles.MisoTol,'Enable','on');
+    set(handles.GrainRefType,'Enable','on');
+    HROIMMethod_Callback(handles.HROIMMethod, eventdata, handles);
+else
+    set(handles.HROIMMethod,'Enable','off');
+    set(handles.HROIMedit,'Enable','off');
+    set(handles.StandardDeviation,'Enable','off');
+    set(handles.MisoTol,'Enable','off');
+    set(handles.GrainRefType,'Enable','off');
+end
+handles.Settings.DoStrain = get(hObject,'Value');
+guidata(hObject,handles);
 

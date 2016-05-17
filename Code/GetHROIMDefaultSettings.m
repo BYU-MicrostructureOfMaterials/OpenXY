@@ -32,6 +32,7 @@ Settings.ImageFilter = [9 90 0 0];
 
 %% Advanced Settings
 %HROIM Settings
+Settings.DoStrain = 1;
 Settings.HROIMMethod = 'Real'; %{'Simulated', 'Real'}, %Someday will add Hybrid
 Settings.IterationLimit = 6;
 Settings.RefImageInd = 0;

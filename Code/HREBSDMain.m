@@ -225,13 +225,18 @@ end
 
 %% Run Analysis
 %Use a parfor loop if allowed multiple processors.
-tic
+if ~isfield(Settings,'DoStrain')
+    Settings.DoStrain = 1;
+end
+
 %Initialize Variables
 F = repmat({zeros(3)},1,Settings.ScanLength);
-g = repmat({zeros(3,1)},1,Settings.ScanLength);
+g = repmat({zeros(3)},1,Settings.ScanLength);
 U = repmat({zeros(3)},1,Settings.ScanLength);
 SSE = repmat({0},1,Settings.ScanLength);
-
+XX = repmat({zeros(Settings.NumROIs,3)},1,Settings.ScanLength);
+if Settings.DoStrain
+tic
 if Settings.DoParallel > 1
     NumberOfCores = Settings.DoParallel;
     try
@@ -301,6 +306,7 @@ else
 end
 Time = toc/60;
 if Settings.DisplayGUI; disp(['Time to finish: ' num2str(Time) ' minutes']); end;
+end
 
 %% Save output and write to .ang file
 for jj = 1:Settings.ScanLength
@@ -335,7 +341,6 @@ for jj = 1:Settings.ScanLength
         data.phi1rn{jj} = phi1;
         data.PHIrn{jj} = PHI;
         data.phi2rn{jj} = phi2;
-        Settings.XX = XX;
         
     end
     
@@ -343,6 +348,7 @@ for jj = 1:Settings.ScanLength
     Settings.NewAngles(jj,1:3) = [phi1 PHI phi2];
     
 end
+Settings.XX = XX;
 if strcmp(Settings.ScanType,'L')
     
     data.phi1rn = LFileVals{1};
