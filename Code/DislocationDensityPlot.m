@@ -35,9 +35,11 @@ alpha = alpha_data.alpha;
 %cmin=MinCutoff;
 %cmax=UpperCutoff;
 
-ind = alpha_data.misang < 8.5;
-ind = reshape(ind,[c r])';
+
 if strcmp(Settings.ScanType,'Square') ||  strcmp(Settings.ScanType,'LtoSquare')
+    ind = alpha_data.misang < 8.5;
+    ind = reshape(ind,[c r])';
+    
     alpha_total3=reshape(alpha_total3, [c r])';
     
     % alphare=reshape(alpha,[3,3,r,c]);
