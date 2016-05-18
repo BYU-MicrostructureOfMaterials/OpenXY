@@ -46,6 +46,7 @@ elseif strcmp(ext,'.ctf')
     Phase = cell(length(Angles),1); 
     if strcmp(Material,'Auto-detect')
         ind = 1;
+        auto = 1;
         if length(ScanParams.material) > 1
             [ind,ok] = listdlg('ListString',ScanParams.material,'PromptString',...
                 {'More than one phase detected.';'Mutli-phase scans not currently supported.';'Select one:'},...
@@ -60,7 +61,11 @@ elseif strcmp(ext,'.ctf')
     Phase = ValidatePhase(Phase);
     if ~isempty(Phase)
         MaterialData = ReadMaterial(Phase{1});
-
+        
+        if auto
+            disp(['Auto detected material: ' Phase{1}])
+        end
+        
         %Set up params for findgrains.m
         angles = reshape(Angles,ScanParams.NumColsOdd,ScanParams.NumRows,3);
         clean = true;

@@ -13,6 +13,9 @@ end
 if strcmpi(Material,'aluminium')
     Material = 'aluminum';
 end
+if strcmpi(Material,'TiAl')
+    Material = 'titaniumaluminum';
+end
 
 filename = fullfile(pwd,'Materials',[Material '.txt']);
 
