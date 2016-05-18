@@ -17,5 +17,5 @@ else
     materials = materials(2:end);
 end
 if option == 1 || option == 2
-    materials = [materials; {'ferrite';'austenite';'aluminium'}];
+    materials = [materials; {'ferrite';'austenite';'aluminium';'tial'}];
 end
