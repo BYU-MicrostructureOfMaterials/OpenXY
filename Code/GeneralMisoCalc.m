@@ -6,6 +6,13 @@ function [angle,Axis,deltaG]=GeneralMisoCalc(A,B,lattice)
 %
 %
 
+%Convert from euler to gmat if necessary
+if all(size(A)==[1,3]) && all(size(B)==[1,3])
+    A = euler2gmat(A(1),A(2),A(3));
+    B = euler2gmat(B(1),B(2),B(3));
+end
+    
+
 if strcmp(lattice,'cubic') || strcmp(lattice,'tetragonal')
     
     SymOps=gensymops;
