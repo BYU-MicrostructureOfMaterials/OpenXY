@@ -43,7 +43,8 @@ if strcmp(ext,'.ang')
     Phase = ValidatePhase(Phase);
     
 elseif strcmp(ext,'.ctf')
-    Phase = cell(length(Angles),1); 
+    Phase = cell(length(Angles),1);
+    auto = 0;
     if strcmp(Material,'Auto-detect')
         ind = 1;
         auto = 1;

@@ -232,7 +232,7 @@ switch HROIMMethod
             EMsoftMats = dir(EMdataPath);
             EMsoftMats = {EMsoftMats(~cellfun(@isempty,strfind({EMsoftMats.name},'EBSDmaster'))).name}';
             EMsoftMats = cellfun(@(x) x(1:strfind(x,'_EBSDmaster')-1),EMsoftMats,'UniformOutput',false);
-            inlist = ismember(mats,EMsoftMats);
+            inlist = ismember(lower(mats),lower(EMsoftMats));
             if ~all(inlist)
                 valid = 0;
                 msg = {['No master EBSD files for: ' strjoin(mats(~inlist),', ')], ['Search path: ' EMdataPath],'Resetting to kinematic simulation'};
