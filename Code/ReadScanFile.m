@@ -1,5 +1,14 @@
 
 function [ScanFileData, ScanParams] = ReadScanFile(ScanFilePath)
+% Reads .ang and .ctf Scan files into arrays. Converts .ctf angles to .ang
+%   orientation
+% ScanFileData columns:
+%   1-3: Euler Angles
+%   4-5: Position data
+%   6: Image Quality
+%   7: Confidence Index
+%   10: Fit
+
 [~, ~, ext] = fileparts(ScanFilePath);
 if strcmp(ext, '.ang')
     [ScanFileData, ScanParams] = ReadAngFile(ScanFilePath); 
