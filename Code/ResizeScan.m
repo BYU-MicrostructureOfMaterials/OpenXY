@@ -39,6 +39,21 @@ YDataNew = reshape(Settings.YData,Nx,Ny);
 IQNew = reshape(Settings.IQ,Nx,Ny)';
 CINew = reshape(Settings.CI,Nx,Ny);
 
+%Create IPF Map
+g = zeros(3,3,Nx*Ny);
+for i = 1:Nx*Ny
+    g(:,:,i) = euler2gmat(Settings.Angles(i,:));
+end
+IPF_map = PlotIPF(g,[Ny Nx],0);
+
+%Ask image type
+sel = questdlg('Select Image to Display','Resize Scan','Image Quality','IPF','Image Quality');
+if strcmp(sel,'Image Quality')
+    im = IQNew;
+elseif strcmp(sel,'IPF')
+    im = IPF_map;
+end
+
 %Location Selection GUI
 XStep = Settings.XData(2)-Settings.XData(1);
 YStep = Settings.YData(Settings.YData > 0);
@@ -46,7 +61,7 @@ YStep = YStep(1);
 indi = 1:1:Nx*Ny;
 indi = reshape(indi,Nx,Ny)';
 selectfig = figure;
-imagesc(IQNew);
+imagesc(permute(im,[2 1 3]));
 axis image
 title('Press RETURN key to select area');
 
@@ -81,7 +96,7 @@ while redo
         end   
 
         hold off
-        imagesc(IQNew)
+        imagesc(permute(im,[2 1 3]));
         axis image
         hold on
         plot(Xind,Yind,'kd','MarkerFaceColor','k');
