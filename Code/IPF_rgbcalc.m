@@ -22,7 +22,9 @@ bvect=bset(bvectind,:);
 RDirPlane = cross(DIR,rvect);
 GBplane = cross(bvect,gvect);
 Rintersect = cross(RDirPlane,GBplane);
-Rintersect = Rintersect/norm(Rintersect);
+if norm(Rintersect)~=0
+    Rintersect = Rintersect/norm(Rintersect);
+end
 if acos(dot(DIR,Rintersect))>(pi/2)
     Rintersect = -1*Rintersect;
 end
@@ -31,7 +33,9 @@ rgb(1) = (acos(dot(DIR,Rintersect)))/(acos(dot(rvect,Rintersect)));
 GDirPlane = cross(DIR,gvect);
 RBplane = cross(rvect,bvect);
 Gintersect = cross(GDirPlane,RBplane);
-Gintersect = Gintersect/norm(Gintersect);
+if norm(Gintersect)~=0
+    Gintersect = Gintersect/norm(Gintersect);
+end
 if acos(dot(DIR,Gintersect))>(pi/2)
     Gintersect = -1*Gintersect;
 end
@@ -40,7 +44,9 @@ rgb(2) = (acos(dot(DIR,Gintersect)))/(acos(dot(gvect,Gintersect)));
 BDirPlane = cross(DIR,bvect);
 RGplane = cross(gvect,rvect);
 Bintersect = cross(BDirPlane,RGplane);
-Bintersect = Bintersect/norm(Bintersect);
+if norm(Bintersect)~=0
+    Bintersect = Bintersect/norm(Bintersect);
+end
 if acos(dot(DIR,Bintersect))>(pi/2)
     Bintersect = -1*Bintersect;
 end
