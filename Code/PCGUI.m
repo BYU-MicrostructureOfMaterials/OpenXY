@@ -88,6 +88,15 @@ if ~isfield(handles,'IQ_map')
     handles.IQ_map = reshape(handles.Settings.IQ,Nx,Ny)';
 end
 
+%Get VHRatio
+if isfield(handles.Settings.ScanParams,'VHRatio')
+    handles.V = handles.Settings.ScanParams.VHRatio;
+else
+    im = imread(handles.Settings.FirstImagePath);
+    [Y,X,~] = size(im);
+    handles.V = Y/X;
+end
+
 % Update handles structure
 handles.Settings = Settings;
 guidata(hObject, handles);
@@ -199,7 +208,7 @@ if strcmp(type,'Strain Minimization')
     if count
         def_name = [def_name num2str(count)];
     end
-    PCSettings = PCEdit([Sel(1:3) 'Strain Minimization' Sel(5) def_name]);
+    PCSettings = PCEdit([Sel(1:3) 'Strain Minimization' Sel(5) def_name],handles.V);
     
     %Perform Strain Minimization
     PCData = PCStrainMinimization(Settings,PCSettings{5});
@@ -217,7 +226,7 @@ elseif strcmp(type,'Manual')
     if count
         def_name = [def_name num2str(count)];
     end
-    PCSettings = PCEdit([Sel(1:3) 'Manual' Sel(5) def_name]);
+    PCSettings = PCEdit([Sel(1:3) 'Manual' Sel(5) def_name],handles.V);
     count = sum(cell2mat(strfind(handles.Settings.PCList(:,6),PCSettings{6}))>0);
     if count
         PCSettings{6} = [PCSettings{6} num2str(count)];
@@ -235,10 +244,16 @@ elseif strcmp(type,'Grid')
     if count
         def_name = [def_name num2str(count)];
     end
-    PCData = PCGrid(Settings);
+    PCSettings = PCEdit([Sel(1:3) 'Grid' Sel(5) def_name {''}],handles.V);
+    
+    sel = questdlg('Select method for calibration point selection:','Grid PC Calibration','Manual','Automatic','Automatic');
+    if strcmp(sel,'Manual')
+        PCSettings{7}.CalibrationIndices = SelectCalibrationPoints(handles.IQ_map,handles.IPF_map);
+    end
+    PCData = PCGrid(Settings,PCSettings{7});
     
     %Add to PC List
-    Settings.PCList(end+1,:) = {PCData.XStar PCData.YStar PCData.ZStar...
+    Settings.PCList(end+1,:) = {PCData.xstar PCData.ystar PCData.zstar...
         'Grid' 'Naive' def_name PCData};
     set(handles.PCList,'String',Settings.PCList(:,6));
     handles.Settings = Settings;
@@ -276,7 +291,7 @@ function EditPC_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 index = GetListIndex(handles);
 plots.IQ_map = handles.IQ_map; plots.IPF_map = handles.IPF_map;
-EditedPC = PCEdit(handles.Settings.PCList(index,:),plots);
+EditedPC = PCEdit(handles.Settings.PCList(index,:),handles.V,plots);
 XStars = abs([handles.Settings.PCList{:,1}] - EditedPC{1}) < 1e-6;
 YStars = abs([handles.Settings.PCList{:,2}] - EditedPC{2}) < 1e-6;
 ZStars = abs([handles.Settings.PCList{:,3}] - EditedPC{3}) < 1e-6;
@@ -314,11 +329,13 @@ if isfield(EditedPC{7},'CalibrationIndices') %Calibration Points changed
         if strcmp(EditedPC{4},'Strain Minimization')
             PCData = PCStrainMinimization(handles.Settings,EditedPC{5},EditedPC{7}.CalibrationIndices);
             handles.Settings.PCList(end+1,:) = {PCData.MeanXStar PCData.MeanYStar PCData.MeanZStar  EditedPC{4:5} rename PCData};
+            set(handles.PCList,'String',handles.Settings.PCList(:,6));
         end
     end
 end
 guidata(handles.PCGUI,handles);
 PCList_Callback(handles.PCList, eventdata, handles);
+handles = guidata(handles.PCGUI);
 guidata(handles.PCGUI,handles);
 
 
@@ -388,7 +405,7 @@ elseif get(handles.IPFPlot,'Value')
     image(handles.PCaxes,handles.IPF_map)
     
     %Plot Calibration Points
-    if strcmp('Strain Minimization',handles.Settings.PCList{cur,4})
+    if ismember(handles.Settings.PCList{cur,4},{'Strain Minimization','Grid'})
         hold on
         [Yinds,Xinds] = ind2sub([Nx Ny],handles.Settings.PCList{cur,7}.CalibrationIndices);
         plot(Xinds,Yinds,'kd','MarkerFaceColor','k')
@@ -398,7 +415,7 @@ elseif get(handles.IQPlot,'Value')
     image(handles.PCaxes,handles.IQ_map)
     
     %Plot Calibration Points
-    if strcmp('Strain Minimization',handles.Settings.PCList{cur,4})
+    if ismember(handles.Settings.PCList{cur,4},{'Strain Minimization','Grid'})
         hold on
         [Yinds,Xinds] = ind2sub([Nx Ny],handles.Settings.PCList{cur,7}.CalibrationIndices);
         plot(Xinds,Yinds,'kd','MarkerFaceColor','k')
