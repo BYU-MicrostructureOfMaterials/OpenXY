@@ -90,11 +90,11 @@ for dir = 1:3
     PCopt = EvalPCGrid(pctest,PCvals,0);
     
     PCnew(dir) = PCopt;
-    PCData.CalibrationIndices(:,dir) = Inds;
     PCData.PCPoints(:,:,dir) = PCvals;
     PCData.StrainPoints(:,:,dir) = pctest;
 end
 
+PCData.CalibrationIndices = Inds;
 PCData.xstar = PCnew(1);
 PCData.ystar = PCnew(2);
 PCData.zstar = PCnew(3);
