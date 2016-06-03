@@ -80,6 +80,9 @@ copyParam('CameraAzimuthal');
 copyParam('mperpix');
 
 %% Other
+if isfield(NewSettings,'PCList')
+    Settings.PCList = NewSettings.PCList;
+end
 if isfield(NewSettings,'ScanData')
     Settings.ScanData = NewSettings.ScanData;
 end
