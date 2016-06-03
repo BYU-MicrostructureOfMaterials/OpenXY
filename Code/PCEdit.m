@@ -93,11 +93,11 @@ switch Type
         set(handles.StrainMinPanel,'Visible','on');
         set(handles.PCGridPanel,'Visible','off');
     case 'Grid'
-        set(handles.PCEdit,'Position',[pos(1) pos(2) 88 pos(4)]);
-        set(handles.StrainMinPanel,'Visible','off');
-        set(handles.PCGridPanel,'Visible','on','Position',[44 1.5 40 17]);
+        set(handles.PCEdit,'Position',[pos(1) pos(2) 128 pos(4)]);
+        set(handles.StrainMinPanel,'Visible','on','Position',[85 0.5 40 17]);
+        set(handles.PCGridPanel,'Visible','on','Position',[44 0.5 40 17]);
         if length(input)>6 && ~isempty(input{7})
-            set(handles.numpats,'String',input{7}.numpats);
+            set(handles.numpats,'String',input{7}.numpats,'Enable','off');
             set(handles.numpc,'String',input{7}.numpc);
             set(handles.deltapc,'String',input{7}.deltapc);
             set(handles.XStarFit,'Enable','on')
@@ -407,7 +407,7 @@ if get(handles.IPFPlot,'Value')
     image(handles.StrainMinaxes,handles.IPF_map)
     
     %Plot Calibration Points
-    if strcmp('Strain Minimization',GetPopupString(handles.PCType))
+    if ismember(GetPopupString(handles.PCType),{'Strain Minimization','Grid'})
         hold on
         [Yinds,Xinds] = ind2sub([Nx Ny],handles.PCData.CalibrationIndices);
         plot(Xinds,Yinds,'kd','MarkerFaceColor','k')
@@ -416,7 +416,7 @@ elseif get(handles.IQPlot,'Value')
     image(handles.StrainMinaxes,handles.IQ_map)
     
     %Plot Calibration Points
-    if strcmp('Strain Minimization',GetPopupString(handles.PCType))
+    if ismember(GetPopupString(handles.PCType),{'Strain Minimization','Grid'})
         hold on
         [Yinds,Xinds] = ind2sub([Nx Ny],handles.PCData.CalibrationIndices);
         plot(Xinds,Yinds,'kd','MarkerFaceColor','k')
@@ -454,7 +454,11 @@ function SelectPoints_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 sel = questdlg({'This will create a new pattern center calibration.';'Continue?'},'Point Selection','Yes','No','Yes');
 if strcmp(sel,'Yes')
-   handles.PCData.CalibrationIndices = SelectCalibrationPoints(handles.IQ_map,handles.IPF_map);
+   handles.PCData.CalibrationIndices = SelectCalibrationPoints(handles.IQ_map,handles.IPF_map,handles.PCData.CalibrationIndices(:,1));
+   numpats = length(handles.PCData.CalibrationIndices);
+   set(handles.numpats,'String',numpats);
+   handles.PCData.numpats = numpats;
+   UpdatePlot(handles);
 end
 guidata(handles.PCEdit,handles);
 
