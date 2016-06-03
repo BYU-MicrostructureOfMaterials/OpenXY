@@ -7,39 +7,50 @@ function Inds = SelectCalibrationPoints(mapsize,IQ,Angles)
 %   1st Argument: Image quality map of (Ny,Nx) dimensions
 %   2nd Argument: IPF map of (Ny,Nx) dimensions
 
+    if all(size(mapsize) == [1,2])
+        if nargin == 3
+            %Set up Images to Plot
+            Nx = mapsize(1);
+            Ny = mapsize(2);
+            ScanLength = Nx*Ny;
+            g = zeros(3,3,ScanLength);
+            for i = 1:ScanLength
+                g(:,:,i) = euler2gmat(Angles(i,:));
+            end
 
-    if nargin == 3
-        %Set up Images to Plot
-        Nx = mapsize(1);
-        Ny = mapsize(2);
-        ScanLength = Nx*Ny;
-        g = zeros(3,3,ScanLength);
-        for i = 1:ScanLength
-            g(:,:,i) = euler2gmat(Angles(i,:));
+            %Ask image type
+            sel = questdlg('Select Image to Display','Resize Scan','Image Quality','IPF','Image Quality');
+            if strcmp(sel,'Image Quality')
+                im = reshape(IQ,Nx,Ny)';
+            elseif strcmp(sel,'IPF')
+                im = PlotIPF(g,[Nx Ny],0);
+            end
+            
+            npoints = 1;
+            Inds = zeros(1);
         end
-    
-        %Ask image type
-        sel = questdlg('Select Image to Display','Resize Scan','Image Quality','IPF','Image Quality');
-        if strcmp(sel,'Image Quality')
-            im = reshape(IQ,Nx,Ny)';
-        elseif strcmp(sel,'IPF')
-            im = PlotIPF(g,[Nx Ny],0);
+    else
+        if nargin > 1
+            %Ask image type
+            sel = questdlg('Select Image to Display','Resize Scan','Image Quality','IPF','Image Quality');
+            if strcmp(sel,'Image Quality')
+                im = mapsize;
+            elseif strcmp(sel,'IPF')
+                im = IQ;
+            end
+            [Ny,Nx,~] = size(im);
         end
-    elseif nargin == 2
-        %Ask image type
-        sel = questdlg('Select Image to Display','Resize Scan','Image Quality','IPF','Image Quality');
-        if strcmp(sel,'Image Quality')
-            im = mapsize;
-        elseif strcmp(sel,'IPF')
-            im = IQ;
-        end
-        [Ny,Nx] = size(im);
+        if nargin == 3
+            Inds = Angles;
+            npoints = length(Inds)+1;
+        else
+            Inds = zeros(1);
+            npoints = 1;
+        end 
     end
     
     %Select Calibration Points
     morepoints = 1;
-    npoints = 1;
-    Inds = [];
     Title = 'Press RETURN key or right-click last point to exit';
     
     %Set minimum number of points
@@ -51,7 +62,15 @@ function Inds = SelectCalibrationPoints(mapsize,IQ,Angles)
     f = figure(1);
     image(im)
     title(Title)
-    Inds = zeros(1); Xind = zeros(1); Yind = zeros(1);
+   
+    if Inds ~= 0
+        hold on
+        [Yind,Xind] = ind2sub(size(im),Inds);
+        plot(Xind,Yind,'kd','MarkerFaceColor','k')
+    else
+         Xind = zeros(1); Yind = zeros(1);
+    end
+    
     while morepoints       
         %Gets X,Y data from user
         [x,y, button] = ginput(1);
