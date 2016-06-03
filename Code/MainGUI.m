@@ -632,7 +632,7 @@ function PCCalSettings_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 if handles.ScanFileLoaded && handles.ImageLoaded
-    handles.Settings = PCCalGUI(handles.Settings,get(handles.MainGUI,'Position'));
+    handles.Settings = PCGUI(handles.Settings,get(handles.MainGUI,'Position'));
 else
     warndlg({'Cannot open PC Calibration menu'; 'Must select scan file data and first image'},'OpenXY: Invalid Operation');
 end
