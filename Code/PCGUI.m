@@ -60,7 +60,6 @@ if isempty(varargin)
 else
     Settings = varargin{1};
 end
-handles.PrevSettings = Settings;
 
 %Populate PCMethod Box
 TypeString = {'Strain Minimization','Grid','Tiff','Manual'};
@@ -76,26 +75,37 @@ set(handles.PCList,'String',Settings.PCList(:,6));
 
 %Create IPF map and save it
 if ~isfield(handles,'IPF_map')
-    g = zeros(3,3,handles.Settings.ScanLength);
-    for i = 1:handles.Settings.ScanLength
-        g(:,:,i) = euler2gmat(handles.Settings.Angles(i,:));
+    g = zeros(3,3,Settings.ScanLength);
+    for i = 1:Settings.ScanLength
+        g(:,:,i) = euler2gmat(Settings.Angles(i,:));
     end
-    handles.IPF_map = PlotIPF(g,[Nx Ny],0);
+    handles.IPF_map = PlotIPF(g,[Settings.Nx Settings.Ny],0);
 end
 
 %Create IQ map and save it
 if ~isfield(handles,'IQ_map')
-    handles.IQ_map = reshape(handles.Settings.IQ,Nx,Ny)';
+    handles.IQ_map = reshape(Settings.IQ,Settings.Nx,Settings.Ny)';
 end
 
 %Get VHRatio
-if isfield(handles.Settings.ScanParams,'VHRatio')
-    handles.V = handles.Settings.ScanParams.VHRatio;
+if isfield(Settings.ScanParams,'VHRatio')
+    handles.V = Settings.ScanParams.VHRatio;
 else
-    im = imread(handles.Settings.FirstImagePath);
+    im = imread(Settings.FirstImagePath);
     [Y,X,~] = size(im);
     handles.V = Y/X;
 end
+
+%Select Current PC
+if size(Settings.PCList,2) == 8
+    IndCol = [Settings.PCList{:,8}];
+    Settings.PCList(:,8) = []; %Remove column
+    ListInds = 1:length(IndCol);
+    index = ListInds(logical(IndCol)    );
+else
+    index = 1;
+end
+set(handles.PCList,'Value',index);
 
 % Update handles structure
 handles.Settings = Settings;
@@ -116,6 +126,10 @@ function varargout = PCGUI_OutputFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Get default command line output from handles structure
+index = GetListIndex(handles);
+IndCol = zeros(size(handles.Settings.PCList,1),1);
+IndCol(index) = 1;
+handles.Settings.PCList(:,8) = num2cell(IndCol);
 varargout{1} = handles.Settings;
 delete(handles.PCGUI);
 
@@ -309,9 +323,10 @@ if count > 0
 end
 
 %Edit or Add
+GridEdit = false;
 if ~any(XStars&YStars&ZStars) %Manually Edited PC
     EditedPC{4} = 'Manual';
-    handles.Settings.PCList(end+1,:) = [EditedPC(1:5) rename 1 {''}];
+    handles.Settings.PCList(end+1,:) = [EditedPC(1:5) rename {''}];
     set(handles.PCList,'String',handles.Settings.PCList(:,6));
 elseif ~strcmp(name,EditedPC{6}) %Rename only
     if any(strcmp(handles.Settings.PCList(:,6),EditedPC{6}))
@@ -325,13 +340,28 @@ if ~strcmp(planefit,EditedPC{5}) %PlaneFit changed
     handles.Settings.PCList{index,5} = EditedPC{5};
 end
 if isfield(EditedPC{7},'CalibrationIndices') %Calibration Points changed
-    if ~all(EditedPC{7}.CalibrationIndices == handles.Settings.PCList{index,7}.CalibrationIndices)
+    if EditedPC{7}.numpats == handles.Settings.PCList{index,7}.numpats && ~all(EditedPC{7}.CalibrationIndices == handles.Settings.PCList{index,7}.CalibrationIndices)
         if strcmp(EditedPC{4},'Strain Minimization')
             PCData = PCStrainMinimization(handles.Settings,EditedPC{5},EditedPC{7}.CalibrationIndices);
             handles.Settings.PCList(end+1,:) = {PCData.MeanXStar PCData.MeanYStar PCData.MeanZStar  EditedPC{4:5} rename PCData};
             set(handles.PCList,'String',handles.Settings.PCList(:,6));
+        elseif strcmp(EditPC{4},'Grid')
+            GridEdit = true;
         end
     end
+end
+if strcmp(EditedPC{4},'Grid')
+    if EditedPC{7}.numpc ~= handles.Settings.PCList{index,7}.numpc || ...
+            EditedPC{7}.numpats ~= handles.Settings.PCList{index,7}.numpats || ...
+            EditedPC{7}.deltapc ~= handles.Settings.PCList{incex,7}.deltapc
+        GridEdit = true;
+    end
+end
+if GridEdit
+    PCData = PCGrid(handles.Settings,EditedPC{7});
+    handles.Settings.PCList(end+1,:) = {PCData.xstar PCData.ystar PCData.zstar...
+        'Grid' 'Naive' rename PCData};
+    set(handles.PCList,'String',handles.Settings.PCList(:,6));
 end
 guidata(handles.PCGUI,handles);
 PCList_Callback(handles.PCList, eventdata, handles);
