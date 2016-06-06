@@ -4,17 +4,35 @@ if nargin < 3
 end
 Nx = arraysize(1);
 Ny = arraysize(2);
+if numpts > Nx*Ny
+    numpts = Nx*Ny;
+end
+
 
 Dx = sqrt(Nx*numpts/Ny);
 Dy = (numpts/Dx);
-Sx = Nx/(Dx+1);
-Sy = Ny/(Dy+1);
-Ix = 0:round(Sx):Nx;
-Iy = 0:round(Sy):Ny;
-Ix = Ix(2:round(Dx)+1);
-Iy = Iy(2:round(Dy)+1);
+Sx = round(Nx/(Dx+1));
+Sy = round(Ny/(Dy+1));
+Lx = (round(Dx)-1)*Sx;
+Ly = (round(Dy)-1)*Sy;
+if Lx >= Nx
+    Sx = Sx-1;
+    Lx = (round(Dx)-1)*Sx;
+end
+if Ly >= Ny
+    Sy = Sy-1;
+    Ly = (round(Dy)-1)*Sy;
+end
+Cx = round((Nx-Lx)/2);
+Cy = round((Ny-Ly)/2);
+Ix = Cx:Sx:Nx;
+Iy = Cy:Sy:Ny;
+
+Ix = Ix(1:round(Dx));
+Iy = Iy(1:round(Dy));
+
 [Xinds,Yinds] = meshgrid(Ix,Iy);
-Inds = sub2ind(arraysize,Xinds,Yinds);
+Inds = sub2ind(arraysize,Xinds(:),Yinds(:));
 
 if plot
     figure(1)
