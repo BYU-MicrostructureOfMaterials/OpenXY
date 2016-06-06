@@ -76,27 +76,24 @@ if ~isempty(varargin{2})
     handles.V = varargin{2};
 end
 
-%Read in image maps
-if length(varargin) > 2
-    handles.IQ_map = varargin{3}.IQ_map;
-    handles.IPF_map = varargin{3}.IPF_map;
-    set(handles.IPFPlot,'Value',1);
-    UpdatePlot(handles); 
-end
-UpdatePC(handles);
-
+%Update GUI components
 pos = get(handles.PCEdit,'Position');
 Type = input{4};
 switch Type
     case 'Strain Minimization'
-        set(handles.PCEdit,'Position',[pos(1) pos(2) 88 pos(4)]);
-        set(handles.StrainMinPanel,'Visible','on');
+        if ~isempty(handles.PCData) && isfield(handles.PCData,'CalibrationIndices')
+            set(handles.StrainMinPanel,'Visible','on','Position',[44 0.5 40 17]);
+            set(handles.PCEdit,'Position',[pos(1) pos(2) 88 pos(4)]);
+        else
+            set(handles.StrainMinPanel,'Visible','off');
+            set(handles.PCEdit,'Position',[pos(1) pos(2) 44 pos(4)]);
+        end
         set(handles.PCGridPanel,'Visible','off');
     case 'Grid'
         set(handles.PCEdit,'Position',[pos(1) pos(2) 128 pos(4)]);
         set(handles.StrainMinPanel,'Visible','on','Position',[85 0.5 40 17]);
         set(handles.PCGridPanel,'Visible','on','Position',[44 0.5 40 17]);
-        if length(input)>6 && ~isempty(input{7})
+        if length(input)>6 && ~isempty(input{7}) %Editing PC
             set(handles.numpats,'String',input{7}.numpats,'Enable','off');
             set(handles.numpc,'String',input{7}.numpc);
             set(handles.deltapc,'String',input{7}.deltapc);
@@ -104,10 +101,11 @@ switch Type
             set(handles.YStarFit,'Enable','on')
             set(handles.ZStarFit,'Enable','on')
             set(handles.NoGridPlot,'Enable','on')
-        else
+        else %New PC
             set(handles.numpats,'String',100); handles.PCData.numpats = 100;
             set(handles.numpc,'String',40); handles.PCData.numpc = 40;
             set(handles.deltapc,'String',0.06/40); handles.PCData.deltapc = 0.06/handles.PCData.numpc;
+            set(handles.SelectPoints,'String','Generate Grid');
             set(handles.XStarFit,'Enable','off')
             set(handles.YStarFit,'Enable','off')
             set(handles.ZStarFit,'Enable','off')
@@ -118,6 +116,15 @@ switch Type
         set(handles.StrainMinPanel,'Visible','off');
         set(handles.PCGridPanel,'Visible','off');
 end
+
+%Read in image maps
+if length(varargin) > 2
+    handles.IQ_map = varargin{3}.IQ_map;
+    handles.IPF_map = varargin{3}.IPF_map;
+    set(handles.IPFPlot,'Value',1);
+    UpdatePlot(handles); 
+end
+UpdatePC(handles);
 
 % Update handles structure
 handles.fig = {};
@@ -405,23 +412,23 @@ cla(handles.StrainMinaxes,'reset');
 %Plot Selected graph
 if get(handles.IPFPlot,'Value')
     image(handles.StrainMinaxes,handles.IPF_map)
-    
-    %Plot Calibration Points
-    if ismember(GetPopupString(handles.PCType),{'Strain Minimization','Grid'})
-        hold on
-        [Yinds,Xinds] = ind2sub([Nx Ny],handles.PCData.CalibrationIndices);
-        plot(Xinds,Yinds,'kd','MarkerFaceColor','k')
-    end
 elseif get(handles.IQPlot,'Value')
     image(handles.StrainMinaxes,handles.IQ_map)
-    
-    %Plot Calibration Points
-    if ismember(GetPopupString(handles.PCType),{'Strain Minimization','Grid'})
-        hold on
-        [Yinds,Xinds] = ind2sub([Nx Ny],handles.PCData.CalibrationIndices);
-        plot(Xinds,Yinds,'kd','MarkerFaceColor','k')
-    end
 end
+
+%Plot Calibration Points
+if ismember(GetPopupString(handles.PCType),{'Strain Minimization','Grid'})
+    if isfield(handles.PCData,'CalibrationIndices')
+        [Xinds,Yinds] = ind2sub([Nx Ny],handles.PCData.CalibrationIndices);
+    elseif strcmp(GetPopupString(handles.PCType),'Grid') %New Grid PC
+        [Xinds,Yinds] = GridPattern([Nx Ny],str2double(get(handles.numpats,'String')));
+        Xinds = Xinds(:);
+        Yinds = Yinds(:);
+    end
+    hold on
+    plot(handles.StrainMinaxes,Xinds,Yinds,'kd','MarkerFaceColor','k','MarkerSize',3)
+end
+axis equal tight
 set(handles.StrainMinaxes,'XTick',[],'YTick',[]);
 
 
