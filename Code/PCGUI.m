@@ -222,7 +222,7 @@ if strcmp(type,'Strain Minimization')
     if count
         def_name = [def_name num2str(count)];
     end
-    PCSettings = PCEdit([Sel(1:3) 'Strain Minimization' Sel(5) def_name],handles.V);
+    PCSettings = PCEdit([Sel(1:3) 'Strain Minimization' Sel(5) def_name {''}],handles.V);
     
     %Perform Strain Minimization
     PCData = PCStrainMinimization(Settings,PCSettings{5});
@@ -258,7 +258,8 @@ elseif strcmp(type,'Grid')
     if count
         def_name = [def_name num2str(count)];
     end
-    PCSettings = PCEdit([Sel(1:3) 'Grid' Sel(5) def_name {''}],handles.V);
+    plots.IQ_map = handles.IQ_map; plots.IPF_map = handles.IPF_map;
+    PCSettings = PCEdit([Sel(1:3) 'Grid' Sel(5) def_name {''}],handles.V,plots);
     
     sel = questdlg('Select method for calibration point selection:','Grid PC Calibration','Manual','Automatic','Automatic');
     if strcmp(sel,'Manual')
@@ -339,21 +340,20 @@ end
 if ~strcmp(planefit,EditedPC{5}) %PlaneFit changed
     handles.Settings.PCList{index,5} = EditedPC{5};
 end
-if isfield(EditedPC{7},'CalibrationIndices') %Calibration Points changed
-    if EditedPC{7}.numpats == handles.Settings.PCList{index,7}.numpats && ~all(EditedPC{7}.CalibrationIndices == handles.Settings.PCList{index,7}.CalibrationIndices)
-        if strcmp(EditedPC{4},'Strain Minimization')
-            PCData = PCStrainMinimization(handles.Settings,EditedPC{5},EditedPC{7}.CalibrationIndices);
-            handles.Settings.PCList(end+1,:) = {PCData.MeanXStar PCData.MeanYStar PCData.MeanZStar  EditedPC{4:5} rename PCData};
-            set(handles.PCList,'String',handles.Settings.PCList(:,6));
-        elseif strcmp(EditPC{4},'Grid')
-            GridEdit = true;
-        end
+if strcmp(EditedPC{4},'Strain Minimization')
+    if isfield(EditedPC{7},'CalibrationIndices') && ~all(EditedPC{7}.CalibrationIndices == handles.Settings.PCList{index,7}.CalibrationIndices) %Calibration Points changed
+        PCData = PCStrainMinimization(handles.Settings,EditedPC{5},EditedPC{7}.CalibrationIndices);
+        handles.Settings.PCList(end+1,:) = {PCData.MeanXStar PCData.MeanYStar PCData.MeanZStar  EditedPC{4:5} rename PCData};
+        set(handles.PCList,'String',handles.Settings.PCList(:,6));
     end
 end
 if strcmp(EditedPC{4},'Grid')
     if EditedPC{7}.numpc ~= handles.Settings.PCList{index,7}.numpc || ...
             EditedPC{7}.numpats ~= handles.Settings.PCList{index,7}.numpats || ...
             EditedPC{7}.deltapc ~= handles.Settings.PCList{incex,7}.deltapc
+        GridEdit = true;
+    end
+    if isfield(EditedPC{7},'CalibrationIndices') && EditedPC{7}.numpats == handles.Settings.PCList{index,7}.numpats && ~all(EditedPC{7}.CalibrationIndices == handles.Settings.PCList{index,7}.CalibrationIndices)
         GridEdit = true;
     end
 end
@@ -437,7 +437,7 @@ elseif get(handles.IPFPlot,'Value')
     %Plot Calibration Points
     if ismember(handles.Settings.PCList{cur,4},{'Strain Minimization','Grid'})
         hold on
-        [Yinds,Xinds] = ind2sub([Nx Ny],handles.Settings.PCList{cur,7}.CalibrationIndices);
+        [Xinds,Yinds] = ind2sub([Nx Ny],handles.Settings.PCList{cur,7}.CalibrationIndices);
         plot(Xinds,Yinds,'kd','MarkerFaceColor','k')
     end
     guidata(handles.PCGUI,handles);
@@ -447,7 +447,8 @@ elseif get(handles.IQPlot,'Value')
     %Plot Calibration Points
     if ismember(handles.Settings.PCList{cur,4},{'Strain Minimization','Grid'})
         hold on
-        [Yinds,Xinds] = ind2sub([Nx Ny],handles.Settings.PCList{cur,7}.CalibrationIndices);
+        [Xinds,Yinds] = ind2sub([Nx Ny],handles.Settings.PCList{cur,7}.CalibrationIndices);
         plot(Xinds,Yinds,'kd','MarkerFaceColor','k')
     end
 end
+axis equal tight
