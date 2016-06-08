@@ -105,7 +105,7 @@ switch Type
             set(handles.numpats,'String',100); handles.PCData.numpats = 100;
             set(handles.numpc,'String',40); handles.PCData.numpc = 40;
             set(handles.deltapc,'String',0.06/40); handles.PCData.deltapc = 0.06/handles.PCData.numpc;
-            set(handles.SelectPoints,'String','Generate Grid');
+            set(handles.SelectPoints,'Enable','off')
             set(handles.XStarFit,'Enable','off')
             set(handles.YStarFit,'Enable','off')
             set(handles.ZStarFit,'Enable','off')
@@ -424,6 +424,8 @@ if ismember(GetPopupString(handles.PCType),{'Strain Minimization','Grid'})
         [Xinds,Yinds] = GridPattern([Nx Ny],str2double(get(handles.numpats,'String')));
         Xinds = Xinds(:);
         Yinds = Yinds(:);
+        numpats = length(Xinds);
+        set(handles.numpats,'String',num2str(numpats));
     end
     hold on
     plot(handles.StrainMinaxes,Xinds,Yinds,'kd','MarkerFaceColor','k','MarkerSize',3)
@@ -480,6 +482,7 @@ function numpats_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of numpats as a double
 handles.PCData.numpats = str2double(get(handles.numpats,'String'));
 guidata(handles.PCEdit,handles);
+UpdatePlot(handles);
 
 % --- Executes during object creation, after setting all properties.
 function numpats_CreateFcn(hObject, eventdata, handles)
