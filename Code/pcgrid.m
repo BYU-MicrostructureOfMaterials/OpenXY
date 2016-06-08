@@ -15,6 +15,8 @@ else
     end
 end
 
+delete(gcp('nocreate'))
+parpool(4);
 tic
 
 %Try to filter out useless points based on CI and Fit
@@ -33,6 +35,14 @@ elevang = Settings.CameraElevation;
 pixsize = Settings.PixelSize;
 if length(unique(Settings.Phase)) == 1
     Material = ReadMaterial(Settings.Phase{1});
+    lattice = Material.lattice;
+    a1 = Material.a1;
+    b1 = Material.b1;
+    c1 = Material.c1;
+    Fhkl = Material.Fhkl;
+    dhkl = Material.dhkl;
+    hkl = Material.hkl;
+    axs = Material.axs;
 end
 if ~strcmp('Intensity',Settings.ROIStyle)
     [roixc,roiyc]= GetROIs(zeros(Settings.Nx,Settings.Ny),Settings.NumROIs,pixsize,Settings.ROISize,...
@@ -41,37 +51,46 @@ if ~strcmp('Intensity',Settings.ROIStyle)
     Settings.roiyc = roiyc;
 end
 
+%Initialize arrays
 pctest = zeros(length(Inds),numpc);
 PCvals = zeros(length(Inds),numpc);
+PCnew = zeros(3,1);
+
+%Extract out arrays to avoid parfor overhead
+ImageNamesList = Settings.ImageNamesList(Inds);
+ImageFilter = Settings.ImageFilter;
+Angles = Settings.Angles(Inds,:);
 
 for dir = 1:3
-    for qq=1:numpats
+    parfor qq = 1:numpats
+        PC0 = zeros(1,3);
         Ind=Inds(qq);
         PC0(1) = xstar(qq);
         PC0(2) = ystar(qq);
         PC0(3) = zstar(qq);
-        if length(unique(Settings.Phase)) > 1
-            Material = ReadMaterial(Settings.Phase{Ind});
-        end
-        
         star = PC0(dir);
         
-        ImagePath = Settings.ImageNamesList{Ind};
-        ScanImage = ReadEBSDImage(ImagePath,Settings.ImageFilter);
-        if strcmp('Intensity',Settings.ROIStyle)
-            [roixc,roiyc]= GetROIs(ScanImage,Settings.NumROIs,pixsize,Settings.ROISize,...
-                Settings.ROIStyle);
-            Settings.roixc = roixc;
-            Settings.roiyc = roiyc;
-        end
-        g = euler2gmat(Settings.Angles(Ind,1)+0.05,Settings.Angles(Ind,2),Settings.Angles(Ind,3)); % DTF - don't use ref angles for grain as is done on previous line!!
+%         if length(unique(Settings.Phase)) > 1
+%             Material = ReadMaterial(Settings.Phase{Ind});
+%         end
         
-        PCvals(qq,:) = star+((1:numpc)-1-(numpc-1)/2)*deltapc;
+        ImagePath = ImageNamesList{qq};
+        ScanImage = ReadEBSDImage(ImagePath,ImageFilter);
+%         if strcmp('Intensity',Settings.ROIStyle)
+%             [roixc,roiyc]= GetROIs(ScanImage,Settings.NumROIs,pixsize,Settings.ROISize,...
+%                 Settings.ROIStyle);
+%             Settings.roixc = roixc;
+%             Settings.roiyc = roiyc;
+%         end
+        g = euler2gmat(Angles(qq,:)); % DTF - don't use ref angles for grain as is done on previous line!!
+        
+        PCs = star+((1:numpc)-1-(numpc-1)/2)*deltapc;
+        PCvals(qq,:) = PCs;
         for xx=1:numpc
-            PC0(dir) = PCvals(qq,xx);
-            paramspat={PC0(1);PC0(2);PC0(3);pixsize;Av;sampletilt;elevang;Material.Fhkl;Material.dhkl;Material.hkl};
-            [pctest(qq,xx),~,F]=CalcNormFMod(PC0,ScanImage,paramspat,Material.lattice,Material.a1,Material.b1,Material.c1,Material.axs,g,Settings.ImageFilter,Ind,Settings);
-            R = poldec(F);
+            PC0(dir) = PCs(xx);
+            paramspat={PC0(1);PC0(2);PC0(3);pixsize;Av;sampletilt;elevang;Fhkl;dhkl;hkl};
+            [pctest(qq,xx),~,~]=CalcNormFMod(PC0,ScanImage,paramspat,lattice,a1,b1,c1,axs,g,ImageFilter,Ind,Settings);
+            %R = poldec(F);
             %g = R'*g; %Use Corrected Orientation
         end
         
