@@ -430,9 +430,10 @@ if get(handles.PCPlot,'Value')
     YStar = reshape(handles.Settings.YStar,handles.Settings.Nx,handles.Settings.Ny)';
     ZStar = reshape(handles.Settings.ZStar,handles.Settings.Nx,handles.Settings.Ny)';
     surf(XStar,YStar,ZStar,zeros(size(ZStar)))
+    colormap jet
     shading flat
 elseif get(handles.IPFPlot,'Value')
-    image(handles.PCaxes,handles.IPF_map)
+    PlotScan(handles.IPF_map,'IPF')
     
     %Plot Calibration Points
     if ismember(handles.Settings.PCList{cur,4},{'Strain Minimization','Grid'})
@@ -442,7 +443,7 @@ elseif get(handles.IPFPlot,'Value')
     end
     guidata(handles.PCGUI,handles);
 elseif get(handles.IQPlot,'Value')
-    image(handles.PCaxes,handles.IQ_map)
+    PlotScan(handles.IQ_map,'Image Quality')
     
     %Plot Calibration Points
     if ismember(handles.Settings.PCList{cur,4},{'Strain Minimization','Grid'})

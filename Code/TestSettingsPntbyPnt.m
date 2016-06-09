@@ -40,22 +40,22 @@ n = Settings.Nx;
 m = Settings.Ny;
 
 if strcmp(Settings.ScanType,'Square')
-    iqRS = reshape(Settings.IQ,n,m)';
+    [im,PlotType] = ChoosePlot([n m],Settings.IQ,Settings.Angles);
     indi = 1:1:m*n;
     indi = reshape(indi, n,m)';
     if m == 1 %Lines Scans
-        iqRS = repmat(iqRS,floor(Settings.ScanLength/4),1);
+        im = repmat(im,floor(Settings.ScanLength/4),1);
     end
 else
     NumColsEven = n-1;
     NumColsOdd = n;
     indi = 1:length(Settings.IQ);
     indi = Hex2Array(indi,NumColsOdd,NumColsEven);
-    iqRS = Hex2Array(Settings.IQ,NumColsOdd,NumColsEven);
+    im = Hex2Array(Settings.IQ,NumColsOdd,NumColsEven);
 end
 
-StdDev = std(iqRS(:));
-Mean = mean(iqRS(:));
+StdDev = std(im(:));
+Mean = mean(im(:));
 Limits(1) = Mean - 3*StdDev;
 Limits(2) = Mean + 3*StdDev;
 
@@ -71,10 +71,8 @@ figure(101);
 while(button==1)
     
     figure(99);
-    imagesc(iqRS)
-    axis image
+    PlotScan(im,PlotType);
     caxis(Limits)
-    colormap('jet')
     title({'\fontsize{14} Select a point to calculate the deformation tensor','\fontsize{10} Right-click to exit'},'HorizontalAlignment','center')
     
     figure(99)
