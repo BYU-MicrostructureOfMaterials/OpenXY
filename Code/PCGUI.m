@@ -416,6 +416,7 @@ Nx = handles.Settings.Nx;
 Ny = handles.Settings.Ny;
 
 %Reset Plot
+axes(handles.PCaxes)
 cla(handles.PCaxes,'reset')
 
 %Plot Selected graph
@@ -430,10 +431,9 @@ if get(handles.PCPlot,'Value')
     YStar = reshape(handles.Settings.YStar,handles.Settings.Nx,handles.Settings.Ny)';
     ZStar = reshape(handles.Settings.ZStar,handles.Settings.Nx,handles.Settings.Ny)';
     surf(XStar,YStar,ZStar,zeros(size(ZStar)))
-    colormap jet
     shading flat
 elseif get(handles.IPFPlot,'Value')
-    PlotScan(handles.IPF_map,'IPF')
+    image(handles.IPF_map)
     
     %Plot Calibration Points
     if ismember(handles.Settings.PCList{cur,4},{'Strain Minimization','Grid'})
@@ -443,7 +443,7 @@ elseif get(handles.IPFPlot,'Value')
     end
     guidata(handles.PCGUI,handles);
 elseif get(handles.IQPlot,'Value')
-    PlotScan(handles.IQ_map,'Image Quality')
+    image(handles.IQ_map)
     
     %Plot Calibration Points
     if ismember(handles.Settings.PCList{cur,4},{'Strain Minimization','Grid'})

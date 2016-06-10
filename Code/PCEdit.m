@@ -408,12 +408,13 @@ function UpdatePlot(handles)
 %Reset Plot
 cla(handles.StrainMinaxes,'reset');
 [Ny,Nx] = size(handles.IQ_map);
+axes(handles.StrainMinaxes)
 
 %Plot Selected graph
 if get(handles.IPFPlot,'Value')
-    PlotScan(handles.IPF_map,'IPF')
+    image(handles.IPF_map)
 elseif get(handles.IQPlot,'Value')
-    PlotScan(handles.IQ_map,'Image Quality')
+    image(handles.IQ_map)
 end
 
 %Plot Calibration Points
