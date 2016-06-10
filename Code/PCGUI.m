@@ -79,7 +79,7 @@ if ~isfield(handles,'IPF_map')
     for i = 1:Settings.ScanLength
         g(:,:,i) = euler2gmat(Settings.Angles(i,:));
     end
-    handles.IPF_map = PlotIPF(g,[Settings.Nx Settings.Ny],0);
+    handles.IPF_map = PlotIPF(g,[Settings.Nx Settings.Ny],Settings.ScanType,0);
 end
 
 %Create IQ map and save it
@@ -223,16 +223,17 @@ if strcmp(type,'Strain Minimization')
         def_name = [def_name num2str(count)];
     end
     PCSettings = PCEdit([Sel(1:3) 'Strain Minimization' Sel(5) def_name {''}],handles.V);
-    
-    %Perform Strain Minimization
-    PCData = PCStrainMinimization(Settings,PCSettings{5});
-    
-    %Add New PC to List
-    Settings.PCList(end+1,:) = {PCData.MeanXStar PCData.MeanYStar PCData.MeanZStar  PCSettings{4:6} PCData};
-    set(handles.PCList,'String',Settings.PCList(:,6));
-    handles.Settings = Settings;
-    guidata(handles.PCGUI,handles);
-    
+    if ~isempty([PCSettings{1:3}])
+        
+        %Perform Strain Minimization
+        PCData = PCStrainMinimization(Settings,PCSettings{5});
+
+        %Add New PC to List
+        Settings.PCList(end+1,:) = {PCData.MeanXStar PCData.MeanYStar PCData.MeanZStar  PCSettings{4:6} PCData};
+        set(handles.PCList,'String',Settings.PCList(:,6));
+        handles.Settings = Settings;
+        guidata(handles.PCGUI,handles);
+    end
 elseif strcmp(type,'Manual')
      %Setup Initial Params
     def_name = 'Manual';
@@ -240,18 +241,19 @@ elseif strcmp(type,'Manual')
     if count
         def_name = [def_name num2str(count)];
     end
-    PCSettings = PCEdit([Sel(1:3) 'Manual' Sel(5) def_name],handles.V);
-    count = sum(cell2mat(strfind(handles.Settings.PCList(:,6),PCSettings{6}))>0);
-    if count
-        PCSettings{6} = [PCSettings{6} num2str(count)];
+    PCSettings = PCEdit([Sel(1:3) 'Manual' Sel(5) def_name {''}],handles.V);
+    if ~isempty([PCSettings{1:3}])
+        count = sum(cell2mat(strfind(handles.Settings.PCList(:,6),PCSettings{6}))>0);
+        if count
+            PCSettings{6} = [PCSettings{6} num2str(count)];
+        end
+
+        %Add to PC List
+        Settings.PCList(end+1,:) = [PCSettings {''}];
+        set(handles.PCList,'String',Settings.PCList(:,6));
+        handles.Settings = Settings;
+        guidata(handles.PCGUI,handles);
     end
-    
-    %Add to PC List
-    Settings.PCList(end+1,:) = [PCSettings {''}];
-    set(handles.PCList,'String',Settings.PCList(:,6));
-    handles.Settings = Settings;
-    guidata(handles.PCGUI,handles);
-    
 elseif strcmp(type,'Grid')
     def_name = 'Grid';
     count = sum(cell2mat(strfind(handles.Settings.PCList(:,6),def_name))>0);
@@ -307,66 +309,68 @@ function EditPC_Callback(hObject, eventdata, handles)
 index = GetListIndex(handles);
 plots.IQ_map = handles.IQ_map; plots.IPF_map = handles.IPF_map;
 EditedPC = PCEdit(handles.Settings.PCList(index,:),handles.V,plots);
-XStars = abs([handles.Settings.PCList{:,1}] - EditedPC{1}) < 1e-6;
-YStars = abs([handles.Settings.PCList{:,2}] - EditedPC{2}) < 1e-6;
-ZStars = abs([handles.Settings.PCList{:,3}] - EditedPC{3}) < 1e-6;
-planefit = handles.Settings.PCList{index,5};
-name = handles.Settings.PCList{index,6};
-
-%Check for rename
-rename = [name '_Edit'];
-if ~strcmp(name,EditedPC{6})
-    rename = EditedPC{6};
-end
-count = sum(cell2mat(strfind(handles.Settings.PCList(:,6),rename))>0);
-if count > 0
-    rename = [rename num2str(count)];
-end
-
-%Edit or Add
-GridEdit = false;
-if ~any(XStars&YStars&ZStars) %Manually Edited PC
-    EditedPC{4} = 'Manual';
-    handles.Settings.PCList(end+1,:) = [EditedPC(1:5) rename {''}];
-    set(handles.PCList,'String',handles.Settings.PCList(:,6));
-elseif ~strcmp(name,EditedPC{6}) %Rename only
-    if any(strcmp(handles.Settings.PCList(:,6),EditedPC{6}))
-        handles.Settings.PCList{index,6} = rename;
-    else
-        handles.Settings.PCList{index,6} = EditedPC{6};
+if ~isempty([EditedPC{1:3}])
+    XStars = abs([handles.Settings.PCList{:,1}] - EditedPC{1}) < 1e-6;
+    YStars = abs([handles.Settings.PCList{:,2}] - EditedPC{2}) < 1e-6;
+    ZStars = abs([handles.Settings.PCList{:,3}] - EditedPC{3}) < 1e-6;
+    planefit = handles.Settings.PCList{index,5};
+    name = handles.Settings.PCList{index,6};
+    
+    %Check for rename
+    rename = [name '_Edit'];
+    if ~strcmp(name,EditedPC{6})
+        rename = EditedPC{6};
     end
-    set(handles.PCList,'String',handles.Settings.PCList(:,6));
-end
-if ~strcmp(planefit,EditedPC{5}) %PlaneFit changed
-    handles.Settings.PCList{index,5} = EditedPC{5};
-end
-if strcmp(EditedPC{4},'Strain Minimization')
-    if isfield(EditedPC{7},'CalibrationIndices') && ~all(EditedPC{7}.CalibrationIndices == handles.Settings.PCList{index,7}.CalibrationIndices) %Calibration Points changed
-        PCData = PCStrainMinimization(handles.Settings,EditedPC{5},EditedPC{7}.CalibrationIndices);
-        handles.Settings.PCList(end+1,:) = {PCData.MeanXStar PCData.MeanYStar PCData.MeanZStar  EditedPC{4:5} rename PCData};
+    count = sum(cell2mat(strfind(handles.Settings.PCList(:,6),rename))>0);
+    if count > 0
+        rename = [rename num2str(count)];
+    end
+    
+    %Edit or Add
+    GridEdit = false;
+    if ~any(XStars&YStars&ZStars) %Manually Edited PC
+        EditedPC{4} = 'Manual';
+        handles.Settings.PCList(end+1,:) = [EditedPC(1:5) rename {''}];
+        set(handles.PCList,'String',handles.Settings.PCList(:,6));
+    elseif ~strcmp(name,EditedPC{6}) %Rename only
+        if any(strcmp(handles.Settings.PCList(:,6),EditedPC{6}))
+            handles.Settings.PCList{index,6} = rename;
+        else
+            handles.Settings.PCList{index,6} = EditedPC{6};
+        end
         set(handles.PCList,'String',handles.Settings.PCList(:,6));
     end
-end
-if strcmp(EditedPC{4},'Grid')
-    if EditedPC{7}.numpc ~= handles.Settings.PCList{index,7}.numpc || ...
-            EditedPC{7}.numpats ~= handles.Settings.PCList{index,7}.numpats || ...
-            EditedPC{7}.deltapc ~= handles.Settings.PCList{incex,7}.deltapc
-        GridEdit = true;
+    if ~strcmp(planefit,EditedPC{5}) %PlaneFit changed
+        handles.Settings.PCList{index,5} = EditedPC{5};
     end
-    if isfield(EditedPC{7},'CalibrationIndices') && EditedPC{7}.numpats == handles.Settings.PCList{index,7}.numpats && ~all(EditedPC{7}.CalibrationIndices == handles.Settings.PCList{index,7}.CalibrationIndices)
-        GridEdit = true;
+    if strcmp(EditedPC{4},'Strain Minimization')
+        if isfield(EditedPC{7},'CalibrationIndices') && ~all(EditedPC{7}.CalibrationIndices == handles.Settings.PCList{index,7}.CalibrationIndices) %Calibration Points changed
+            PCData = PCStrainMinimization(handles.Settings,EditedPC{5},EditedPC{7}.CalibrationIndices);
+            handles.Settings.PCList(end+1,:) = {PCData.MeanXStar PCData.MeanYStar PCData.MeanZStar  EditedPC{4:5} rename PCData};
+            set(handles.PCList,'String',handles.Settings.PCList(:,6));
+        end
     end
+    if strcmp(EditedPC{4},'Grid')
+        if EditedPC{7}.numpc ~= handles.Settings.PCList{index,7}.numpc || ...
+                EditedPC{7}.numpats ~= handles.Settings.PCList{index,7}.numpats || ...
+                EditedPC{7}.deltapc ~= handles.Settings.PCList{incex,7}.deltapc
+            GridEdit = true;
+        end
+        if isfield(EditedPC{7},'CalibrationIndices') && EditedPC{7}.numpats == handles.Settings.PCList{index,7}.numpats && ~all(EditedPC{7}.CalibrationIndices == handles.Settings.PCList{index,7}.CalibrationIndices)
+            GridEdit = true;
+        end
+    end
+    if GridEdit
+        PCData = PCGrid(handles.Settings,EditedPC{7});
+        handles.Settings.PCList(end+1,:) = {PCData.xstar PCData.ystar PCData.zstar...
+            'Grid' 'Naive' rename PCData};
+        set(handles.PCList,'String',handles.Settings.PCList(:,6));
+    end
+    guidata(handles.PCGUI,handles);
+    PCList_Callback(handles.PCList, eventdata, handles);
+    handles = guidata(handles.PCGUI);
+    guidata(handles.PCGUI,handles);
 end
-if GridEdit
-    PCData = PCGrid(handles.Settings,EditedPC{7});
-    handles.Settings.PCList(end+1,:) = {PCData.xstar PCData.ystar PCData.zstar...
-        'Grid' 'Naive' rename PCData};
-    set(handles.PCList,'String',handles.Settings.PCList(:,6));
-end
-guidata(handles.PCGUI,handles);
-PCList_Callback(handles.PCList, eventdata, handles);
-handles = guidata(handles.PCGUI);
-guidata(handles.PCGUI,handles);
 
 
 % --- Executes on button press in RemovePC.
@@ -433,7 +437,7 @@ if get(handles.PCPlot,'Value')
     surf(XStar,YStar,ZStar,zeros(size(ZStar)))
     shading flat
 elseif get(handles.IPFPlot,'Value')
-    image(handles.IPF_map)
+    PlotScan(handles.IPF_map,'IPF')
     
     %Plot Calibration Points
     if ismember(handles.Settings.PCList{cur,4},{'Strain Minimization','Grid'})
@@ -443,7 +447,7 @@ elseif get(handles.IPFPlot,'Value')
     end
     guidata(handles.PCGUI,handles);
 elseif get(handles.IQPlot,'Value')
-    image(handles.IQ_map)
+    PlotScan(handles.IQ_map,'Image Quality')
     
     %Plot Calibration Points
     if ismember(handles.Settings.PCList{cur,4},{'Strain Minimization','Grid'})

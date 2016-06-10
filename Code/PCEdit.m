@@ -22,7 +22,7 @@ function varargout = PCEdit(varargin)
 
 % Edit the above text to modify the response to help PCEdit
 
-% Last Modified by GUIDE v2.5 02-Jun-2016 10:05:05
+% Last Modified by GUIDE v2.5 10-Jun-2016 14:35:45
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -572,3 +572,16 @@ if isfield(handles,'PCData')
     end
     guidata(handles.PCEdit,handles);
 end
+
+
+% --- Executes on button press in CancelButton.
+function CancelButton_Callback(hObject, eventdata, handles)
+% hObject    handle to CancelButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.xstar = [];
+handles.ystar = [];
+handles.zstar = [];
+guidata(handles.PCEdit,handles);
+PCEdit_CloseRequestFcn(handles.PCEdit, eventdata, handles);
+
