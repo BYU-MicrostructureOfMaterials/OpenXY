@@ -89,7 +89,7 @@ for dir = 1:3
         for xx=1:numpc
             PC0(dir) = PCs(xx);
             paramspat={PC0(1);PC0(2);PC0(3);pixsize;Av;sampletilt;elevang;Fhkl;dhkl;hkl};
-            [pctest(qq,xx),~,~]=CalcNormFMod(PC0,ScanImage,paramspat,lattice,a1,b1,c1,axs,g,ImageFilter,Ind,Settings);
+            [pctest(qq,xx)]=CalcNormFMod(PC0,ScanImage,paramspat,lattice,a1,b1,c1,axs,g,ImageFilter,Ind,Settings);
             %R = poldec(F);
             %g = R'*g; %Use Corrected Orientation
         end
