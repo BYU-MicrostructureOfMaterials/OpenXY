@@ -1,17 +1,27 @@
 function [im,sel] = ChoosePlot(mapsize,IQ,Angles)
-%Convert angles to gmat
+%Determine ScanType
 Nx = mapsize(1);
 Ny = mapsize(2);
-ScanLength = Nx*Ny;
-g = zeros(3,3,ScanLength);
-for i = 1:ScanLength
-    g(:,:,i) = euler2gmat(Angles(i,:));
+ScanLength = length(IQ);
+if prod(mapsize) == ScanLength
+    ScanType = 'Square';
+elseif prod(mapsize)*3 == ScanLength
+    ScanType = 'LGrid';
+else
+    ScanType = 'Hexagonal';
 end
+
+%Convert angles to gmat
+g = euler2gmat(Angles);
 
 %Ask image type
 sel = questdlg('Select Image to Display','Resize Scan','Image Quality','IPF','Image Quality');
 if strcmp(sel,'Image Quality')
-    im = reshape(IQ,Nx,Ny)';
+    if strcmp(ScanType,'Square')
+        im = reshape(IQ,Nx,Ny)';
+    elseif strcmp(ScanType,'Hexagonal')
+        im = Hex2Array(IQ,mapsize(1));
+    end
 elseif strcmp(sel,'IPF')
-    im = PlotIPF(g,[Nx Ny],0);
+    im = PlotIPF(g,[Nx Ny],ScanType,0);
 end

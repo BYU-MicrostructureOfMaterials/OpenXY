@@ -1,5 +1,5 @@
 function TestSettingsPntbyPnt(Settings,MainGUI)
-
+profile on
 %% Get Reference Image Names
 if ~strcmp(Settings.HROIMMethod,'Simulated')&& ~isfield(Settings,'RefImageNames')
     RefImageInd = Settings.RefImageInd;
@@ -38,20 +38,18 @@ end
 
 n = Settings.Nx;
 m = Settings.Ny;
+[im,PlotType] = ChoosePlot([n m],Settings.IQ,Settings.Angles);
 
 if strcmp(Settings.ScanType,'Square')
-    [im,PlotType] = ChoosePlot([n m],Settings.IQ,Settings.Angles);
     indi = 1:1:m*n;
     indi = reshape(indi, n,m)';
     if m == 1 %Lines Scans
         im = repmat(im,floor(Settings.ScanLength/4),1);
     end
-else
-    NumColsEven = n-1;
+elseif strcmp(Settings.ScanType,'Hexagonal')
     NumColsOdd = n;
     indi = 1:length(Settings.IQ);
-    indi = Hex2Array(indi,NumColsOdd,NumColsEven);
-    im = Hex2Array(Settings.IQ,NumColsOdd,NumColsEven);
+    indi = Hex2Array(indi,NumColsOdd);
 end
 
 StdDev = std(im(:));
@@ -63,7 +61,7 @@ Settings.DoShowPlot = 1;
 Settings.SinglePattern = 0;
 
 %% Open GUI and Run Test
-
+profile off; profile viewer;
 button = 1;
 
 figure(100);
