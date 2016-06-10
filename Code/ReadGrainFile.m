@@ -47,7 +47,7 @@ while ~feof(fid)
                 GrainFileVals{13}=[];
             end
         end
-        disp(unique(GrainFileVals{11}(:)));
+        %disp(unique(GrainFileVals{11}(:)));
     end
 end
 

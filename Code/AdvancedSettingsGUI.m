@@ -22,7 +22,7 @@ function varargout = AdvancedSettingsGUI(varargin)
 
 % Edit the above text to modify the response to help AdvancedSettingsGUI
 
-% Last Modified by GUIDE v2.5 17-May-2016 08:16:51
+% Last Modified by GUIDE v2.5 10-Jun-2016 11:18:05
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -93,6 +93,16 @@ set(handles.MisoTol,'String',num2str(Settings.MisoTol));
 GrainRefImageTypeList = {'Min Kernel Avg Miso','IQ > Fit > CI'};
 set(handles.GrainRefType, 'String', GrainRefImageTypeList);
 SetPopupValue(handles.GrainRefType,Settings.GrainRefImageType);
+%Grain ID Method
+set(handles.GrainMethod,'String',{'Grain File','Find Grains'});
+[~,~,ext] = fileparts(Settings.ScanFilePath);
+if strcmp(ext,'.ctf')
+    SetPopupValue(handles.GrainMethod,'Find Grains');
+    set(handles.GrainMethod,'Enable','off')
+else
+    SetPopupValue(handles.GrainMethod,Settings.GrainMethod);
+    set(handles.GrainMethod,'Enable','on');
+end
 %Calculate Dislocation Density
 set(handles.DoDD,'Value', Settings.CalcDerivatives);
 %Do Split DD
@@ -634,3 +644,39 @@ end
 handles.Settings.DoStrain = get(hObject,'Value');
 guidata(hObject,handles);
 
+
+% --- Executes on selection change in GrainMethod.
+function GrainMethod_Callback(hObject, eventdata, handles)
+% hObject    handle to GrainMethod (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns GrainMethod contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from GrainMethod
+contents = get(hObject,'String');
+Method = contents{get(hObject,'Value')};
+
+ScanParams = handles.Settings.ScanParams;
+ScanParams.Nx = handles.Settings.Nx;
+ScanParams.Ny = handles.Settings.Ny;
+ScanParams.ScanType = handles.Settings.ScanType;
+grainID = GetGrainInfo(handles.Settings.ScanFilePath,handles.Settings.Phase{1},ScanParams,...
+    handles.Settings.Angles,handles.Settings.MisoTol,Method);
+handles.Settings.grainID = grainID;
+
+handles.Settings.GrainMethod = Method;
+guidata(hObject,handles);
+    
+
+
+% --- Executes during object creation, after setting all properties.
+function GrainMethod_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to GrainMethod (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end

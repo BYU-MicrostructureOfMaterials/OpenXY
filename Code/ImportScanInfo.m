@@ -29,14 +29,14 @@ end
 %Check ScanType
 [~,~,ext] = fileparts(fullfile(path,name));
 if strcmp(ext,'.ang')
-check = true;
-if ~isempty(strfind(Settings.ScanParams.GridType,'Hex'))
-    AutoType = 'Hexagonal';
-elseif ~isempty(strfind(Settings.ScanParams.GridType,'Sqr'))
-    AutoType = 'Square';
-else
-    check = false;
-end
+    check = true;
+    if ~isempty(strfind(Settings.ScanParams.GridType,'Hex'))
+        AutoType = 'Hexagonal';
+    elseif ~isempty(strfind(Settings.ScanParams.GridType,'Sqr'))
+        AutoType = 'Square';
+    else
+        check = false;
+    end
     if check && ~strcmp(Settings.ScanType,AutoType)
         button = questdlg({'Scan type might be incorrect.';['Would you like to change it to ' AutoType '?']},'OpenXY');
         switch button
@@ -46,6 +46,9 @@ end
                 return;
         end
     end
+    Settings.GrainMethod = 'Grain File'; %Default method
+else
+    Settings.GrainMethod = 'Find Grains'; %Only method available
 end
 
 %Unique x and y

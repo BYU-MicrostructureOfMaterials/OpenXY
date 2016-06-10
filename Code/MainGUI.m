@@ -447,9 +447,13 @@ function MaterialPopup_Callback(hObject, eventdata, handles)
 Settings = handles.Settings;
 Material = GetPopupString(hObject);
 handles.Settings.Material = Material;
+ScanParams = Settings.ScanParams;
+ScanParams.Nx = Settings.Nx;
+ScanParams.Ny = Settings.Ny;
+ScanParams.ScanType = Settings.ScanType;
 if handles.ScanFileLoaded
     [handles.Settings.grainID, handles.Settings.Phase] = GetGrainInfo(...
-        Settings.ScanFilePath, Material, Settings.ScanParams, Settings.Angles, Settings.MisoTol);
+        Settings.ScanFilePath, Material, ScanParams, Settings.Angles, Settings.MisoTol, Settings.GrainMethod);
     if isempty(handles.Settings.Phase)
         handles.ScanFileLoaded = 0;
     end
