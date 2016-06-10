@@ -416,6 +416,7 @@ Nx = handles.Settings.Nx;
 Ny = handles.Settings.Ny;
 
 %Reset Plot
+axes(handles.PCaxes)
 cla(handles.PCaxes,'reset')
 
 %Plot Selected graph
@@ -432,7 +433,7 @@ if get(handles.PCPlot,'Value')
     surf(XStar,YStar,ZStar,zeros(size(ZStar)))
     shading flat
 elseif get(handles.IPFPlot,'Value')
-    image(handles.PCaxes,handles.IPF_map)
+    image(handles.IPF_map)
     
     %Plot Calibration Points
     if ismember(handles.Settings.PCList{cur,4},{'Strain Minimization','Grid'})
@@ -442,7 +443,7 @@ elseif get(handles.IPFPlot,'Value')
     end
     guidata(handles.PCGUI,handles);
 elseif get(handles.IQPlot,'Value')
-    image(handles.PCaxes,handles.IQ_map)
+    image(handles.IQ_map)
     
     %Plot Calibration Points
     if ismember(handles.Settings.PCList{cur,4},{'Strain Minimization','Grid'})
