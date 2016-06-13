@@ -249,7 +249,7 @@ elseif strcmp(type,'Manual')
         end
 
         %Add to PC List
-        Settings.PCList(end+1,:) = [PCSettings {''}];
+        Settings.PCList(end+1,:) = PCSettings;
         set(handles.PCList,'String',Settings.PCList(:,6));
         handles.Settings = Settings;
         guidata(handles.PCGUI,handles);

@@ -81,6 +81,7 @@ if length(varargin) > 2
     handles.IQ_map = varargin{3}.IQ_map;
     handles.IPF_map = varargin{3}.IPF_map;
     set(handles.IPFPlot,'Value',1);
+    guidata(handles.PCEdit,handles);
 end
 UpdatePC(handles);
 
@@ -126,7 +127,9 @@ switch Type
 end
 
 %Update Plot
-UpdatePlot(handles); 
+if isfield(handles,'IQ_map')
+    UpdatePlot(handles); 
+end
 
 % Update handles structure
 handles.fig = {};
