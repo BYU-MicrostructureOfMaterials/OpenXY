@@ -263,20 +263,23 @@ elseif strcmp(type,'Grid')
     plots.IQ_map = handles.IQ_map; plots.IPF_map = handles.IPF_map;
     PCSettings = PCEdit([Sel(1:3) 'Grid' Sel(5) def_name {''}],handles.V,plots);
     
-    sel = questdlg('Select method for calibration point selection:','Grid PC Calibration','Manual','Automatic','Automatic');
-    if strcmp(sel,'Manual')
-        PCSettings{7}.CalibrationIndices = SelectCalibrationPoints(handles.IQ_map,handles.IPF_map);
+    if ~isempty([PCSettings{1:3}])
+        PCData = PCSettings{7};
+        if isempty(PCData.CalibrationIndices)
+            warndlg('No Calibration Indices Selected. Calibration Aborted')
+        else
+            PCData = PCGrid(Settings,PCSettings{7});
+        
+            %Add to PC List
+            Settings.PCList(end+1,:) = {PCData.xstar PCData.ystar PCData.zstar...
+                'Grid' 'Naive' def_name PCData};
+            set(handles.PCList,'String',Settings.PCList(:,6));
+            handles.Settings = Settings;
+            guidata(handles.PCGUI,handles);
+        end
     end
-    PCData = PCGrid(Settings,PCSettings{7});
-    
-    %Add to PC List
-    Settings.PCList(end+1,:) = {PCData.xstar PCData.ystar PCData.zstar...
-        'Grid' 'Naive' def_name PCData};
-    set(handles.PCList,'String',Settings.PCList(:,6));
-    handles.Settings = Settings;
-    guidata(handles.PCGUI,handles);
 end
-    
+
 
 % --- Executes on selection change in NewPCType.
 function NewPCType_Callback(hObject, eventdata, handles)
@@ -343,11 +346,15 @@ if ~isempty([EditedPC{1:3}])
     if ~strcmp(planefit,EditedPC{5}) %PlaneFit changed
         handles.Settings.PCList{index,5} = EditedPC{5};
     end
+    
+    %Check for changes requiring recalibration
     if strcmp(EditedPC{4},'Strain Minimization')
-        if isfield(EditedPC{7},'CalibrationIndices') && ~all(EditedPC{7}.CalibrationIndices == handles.Settings.PCList{index,7}.CalibrationIndices) %Calibration Points changed
-            PCData = PCStrainMinimization(handles.Settings,EditedPC{5},EditedPC{7}.CalibrationIndices);
-            handles.Settings.PCList(end+1,:) = {PCData.MeanXStar PCData.MeanYStar PCData.MeanZStar  EditedPC{4:5} rename PCData};
-            set(handles.PCList,'String',handles.Settings.PCList(:,6));
+        if isfield(EditedPC{7},'CalibrationIndices')
+            if length(EditedPC{7}.CalibrationIndices) ~= length(handles.Settings.PCList{index,7}.CalibrationIndices)
+                SREdit = true;
+            elseif ~all(EditedPC{7}.CalibrationIndices == handles.Settings.PCList{index,7}.CalibrationIndices) %Calibration Points changed
+                SREdit = true;
+            end
         end
     end
     if strcmp(EditedPC{4},'Grid')
@@ -360,11 +367,24 @@ if ~isempty([EditedPC{1:3}])
             GridEdit = true;
         end
     end
+    
+    %Re-perform Calibrations, if necessary
+    if SREdit
+        sel = questdlg('Edits require a new calibration. Continue?','PC Edit','Yes','No','Yes');
+        if strcmp(sel,'Yes')
+            PCData = PCStrainMinimization(handles.Settings,EditedPC{5},EditedPC{7}.CalibrationIndices);
+            handles.Settings.PCList(end+1,:) = {PCData.MeanXStar PCData.MeanYStar PCData.MeanZStar  EditedPC{4:5} rename PCData};
+            set(handles.PCList,'String',handles.Settings.PCList(:,6));
+        end
+    end
     if GridEdit
-        PCData = PCGrid(handles.Settings,EditedPC{7});
-        handles.Settings.PCList(end+1,:) = {PCData.xstar PCData.ystar PCData.zstar...
-            'Grid' 'Naive' rename PCData};
-        set(handles.PCList,'String',handles.Settings.PCList(:,6));
+        sel = questdlg('Edits require a new calibration. Continue?','Yes','No','Yes');
+        if strcmp(sel,'Yes')
+            PCData = PCGrid(handles.Settings,EditedPC{7});
+            handles.Settings.PCList(end+1,:) = {PCData.xstar PCData.ystar PCData.zstar...
+                'Grid' 'Naive' rename PCData};
+            set(handles.PCList,'String',handles.Settings.PCList(:,6));
+        end
     end
     guidata(handles.PCGUI,handles);
     PCList_Callback(handles.PCList, eventdata, handles);

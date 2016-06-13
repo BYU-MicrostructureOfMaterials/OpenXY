@@ -22,7 +22,7 @@ function varargout = PCEdit(varargin)
 
 % Edit the above text to modify the response to help PCEdit
 
-% Last Modified by GUIDE v2.5 10-Jun-2016 14:35:45
+% Last Modified by GUIDE v2.5 13-Jun-2016 11:42:27
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -76,6 +76,14 @@ if ~isempty(varargin{2})
     handles.V = varargin{2};
 end
 
+%Read in image maps
+if length(varargin) > 2
+    handles.IQ_map = varargin{3}.IQ_map;
+    handles.IPF_map = varargin{3}.IPF_map;
+    set(handles.IPFPlot,'Value',1);
+end
+UpdatePC(handles);
+
 %Update GUI components
 pos = get(handles.PCEdit,'Position');
 Type = input{4};
@@ -97,34 +105,28 @@ switch Type
             set(handles.numpats,'String',input{7}.numpats,'Enable','off');
             set(handles.numpc,'String',input{7}.numpc);
             set(handles.deltapc,'String',input{7}.deltapc);
-            set(handles.XStarFit,'Enable','on')
-            set(handles.YStarFit,'Enable','on')
-            set(handles.ZStarFit,'Enable','on')
-            set(handles.NoGridPlot,'Enable','on')
+            set(handles.GridPlotPanel,'Visible','on')
+            set(handles.PointPanel,'Visible','off')
         else %New PC
+            PanelPos = get(handles.GridPlotPanel,'Position');
             set(handles.numpats,'String',100); handles.PCData.numpats = 100;
             set(handles.numpc,'String',40); handles.PCData.numpc = 40;
             set(handles.deltapc,'String',0.06/40); handles.PCData.deltapc = 0.06/handles.PCData.numpc;
             set(handles.SelectPoints,'Enable','off')
-            set(handles.XStarFit,'Enable','off')
-            set(handles.YStarFit,'Enable','off')
-            set(handles.ZStarFit,'Enable','off')
-            set(handles.NoGridPlot,'Enable','off')
+            set(handles.GridPlotPanel,'Visible','off')
+            set(handles.PointPanel,'Visible','on','Position',PanelPos)
+            numpats_Callback(handles.numpats, eventdata, handles);
+            handles = guidata(handles.PCEdit);
         end
+        PointPanel_SelectionChangedFcn(handles.PointPanel, eventdata, handles);
     otherwise
         set(handles.PCEdit,'Position',[pos(1) pos(2) 45 pos(4)]);
         set(handles.StrainMinPanel,'Visible','off');
         set(handles.PCGridPanel,'Visible','off');
 end
 
-%Read in image maps
-if length(varargin) > 2
-    handles.IQ_map = varargin{3}.IQ_map;
-    handles.IPF_map = varargin{3}.IPF_map;
-    set(handles.IPFPlot,'Value',1);
-    UpdatePlot(handles); 
-end
-UpdatePC(handles);
+%Update Plot
+UpdatePlot(handles); 
 
 % Update handles structure
 handles.fig = {};
@@ -412,22 +414,14 @@ axes(handles.StrainMinaxes)
 
 %Plot Selected graph
 if get(handles.IPFPlot,'Value')
-    image(handles.IPF_map)
+    PlotScan(handles.IPF_map,'IPF')
 elseif get(handles.IQPlot,'Value')
-    image(handles.IQ_map)
+    PlotScan(handles.IQ_map,'Image Quality')
 end
 
 %Plot Calibration Points
 if ismember(GetPopupString(handles.PCType),{'Strain Minimization','Grid'})
-    if isfield(handles.PCData,'CalibrationIndices')
-        [Xinds,Yinds] = ind2sub([Nx Ny],handles.PCData.CalibrationIndices);
-    elseif strcmp(GetPopupString(handles.PCType),'Grid') %New Grid PC
-        [Xinds,Yinds] = GridPattern([Nx Ny],str2double(get(handles.numpats,'String')));
-        Xinds = Xinds(:);
-        Yinds = Yinds(:);
-        numpats = length(Xinds);
-        set(handles.numpats,'String',num2str(numpats));
-    end
+    [Xinds,Yinds] = ind2sub([Nx Ny],handles.PCData.CalibrationIndices);
     hold on
     plot(handles.StrainMinaxes,Xinds,Yinds,'kd','MarkerFaceColor','k','MarkerSize',3)
 end
@@ -462,14 +456,11 @@ function SelectPoints_Callback(hObject, eventdata, handles)
 % hObject    handle to SelectPoints (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-sel = questdlg({'This will create a new pattern center calibration.';'Continue?'},'Point Selection','Yes','No','Yes');
-if strcmp(sel,'Yes')
-   handles.PCData.CalibrationIndices = SelectCalibrationPoints(handles.IQ_map,handles.IPF_map,handles.PCData.CalibrationIndices(:,1));
-   numpats = length(handles.PCData.CalibrationIndices);
-   set(handles.numpats,'String',numpats);
-   handles.PCData.numpats = numpats;
-   UpdatePlot(handles);
-end
+handles.PCData.CalibrationIndices = SelectCalibrationPoints(handles.IQ_map,handles.IPF_map,handles.PCData.CalibrationIndices);
+numpats = length(handles.PCData.CalibrationIndices);
+set(handles.numpats,'String',numpats);
+handles.PCData.numpats = numpats;
+UpdatePlot(handles);
 guidata(handles.PCEdit,handles);
 
 
@@ -481,7 +472,17 @@ function numpats_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of numpats as text
 %        str2double(get(hObject,'String')) returns contents of numpats as a double
-handles.PCData.numpats = str2double(get(handles.numpats,'String'));
+
+%Get input 
+numpats = str2double(get(handles.numpats,'String'));
+%Get closest matching pattern
+[Ny,Nx] = size(handles.IQ_map);
+[~,~,Inds] = GridPattern([Nx Ny],numpats);
+%Save results
+numpats = length(Inds);
+handles.PCData.CalibrationIndices = Inds;
+set(handles.numpats,'String',num2str(numpats));
+handles.PCData.numpats = numpats;
 guidata(handles.PCEdit,handles);
 UpdatePlot(handles);
 
@@ -585,3 +586,30 @@ handles.zstar = [];
 guidata(handles.PCEdit,handles);
 PCEdit_CloseRequestFcn(handles.PCEdit, eventdata, handles);
 
+
+
+% --- Executes when selected object is changed in PointPanel.
+function PointPanel_SelectionChangedFcn(hObject, eventdata, handles)
+% hObject    handle to the selected object in PointPanel 
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if get(handles.AutoPoints,'Value')
+    set(handles.numpats,'Enable','on')
+    set(handles.SelectPoints,'Enable','off')
+    set(handles.ClearPoints,'Enable','off')
+    numpats_Callback(handles.numpats, eventdata, handles);
+else
+    set(handles.numpats,'Enable','off')
+    set(handles.SelectPoints,'Enable','on')
+    set(handles.ClearPoints,'Enable','on')
+end
+
+
+% --- Executes on button press in ClearPoints.
+function ClearPoints_Callback(hObject, eventdata, handles)
+% hObject    handle to ClearPoints (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.PCData.CalibrationIndices = [];
+guidata(handles.PCEdit,handles);
+UpdatePlot(handles);
