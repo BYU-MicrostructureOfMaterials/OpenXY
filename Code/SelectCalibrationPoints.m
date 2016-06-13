@@ -18,10 +18,10 @@ function Inds = SelectCalibrationPoints(mapsize,IQ,Angles)
     else
         if nargin > 1
             %Ask image type
-            sel = questdlg('Select Image to Display','Resize Scan','Image Quality','IPF','Image Quality');
-            if strcmp(sel,'Image Quality')
+            PlotType = questdlg('Select Image to Display','Resize Scan','Image Quality','IPF','Image Quality');
+            if strcmp(PlotType,'Image Quality')
                 im = mapsize;
-            elseif strcmp(sel,'IPF')
+            elseif strcmp(PlotType,'IPF')
                 im = IQ;
             end
             [Ny,Nx,~] = size(im);
