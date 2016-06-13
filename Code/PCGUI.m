@@ -331,6 +331,7 @@ if ~isempty([EditedPC{1:3}])
     
     %Edit or Add
     GridEdit = false;
+    SREdit = false;
     if ~any(XStars&YStars&ZStars) %Manually Edited PC
         EditedPC{4} = 'Manual';
         handles.Settings.PCList(end+1,:) = [EditedPC(1:5) rename {''}];
@@ -360,7 +361,7 @@ if ~isempty([EditedPC{1:3}])
     if strcmp(EditedPC{4},'Grid')
         if EditedPC{7}.numpc ~= handles.Settings.PCList{index,7}.numpc || ...
                 EditedPC{7}.numpats ~= handles.Settings.PCList{index,7}.numpats || ...
-                EditedPC{7}.deltapc ~= handles.Settings.PCList{incex,7}.deltapc
+                EditedPC{7}.deltapc ~= handles.Settings.PCList{index,7}.deltapc
             GridEdit = true;
         end
         if isfield(EditedPC{7},'CalibrationIndices') && EditedPC{7}.numpats == handles.Settings.PCList{index,7}.numpats && ~all(EditedPC{7}.CalibrationIndices == handles.Settings.PCList{index,7}.CalibrationIndices)
@@ -454,7 +455,11 @@ if get(handles.PCPlot,'Value')
     XStar = reshape(handles.Settings.XStar,handles.Settings.Nx,handles.Settings.Ny)';
     YStar = reshape(handles.Settings.YStar,handles.Settings.Nx,handles.Settings.Ny)';
     ZStar = reshape(handles.Settings.ZStar,handles.Settings.Nx,handles.Settings.Ny)';
-    surf(XStar,YStar,ZStar,zeros(size(ZStar)))
+    if Ny == 1
+        plot3(handles.PCaxes,XStar,YStar,ZStar,'g')
+    else
+        surf(XStar,YStar,ZStar,zeros(size(ZStar)))
+    end
     shading flat
 elseif get(handles.IPFPlot,'Value')
     PlotScan(handles.IPF_map,'IPF')
@@ -476,4 +481,4 @@ elseif get(handles.IQPlot,'Value')
         plot(Xinds,Yinds,'kd','MarkerFaceColor','k')
     end
 end
-axis equal tight
+
