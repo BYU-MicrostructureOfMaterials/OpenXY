@@ -71,12 +71,12 @@ if strcmp(GrainMethod,'Find Grains')
 
         %Set up params for findgrains.m
         if strcmp(ScanParams.ScanType,'Square')
-            angles = permute(reshape(Angles,ScanParams.Nx,ScanParams.Ny,3),[2,1,3]);
+            angles = reshape(Angles,ScanParams.Nx,ScanParams.Ny,3);
         else
-            angles = Hex2Array(Angles,ScanParams.Nx);
+            angles = permute(Hex2Array(Angles,ScanParams.Nx),[2 1 3]);
         end
         clean = true;
-        small = true;
+        small = 1;
         mistol = MaxMisorientation*pi/180;
         grainID = findgrains(angles, MaterialData.lattice, clean, small,mistol);
         
