@@ -2,14 +2,7 @@ function [im,sel] = ChoosePlot(mapsize,IQ,Angles)
 %Determine ScanType
 Nx = mapsize(1);
 Ny = mapsize(2);
-ScanLength = length(IQ);
-if prod(mapsize) == ScanLength
-    ScanType = 'Square';
-elseif prod(mapsize)*3 == ScanLength
-    ScanType = 'LGrid';
-else
-    ScanType = 'Hexagonal';
-end
+ScanType = FindScanType(mapsize,length(IQ));
 
 %Convert angles to gmat
 g = euler2gmat(Angles);
