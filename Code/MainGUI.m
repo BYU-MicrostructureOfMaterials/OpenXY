@@ -22,7 +22,7 @@ function varargout = MainGUI(varargin)
 
 % Edit the above text to modify the response to help MainGUI
 
-% Last Modified by GUIDE v2.5 20-Oct-2015 16:00:34
+% Last Modified by GUIDE v2.5 14-Jun-2016 08:30:11
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -697,3 +697,25 @@ else
     warndlg({'Cannot run test'; 'Must select scan file data and first image'},'OpenXY: Invalid Operation');
 end
 guidata(hObject,handles);
+
+
+% --- Executes on button press in SubScan.
+function SubScan_Callback(hObject, eventdata, handles)
+% hObject    handle to SubScan (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if handles.ScanFileLoaded
+    [im, PlotType] = ChoosePlot([handles.Settings.Nx handles.Settings.Ny],handles.Settings.IQ,handles.Settings.Angles);
+    [X,Y] = SelectSubscan(im,PlotType);
+    Inds = 1:handles.Settings.ScanLength;
+    IndMap = vec2map(Inds,handles.Settings.Nx,handles.Settings.ScanType);
+    SubInds = IndMap(Y(1):Y(2),X(1):X(2));
+    handles.Settings.Inds = SubInds(:);
+    
+    %Update Size
+    newsize = fliplr(size(SubInds));
+    handles.Settings.NewSize = newsize;
+    SizeStr =  [num2str(newsize(1)) 'x' num2str(newsize(2)) ' (Subscan)'];
+    set(handles.ScanSizeText,'String',SizeStr);
+    guidata(handles.MainGUI,handles);
+end
