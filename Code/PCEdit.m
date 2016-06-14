@@ -102,6 +102,7 @@ switch Type
         set(handles.PCEdit,'Position',[pos(1) pos(2) 128 pos(4)]);
         set(handles.StrainMinPanel,'Visible','on','Position',[85 0.5 40 17]);
         set(handles.PCGridPanel,'Visible','on','Position',[44 0.5 40 17]);
+        set(handles.PlaneFit,'Enable','off')
         if length(input)>6 && ~isempty(input{7}) %Editing PC
             set(handles.numpats,'String',input{7}.numpats,'Enable','off');
             set(handles.numpc,'String',input{7}.numpc);
