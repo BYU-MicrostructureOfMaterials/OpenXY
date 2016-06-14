@@ -35,13 +35,18 @@ function Inds = SelectCalibrationPoints(mapsize,IQ,Angles)
         end 
     end
     
+    ScanType = FindScanType([Nx Ny],length(im(:)));
+    if strcmp(ScanType,'Hexagonal')
+        Nx = Nx-1;
+    end
+    
     %Select Calibration Points
     morepoints = 1;
     Title = {{'{\bf Press RETURN key or right-click last point to exit}';...
         '{\fontsize{10} Click Mouse wheel or hold SHIFT to enter point by index}'},'Interpreter','tex','FontWeight','Normal'};
     
     %Set minimum number of points
-    MinPoints = 1;
+    MinPoints = 3;
     if Ny == 1
         MinPoints = 1;
     end
@@ -74,7 +79,7 @@ function Inds = SelectCalibrationPoints(mapsize,IQ,Angles)
         
         if ~isempty(x)
             sze = [size(im,2),size(im,1)];
-            ind = sub2ind(sze,round(x),round(y));
+            ind = sub2ind2(mapsize,round(x),round(y),ScanType);
             if button ~= 2
                 [La,Lb] = ismember(ind,Inds);
                 if La %De-select Point
@@ -87,7 +92,7 @@ function Inds = SelectCalibrationPoints(mapsize,IQ,Angles)
                     Yind(npoints) = round(y);
                 end
                 npoints = length(Inds)+1;
-            else
+            else %Manual Point Entry
                 answer = inputdlg('Enter Point Indices (space delimited):','Manual Point Selection',1,{num2str(ind)});
                 answer = answer{1};
                 ind = sscanf(answer,'%d');
@@ -97,9 +102,9 @@ function Inds = SelectCalibrationPoints(mapsize,IQ,Angles)
                 if Inds == 0
                     Inds = ind(~La);
                 else
-                    Inds = [Inds;ind(~La)];
+                    Inds = [Inds ind(~La)];
                 end
-                [Xind,Yind] = ind2sub(sze,Inds);
+                [Xind,Yind] = ind2sub2(mapsize,Inds,ScanType);
                 npoints = length(Inds)+1;
             end
             if button == 3 && npoints > MinPoints
