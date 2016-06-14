@@ -84,7 +84,7 @@ end
 
 %Create IQ map and save it
 if ~isfield(handles,'IQ_map')
-    handles.IQ_map = reshape(Settings.IQ,Settings.Nx,Settings.Ny)';
+    handles.IQ_map = vec2map(Settings.IQ,Settings.Nx,Settings.ScanType);
 end
 
 %Get VHRatio
@@ -452,14 +452,15 @@ if get(handles.PCPlot,'Value')
     scatter3(handles.PCaxes,ScanPC(1),ScanPC(2),ScanPC(3),'bo')
     hold on
     scatter3(handles.PCaxes,CurrPC(1),CurrPC(2),CurrPC(3),'go')
-    XStar = reshape(handles.Settings.XStar,handles.Settings.Nx,handles.Settings.Ny)';
-    YStar = reshape(handles.Settings.YStar,handles.Settings.Nx,handles.Settings.Ny)';
-    ZStar = reshape(handles.Settings.ZStar,handles.Settings.Nx,handles.Settings.Ny)';
+    XStar = vec2map(handles.Settings.XStar,handles.Settings.Nx,handles.Settings.ScanType);
+    YStar = vec2map(handles.Settings.YStar,handles.Settings.Nx,handles.Settings.ScanType);
+    ZStar = vec2map(handles.Settings.ZStar,handles.Settings.Nx,handles.Settings.ScanType);
     if Ny == 1
         plot3(handles.PCaxes,XStar,YStar,ZStar,'g')
     else
         surf(XStar,YStar,ZStar,zeros(size(ZStar)))
     end
+    colormap jet
     shading flat
 elseif get(handles.IPFPlot,'Value')
     PlotScan(handles.IPF_map,'IPF')
