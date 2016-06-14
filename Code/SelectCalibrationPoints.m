@@ -79,7 +79,7 @@ function Inds = SelectCalibrationPoints(mapsize,IQ,Angles)
         
         if ~isempty(x)
             sze = [size(im,2),size(im,1)];
-            ind = sub2ind2(mapsize,round(x),round(y),ScanType);
+            ind = sub2ind2(sze,round(x),round(y),ScanType);
             if button ~= 2
                 [La,Lb] = ismember(ind,Inds);
                 if La %De-select Point
@@ -104,7 +104,7 @@ function Inds = SelectCalibrationPoints(mapsize,IQ,Angles)
                 else
                     Inds = [Inds ind(~La)];
                 end
-                [Xind,Yind] = ind2sub2(mapsize,Inds,ScanType);
+                [Xind,Yind] = ind2sub2(sze,Inds,ScanType);
                 npoints = length(Inds)+1;
             end
             if button == 3 && npoints > MinPoints
