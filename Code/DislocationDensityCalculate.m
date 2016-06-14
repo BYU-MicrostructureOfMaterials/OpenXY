@@ -14,7 +14,7 @@ r = data.rows;%
 c = data.cols;%
 stepsize_orig = abs((data.xpos(3)-data.xpos(2))/1e6); %units in meters. This is for square grid
 Allg=data.g;
-ImageNamesList=Settings.ImageNamesList;
+ImageNamesList=Settings.ImageNamesList(Settings.Inds);
 ImageFilter=Settings.ImageFilter;
 special=0;
 
@@ -124,7 +124,7 @@ if ~strcmp(Settings.ScanType,'L')
    % intensityr=zeros(size(ImageNamesList));
 
     
-    N = length(Settings.ImageNamesList);
+    N = Settings.ScanLength;
     
     lattice=cell(N,1);
     Burgers=zeros(N,1);

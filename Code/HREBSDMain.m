@@ -97,6 +97,17 @@ end
 %Sets default color scheme for all figures and axes
 set(0,'DefaultFigureColormap',jet);
 
+%% Set up Sub-scan
+if isfield(Settings,'Inds') && isfield(Settings,'NewSize') && ...
+        length(Settings.Inds) < Settings.ScanLength
+    Inds = Settings.Inds;
+    Settings.ScanLength = length(Settings.Inds);
+    Settings.Nx = Settings.NewSize(1);
+    Settings.Ny = Settings.NewSize(2);
+else
+    Inds = 1:Settings.ScanLength;
+end
+
 %Common to all scan types
 data.cols = Settings.Nx;
 data.rows = Settings.Ny;
@@ -127,8 +138,8 @@ if ~strcmp(Settings.HROIMMethod,'Simulated')&& ~isfield(Settings,'RefImageNames'
                 {Settings.Angles;Settings.IQ;Settings.CI;Settings.Fit}, Settings.grainID, Settings.KernelAvgMisoPath);
         else
             [Settings.RefImageNames, Settings.Phi1Ref, ...
-                Settings.PHIRef, Settings.Phi2Ref, Settings.RefInd] = GetRefImageNames(Settings.ImageNamesList, ...
-                {Settings.Angles;Settings.IQ;Settings.CI;Settings.Fit}, Settings.grainID);
+                Settings.PHIRef, Settings.Phi2Ref, Settings.RefInd] = GetRefImageNames(Settings.ImageNamesList(Inds), ...
+                {Settings.Angles(Inds,:);Settings.IQ(Inds);Settings.CI(Inds);Settings.Fit(Inds)}, Settings.grainID(Inds));
         end
     end  
 end
@@ -200,9 +211,9 @@ elseif ~isfield(Settings,'XStar')
     %Default Naive Plane Fit *****need to include Settings.SampleAzimuthal
     %and Settings.CameraAzimuthal ******
     if isfield(Settings,'PlaneFit') && strcmp(Settings.PlaneFit,'Naive')
-        Settings.XStar(1:Settings.ScanLength) = Settings.ScanParams.xstar-Settings.XData/Settings.PhosphorSize;
-        Settings.YStar(1:Settings.ScanLength) = Settings.ScanParams.ystar+Settings.YData/Settings.PhosphorSize*sin(Settings.SampleTilt-Settings.CameraElevation);
-        Settings.ZStar(1:Settings.ScanLength) = Settings.ScanParams.zstar+Settings.YData/Settings.PhosphorSize*cos(Settings.SampleTilt-Settings.CameraElevation);
+        Settings.XStar(1:Settings.ScanLength) = Settings.ScanParams.xstar-Settings.XData(Inds)/Settings.PhosphorSize;
+        Settings.YStar(1:Settings.ScanLength) = Settings.ScanParams.ystar+Settings.YData(Inds)/Settings.PhosphorSize*sin(Settings.SampleTilt-Settings.CameraElevation);
+        Settings.ZStar(1:Settings.ScanLength) = Settings.ScanParams.zstar+Settings.YData(Inds)/Settings.PhosphorSize*cos(Settings.SampleTilt-Settings.CameraElevation);
     else
         Settings.XStar(1:Settings.ScanLength) = Settings.ScanParams.xstar;
         Settings.YStar(1:Settings.ScanLength) = Settings.ScanParams.ystar;
@@ -264,7 +275,7 @@ if Settings.DoParallel > 1
         %each point in the L grid
         
         [F{ImageInd}, g{ImageInd}, U{ImageInd}, SSE{ImageInd}, XX{ImageInd}] = ...
-            GetDefGradientTensor(ImageInd,Settings,Settings.Phase{ImageInd});
+            GetDefGradientTensor(Inds(ImageInd),Settings,Settings.Phase{ImageInd});
         
         %{
         commented out this (outputs strain matrix - I think - DTF 5/15/14)
