@@ -106,6 +106,7 @@ if isfield(Settings,'Inds') && isfield(Settings,'NewSize') && ...
     Settings.Ny = Settings.NewSize(2);
 else
     Inds = 1:Settings.ScanLength;
+    Settings.Inds = Inds;
 end
 
 %Common to all scan types
