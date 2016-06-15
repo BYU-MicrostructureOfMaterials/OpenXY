@@ -117,6 +117,6 @@ for GrnInd = min(GrainID):max(GrainID)
         phi1ref(SortedGrainInds{GrnInd}') = phi1(SortedGrainInds{GrnInd}(BestInd(GrnInd)));
         PHIref(SortedGrainInds{GrnInd}') = PHI(SortedGrainInds{GrnInd}(BestInd(GrnInd)));
         phi2ref(SortedGrainInds{GrnInd}') = phi2(SortedGrainInds{GrnInd}(BestInd(GrnInd)));
-        RefInd(SortedGrainInds{GrnInd}') = BestInd(GrnInd);
+        RefInd(SortedGrainInds{GrnInd}') = SortedGrainInds{GrnInd}(BestInd(GrnInd));
     end
 end
