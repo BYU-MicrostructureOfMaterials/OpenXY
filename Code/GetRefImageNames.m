@@ -40,6 +40,7 @@ IndVect = 1:length(GrainID);
 
 GrainID(GrainID==0)=1; % ***************this seems odd **************
 RefImageNames = cell(length(ImageNamesList),1);
+RefInd = zeros(length(ImageNamesList),1);
 %sort by grain ID
 for GrnInd = min(GrainID):max(GrainID)
     
