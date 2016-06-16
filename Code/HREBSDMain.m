@@ -136,12 +136,14 @@ if ~strcmp(Settings.HROIMMethod,'Simulated')&& ~isfield(Settings,'RefImageNames'
         if strcmp(Settings.GrainRefImageType,'Min Kernel Avg Miso')
             [Settings.RefImageNames, Settings.Phi1Ref, ...
                 Settings.PHIRef, Settings.Phi2Ref, Settings.RefInd] = GetRefImageNames(Settings.ImageNamesList, ...
-                {Settings.Angles;Settings.IQ;Settings.CI;Settings.Fit}, Settings.grainID, Settings.KernelAvgMisoPath);
-        else
+                {Settings.Angles(Inds,:);Settings.IQ(Inds);Settings.CI(Inds);Settings.Fit(Inds)}, Settings.grainID(Inds), Settings.KernelAvgMisoPath);
+        elseif isfield(Settings,'RefInd')
+            Settings.RefImageNames = Settings.ImageNamesList(Settings.RefInd);
+        else 
             [Settings.RefImageNames, Settings.Phi1Ref, ...
                 Settings.PHIRef, Settings.Phi2Ref, Settings.RefInd] = GetRefImageNames(Settings.ImageNamesList(Inds), ...
                 {Settings.Angles(Inds,:);Settings.IQ(Inds);Settings.CI(Inds);Settings.Fit(Inds)}, Settings.grainID(Inds));
-        end
+        end 
     end  
 end
 
@@ -159,7 +161,6 @@ if Settings.DoUsePCFile
     Extension = PCPath(dotpos+1:end);
     
     if strcmp(Extension,'txt')
-        
         
         %Read in PC Calibration file (in percent of the phosphor screen)
         PCData = ReadPCCalibFile(Settings.PCFilePath);
