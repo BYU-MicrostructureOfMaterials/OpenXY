@@ -234,7 +234,12 @@ if name ~= 0
         if handles.ImageLoaded
             handles.Settings.ImageNamesList = ImportImageNamesList(handles.Settings);
         end
+        
     end 
+    %Remove Subscan
+    if all(isfield(handles.Settings,{'Inds','NewSize'}))
+        handles.Settings = rmfield(handles.Settings,{'Inds','NewSize'});
+    end
     handles.ScanFileLoaded = true;
 elseif ~handles.ScanFileLoaded
     set(handles.ScanNameText,'String','Select a Scan');
