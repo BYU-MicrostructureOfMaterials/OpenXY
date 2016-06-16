@@ -57,7 +57,7 @@ function Inds = SelectCalibrationPoints(mapsize,IQ,Angles)
    
     if Inds ~= 0
         hold on
-        [Xind,Yind] = ind2sub([size(im,2) size(im,1)],Inds);
+        [Xind,Yind] = ind2sub2([size(im,2) size(im,1)],Inds,ScanType);
         plot(Xind,Yind,'kd','MarkerFaceColor','k')
     else
          Xind = zeros(1); Yind = zeros(1);
