@@ -715,9 +715,9 @@ else
 end
 handles.Settings.GrainMethod = Method;
 handles.Settings.grainID = UpdateGrainIDs(handles);
-handles.AutoRefInds = UpdateAutoInds(handles,handles.Settings.GrainRefImageType);
 guidata(hObject,handles);
-ToggleGrainMap_Callback(handles.ToggleGrainMap, eventdata, handles)
+GrainRefType_Callback(handles.GrainRefType, eventdata, handles);
+
     
 
 
