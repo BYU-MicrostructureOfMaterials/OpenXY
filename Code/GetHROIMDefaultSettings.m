@@ -38,8 +38,9 @@ Settings.IterationLimit = 6;
 Settings.RefImageInd = 0;
 Settings.StandardDeviation = 2;
 Settings.MisoTol = 5; %Degrees
-Settings.GrainRefImageType = 'IQ > Fit > CI'; %{'Min Kernel Avg Miso','IQ > Fit > CI'} - more may yet be added, eg. %'Min Fit','1/Fit * CI', etc.' 
+Settings.GrainRefImageType = 'IQ > Fit > CI'; %{'Min Kernel Avg Miso','IQ > Fit > CI','Manual'} - more may yet be added, eg. %'Min Fit','1/Fit * CI', etc.' 
 Settings.GrainMethod = 'Grain File'; %{'Grain File','Find Grains'}
+Settings.MinGrainSize = 10;
 %Dislocation Density Settings
 Settings.CalcDerivatives = false;
 Settings.DoDDS = false;

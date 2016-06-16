@@ -1,4 +1,4 @@
-function [ grainID, Phase ] = GetGrainInfo( ScanFilePath, Material, ScanParams, Angles, MaxMisorientation, GrainMethod )
+function [ grainID, Phase ] = GetGrainInfo( ScanFilePath, Material, ScanParams, Angles, MaxMisorientation, GrainMethod, MinGrainSize )
 %GETGRAININFO Returns grainID and material for HKL and OIM data
 %   INPUTS: ScanFilePath-Full path to .ang or .ctf file
 %           Material-Manual material selection from MainGUI. Looks for 'Auto-detect' parameter
@@ -17,7 +17,12 @@ function [ grainID, Phase ] = GetGrainInfo( ScanFilePath, Material, ScanParams, 
 %           Grain file has the same name as the .ang file
 %
 %   Written by Brian Jackson 4/28/2015
-
+clean = true;
+if nargin < 7
+    MinGrainSize = 10;
+elseif MinGrainSize == 0
+    clean = false;
+end
 [path, name, ext] = fileparts(ScanFilePath);
 if strcmp(ext,'.ang')
     if strcmp(GrainMethod,'Grain File')
@@ -68,17 +73,15 @@ if strcmp(GrainMethod,'Find Grains')
     Phase = ValidatePhase(Phase);
     if ~isempty(Phase)
         MaterialData = ReadMaterial(Phase{1});
-
+        
         %Set up params for findgrains.m
         if strcmp(ScanParams.ScanType,'Square')
             angles = reshape(Angles,ScanParams.Nx,ScanParams.Ny,3);
         else
             angles = permute(Hex2Array(Angles,ScanParams.Nx),[2 1 3]);
         end
-        clean = true;
-        small = 1;
         mistol = MaxMisorientation*pi/180;
-        grainID = findgrains(angles, MaterialData.lattice, clean, small,mistol);
+        grainID = findgrains(angles, MaterialData.lattice, clean, MinGrainSize,mistol);
         
         %Convert back to vector
         if strcmp(ScanParams.ScanType,'Square')

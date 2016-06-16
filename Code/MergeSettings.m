@@ -54,12 +54,15 @@ copyParam('ImageFilterType',{'standard','localthresh'});
 
 %% Advanced Settings
 %HROIM Settings
+copyParam('DoStrain');
 copyParam('HROIMMethod',{'Simulated', 'Real', 'Dynamic Simulated'});
 copyParam('IterationLimit');
 copyParam('RefImageInd');
 copyParam('StandardDeviation');
 copyParam('MisoTol');
-copyParam('GrainRefImageType',{'Min Kernel Avg Miso','IQ > Fit > CI'});
+copyParam('GrainRefImageType',{'Min Kernel Avg Miso','IQ > Fit > CI','Manual'});
+copyParam('GrainMethod',{'Grain File','Find Grains'});
+copyParam('MinGrainSize');
 
 %Dislocation Density Settings
 copyParam('CalcDerivatives');
@@ -86,7 +89,9 @@ end
 if isfield(NewSettings,'ScanData')
     Settings.ScanData = NewSettings.ScanData;
 end
-
+if isfield(NewSettings,'grainID') && strcmp(Settings.GrainRefImageType,'Manual')
+    Settings.grainID = NewSettings.grainID;
+end
 
 end
 
