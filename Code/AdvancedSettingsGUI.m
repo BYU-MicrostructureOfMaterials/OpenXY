@@ -227,6 +227,8 @@ switch HROIMMethod
         else
             set(handles.HROIMedit,'Enable','off');
         end
+        handles.Settings.RefInd = [];
+        ToggleGrainMap_Callback(handles.ToggleGrainMap,eventdata,handles);
     case 'Simulated-Dynamic'
         %Check for EMsoft
         EMsoftPath = GetEMsoftPath;
@@ -277,6 +279,8 @@ switch HROIMMethod
                 else
                     set(handles.HROIMedit,'Enable','off');
                 end
+                handles.Settings.RefInd = [];
+                ToggleGrainMap_Callback(handles.ToggleGrainMap,eventdata,handles);
             end
         end
     case 'Real-Grain Ref'
@@ -286,9 +290,9 @@ switch HROIMMethod
         set(handles.HROIMedit,'Enable','off');
         set(handles.GrainRefType,'Enable','on');
         set(handles.EditRefPoints,'Enable','on')
+        handles.Settings.HROIMMethod = 'Real';
         GrainRefType_Callback(handles.GrainRefType, eventdata, handles);
         handles = guidata(hObject);
-        handles.Settings.HROIMMethod = 'Real';
     case 'Real-Single Ref'
         set(handles.HROIMlabel,'String','Ref Image Index');
         if handles.Settings.RefImageInd == 0
