@@ -22,7 +22,7 @@ function varargout = ROISettingsGUI(varargin)
 
 % Edit the above text to modify the response to help ROISettingsGUI
 
-% Last Modified by GUIDE v2.5 28-Jul-2015 06:16:36
+% Last Modified by GUIDE v2.5 17-Jun-2016 13:21:18
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -131,7 +131,7 @@ axis equal
 %Draw Filtered Image
 handles.Settings = Settings;
 guidata(hObject, handles);
-UpdateImageDisplay(handles);
+UpdateImage(handles);
 handles = guidata(hObject);
 
 %Draw Simulated Pattern
@@ -215,6 +215,7 @@ function ImageFilter1_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of ImageFilter1 as a double
 handles.Settings.ImageFilter(1) = str2double(get(hObject,'String'));
 guidata(hObject,handles);
+UpdateImage(handles)
 
 
 % --- Executes during object creation, after setting all properties.
@@ -240,6 +241,7 @@ function ImageFilter2_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of ImageFilter2 as a double
 handles.Settings.ImageFilter(2) = str2double(get(hObject,'String'));
 guidata(hObject,handles);
+UpdateImage(handles)
 
 
 % --- Executes during object creation, after setting all properties.
@@ -265,6 +267,7 @@ function ImageFilter3_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of ImageFilter3 as a double
 handles.Settings.ImageFilter(3) = str2double(get(hObject,'String'));
 guidata(hObject,handles);
+UpdateImage(handles)
 
 
 % --- Executes during object creation, after setting all properties.
@@ -290,6 +293,7 @@ function ImageFilter4_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of ImageFilter4 as a double
 handles.Settings.ImageFilter(4) = str2double(get(hObject,'String'));
 guidata(hObject,handles);
+UpdateImage(handles)
 
 
 % --- Executes during object creation, after setting all properties.
@@ -316,6 +320,7 @@ function ImageFilterType_Callback(hObject, eventdata, handles)
 contents = cellstr(get(hObject,'String'));
 handles.Settings.ImageFilterType = contents{get(hObject,'Value')};
 guidata(hObject,handles);
+UpdateImage(handles)
 
 
 % --- Executes during object creation, after setting all properties.
@@ -342,6 +347,7 @@ function ROISizeEdit_Callback(hObject, eventdata, handles)
 handles.Settings.ROISizePercent = str2double(get(hObject,'String'));
 handles.Settings.ROISize = round((handles.Settings.ROISizePercent * .01)*handles.Settings.PixelSize);
 guidata(hObject,handles);
+UpdateImage(handles)
 
 
 % --- Executes during object creation, after setting all properties.
@@ -368,6 +374,7 @@ function NumROIPopup_Callback(hObject, eventdata, handles)
 contents = cellstr(get(hObject,'String'));
 handles.Settings.NumROIs = str2double(contents{get(hObject,'Value')});
 guidata(hObject,handles);
+UpdateImage(handles)
 
 
 % --- Executes during object creation, after setting all properties.
@@ -399,6 +406,7 @@ if strcmp(ROIStyle,'Grid')
     handles.Settings.NumROIs = 48;
 end
 guidata(hObject,handles);
+UpdateImage(handles)
 
 % --- Executes during object creation, after setting all properties.
 function ROIStylePopup_CreateFcn(hObject, eventdata, handles)
@@ -423,6 +431,7 @@ function ROIFilter1_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of ROIFilter1 as a double
 handles.Settings.ROIFilter(1) = str2double(get(hObject,'String'));
 guidata(hObject,handles);
+UpdateImage(handles)
 
 
 % --- Executes during object creation, after setting all properties.
@@ -448,6 +457,7 @@ function ROIFilter2_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of ROIFilter2 as a double
 handles.Settings.ROIFilter(2) = str2double(get(hObject,'String'));
 guidata(hObject,handles);
+UpdateImage(handles)
 
 % --- Executes during object creation, after setting all properties.
 function ROIFilter2_CreateFcn(hObject, eventdata, handles)
@@ -472,6 +482,7 @@ function ROIFilter3_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of ROIFilter3 as a double
 handles.Settings.ROIFilter(3) = str2double(get(hObject,'String'));
 guidata(hObject,handles);
+UpdateImage(handles)
 
 % --- Executes during object creation, after setting all properties.
 function ROIFilter3_CreateFcn(hObject, eventdata, handles)
@@ -495,6 +506,7 @@ function ROIFilter4_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of ROIFilter4 as a double
 handles.Settings.ROIFilter(4) = str2double(get(hObject,'String'));
 guidata(hObject,handles);
+UpdateImage(handles)
 
 % --- Executes during object creation, after setting all properties.
 function ROIFilter4_CreateFcn(hObject, eventdata, handles)
@@ -508,20 +520,21 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-% --- Executes on button press in RefreshButton.
-function RefreshButton_Callback(hObject, eventdata, handles)
-% hObject    handle to RefreshButton (see GCBO)
+% --- Executes on button press in PlotROI.
+function PlotROI_Callback(hObject, eventdata, handles)
+% hObject    handle to PlotROI (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-UpdateImageDisplay(handles);
 
-% --- Executes on button press in UpdateROIButton.
-function UpdateROIButton_Callback(hObject, eventdata, handles)
-% hObject    handle to UpdateROIButton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-UpdateROIDisplay(handles);
+% Hint: get(hObject,'Value') returns toggle state of PlotROI
+UpdateImage(handles)
 
+function UpdateImage(handles)
+if get(handles.PlotROI,'Value')
+    UpdateROIDisplay(handles)
+else
+    UpdateImageDisplay(handles)
+end
 
 function UpdateImageDisplay(handles)
 % Apply updated filter to displayed image
@@ -629,4 +642,3 @@ function string = GetPopupString(Popup)
 List = get(Popup,'String');
 Value = get(Popup,'Value');
 string = List{Value};    
-
