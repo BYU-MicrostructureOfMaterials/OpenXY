@@ -876,7 +876,11 @@ ScanParams = handles.Settings.ScanParams;
 ScanParams.Nx = handles.Settings.Nx;
 ScanParams.Ny = handles.Settings.Ny;
 ScanParams.ScanType = handles.Settings.ScanType;
-grainID = GetGrainInfo(handles.Settings.ScanFilePath,handles.Settings.Phase{1},ScanParams,...
+Input1 = handles.Settings.ScanFilePath;
+if strcmp(handles.Settings.GrainMethod,'Grain File') && isfield(handles.Settings,'GrainFileVals')
+    Input1 = handles.Settings.GrainFileVals;
+end
+grainID = GetGrainInfo(Input1,handles.Settings.Phase{1},ScanParams,...
     handles.Settings.Angles,handles.Settings.MisoTol,handles.Settings.GrainMethod,handles.Settings.MinGrainSize);
 
 function GrainMap = OpenGrainMap(handles)
