@@ -163,6 +163,10 @@ end
 
 grains=reshape(grains,(nx),(ny));
 
+if ny==1 %Temporary fix to avoid error in cleanup.m line 33 - BEJ 6/17/16
+    small = 1;
+end
+
 if clean==1
     [grains,grainsize] = cleanup(grains,grainsize,small);
 end
