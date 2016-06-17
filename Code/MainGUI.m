@@ -624,7 +624,11 @@ function AdvancedSettings_Callback(hObject, eventdata, handles)
 % hObject    handle to AdvancedSettings (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.Settings = AdvancedSettingsGUI(handles.Settings,get(handles.MainGUI,'Position'));
+if handles.ScanFileLoaded && handles.ImageLoaded
+    handles.Settings = AdvancedSettingsGUI(handles.Settings,get(handles.MainGUI,'Position'));
+else
+    warndlg({'Cannot open ROI Settings menu'; 'Must select scan file data and first image'},'OpenXY: Invalid Operation');
+end
 guidata(hObject,handles);
 
 % --------------------------------------------------------------------
