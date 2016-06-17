@@ -777,6 +777,9 @@ if get(hObject,'Value')
     handles.GrainMap = OpenGrainMap(handles);
     cla
     GrainMap = vec2map(handles.Settings.grainID,handles.Settings.Nx,handles.Settings.ScanType);
+    if size(GrainMap,1) == 1 %Line Scans
+        GrainMap = repmat(GrainMap,round(size(GrainMap,2)/6),1);
+    end
     imagesc(GrainMap)
     axis image
     

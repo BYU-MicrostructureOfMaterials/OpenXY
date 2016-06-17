@@ -4,6 +4,9 @@ if nargin<5
 end
 
 GrainMap = vec2map(grainID,mapsize(1),ScanType);
+if size(GrainMap,1) == 1 %Line Scans
+    GrainMap = repmat(GrainMap,round(size(GrainMap,2)/6),1);
+end
 Nx = mapsize(1);
 Ny = mapsize(2);
 
