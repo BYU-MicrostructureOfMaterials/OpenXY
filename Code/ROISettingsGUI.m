@@ -156,6 +156,7 @@ set(gca,'xtick',[]);
 axis equal
 
 % Update handles structure
+ROIStylePopup_Callback(handles.ROIStylePopup, eventdata, handles)
 handles.Settings = Settings;
 guidata(hObject, handles);
 
@@ -347,7 +348,7 @@ function ROISizeEdit_Callback(hObject, eventdata, handles)
 handles.Settings.ROISizePercent = str2double(get(hObject,'String'));
 handles.Settings.ROISize = round((handles.Settings.ROISizePercent * .01)*handles.Settings.PixelSize);
 guidata(hObject,handles);
-UpdateImage(handles)
+UpdateImage(handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -374,7 +375,7 @@ function NumROIPopup_Callback(hObject, eventdata, handles)
 contents = cellstr(get(hObject,'String'));
 handles.Settings.NumROIs = str2double(contents{get(hObject,'Value')});
 guidata(hObject,handles);
-UpdateImage(handles)
+UpdateImage(handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -404,6 +405,9 @@ handles.Settings.ROIStyle = ROIStyle;
 if strcmp(ROIStyle,'Grid')
     SetPopupValue(handles.NumROIPopup,num2str(48));
     handles.Settings.NumROIs = 48;
+    set(handles.NumROIPopup,'Enable','off')
+else
+    set(handles.NumROIPopup,'Enable','on')
 end
 guidata(hObject,handles);
 UpdateImage(handles)
