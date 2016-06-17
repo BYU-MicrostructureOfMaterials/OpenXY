@@ -22,7 +22,7 @@ function varargout = PCGUI(varargin)
 
 % Edit the above text to modify the response to help PCGUI
 
-% Last Modified by GUIDE v2.5 31-May-2016 12:50:57
+% Last Modified by GUIDE v2.5 17-Jun-2016 12:45:06
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -482,4 +482,21 @@ elseif get(handles.IQPlot,'Value')
         plot(Xinds,Yinds,'kd','MarkerFaceColor','k')
     end
 end
+PlotGB_Callback(handles.PlotGB, [], handles);
 
+
+
+% --- Executes on button press in PlotGB.
+function PlotGB_Callback(hObject, eventdata, handles)
+% hObject    handle to PlotGB (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of PlotGB
+if ~get(handles.PCPlot,'Value')
+    if get(handles.PlotGB,'Value')
+        axes(handles.PCaxes)
+        GrainMap = vec2map(handles.Settings.grainID,handles.Settings.Nx,handles.Settings.ScanType);
+        PlotGBs(GrainMap);
+    end
+end
