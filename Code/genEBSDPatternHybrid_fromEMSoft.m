@@ -22,8 +22,8 @@ else
 end
 energyfile=(sprintf('%s_MCoutput.h5',Material));
 datafile='EBSDout.h5';  
-datafilepath= fullfile(EMdataPath,'EBSDout.h5');%['temp' filesep 'EBSDout.h5'];
-inputfile = fullfile(EMdataPath,'EMEBSDexample.nml');
+datafilepath= fullfile(EMdataPath,datafile);%['temp' filesep 'EBSDout.h5'];
+inputfile = fullfile(EMdataPath,'OpenXY.nml');
 beamcurrent=15; %Make variable later
 dwelltime=100;   %Make variable later
 binning=1;       %Make variable later
