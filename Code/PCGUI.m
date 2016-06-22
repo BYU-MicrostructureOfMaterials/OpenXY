@@ -22,7 +22,7 @@ function varargout = PCGUI(varargin)
 
 % Edit the above text to modify the response to help PCGUI
 
-% Last Modified by GUIDE v2.5 17-Jun-2016 12:45:06
+% Last Modified by GUIDE v2.5 21-Jun-2016 07:28:58
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -295,7 +295,8 @@ elseif strcmp(type,'Tiff')
     end
     if strcmp(sel,'Yes')
         %Read PC from images
-        [PCData.XStar,PCData.YStar,PCData.ZStar] = ReadTiffPC(handles.Settings.ImageNamesList,handles.Settings.VHRatio);
+        [PCData.XStar,PCData.YStar,PCData.ZStar] = ReadTiffPC(handles.Settings.ImageNamesList,...
+            [handles.Settings.Nx handles.Settings.Ny],handles.Settings.VHRatio);
         
         %Add to PC List
         Settings.PCList(end+1,:) = {PCData.XStar(1) PCData.YStar(1) PCData.ZStar(1)...
