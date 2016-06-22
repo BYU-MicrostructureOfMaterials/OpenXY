@@ -9,7 +9,7 @@ end
 ginds = median(strainvals,1)<thresh;
 strainvals_filt = strainvals(:,ginds);
 pcvals_filt = pcvals(:,ginds);
-numpc_filt = length(strainvals_filt);
+numpc_filt = size(strainvals_filt,2);
 
 numlow = sum(strainvals_filt<thresh,1);
 [nlow, indlow] = max(numlow);
