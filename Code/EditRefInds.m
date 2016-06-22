@@ -1,7 +1,20 @@
-function RefInd = EditRefInds(grainID,mapsize,ScanType,AutoRefInds,Inds)
-if nargin<5
+function RefInd = EditRefInds(grainID,ImageNames,ScanData,mapsize,ScanType,AutoRefInds,ImageFilt,Inds)
+if nargin<8
     Inds = 0;
 end
+
+%Get background maps
+CI = vec2map(ScanData(:,1),mapsize(1),ScanType)./max(ScanData(:,1));
+Fit = vec2map(ScanData(:,2),mapsize(1),ScanType)./max(ScanData(:,2));
+IQ = vec2map(ScanData(:,3),mapsize(1),ScanType)./max(ScanData(:,3));
+bg = 1;
+bgtitle = 'none';
+pat = -1;
+
+%Title
+T = {{'{\bf \fontsize{14} Select 1 reference point per grain}';'{Left-click to select point}';'{Right-click (or SHIFT-click) to change secondary value}';...
+    '{Click wheel (or CTRL-click) to view pattern info}';'{RETURN to finish}'},'Interpreter','tex','FontWeight','Normal','FontSize',10};
+subT = sprintf('Secondary value: %s',bgtitle);
 
 GrainMap = vec2map(grainID,mapsize(1),ScanType);
 if size(GrainMap,1) == 1 %Line Scans
@@ -13,10 +26,13 @@ Ny = mapsize(2);
 morepoints = 1;
 npoints = 1;
 
-figure(1)
+main = figure(1);
 cla
 imagesc(GrainMap)
 axis image
+title(T{:})
+xlabel(subT)
+
 
 if Inds ~= 0
     hold on
@@ -25,6 +41,7 @@ if Inds ~= 0
     [Grain,UID] = unique(Grain);
     Inds = Inds(UID);
     npoints = length(Inds)+1;
+    
     
     %Plot Inds
     [Xind,Yind] = ind2sub2([size(GrainMap,2) size(GrainMap,1)],Inds,ScanType);
@@ -51,7 +68,9 @@ while morepoints
         sze = [size(GrainMap,2),size(GrainMap,1)];
         ind = sub2ind2(sze,round(x),round(y),ScanType);
         grn = grainID(ind);
-        if button ~= 2
+        if button == 1
+            if ishandle(pat); close(pat); end;
+            
             [La,Lb] = ismember(ind,Inds);
             [Ga,Gb] = ismember(grn,Grain);
             
@@ -74,21 +93,55 @@ while morepoints
                 Grain(npoints,1) = grn;
             end
             npoints = length(Inds)+1;
-        end
-        if button == 3 %Exit on Right-Click
-            morepoints = 0;
+        elseif button == 2
+            if ishandle(pat)
+                figure(pat)
+            else
+                pos = get(main,'Position');
+                pat = figure('Position',[pos(1)+pos(3)+15 pos(2) pos(3) pos(4)]);
+            end
+            pattern = ReadEBSDImage(ImageNames{ind,1},ImageFilt);
+            imagesc(pattern); colormap gray;
+            title(['CI: ' num2str(ScanData(ind,1)) ' Fit: ' num2str(ScanData(ind,2))]);
+        elseif button == 3
+            bg = bg + 1;
+            if bg == 5; bg = 1; end;
         end
     else %Press RETURN
         morepoints = 0;
     end
     
+    %Background 
+    switch bg
+        case 1
+            background = ones(mapsize(2),mapsize(1));
+            bgtitle = 'none';
+        case 2
+            background = Fit;
+            bgtitle = 'Fit';
+        case 3
+            background = CI;
+            bgtitle = 'Confidence Index';
+        case 4
+            background = IQ;
+            bgtitle = 'Image Quality';
+    end
+    subT = sprintf('Secondary value: %s',bgtitle);
+    
     %Plot Points
+    figure(main);
     cla
-    imagesc(GrainMap);
+    imagesc(GrainMap.*background);
     hold on
     plot(Xind,Yind,'kd','MarkerFaceColor','k')
     %title(Title{:})
     axis image
+    title(T{:})
+    xlabel(subT)
+    
+    if button == 2
+        plot(round(x),round(y),'rd','MarkerFaceColor','r')
+    end
 end
 [Grains,GrainInds,ic] = unique(grainID);
 GrainRefInds = AutoRefInds(GrainInds);
@@ -107,7 +160,9 @@ hold on
 plot(Xind,Yind,'kd','MarkerFaceColor','k')
 %title(Title{:})
 axis image
-
+if ishandle(pat); close(pat); end;
+title('')
+xlabel('')
 
 
 
