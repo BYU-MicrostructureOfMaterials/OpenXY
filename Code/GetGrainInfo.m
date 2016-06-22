@@ -1,6 +1,7 @@
-function [ grainID, Phase ] = GetGrainInfo( ScanFilePath, Material, ScanParams, Angles, MaxMisorientation, GrainMethod, MinGrainSize )
+function [ grainID, Phase ] = GetGrainInfo( ScanFilePath, Material, ScanParams, Angles, MaxMisorientation, GrainMethod, MinGrainSize)
 %GETGRAININFO Returns grainID and material for HKL and OIM data
 %   INPUTS: ScanFilePath-Full path to .ang or .ctf file
+%               OR 1x2 cell array of Grain File Vals to skip reading grain file
 %           Material-Manual material selection from MainGUI. Looks for 'Auto-detect' parameter
 %           ScanParams-Struct of info gathered from ScanFile. Add in Nx,
 %               Ny, and ScanType
@@ -23,29 +24,43 @@ if nargin < 7
 elseif MinGrainSize == 0
     clean = false;
 end
-[path, name, ext] = fileparts(ScanFilePath);
+ReadFile = true;
+if iscell(ScanFilePath) && all(size(ScanFilePath)==[1,2])
+    ReadFile = false;
+    ext = '.ang';
+else
+    [path, name, ext] = fileparts(ScanFilePath);
+end
+
+
 if strcmp(ext,'.ang')
     if strcmp(GrainMethod,'Grain File')
-        GrainFilePath = fullfile(path,[name '.txt']);
-        if ~exist(GrainFilePath,'file')
-            button = questdlg('No matching grain file was found. Would you like to manually select a grain file?','Grain file not found');
-            if strcmp(button,'Yes')
-                w = pwd;
-                cd(path);
-                [name, path] = uigetfile({'*.txt', 'Grain Files (*.txt)'},'Select a Grain File');
-                GrainFilePath = fullfile(path,name);
-                cd(w);
-            else
-                error('No grain matching ground file was found');
+        if ReadFile
+            GrainFilePath = fullfile(path,[name '.txt']);
+            if ~exist(GrainFilePath,'file')
+                button = questdlg('No matching grain file was found. Would you like to manually select a grain file?','Grain file not found');
+                if strcmp(button,'Yes')
+                    w = pwd;
+                    cd(path);
+                    [name, path] = uigetfile({'*.txt', 'Grain Files (*.txt)'},'Select a Grain File');
+                    GrainFilePath = fullfile(path,name);
+                    cd(w);
+                else
+                    error('No grain matching ground file was found');
+                end
             end
-        end
-        GrainFileVals = ReadGrainFile(GrainFilePath);
-        grainID = GrainFileVals{9};
-        if strcmp(Material,'Auto-detect')
+            GrainFileVals = ReadGrainFile(GrainFilePath);
+            grainID = GrainFileVals{9};
             Phase=lower(GrainFileVals{11});
+        else
+            grainID = ScanFilePath{1};
+            Phase = ScanFilePath{2};
+            clear ScanFilePath
+        end
+        if strcmp(Material,'Auto-detect');
             disp(['Auto Detected Material: ' Phase{1}])
         else
-            Phase = cell(length(GrainFileVals{1}),1);
+            Phase = cell(length(Phase),1);
             Phase(:) = {Material};
         end
         Phase = ValidatePhase(Phase);

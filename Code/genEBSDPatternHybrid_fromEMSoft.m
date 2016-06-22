@@ -1,4 +1,4 @@
-function [pic]=genEBSDPatternHybrid_fromEMSoft(g,xstar,ystar,zstar,pixsize,mperpix,elevang,Material,Av)
+function [pic]=genEBSDPatternHybrid_fromEMSoft(g,xstar,ystar,zstar,pixsize,mperpix,elevang,Material,Av,ImageInd)
 
 L=(zstar*pixsize*mperpix); %define mperpix in original script
 thetac=elevang*180/pi; % in degrees
@@ -21,14 +21,14 @@ else
     masterfile=(sprintf('%s_EBSDmaster.h5',Material)); 
 end
 energyfile=(sprintf('%s_MCoutput.h5',Material));
-datafile='EBSDout.h5';  
-datafilepath= fullfile(EMdataPath,'EBSDout.h5');%['temp' filesep 'EBSDout.h5'];
-inputfile = fullfile(EMdataPath,'EMEBSDexample.nml');
+datafile=['EBSDout_' num2str(ImageInd) '.h5'];    
+datafilepath= fullfile(EMdataPath,datafile);%['temp' filesep 'EBSDout.h5'];
+inputfile = fullfile(EMdataPath,['OpenXY_' num2str(ImageInd) '.nml']);
 beamcurrent=15; %Make variable later
 dwelltime=100;   %Make variable later
 binning=1;       %Make variable later
 gammavalue=.4;   %Make variable later
-anglefile='testeuler.txt';  %fullfile(OpenXYPath,'temp','testeuler.txt');%['temp' filesep 'testeuler.txt'];
+anglefile= ['OpenXY_euler' num2str(ImageInd) '.txt'];  %fullfile(OpenXYPath,'temp','testeuler.txt');%['temp' filesep 'testeuler.txt'];
 
 [phi1,PHI,phi2]=gmat2euler(g); % in radians
 
@@ -93,7 +93,7 @@ fclose(fid);
 
 %run EMsoft
 cd(EMdataPath);
-setenv('DYLD_LIBRARY_PATH',['/opt/local/lib/libgcc/']);
+%setenv('DYLD_LIBRARY_PATH',['/opt/local/lib/libgcc/']);
 [status,cmdout] = system(['"' fullfile(EMsoftPath,'bin','EMEBSD') '" ' inputfile]);
 cd(OpenXYPath);
 %!EMEBSD EMEBSDexample.nml
@@ -106,4 +106,5 @@ pic(:,:)=data1(:,:,1);
 pic=flipud(pic');   % flip to correct OIM reference frame (swap TD and RD)
 %imagesc(pic)
 %colormap 'gray'
+delete(fullfile(EMdataPath,datafile), inputfile, fullfile(EMdataPath,anglefile));
 end

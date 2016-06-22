@@ -449,16 +449,35 @@ function MaterialPopup_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns MaterialPopup contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from MaterialPopup
-Settings = handles.Settings;
 Material = GetPopupString(hObject);
 handles.Settings.Material = Material;
-ScanParams = Settings.ScanParams;
-ScanParams.Nx = Settings.Nx;
-ScanParams.Ny = Settings.Ny;
-ScanParams.ScanType = Settings.ScanType;
+ScanParams = handles.Settings.ScanParams;
+ScanParams.Nx = handles.Settings.Nx;
+ScanParams.Ny = handles.Settings.Ny;
+ScanParams.ScanType = handles.Settings.ScanType;
+saveVals = false;
 if handles.ScanFileLoaded
+    Input1 = handles.Settings.ScanFilePath;
+    
+    %Use saved Grain File Data
+    if strcmp(handles.Settings.GrainMethod,'Grain File') 
+        if isfield(handles.Settings,'GrainFileVals')
+            Input1 = handles.Settings.GrainFileVals;
+        else
+            saveVals = true;
+        end
+    end
+    
+    %Get Grain Info
     [handles.Settings.grainID, handles.Settings.Phase] = GetGrainInfo(...
-        Settings.ScanFilePath, Material, ScanParams, Settings.Angles, Settings.MisoTol, Settings.GrainMethod);
+        Input1, Material, ScanParams, handles.Settings.Angles, handles.Settings.MisoTol, handles.Settings.GrainMethod);
+    
+    %Save GrainFileVals
+    if saveVals
+        handles.Settings.GrainFileVals = {handles.Settings.grainID handles.Settings.Phase};
+    end
+    
+    %Validation
     if isempty(handles.Settings.Phase)
         handles.ScanFileLoaded = 0;
     end

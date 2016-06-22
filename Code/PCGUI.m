@@ -22,7 +22,7 @@ function varargout = PCGUI(varargin)
 
 % Edit the above text to modify the response to help PCGUI
 
-% Last Modified by GUIDE v2.5 31-May-2016 12:50:57
+% Last Modified by GUIDE v2.5 17-Jun-2016 12:45:06
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -168,16 +168,23 @@ zstar = handles.Settings.PCList{index,3};
 set(handles.XStarLabel,'String',xstar);
 set(handles.YStarLabel,'String',ystar);
 set(handles.ZStarLabel,'String',zstar);
+type = handles.Settings.PCList{index,4};
 
-if strcmp(handles.Settings.PCList{index,5},'Naive')
-    handles.Settings.XStar = xstar - handles.Settings.XData/handles.Settings.PhosphorSize;
-    detector_angle = handles.Settings.SampleTilt-handles.Settings.CameraElevation;
-    handles.Settings.YStar = ystar + handles.Settings.YData/handles.Settings.PhosphorSize*sin(detector_angle);
-    handles.Settings.ZStar = zstar + handles.Settings.YData/handles.Settings.PhosphorSize*cos(detector_angle);
+if strcmp(type,'Tiff')
+    handles.Settings.XStar = handles.Settings.PCList{index,7}.XStar;
+    handles.Settings.YStar = handles.Settings.PCList{index,7}.YStar;
+    handles.Settings.ZStar = handles.Settings.PCList{index,7}.ZStar;
 else
-    handles.Settings.XStar(:) = xstar;
-    handles.Settings.YStar(:) = ystar;
-    handles.Settings.ZStar(:) = zstar;
+    if strcmp(handles.Settings.PCList{index,5},'Naive')
+        handles.Settings.XStar = xstar - handles.Settings.XData/handles.Settings.PhosphorSize;
+        detector_angle = handles.Settings.SampleTilt-handles.Settings.CameraElevation;
+        handles.Settings.YStar = ystar + handles.Settings.YData/handles.Settings.PhosphorSize*sin(detector_angle);
+        handles.Settings.ZStar = zstar + handles.Settings.YData/handles.Settings.PhosphorSize*cos(detector_angle);
+    else
+        handles.Settings.XStar(:) = xstar;
+        handles.Settings.YStar(:) = ystar;
+        handles.Settings.ZStar(:) = zstar;
+    end
 end
 UpdatePlot(handles)
 
@@ -278,6 +285,26 @@ elseif strcmp(type,'Grid')
             guidata(handles.PCGUI,handles);
         end
     end
+elseif strcmp(type,'Tiff')
+    def_name = 'TIFF';
+    count = sum(cell2mat(strfind(handles.Settings.PCList(:,6),def_name))>0);
+    sel = 'Yes';
+    if count
+        sel = questdlg('A Tiff PC has already been imported. Continue?','Tiff PC Calibration','Yes','No','No');
+        def_name = [def_name num2str(count)];
+    end
+    if strcmp(sel,'Yes')
+        %Read PC from images
+        [PCData.XStar,PCData.YStar,PCData.ZStar] = ReadTiffPC(handles.Settings.ImageNamesList,handles.Settings.VHRatio);
+        
+        %Add to PC List
+        Settings.PCList(end+1,:) = {PCData.XStar(1) PCData.YStar(1) PCData.ZStar(1)...
+            'Tiff' 'None' def_name PCData};
+        set(handles.PCList,'String',Settings.PCList(:,6));
+        handles.Settings = Settings;
+        guidata(handles.PCGUI,handles);
+    end
+    
 end
 
 
@@ -482,4 +509,21 @@ elseif get(handles.IQPlot,'Value')
         plot(Xinds,Yinds,'kd','MarkerFaceColor','k')
     end
 end
+PlotGB_Callback(handles.PlotGB, [], handles);
 
+
+
+% --- Executes on button press in PlotGB.
+function PlotGB_Callback(hObject, eventdata, handles)
+% hObject    handle to PlotGB (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of PlotGB
+if ~get(handles.PCPlot,'Value')
+    if get(handles.PlotGB,'Value')
+        axes(handles.PCaxes)
+        GrainMap = vec2map(handles.Settings.grainID,handles.Settings.Nx,handles.Settings.ScanType);
+        PlotGBs(GrainMap);
+    end
+end
