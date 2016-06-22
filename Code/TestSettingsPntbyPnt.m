@@ -29,8 +29,8 @@ Settings.DoShowPlot = 1;
 Settings.SinglePattern = 0;
 
 %% Open GUI and Run Test
-profile off; profile viewer;
 morepoints = true;
+gb = false;
 
 figure(100);
 figure(101);
@@ -39,10 +39,17 @@ while(morepoints)
     figure(99);
     PlotScan(im,PlotType);
     caxis(Limits)
-    title({'\fontsize{14} Select a point to calculate the deformation tensor','\fontsize{10} Right-click to exit'},'HorizontalAlignment','center')
+    title({'\fontsize{14} Select a point to calculate the deformation tensor';'\fontsize{10}Scroll-click to toggle grain boundaries';'\fontsize{10} Right-click to exit'},'HorizontalAlignment','center')
+    if gb
+        GrainMap = vec2map(Settings.grainID,Settings.Nx,Settings.ScanType);
+        PlotGBs(GrainMap);
+    end
     
     figure(99)
     [x,y, button] = ginput(1);
+    if isempty(button)
+        button = 0;
+    end
     
     switch button
         case 1
@@ -72,8 +79,7 @@ while(morepoints)
             
             Settings.ImageNamesList{ind}
         case 2
-            GrainMap = vec2map(Settings.grainID,Settings.Nx,Settings.ScanType);
-            PlotGBs(GrainMap);
+            gb = ~gb;
         otherwise
             morepoints = false;
     end
