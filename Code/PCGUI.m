@@ -510,9 +510,15 @@ elseif get(handles.IQPlot,'Value')
         plot(Xinds,Yinds,'kd','MarkerFaceColor','k')
     end
 end
-PlotGB_Callback(handles.PlotGB, [], handles);
 
-
+%Plot Grain Boundaries
+if ~get(handles.PCPlot,'Value')
+    if get(handles.PlotGB,'Value')
+        axes(handles.PCaxes)
+        GrainMap = vec2map(handles.Settings.grainID,handles.Settings.Nx,handles.Settings.ScanType);
+        PlotGBs(GrainMap);
+    end
+end
 
 % --- Executes on button press in PlotGB.
 function PlotGB_Callback(hObject, eventdata, handles)
@@ -521,10 +527,5 @@ function PlotGB_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of PlotGB
-if ~get(handles.PCPlot,'Value')
-    if get(handles.PlotGB,'Value')
-        axes(handles.PCaxes)
-        GrainMap = vec2map(handles.Settings.grainID,handles.Settings.Nx,handles.Settings.ScanType);
-        PlotGBs(GrainMap);
-    end
-end
+UpdatePlot(handles)
+
