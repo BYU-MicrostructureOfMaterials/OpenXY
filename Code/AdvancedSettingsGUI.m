@@ -712,13 +712,15 @@ function GrainMethod_Callback(hObject, eventdata, handles)
 %        contents{get(hObject,'Value')} returns selected item from GrainMethod
 contents = get(hObject,'String');
 Method = contents{get(hObject,'Value')};
-handles.Settings.GrainMethod = Method;
-if strcmp(Method,'Find Grains')
-    set(handles.MinGrainSize,'Enable','on')
-    handles.Settings.grainID = UpdateGrainIDs(handles);
-else
-    set(handles.MinGrainSize,'Enable','off')
-    handles.Settings.grainID = handles.Settings.GrainVals.grainID;
+if ~strcmp(handles.Settings.GrainMethod,Method)
+    handles.Settings.GrainMethod = Method;
+    if strcmp(Method,'Find Grains')
+        set(handles.MinGrainSize,'Enable','on')
+        handles.Settings.grainID = UpdateGrainIDs(handles);
+    else
+        set(handles.MinGrainSize,'Enable','off')
+        handles.Settings.grainID = handles.Settings.GrainVals.grainID;
+    end
 end
 
 guidata(hObject,handles);
