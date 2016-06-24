@@ -71,6 +71,7 @@ copyParam('DoDDS');
 copyParam('NumSkipPts');
 copyParam('IQCutoff');
 copyParam('DDSMethod',{'Nye-Kroner', 'Nye-Kroner (Pantleon)','Distortion Matching'});
+copyParam('rdoptions')
 
 %Kernel Average Misorientation
 copyParam('KernelAvgMisoPath');

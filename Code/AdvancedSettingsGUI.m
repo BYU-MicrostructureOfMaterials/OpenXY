@@ -108,16 +108,35 @@ set(handles.MinGrainSize,'String',num2str(Settings.MinGrainSize))
 
 %Calculate Dislocation Density
 set(handles.DoDD,'Value', Settings.CalcDerivatives);
-%Do Split DD
-set(handles.DoSplitDD,'Value',Settings.DoDDS);
 %Number of Skip Points
 set(handles.SkipPoints,'String',Settings.NumSkipPts);
 %IQ Cutoff
 set(handles.IQCutoff,'String',num2str(Settings.IQCutoff));
-%SplitDD Method
-DDSList = {'Nye-Kroner', 'Nye-Kroner (Pantleon)','Distortion Matching'};
-set(handles.SplitDDMethod,'String',DDSList);
-SetPopupValue(handles.SplitDDMethod,Settings.DDSMethod);
+
+%SplitDD
+%Do SplitDD
+set(handles.DoSplitDD,'Value',Settings.DoDDS);
+%Weighting
+minscheme = {'No weighting', 'Energy','CRSS'};
+set(handles.SplitDDMethod,'String',minscheme);
+set(handles.SplitDDMethod,'Value',Settings.rdoptions.minscheme);
+%Optimization
+L1 = {'L1','L2','L1 from L2'};
+set(handles.SplitDDOpt,'String',L1);
+x0type = Settings.rdoptions.x0type; L1 = Settings.rdoptions.L1;
+if x0type && L1
+    val = 3;
+elseif x0type && ~L1
+    val = 2;
+elseif ~x0type && L1
+    val = 1;
+end
+set(handles.SplitDDOpt,'Value',val)
+%Nye
+Nye = {'alphai3','Pantleon'};
+set(handles.SplitDDNye,'String',Nye);
+set(handles.SplitDDNye,'Value',Settings.rdoptions.Pantleon+1);
+
 %Kernel Avg Miso
 if iscell(Settings.KernelAvgMisoPath)
     Settings.KernelAvgMisoPath = Settings.KernelAvgMisoPath{1};
@@ -494,46 +513,11 @@ else
     set(handles.DoSplitDD,'Enable','off');
     set(handles.SkipPoints,'Enable','off');
     set(handles.IQCutoff,'Enable','off');
-    set(handles.SplitDDMethod,'Enable','off');
+    DoSplitDD_Callback(handles.DoSplitDD, eventdata, handles);
+    handles = guidata(hObject);
 end
 guidata(hObject,handles);
 
-
-% --- Executes on button press in DoSplitDD.
-function DoSplitDD_Callback(hObject, eventdata, handles)
-% hObject    handle to DoSplitDD (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of DoSplitDD
-Settings = handles.Settings;
-valid = 0;
-j = 1;
-allMaterials = unique(Settings.Phase);
-for i = 1:length(allMaterials)
-    M = ReadMaterial(allMaterials{i});
-    if isfield(M,'SplitDD')
-        valid = 1;
-    else
-        valid = 0;
-        invalidInd(j) = i;
-        j = j + 1;
-    end
-end
-if get(hObject,'Value')
-    if valid
-        set(handles.SplitDDMethod,'Enable','on');
-    else
-        warndlg(['Split Dislocation data not available for ' allMaterials{invalidInd(1)}],'OpenXY');
-        set(hObject,'Value',0);
-        set(handles.SplitDDMethod, 'Enable', 'off');
-    end
-else
-    set(hObject,'Value',0);
-    set(handles.SplitDDMethod,'Enable','off');
-end
-handles.Settings.DoDDS = get(hObject,'Value');
-guidata(hObject,handles);
 
 
 function SkipPoints_Callback(hObject, eventdata, handles)
@@ -600,6 +584,47 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
+% --- Executes on button press in DoSplitDD.
+function DoSplitDD_Callback(hObject, eventdata, handles)
+% hObject    handle to DoSplitDD (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of DoSplitDD
+Settings = handles.Settings;
+valid = 0;
+j = 1;
+allMaterials = unique(Settings.Phase);
+for i = 1:length(allMaterials)
+    M = ReadMaterial(allMaterials{i});
+    if isfield(M,'SplitDD')
+        valid = 1;
+    else
+        valid = 0;
+        invalidInd(j) = i;
+        j = j + 1;
+    end
+end
+if get(hObject,'Value')
+    if valid
+        enable = 'on';
+    else
+        warndlg(['Split Dislocation data not available for ' allMaterials{invalidInd(1)}],'OpenXY');
+        set(hObject,'Value',0);
+        enable = 'off';
+    end
+else
+    set(hObject,'Value',0);
+    enable = 'off';
+end
+if strcmp(get(hObject,'Enable'),'off')
+    enable = 'off';
+end
+set(handles.SplitDDMethod,'Enable',enable);
+set(handles.SplitDDOpt,'Enable',enable);
+set(handles.SplitDDNye,'Enable',enable);
+handles.Settings.DoDDS = get(hObject,'Value');
+guidata(hObject,handles);
 
 % --- Executes on selection change in SplitDDMethod.
 function SplitDDMethod_Callback(hObject, eventdata, handles)
@@ -610,13 +635,87 @@ function SplitDDMethod_Callback(hObject, eventdata, handles)
 % Hints: contents = cellstr(get(hObject,'String')) returns SplitDDMethod contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from SplitDDMethod
 contents = cellstr(get(hObject,'String'));
-handles.Settings.DDSMethod = contents{get(hObject,'Value')};
+val = contents{get(hObject,'Value')};
+switch val
+    case 'No weighting'
+        minscheme = 1;
+    case 'Energy'
+        minscheme = 2;
+    case 'CRSS'
+        minscheme = 3;
+    case 'CRSS + Schmid'
+        minscheme = 4;
+end
+handles.Settings.rdoptions.minscheme = minscheme;
 guidata(hObject,handles);
 
 
 % --- Executes during object creation, after setting all properties.
 function SplitDDMethod_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to SplitDDMethod (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+% --- Executes on selection change in SplitDDOpt.
+function SplitDDOpt_Callback(hObject, eventdata, handles)
+% hObject    handle to SplitDDOpt (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns SplitDDOpt contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from SplitDDOpt
+contents = cellstr(get(hObject,'String'));
+val = contents{get(hObject,'Value')};
+switch val
+    case 'L1'
+        L1 = 1; x0type = 0;
+    case 'L2'
+        L1 = 0; x0type = 1;
+    case 'L1 from L2'
+        L1 = 1; x0type = 1;
+end
+handles.Settings.rdoptions.L1 = L1;
+handles.Settings.rdoptions.x0type = x0type;
+guidata(hObject,handles);
+
+% --- Executes during object creation, after setting all properties.
+function SplitDDOpt_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to SplitDDOpt (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in SplitDDNye.
+function SplitDDNye_Callback(hObject, eventdata, handles)
+% hObject    handle to SplitDDNye (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns SplitDDNye contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from SplitDDNye
+contents = cellstr(get(hObject,'String'));
+val = contents{get(hObject,'Value')};
+handles.Settings.rdoptions.Pantleon = strcmp(val,'Pantleon');
+guidata(hObject,handles);
+
+
+% --- Executes during object creation, after setting all properties.
+function SplitDDNye_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to SplitDDNye (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 

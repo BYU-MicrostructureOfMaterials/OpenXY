@@ -179,6 +179,10 @@ if Settings.CalcDerivatives
     
     % Split Dislocation Density (Code by Tim Ruggles, added 3/5/2015)
     if Settings.DoDDS
+        Settings.rdoptions.stress = eye(3);
+        Settings.rdoptions.gbangmin = 20;
+        [rhos, ss, rhoKAM, iqRS, gbs, nphi1, nPHI, nphi2, rdoptions] = RDCalc(Settings.rdoptions);
+        
         temp = load([Settings.AnalysisParamsPath '.mat']);
         alpha_data = temp.alpha_data;
         clear temp
