@@ -41,6 +41,7 @@ copyParam('Material',GetMaterialsList);
 copyParam('DoParallel');
 copyParam('DoShowPlot');
 copyParam('DoPCStrainMin');
+copyParam('GrainVals');
 
 %% ROI/Filter Settings
 %ROI Settings

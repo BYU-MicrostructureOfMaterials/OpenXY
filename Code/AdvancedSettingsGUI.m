@@ -22,7 +22,7 @@ function varargout = AdvancedSettingsGUI(varargin)
 
 % Edit the above text to modify the response to help AdvancedSettingsGUI
 
-% Last Modified by GUIDE v2.5 16-Jun-2016 12:00:58
+% Last Modified by GUIDE v2.5 20-Jun-2016 08:19:13
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -712,13 +712,15 @@ function GrainMethod_Callback(hObject, eventdata, handles)
 %        contents{get(hObject,'Value')} returns selected item from GrainMethod
 contents = get(hObject,'String');
 Method = contents{get(hObject,'Value')};
+handles.Settings.GrainMethod = Method;
 if strcmp(Method,'Find Grains')
     set(handles.MinGrainSize,'Enable','on')
+    handles.Settings.grainID = UpdateGrainIDs(handles);
 else
     set(handles.MinGrainSize,'Enable','off')
+    handles.Settings.grainID = handles.Settings.GrainVals.grainID;
 end
-handles.Settings.GrainMethod = Method;
-handles.Settings.grainID = UpdateGrainIDs(handles);
+
 guidata(hObject,handles);
 GrainRefType_Callback(handles.GrainRefType, eventdata, handles);
 
@@ -848,8 +850,9 @@ end
 
 %Manually Edit Inds
 handles.GrainMap = OpenGrainMap(handles);
-RefInd = EditRefInds(handles.Settings.grainID,[handles.Settings.Nx handles.Settings.Ny],...
-    handles.Settings.ScanType,handles.AutoRefInds,Inds);
+RefInd = EditRefInds(handles.Settings.grainID,handles.Settings.ImageNamesList,[handles.Settings.CI handles.Settings.Fit handles.Settings.IQ],...
+    [handles.Settings.Nx handles.Settings.Ny],...
+    handles.Settings.ScanType,handles.AutoRefInds,handles.Settings.ImageFilter,Inds);
 
 %Check if anything changed
 if ~strcmp(GrainRefType,'Manual') && ~all(RefInd==handles.AutoRefInds)
@@ -877,11 +880,9 @@ ScanParams.Nx = handles.Settings.Nx;
 ScanParams.Ny = handles.Settings.Ny;
 ScanParams.ScanType = handles.Settings.ScanType;
 Input1 = handles.Settings.ScanFilePath;
-if strcmp(handles.Settings.GrainMethod,'Grain File') && isfield(handles.Settings,'GrainFileVals')
-    Input1 = handles.Settings.GrainFileVals;
-end
 grainID = GetGrainInfo(Input1,handles.Settings.Phase{1},ScanParams,...
     handles.Settings.Angles,handles.Settings.MisoTol,handles.Settings.GrainMethod,handles.Settings.MinGrainSize);
+
 
 function GrainMap = OpenGrainMap(handles)
 if ~ishandle(handles.GrainMap)

@@ -200,7 +200,7 @@ wd = pwd;
 if ~strcmp(handles.FileDir,pwd)
     cd(handles.FileDir);
 end
-[name, path] = uigetfile({'*.ang;*.ctf','Scan Files (*.ang,*.ctf)'},'Select a Scan File');
+[name, path, filterind] = uigetfile({'*.ang;*.ctf','Scan Files (*.ang,*.ctf)';'*.h5','OIM HDF5 Files (*.h5)'},'Select a Scan File');
 cd(wd);
 SetScanFields(handles,name,path);
 
@@ -451,39 +451,12 @@ function MaterialPopup_Callback(hObject, eventdata, handles)
 %        contents{get(hObject,'Value')} returns selected item from MaterialPopup
 Material = GetPopupString(hObject);
 handles.Settings.Material = Material;
-ScanParams = handles.Settings.ScanParams;
-ScanParams.Nx = handles.Settings.Nx;
-ScanParams.Ny = handles.Settings.Ny;
-ScanParams.ScanType = handles.Settings.ScanType;
-saveVals = false;
+
 if handles.ScanFileLoaded
-    Input1 = handles.Settings.ScanFilePath;
-    
-    %Use saved Grain File Data
-    if strcmp(handles.Settings.GrainMethod,'Grain File') 
-        if isfield(handles.Settings,'GrainFileVals')
-            Input1 = handles.Settings.GrainFileVals;
-        else
-            saveVals = true;
-        end
-    end
-    
-    %Get Grain Info
-    [handles.Settings.grainID, handles.Settings.Phase] = GetGrainInfo(...
-        Input1, Material, ScanParams, handles.Settings.Angles, handles.Settings.MisoTol, handles.Settings.GrainMethod);
-    
-    %Save GrainFileVals
-    if saveVals
-        handles.Settings.GrainFileVals = {handles.Settings.grainID handles.Settings.Phase};
-    end
-    
-    %Validation
-    if isempty(handles.Settings.Phase)
-        handles.ScanFileLoaded = 0;
-    end
-    if length(handles.Settings.Phase) > handles.Settings.ScanLength %Cropped Scan
-        handles.Settings.Phase = handles.Settings.Phase(1:handles.Settings.ScanLength);
-        handles.Settings.grainID = handles.Settings.grainID(1:handles.Settings.ScanLength);
+    if strcmp(Material,'Auto-detect')
+        handles.Settings.Phase = handles.Settings.GrainVals.Phase;
+    else
+        handles.Settings.Phase(1:handles.Settings.ScanLength) = {Material};
     end
 end
 guidata(hObject, handles);

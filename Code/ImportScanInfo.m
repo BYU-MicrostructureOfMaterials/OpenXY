@@ -1,9 +1,10 @@
 function Settings = ImportScanInfo(Settings,name,path)
 
 %Read Scan File
-if ~isfield(Settings,'Angles') || ~strcmp(Settings.ScanFilePath,fullfile(path,name))
+ScanPath = fullfile(path,name);
+if ~isfield(Settings,'Angles') || ~strcmp(Settings.ScanFilePath,ScanPath)
 
-    [ScanFileData,Settings.ScanParams] = ReadScanFile(fullfile(path,name));
+    [ScanFileData,Settings.ScanParams] = ReadScanFile(ScanPath);
 
     %Initialize Variables
     Settings.ScanLength = size(ScanFileData{1},1);
@@ -23,11 +24,11 @@ if ~isfield(Settings,'Angles') || ~strcmp(Settings.ScanFilePath,fullfile(path,na
     Settings.IQ = ScanFileData{6};
     Settings.CI = ScanFileData{7};
     Settings.Fit = ScanFileData{10};
-    Settings.ScanFilePath = fullfile(path,name);
+    Settings.ScanFilePath = ScanPath;
 end
 
 %Check ScanType
-[~,~,ext] = fileparts(fullfile(path,name));
+[~,~,ext] = fileparts(ScanPath);
 if strcmp(ext,'.ang')
     check = true;
     if ~isempty(strfind(Settings.ScanParams.GridType,'Hex'))
@@ -95,6 +96,12 @@ else
         Settings.Ny = Ny;
     end
 end
+
+%Get Grain and Phase Info
+[Settings.grainID,Settings.Phase] = GetGrainInfo(ScanPath,Settings.Material,Settings.ScanParams,...
+    Settings.Angles,Settings.MisoTol,Settings.GrainMethod,0); %Don't use cleanup
+Settings.GrainVals.grainID = Settings.grainID;
+Settings.GrainVals.Phase = Settings.Phase;
 
 %Crop Scan
 Settings = CropScan(Settings);
