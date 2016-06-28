@@ -217,7 +217,8 @@ switch Settings.HROIMMethod
     case 'Real'
         %Find the grain of scan image and get the reference image for that
         %grain
-        RefImagePath = Settings.RefImageNames{ImageInd}; % original line
+        RefImageInd = Settings.RefInd(ImageInd);
+        RefImagePath = Settings.ImageNamesList{RefImageInd}; % original line
         RefInd=Settings.RefInd(ImageInd);
         if strcmp(Settings.ImageFilterType,'standard')
             RefImage = ReadEBSDImage(RefImagePath,Settings.ImageFilter);

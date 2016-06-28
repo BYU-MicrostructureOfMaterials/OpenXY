@@ -102,28 +102,18 @@ end
 %% Get Reference Image(s) when not Simulated Method
 % Get reference images and assign the name to each scan image (or main
 % image - image b in the case of an L-grid scan)
-if ~strcmp(Settings.HROIMMethod,'Simulated')&& ~isfield(Settings,'RefImageNames')
+if ~strcmp(Settings.HROIMMethod,'Simulated')&& ~isfield(Settings,'RefInd')
     RefImageInd = Settings.RefImageInd;
     if RefImageInd~=0
-        datalength = Settings.ScanLength;
-        Settings.RefImageNames = cell(datalength,1);
-        Settings.RefImageNames(:)= Settings.ImageNamesList(RefImageInd);
-        Settings.Phi1Ref(1:datalength) = Settings.Angles(RefImageInd,1);
-        Settings.PHIRef(1:datalength) = Settings.Angles(RefImageInd,2);
-        Settings.Phi2Ref(1:datalength) = Settings.Angles(RefImageInd,3);
-        Settings.RefInd(1:datalength)= RefImageInd;
+        Settings.RefInd(1:Settings.ScanLength)= RefImageInd;
     else
         if strcmp(Settings.GrainRefImageType,'Min Kernel Avg Miso')
-            [Settings.RefImageNames, Settings.Phi1Ref, ...
-                Settings.PHIRef, Settings.Phi2Ref, Settings.RefInd] = GetRefImageNames(Settings.ImageNamesList, ...
+            Settings.RefInd = GetRefImageInds(...
                 {Settings.Angles(Inds,:);Settings.IQ(Inds);Settings.CI(Inds);Settings.Fit(Inds)}, Settings.grainID(Inds), Settings.KernelAvgMisoPath);
-        elseif isfield(Settings,'RefInd')
-            Settings.RefImageNames = Settings.ImageNamesList(Settings.RefInd);
         else 
-            [Settings.RefImageNames, Settings.Phi1Ref, ...
-                Settings.PHIRef, Settings.Phi2Ref, Settings.RefInd] = GetRefImageNames(Settings.ImageNamesList(Inds), ...
+            Settings.RefInd = GetRefImageInds(...
                 {Settings.Angles(Inds,:);Settings.IQ(Inds);Settings.CI(Inds);Settings.Fit(Inds)}, Settings.grainID(Inds));
-        end 
+        end
     end  
 end
 
