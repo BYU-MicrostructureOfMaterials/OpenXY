@@ -16,12 +16,19 @@ T = {{'{\bf \fontsize{14} Select 1 reference point per grain}';'{Left-click to s
     '{Click wheel (or CTRL-click) to view pattern info}';'{RETURN to finish}'},'Interpreter','tex','FontWeight','Normal','FontSize',10};
 subT = sprintf('Secondary value: %s',bgtitle);
 
-GrainMap = vec2map(grainID,mapsize(1),ScanType);
-if size(GrainMap,1) == 1 %Line Scans
-    GrainMap = repmat(GrainMap,round(size(GrainMap,2)/6),1);
-end
 Nx = mapsize(1);
 Ny = mapsize(2);
+
+GrainMap = vec2map(grainID,mapsize(1),ScanType);
+if size(GrainMap,1) == 1 %Line Scans
+    newsize = round(size(GrainMap,2)/6);
+    GrainMap = repmat(GrainMap,newsize,1);
+    CI = repmat(CI,newsize,1);
+    Fit = repmat(Fit,newsize,1);
+    IQ = repmat(IQ,newsize,1);
+    mapsize(2) = newsize;
+end
+
 
 morepoints = 1;
 npoints = 1;
