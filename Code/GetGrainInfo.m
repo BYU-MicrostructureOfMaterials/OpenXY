@@ -33,7 +33,7 @@ else
 end
 
 
-if strcmp(ext,'.ang')
+if ~strcmp(ext,'.ctf')
     if strcmp(GrainMethod,'Grain File')
         if ReadFile
             GrainFilePath = fullfile(path,[name '.txt']);

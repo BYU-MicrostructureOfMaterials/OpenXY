@@ -148,9 +148,11 @@ else
     set(handles.ProcessorsPopup,'Value',handles.Settings.DoParallel);
 end
 ProcessorsPopup_Callback(handles.ProcessorsPopup,eventdata,handles);
+
 %Files
 [fpath,name,ext] = fileparts(handles.Settings.ScanFilePath);
-SetScanFields(handles,[name ext],fpath);
+if strcmp(ext,'.h5'); filterind = 2; else filterind = 1; end;
+SetScanFields(handles,[name ext],fpath,filterind);
 handles = guidata(hObject);
 [fpath,name,ext] = fileparts(handles.Settings.FirstImagePath);
 SetImageFields(handles,[name ext],fpath);
@@ -202,9 +204,9 @@ if ~strcmp(handles.FileDir,pwd)
 end
 [name, path, filterind] = uigetfile({'*.ang;*.ctf','Scan Files (*.ang,*.ctf)';'*.h5','OIM HDF5 Files (*.h5)'},'Select a Scan File');
 cd(wd);
-SetScanFields(handles,name,path);
+SetScanFields(handles,name,path,filterind);
 
-function SetScanFields(handles,name,path)
+function SetScanFields(handles,name,path,filterind)
 if name ~= 0
     handles.FileDir = path;
     prevName = get(handles.ScanNameText,'String');
@@ -230,11 +232,18 @@ if name ~= 0
         MaterialPopup_Callback(handles.MaterialPopup, [], handles);
         handles = guidata(handles.MainGUI);
         
-        %Get Image Names
-        if handles.ImageLoaded
-            handles.Settings.ImageNamesList = ImportImageNamesList(handles.Settings);
+        if filterind == 1 %Not h5
+            %Get Image Names
+            if handles.ImageLoaded
+                handles.Settings.ImageNamesList = ImportImageNamesList(handles.Settings);
+            end
+        else
+            set(handles.SelectImageButton,'Enable','off');
+            handles.ImageLoaded = 1;
+            set(handles.FirstImageNameText,'String','N/A');
+            set(handles.ImageFolderText,'String','N/A');
+            set(handles.ImageSizeText,'String','N/A');
         end
-        
     end 
     %Remove Subscan
     if all(isfield(handles.Settings,{'Inds','NewSize'}))
