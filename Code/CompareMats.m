@@ -1,4 +1,4 @@
-function CompareMats(ScanMats)
+function Material = CompareMats(ScanMats)
 % COMPAREMATS(SCANMATS)
 % Compares a material structure with the OpenXY material of the same name
 % Creates an interactive GUI to select which parameters to change
@@ -8,7 +8,11 @@ function CompareMats(ScanMats)
 % Written by Brian Jackson June 2016
 for i = 1:size(ScanMats,1)
     count = 1;
-    Material = ReadMaterial(ScanMats(i).MaterialName);
+    if isfield(ScanMats(i),'MaterialName')
+        Material = ReadMaterial(ScanMats(i).MaterialName);
+    else
+        Material = ReadMaterial(ScanMats(i).Material);
+    end
     if ~isempty(Material)
         CompareField('a1');
         CompareField('b1');
