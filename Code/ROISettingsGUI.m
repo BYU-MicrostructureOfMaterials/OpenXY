@@ -120,7 +120,11 @@ set(handles.ImageFilter4,'String',num2str(Settings.ImageFilter(4)));
 
 %Draw Original Image
 axes(handles.OriginalImage);
-handles.OrigImage = imread(Settings.FirstImagePath);
+if size(Settings.ImageNamesList,1)>1
+    handles.OrigImage = imread(Settings.FirstImagePath);
+else
+    handles.OrigImage = ReadH5Pattern(Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter,1);
+end
 imagesc(CropSquare(handles.OrigImage));
 set(gca,'xcolor',get(gcf,'color'));
 set(gca,'ycolor',get(gcf,'color'));

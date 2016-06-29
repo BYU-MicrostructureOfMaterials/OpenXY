@@ -311,7 +311,7 @@ if name ~= 0
         set(handles.ImageFolderText,'String',path);
         set(handles.ImageFolderText,'TooltipString',path);
         
-        [x,y] = size(ReadEBSDImage(fullfile(path,name),handles.Settings.ImageFilter));
+        [x,y] = size(imread(fullfile(path,name)));
         improp = dir(fullfile(path,name));
         SizeStr = [num2str(x) 'x' num2str(y) ' (' num2str(round(improp.bytes/1024)) ' KB)'];
         set(handles.ImageSizeText,'String',SizeStr);
@@ -319,6 +319,7 @@ if name ~= 0
         handles.Settings.PixelSize = x;
         handles.Settings.ROISize = round((handles.Settings.ROISizePercent * .01)*handles.Settings.PixelSize);
         handles.Settings.PhosphorSize = handles.Settings.PixelSize * handles.Settings.mperpix;
+        handles.Settings.imsize = [x,y];
         
         %Get Image Names
         if handles.ScanFileLoaded
