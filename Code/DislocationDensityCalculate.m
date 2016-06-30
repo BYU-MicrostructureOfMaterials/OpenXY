@@ -13,8 +13,10 @@ AnalysisParamsPath=Settings.AnalysisParamsPath;
 r = data.rows;%
 c = data.cols;%
 stepsize_orig = abs((data.xpos(3)-data.xpos(2))/1e6); %units in meters. This is for square grid
-Allg=data.g;
-ImageNamesList=Settings.ImageNamesList(Settings.Inds);
+NewAngles=cell2mat(data.g');
+Allg=Settings.Angles;
+Allg(Settings.Inds,:) = NewAngles;
+Inds = Settings.Inds;
 ImageFilter=Settings.ImageFilter;
 special=0;
 
@@ -96,12 +98,12 @@ collist=1:c;
 % rowlist=find(mod(rowlist-1,skippts+1)==0);
 % collist=find(mod(collist-1,skippts+1)==0);
 if ~strcmp(Settings.ScanType,'Hexagonal')
-    INL=reshape(ImageNamesList,[c r])';
+    INL=reshape(Inds,[c r])';
     INL=INL(rowlist,collist);
     r = length(rowlist);%
     c = length(collist);%
     INL=INL';
-    ImageNamesList=INL(:);
+    Inds=INL(:);
 end
 % adjust these values for a new grid
 
@@ -111,7 +113,12 @@ stepsize = stepsize_orig*(skippts+1);
 disp(Settings.ScanType)
 if ~strcmp(Settings.ScanType,'L')
     
-    ScanImage = ReadEBSDImage(ImageNamesList{1},Settings.ImageFilter);
+    if size(Settings.ImageNamesList,1)>1
+        ScanImage = ReadEBSDImage(Settings.ImageNamesList{1},Settings.ImageFilter);
+    else
+        ScanImage = ReadH5Pattern(Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter,1);
+    end
+    
     [roixc,roiyc]= GetROIs(ScanImage,Settings.NumROIs,Settings.PixelSize,...
         Settings.ROISize, Settings.ROIStyle);
     Settings.roixc = roixc;
@@ -136,9 +143,15 @@ if ~strcmp(Settings.ScanType,'L')
     end
     b = Burgers;
     
+    if isfield(Settings,'Resize') && ~all(Settings.Resize == [c r])
+        Oldsize = Settings.Resize;
+    else
+        Oldsize = [c r];
+    end
+    
     %Set up Parameters
     for cnt = 1:N
-        DDSettings{cnt} = GetDDSettings(cnt,ImageNamesList,Allg,[r,c],ScanType,skippts);
+        DDSettings{cnt} = GetDDSettings(Settings.Inds(cnt),Allg,Oldsize,ScanType,skippts);
     end
     
     %Perform Calculation
@@ -321,9 +334,9 @@ if strcmp(Settings.ScanType,'Square') ||  strcmp(Settings.ScanType,'LtoSquare') 
             alpha_filt(:,:,i)=0;
         end
         
-        Amat=euler2gmat(Allg{anum}(1),Allg{anum}(2),Allg{anum}(3));
-        Bmat=euler2gmat(Allg{bnum}(1),Allg{bnum}(2),Allg{bnum}(3));
-        Cmat=euler2gmat(Allg{cnum}(1),Allg{cnum}(2),Allg{cnum}(3));
+        Amat=euler2gmat(Allg(anum,:));
+        Bmat=euler2gmat(Allg(bnum,:));
+        Cmat=euler2gmat(Allg(cnum,:));
         misanglea=GeneralMisoCalc(Bmat,Amat,lattice{i});
         misanglec=GeneralMisoCalc(Bmat,Cmat,lattice{i});
         misang(i)=max([misanglea misanglec]);
@@ -364,9 +377,9 @@ if strcmp(Settings.ScanType,'L') % L grid
             alpha_filt(:,:,i)=0;
         end
         
-        Amat=euler2gmat(Allg(anum,1),Allg(anum,2),Allg(anum,3));
-        Bmat=euler2gmat(Allg(bnum,1),Allg(bnum,2),Allg(bnum,3));
-        Cmat=euler2gmat(Allg(cnum,1),Allg(cnum,2),Allg(cnum,3));
+        Amat=euler2gmat(Allg(anum,:));
+        Bmat=euler2gmat(Allg(anum,:));
+        Cmat=euler2gmat(Allg(anum,:));
         misanglea=GeneralMisoCalc(Bmat,Amat,lattice{i});
         misanglec=GeneralMisoCalc(Bmat,Cmat,lattice{i});
         misang(i)=max([misanglea misanglec]);
@@ -464,7 +477,9 @@ end
     if strcmp(Settings.ScanType,'L')
         disp(1)
         Settings.ScanType='LtoSquare';
-        Allg=data.g;
+        NewAngles=cell2mat(data.g');
+        Allg=Settings.Angles;
+        Allg(Settings.Inds,:) = NewAngles;
     elseif numruntimes>1
         if strcmp(VaryStepSizeI,'t')
             if run==numruntimes-1
@@ -505,28 +520,48 @@ function [AllFa,AllSSEa,AllFc,AllSSEc, misang] = DDCalc(DDSettings,lattice,Image
     
     skippts = Settings.NumSkipPts;
     
+    %Check Pattern Source
+    H5Images = false;
+    if size(Settings.ImageNamesList,1)==1
+        H5Images = true;
+        H5ImageParams = {Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter};
+    end
+    
     %Extract Dim variables
     r = Settings.data.rows;%
     
-    %Extract Image Variables
-    image_a = ReadEBSDImage(DDSettings{1,1},ImageFilter);
-    image_b = ReadEBSDImage(DDSettings{1,2},ImageFilter);
-    image_c = ReadEBSDImage(DDSettings{1,3},ImageFilter);
+    %Extract Variables 
+    RefIndA = DDSettings{1,1};
+    cnt = DDSettings{1,2};
+    RefIndC = DDSettings{1,3};
     
-    RefIndA = DDSettings{2,1};
-    cnt = DDSettings{2,2};
-    RefIndC = DDSettings{2,3};
+    Amat = DDSettings{2,1};
+    g_b = DDSettings{2,2};
+    Cmat = DDSettings{2,3};
     
-    Amat = DDSettings{3,1};
-    g_b = DDSettings{3,2};
-    Cmat = DDSettings{3,3};
+    %Get Patterns
+    if ~H5Images
+        image_a = ReadEBSDImage(Settings.ImageNamesList{RefIndA},ImageFilter);
+        image_b = ReadEBSDImage(Settings.ImageNamesList{cnt},ImageFilter);
+        image_c = ReadEBSDImage(Settings.ImageNamesList{RefIndC},ImageFilter);
+    else
+        H5ImageParams = {Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter};
+        image_a = ReadH5Pattern(H5ImageParams{:},RefIndA);
+        image_b = ReadH5Pattern(H5ImageParams{:},cnt);
+        image_c = ReadH5Pattern(H5ImageParams{:},RefIndC);
+    end
+        
     
     if size(DDSettings,2) > 3
         image_a1 = image_a;
-        image_a2 = ReadEBSDImage(DDSettings{1,4},ImageFilter);
-        
         RefIndA1 = RefIndA;
         RefIndA2 = DDSettings{2,4};
+        if ~H5Images
+            image_a2 = ReadEBSDImage(Settings.ImageNamesList{RefIndA1},ImageFilter);
+        else
+            image_a2 = ReadH5Pattern(H5ImageParams{:},RefIndA2);
+        end
+        
     end
     
     misanglea=GeneralMisoCalc(g_b,Amat,lattice);
@@ -582,16 +617,14 @@ function [AllFa,AllSSEa,AllFc,AllSSEc, misang] = DDCalc(DDSettings,lattice,Image
     end
 end
 
-function DDSettings = GetDDSettings(cnt,ImageNamesList,Allg,Dims,ScanType,skippts)
+function DDSettings = GetDDSettings(cnt,Allg,Dims,ScanType,skippts)
     extra_a = false;
     
-    r = Dims(1);
-    c = Dims(2);
+    c = Dims(1);
+    r = Dims(2);
     
-    ImagePath = ImageNamesList{cnt};% Change for parallel computing
-    g_b = euler2gmat(Allg{cnt}(1),Allg{cnt}(2),Allg{cnt}(3));% is Allg in the same order as ImageNamesList?
-
-    image_b = ImagePath;% Change for parallel computing
+    g_b = euler2gmat(Allg(cnt,:));% is Allg in the same order as ImageNamesList?
+    
     if strcmp(ScanType,'Square') || strcmp(ScanType,'LtoSquare')% Change for parallel computing
         %Image A
         if r > 1 %No image_a for line scans
@@ -600,10 +633,8 @@ function DDSettings = GetDDSettings(cnt,ImageNamesList,Allg,Dims,ScanType,skippt
             else
                 RefIndA = cnt-c*(skippts+1);
             end
-            image_a = ImageNamesList{RefIndA};
-            Amat=euler2gmat(Allg{RefIndA}(1),Allg{RefIndA}(2),Allg{RefIndA}(3));
+            Amat=euler2gmat(Allg(RefIndA,:));
         elseif r == 1
-            image_a = image_b;
             Amat = eye(3);
             RefIndA = cnt;
         end 
@@ -614,8 +645,7 @@ function DDSettings = GetDDSettings(cnt,ImageNamesList,Allg,Dims,ScanType,skippt
         else
             RefIndC = cnt+(skippts+1);
         end
-        image_c = ImageNamesList{RefIndC}; 
-        Cmat=euler2gmat(Allg{RefIndC}(1),Allg{RefIndC}(2),Allg{RefIndC}(3));
+        Cmat=euler2gmat(Allg(RefIndC,:));
 
     elseif strcmp(ScanType,'Hexagonal')% Change for parallel computing
         % Current hexagonal grid analysis ignores edges and cannot
@@ -624,26 +654,25 @@ function DDSettings = GetDDSettings(cnt,ImageNamesList,Allg,Dims,ScanType,skippt
         NColsOdd = c;
         NColsEven = c-1;
         c = NColsOdd+NColsEven;
-        leftside=1:c:length(ImageNamesList);
-        rightside=NColsOdd:c:length(ImageNamesList);
-        rightside=[rightside,c:c:length(ImageNamesList)];
+        ScanLength = NumColsOdd*r - floor(r/2);
+        
+        leftside=1:c:ScanLength;
+        rightside=NColsOdd:c:ScanLength;
+        rightside=[rightside,c:c:ScanLength];
         rightside=sort(rightside);
-        topside=rightside(end-1)+1:length(ImageNamesList);
+        topside=rightside(end-1)+1:ScanLength;
 
         if sum([find(leftside==cnt),find(rightside==cnt),find(topside==cnt)])==0
 
             if skippts==0
                 %Image A
                 RefIndA1 = cnt+NColsEven;
-                image_a1 = ImageNamesList{RefIndA1};
                 RefIndA2 = cnt+NColsEven+1;
-                image_a2 = ImageNamesList{RefIndA2};
-                Amat=euler2gmat(Allg{RefIndA1}(1),Allg{RefIndA1}(2),Allg{RefIndA1}(3));
+                Amat=euler2gmat(Allg(RefIndA1,:));
                 
                 %Image C
                 RefIndC = cnt+1;
-                image_c = ImageNamesList{RefIndC};% Change for parallel computing
-                Cmat=euler2gmat(Allg{RefIndC}(1),Allg{RefIndC}(2),Allg{RefIndC}(3));
+                Cmat=euler2gmat(Allg(RefIndC,:));
                 
                 extra_a = true;
             else
@@ -653,8 +682,7 @@ function DDSettings = GetDDSettings(cnt,ImageNamesList,Allg,Dims,ScanType,skippt
                 else
                     RefIndA = cnt-c*(skippts+1)/2;
                 end
-                image_a = ImageNamesList{RefIndA};
-                Amat=euler2gmat(Allg{RefIndA}(1),Allg{RefIndA}(2),Allg{RefIndA}(3));
+                Amat=euler2gmat(Allg(RefIndA,:));
                 
                 %Image C
                 if (mod(cnt,c)>NColsOdd-skippts && mod(cnt,c)<=NColsOdd) || (mod(cnt,c)>c-skippts && mod(cnt,c)<c) % distinguish even and odd rows then first look at points too close to right edge
@@ -662,15 +690,9 @@ function DDSettings = GetDDSettings(cnt,ImageNamesList,Allg,Dims,ScanType,skippt
                 else
                     RefIndC = cnt+(skippts+1);
                 end 
-                image_c = ImageNamesList{RefIndC};
-                Cmat=euler2gmat(Allg{RefIndC}(1),Allg{RefIndC}(2),Allg{RefIndC}(3));
+                Cmat=euler2gmat(Allg(RefIndC,:));
             end
         else
-            image_a = image_b;
-            image_a1 = image_b;
-            image_a2 = image_b;
-            image_c = image_b;
-
             RefIndA = cnt;
             RefIndA1 = cnt;
             RefIndA2 = cnt;
@@ -686,12 +708,10 @@ function DDSettings = GetDDSettings(cnt,ImageNamesList,Allg,Dims,ScanType,skippt
        
     end
     if extra_a
-        DDSettings = {image_a1,image_b,image_c,image_a2;...
-                        RefIndA1,cnt,RefIndC,RefIndA2;...
+        DDSettings = {RefIndA1,cnt,RefIndC,RefIndA2;...
                         Amat,g_b,Cmat,[]};
     else
-        DDSettings = {image_a,image_b,image_c;...
-                        RefIndA,cnt,RefIndC;...
+        DDSettings = {RefIndA,cnt,RefIndC;...
                         Amat,g_b,Cmat};
     end
     
