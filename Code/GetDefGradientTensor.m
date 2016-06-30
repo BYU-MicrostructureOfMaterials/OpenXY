@@ -15,10 +15,17 @@ DoLGrid = strcmp(Settings.ScanType,'L');
 
 XX = zeros(Settings.NumROIs,3);
 
+H5Images = false;
+if size(Settings.ImageNamesList,1)==1
+    H5Images = true;
+    H5ImageParams = {Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter};
+end
+
 if DoLGrid
     
     %the LImageNamesList field is a cell of length three containing the
     %L-grid image paths.
+        
     ImagePaths = Settings.LImageNamesList(ImageInd,:);
     ImagePath = ImagePaths{2};
     LegAPath = ImagePaths{1};
@@ -44,11 +51,15 @@ if DoLGrid
     
 else
     
-    ImagePath = Settings.ImageNamesList{ImageInd};
-    if strcmp(Settings.ImageFilterType,'standard')
-        ScanImage = ReadEBSDImage(ImagePath,Settings.ImageFilter);
+    if H5Images
+        ScanImage = ReadH5Pattern(H5ImageParams{:},ImageInd);
     else
-        ScanImage = localthresh(ImagePath);
+        ImagePath = Settings.ImageNamesList{ImageInd};
+        if strcmp(Settings.ImageFilterType,'standard')
+            ScanImage = ReadEBSDImage(ImagePath,Settings.ImageFilter);
+        else
+            ScanImage = localthresh(ImagePath);
+        end
     end
     g = euler2gmat(Settings.Angles(ImageInd,1) ...
         ,Settings.Angles(ImageInd,2),Settings.Angles(ImageInd,3));
@@ -218,17 +229,20 @@ switch Settings.HROIMMethod
         %Find the grain of scan image and get the reference image for that
         %grain
         RefImageInd = Settings.RefInd(ImageInd);
-        RefImagePath = Settings.ImageNamesList{RefImageInd}; % original line
-        RefInd=Settings.RefInd(ImageInd);
-        if strcmp(Settings.ImageFilterType,'standard')
-            RefImage = ReadEBSDImage(RefImagePath,Settings.ImageFilter);
+        if H5Images
+            RefImage = ReadH5Pattern(H5ImageParams{:},RefImageInd);
         else
-            RefImage = localthresh(RefImagePath);
+            RefImagePath = Settings.ImageNamesList{RefImageInd}; % original line
+            if strcmp(Settings.ImageFilterType,'standard')
+                RefImage = ReadEBSDImage(RefImagePath,Settings.ImageFilter);
+            else
+                RefImage = localthresh(RefImagePath);
+            end
         end
         
         clear global rs cs Gs
 %         disp(RefImagePath);
-        [F1,SSE1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,RefInd);
+        [F1,SSE1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,RefImageInd);
         
     case 'Hybrid'
         %Use simulated pattern method on one reference image then use
