@@ -84,11 +84,11 @@ else
     Qsc=g;
 end
 [g U]=poldec(Qsc);
-if sum(sum(U-eye(3)))>1e-10
+if sum(sum(U-eye(3)))>1e-6
     error('g must be a pure rotation');
 end
 Qcs=Qsc';
-if sum(sum(Qsc*Qcs-eye(3)))>1e-10
+if sum(sum(Qsc*Qcs-eye(3)))>1e-6 %Changed by BEJ June 2016 to account for single precision orientations
     error('the orientation matrix has issues')
 end
 
