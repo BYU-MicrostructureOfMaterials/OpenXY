@@ -43,16 +43,21 @@ if strcmp(Settings.HROIMMethod,'Dynamic Simulated')
         Settings.RefImageInd = 4;
         
         %Read Image
-        ImagePath = Settings.ImageNamesList{Settings.RefImageInd};
-        if strcmp(Settings.ImageFilterType,'standard')
-            ScanImage = ReadEBSDImage(ImagePath,Settings.ImageFilter);
+        if size(Settings.ImageNamesList,1)>1
+            ImagePath = Settings.ImageNamesList{Settings.RefImageInd};
+            if strcmp(Settings.ImageFilterType,'standard')
+                ScanImage = ReadEBSDImage(ImagePath,Settings.ImageFilter);
+            else
+                ScanImage = localthresh(ImagePath);
+            end
+            gr = euler2gmat(Settings.Angles(Settings.RefImageInd,1) ...
+                ,Settings.Angles(Settings.RefImageInd,2),Settings.Angles(Settings.RefImageInd,3));
+            if isempty(ScanImage)
+                error('Reference Image not found')
+            end
         else
-            ScanImage = localthresh(ImagePath);
-        end
-        gr = euler2gmat(Settings.Angles(Settings.RefImageInd,1) ...
-            ,Settings.Angles(Settings.RefImageInd,2),Settings.Angles(Settings.RefImageInd,3));
-        if isempty(ScanImage)
-            error('Reference Image not found')
+            ScanImage = ReadH5Pattern(Settings.ScanFilePath,Settings.ImageNamesList,...
+                Settings.imsize,Settings.ImageFilter,Settings.RefImageInd);
         end
         
         %Extract Variables
@@ -83,7 +88,6 @@ end
 %% Set up Sub-scan
 if isfield(Settings,'Inds') && isfield(Settings,'Resize') && ...
         length(Settings.Inds) < Settings.ScanLength
-    Inds = Settings.Inds;
     Settings.ScanLength = length(Settings.Inds);
     Oldsize = [Settings.Nx Settings.Ny];
     Settings.Nx = Settings.Resize(1);
@@ -105,16 +109,15 @@ end
 % Get reference images and assign the name to each scan image (or main
 % image - image b in the case of an L-grid scan)
 if ~strcmp(Settings.HROIMMethod,'Simulated')&& ~isfield(Settings,'RefInd')
-    RefImageInd = Settings.RefImageInd;
-    if RefImageInd~=0
-        Settings.RefInd(1:Settings.ScanLength)= RefImageInd;
+    if Settings.RefImageInd~=0
+        Settings.RefInd(1:Settings.ScanLength)= Settings.RefImageInd;
     else
         if strcmp(Settings.GrainRefImageType,'Min Kernel Avg Miso')
             Settings.RefInd = GetRefImageInds(...
-                {Settings.Angles(Inds,:);Settings.IQ(Inds);Settings.CI(Inds);Settings.Fit(Inds)}, Settings.grainID(Inds), Settings.KernelAvgMisoPath);
+                {Settings.Angles;Settings.IQ;Settings.CI;Settings.Fit}, Settings.grainID, Settings.KernelAvgMisoPath);
         else 
             Settings.RefInd = GetRefImageInds(...
-                {Settings.Angles(Inds,:);Settings.IQ(Inds);Settings.CI(Inds);Settings.Fit(Inds)}, Settings.grainID(Inds));
+                {Settings.Angles;Settings.IQ;Settings.CI;Settings.Fit}, Settings.grainID);
         end
     end  
 end
@@ -124,13 +127,14 @@ if ~isfield(Settings,'XStar')
     if Settings.DisplayGUI; disp('No PC calibration at all'); end;
     %Default Naive Plane Fit *****need to include Settings.SampleAzimuthal
     %and Settings.CameraAzimuthal ******
+    FullLength = length(Settings.XData);
     if isfield(Settings,'PlaneFit') && strcmp(Settings.PlaneFit,'Naive')
-        Settings.XStar(1:Settings.ScanLength) = Settings.ScanParams.xstar-Settings.XData(Inds)/Settings.PhosphorSize;
-        Settings.YStar(1:Settings.ScanLength) = Settings.ScanParams.ystar+Settings.YData(Inds)/Settings.PhosphorSize*sin(Settings.SampleTilt-Settings.CameraElevation);
-        Settings.ZStar(1:Settings.ScanLength) = Settings.ScanParams.zstar+Settings.YData(Inds)/Settings.PhosphorSize*cos(Settings.SampleTilt-Settings.CameraElevation);
+        Settings.XStar(1:FullLength) = Settings.ScanParams.xstar-Settings.XData/Settings.PhosphorSize;
+        Settings.YStar(1:FullLength) = Settings.ScanParams.ystar+Settings.YData/Settings.PhosphorSize*sin(Settings.SampleTilt-Settings.CameraElevation);
+        Settings.ZStar(1:FullLength) = Settings.ScanParams.zstar+Settings.YData/Settings.PhosphorSize*cos(Settings.SampleTilt-Settings.CameraElevation);
     else
-        Settings.XStar(1:Settings.ScanLength) = Settings.ScanParams.xstar;
-        Settings.YStar(1:Settings.ScanLength) = Settings.ScanParams.ystar;
-        Settings.ZStar(1:Settings.ScanLegnth) = Settings.ScanParams.zstar;
+        Settings.XStar(1:FullLength) = Settings.ScanParams.xstar;
+        Settings.YStar(1:FullLength) = Settings.ScanParams.ystar;
+        Settings.ZStar(1:FullLength) = Settings.ScanParams.zstar;
     end
 end
