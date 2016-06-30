@@ -721,7 +721,7 @@ if handles.ScanFileLoaded
     Inds = 1:handles.Settings.ScanLength;
     IndMap = vec2map(Inds,handles.Settings.Nx,handles.Settings.ScanType);
     SubInds = IndMap(Y(1):Y(2),X(1):X(2));
-    handles.Settings.Inds = SubInds(:);
+    handles.Settings.Inds = reshape(SubInds',[numel(SubInds) 1]);
     
     %Update Size
     newsize = fliplr(size(SubInds));
