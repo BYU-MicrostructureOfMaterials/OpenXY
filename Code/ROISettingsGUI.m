@@ -139,7 +139,11 @@ UpdateImage(handles);
 handles = guidata(hObject);
 
 %Draw Simulated Pattern
-Image = ReadEBSDImage(Settings.FirstImagePath, Settings.ImageFilter);
+if size(Settings.ImageNamesList,1)>1
+    Image = ReadEBSDImage(Settings.FirstImagePath, Settings.ImageFilter);
+else
+    Image = ReadH5Pattern(Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter,1);
+end
 if isempty(Image)
     Image = ReadEBSDImage('demo.bmp', Settings.ImageFilter);
 end
@@ -548,11 +552,16 @@ function UpdateImageDisplay(handles)
 % Apply updated filter to displayed image
 Settings=handles.Settings;
 
-if strcmp(Settings.ImageFilterType,'standard')
-    Image=ReadEBSDImage(Settings.FirstImagePath,Settings.ImageFilter);
+if size(Settings.ImageNamesList,1)>1
+    if strcmp(Settings.ImageFilterType,'standard')
+        Image=ReadEBSDImage(Settings.FirstImagePath,Settings.ImageFilter);
+    else
+        Image=localthresh(Settings.FirstImagePath);
+    end
 else
-    Image=localthresh(Settings.FirstImagePath);
+    Image = ReadH5Pattern(Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter,1);
 end
+
 axes(handles.FilteredImage);
 cla
 imagesc(Image);

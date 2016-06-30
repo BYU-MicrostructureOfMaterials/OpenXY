@@ -61,6 +61,13 @@ ImageNamesList = Settings.ImageNamesList(Inds);
 ImageFilter = Settings.ImageFilter;
 Angles = Settings.Angles(Inds,:);
 
+%Set up for reading patters from H5 files
+H5Images = false;
+if size(Settings.ImageNamesList,1)==1
+    H5Images = true;
+    H5ImageParams = {Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter};
+end
+
 for dir = 1:3
     parfor qq = 1:numpats
         PC0 = zeros(1,3);
@@ -74,8 +81,12 @@ for dir = 1:3
 %             Material = ReadMaterial(Settings.Phase{Ind});
 %         end
         
-        ImagePath = ImageNamesList{qq};
-        ScanImage = ReadEBSDImage(ImagePath,ImageFilter);
+        if H5Images
+            ScanImage = ReadH5Pattern(H5ImageParams{:},qq);
+        else
+            ImagePath = ImageNamesList{qq};
+            ScanImage = ReadEBSDImage(ImagePath,ImageFilter);
+        end
 %         if strcmp('Intensity',Settings.ROIStyle)
 %             [roixc,roiyc]= GetROIs(ScanImage,Settings.NumROIs,pixsize,Settings.ROISize,...
 %                 Settings.ROIStyle);
