@@ -246,8 +246,8 @@ if name ~= 0
         end
     end 
     %Remove Subscan
-    if all(isfield(handles.Settings,{'Inds','NewSize'}))
-        handles.Settings = rmfield(handles.Settings,{'Inds','NewSize'});
+    if all(isfield(handles.Settings,{'Inds','Resize'}))
+        handles.Settings = rmfield(handles.Settings,{'Inds','Resize'});
     end
     handles.ScanFileLoaded = true;
 elseif ~handles.ScanFileLoaded
@@ -725,7 +725,7 @@ if handles.ScanFileLoaded
     
     %Update Size
     newsize = fliplr(size(SubInds));
-    handles.Settings.NewSize = newsize;
+    handles.Settings.Resize = newsize;
     SizeStr =  [num2str(newsize(1)) 'x' num2str(newsize(2)) ' (Subscan)'];
     set(handles.ScanSizeText,'String',SizeStr);
     guidata(handles.MainGUI,handles);

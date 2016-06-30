@@ -81,12 +81,14 @@ if strcmp(Settings.HROIMMethod,'Dynamic Simulated')
 end
 
 %% Set up Sub-scan
-if isfield(Settings,'Inds') && isfield(Settings,'NewSize') && ...
+if isfield(Settings,'Inds') && isfield(Settings,'Resize') && ...
         length(Settings.Inds) < Settings.ScanLength
     Inds = Settings.Inds;
     Settings.ScanLength = length(Settings.Inds);
-    Settings.Nx = Settings.NewSize(1);
-    Settings.Ny = Settings.NewSize(2);
+    Oldsize = [Settings.Nx Settings.Ny];
+    Settings.Nx = Settings.Resize(1);
+    Settings.Ny = Settings.Resize(2);
+    Settings.Resize = Oldsize;
 else
     Inds = 1:Settings.ScanLength;
     Settings.Inds = Inds;
