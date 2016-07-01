@@ -129,24 +129,34 @@ if ~strcmp(Settings.ScanType,'L')
    % Allg=data.g;
    % ScanType=Settings.ScanType;
    % intensityr=zeros(size(ImageNamesList));
-
     
     N = Settings.ScanLength;
     
     lattice=cell(N,1);
     Burgers=zeros(N,1);
-
-    for p=1:N
+    
+    %Get info for Subscans
+    if isfield(Settings,'Resize') && ~all(Settings.Resize == [c r])
+        Oldsize = Settings.Resize;
+    else
+        Oldsize = [c r];
+    end
+    if strcmp(Settings.ScanType,'Hexagonal')
+        FullLength = Oldsize(1)*Oldsize(2)-floor(Oldsize(2)/2);
+    elseif strcmp(Settings.ScanType,'Square')
+        FullLength = prod(Oldsize);
+    end
+    
+    %Get Material Info
+    for p=1:FullLength
         Material = ReadMaterial(lower(Settings.Phase{p}));
         lattice{p}=Material.lattice;
         Burgers(p)=Material.Burgers;
     end
     b = Burgers;
-    
-    if isfield(Settings,'Resize') && ~all(Settings.Resize == [c r])
-        Oldsize = Settings.Resize;
-    else
-        Oldsize = [c r];
+    if isempty(b)
+       errordlg('No Burgers vector specified for this material in Materials sub-folder).','Error');
+       return
     end
     
     %Set up Parameters
@@ -244,18 +254,6 @@ end
     
     clear FaArray FaList FcArray FcList
 % end
-lattice=cell(i,1);
-Burgers=zeros(i,1);
-for p=1:i
-    Material = ReadMaterial(lower(Settings.Phase{p}));
-    lattice{p}=Material.lattice;
-    Burgers(p)=Material.Burgers;
-end
-b = Burgers;
-if isempty(b)
-   errordlg('No Burgers vector specified for this material in Materials sub-folder).','Error');
-   return
-end
 
 NoiseCutoff=log10((0.006*pi/180)/(stepsize*max(b))); %lower cutoff filters noise below resolution level
 disp(stepsize)
@@ -291,17 +289,17 @@ Beta(3,3,2,:)=-(FaSample(3,3,:)-1)/stepsize;
 Beta(3,2,1,:)=FcSample(3,2,:)/stepsize;
 Beta(3,3,1,:)=(FcSample(3,3,:)-1)/stepsize;
 % keyboard
-alpha(1,1,:)=shiftdim(Beta(1,2,3,:)-Beta(1,3,2,:))./shiftdim(b);
-alpha(1,2,:)=shiftdim(Beta(1,3,1,:)-Beta(1,1,3,:))./shiftdim(b);
-alpha(1,3,:)=shiftdim(Beta(1,1,2,:)-Beta(1,2,1,:))./shiftdim(b);
+alpha(1,1,:)=shiftdim(Beta(1,2,3,:)-Beta(1,3,2,:))./shiftdim(b(Inds));
+alpha(1,2,:)=shiftdim(Beta(1,3,1,:)-Beta(1,1,3,:))./shiftdim(b(Inds));
+alpha(1,3,:)=shiftdim(Beta(1,1,2,:)-Beta(1,2,1,:))./shiftdim(b(Inds));
 
-alpha(2,1,:)=shiftdim(Beta(2,2,3,:)-Beta(2,3,2,:))./shiftdim(b);
-alpha(2,2,:)=shiftdim(Beta(2,3,1,:)-Beta(2,1,3,:))./shiftdim(b);
-alpha(2,3,:)=shiftdim(Beta(2,1,2,:)-Beta(2,2,1,:))./shiftdim(b);
+alpha(2,1,:)=shiftdim(Beta(2,2,3,:)-Beta(2,3,2,:))./shiftdim(b(Inds));
+alpha(2,2,:)=shiftdim(Beta(2,3,1,:)-Beta(2,1,3,:))./shiftdim(b(Inds));
+alpha(2,3,:)=shiftdim(Beta(2,1,2,:)-Beta(2,2,1,:))./shiftdim(b(Inds));
 
-alpha(3,1,:)=shiftdim(Beta(3,2,3,:)-Beta(3,3,2,:))./shiftdim(b);
-alpha(3,2,:)=shiftdim(Beta(3,3,1,:)-Beta(3,1,3,:))./shiftdim(b);
-alpha(3,3,:)=shiftdim(Beta(3,1,2,:)-Beta(3,2,1,:))./shiftdim(b);
+alpha(3,1,:)=shiftdim(Beta(3,2,3,:)-Beta(3,3,2,:))./shiftdim(b(Inds));
+alpha(3,2,:)=shiftdim(Beta(3,3,1,:)-Beta(3,1,3,:))./shiftdim(b(Inds));
+alpha(3,3,:)=shiftdim(Beta(3,1,2,:)-Beta(3,2,1,:))./shiftdim(b(Inds));
 
 clear FaSample FcSample
 
@@ -309,12 +307,20 @@ clear FaSample FcSample
 discount=0;
 alpha_filt=alpha;
 
+%Use Full-size scan dimensions
+c = Oldsize(1);
+r = Oldsize(2);
+
 if strcmp(Settings.ScanType,'Square') ||  strcmp(Settings.ScanType,'LtoSquare') % Square grid
     misang=zeros(Settings.ScanLength,1);
+    misanglea=zeros(Settings.ScanLength,1);
+    misanglec=zeros(Settings.ScanLength,1);
+    MisAngleInds=zeros(Settings.ScanLength,3);
     for i=1:Settings.ScanLength
-        bnum=i;
+        ind = Inds(i);
+        bnum=ind;
         if r > 1 
-            if i <= c*(skippts+1)
+            if ind <= c*(skippts+1)
                 anum=bnum+c*(skippts+1);
             else
                 anum=bnum-c*(skippts+1);
@@ -322,13 +328,13 @@ if strcmp(Settings.ScanType,'Square') ||  strcmp(Settings.ScanType,'LtoSquare') 
         elseif r == 1
             anum = bnum;
         end
-        if mod(i,c)==0 || (c-mod(i,c))<=skippts
+        if mod(ind,c)==0 || (c-mod(ind,c))<=skippts
             cnum=bnum-(skippts+1);
         else
             cnum=bnum+(skippts+1);
         end
         
-        iq = min([data.IQ{anum},data.IQ{bnum},data.IQ{cnum}]);% Is data.IQ shaped the same as ImageNamesList
+        iq = min([Settings.IQ(anum),Settings.IQ(bnum),Settings.IQ(cnum)]);% Is data.IQ shaped the same as ImageNamesList
         %IQcutoff = 0; % bad Jay, I ought to put this as an option somewhere in the OutputPlotting.m GUI
         if (iq<=IQcutoff)
             alpha_filt(:,:,i)=0;
@@ -337,9 +343,9 @@ if strcmp(Settings.ScanType,'Square') ||  strcmp(Settings.ScanType,'LtoSquare') 
         Amat=euler2gmat(Allg(anum,:));
         Bmat=euler2gmat(Allg(bnum,:));
         Cmat=euler2gmat(Allg(cnum,:));
-        misanglea=GeneralMisoCalc(Bmat,Amat,lattice{i});
-        misanglec=GeneralMisoCalc(Bmat,Cmat,lattice{i});
-        misang(i)=max([misanglea misanglec]);
+        misanglea(i)=GeneralMisoCalc(Bmat,Amat,lattice{ind});
+        misanglec(i)=GeneralMisoCalc(Bmat,Cmat,lattice{ind});
+        misang(i)=max([misanglea(i) misanglec(i)]);
         if (misang(i)>MaxMisorientation)
             alpha_filt(:,:,i)=0;
         end
@@ -353,6 +359,7 @@ if strcmp(Settings.ScanType,'Square') ||  strcmp(Settings.ScanType,'LtoSquare') 
 %             alpha_filt(:,:,i)=0;
 %         end
         
+        MisAngleInds(i,:) = [anum bnum cnum];
         if alpha_filt(:,:,i)==0
             discount=discount+1;
         end
@@ -408,10 +415,13 @@ alpha_data.alpha_total9=alpha_total9;
 alpha_data.alpha=alpha;
 alpha_data.alpha_filt=alpha_filt;
 alpha_data.misang=misang;
+alpha_data.misanglea=misanglea;
+alpha_data.misanglec=misanglec;
+alpha_data.MisAngleInds=MisAngleInds;
 alpha_data.discount=discount;
 % alpha_data.intensityr=intensityr;
 alpha_data.stepsize=stepsize;
-alpha_data.b=b;
+alpha_data.b=b(Inds);
 
 if special==1
     disp('special')
