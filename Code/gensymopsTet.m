@@ -1,4 +1,4 @@
-function [SymOps]=gensymops(axs) %Generate symmetry operators for tetragonal symmetry
+function [SymOps]=gensymopsTet(axs) %Generate symmetry operators for tetragonal symmetry
 if axs == 1
     rotter = [1 0 0; 0 0 -1; 0 1 0]*[0 0 1; 0 1 0; -1 0 0];
 elseif axs == 2

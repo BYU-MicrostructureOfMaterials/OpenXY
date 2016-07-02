@@ -68,6 +68,7 @@ if ~strcmp(ext,'.ctf')
 end
 if strcmp(GrainMethod,'Find Grains')
     Phase = cell(length(Angles),1); 
+    auto = 0;
     if strcmp(Material,'Auto-detect')
         ind = 1;
         if ~iscell(ScanParams.material)
@@ -88,7 +89,7 @@ if strcmp(GrainMethod,'Find Grains')
     Phase = ValidatePhase(Phase);
     if ~isempty(Phase)
         MaterialData = ReadMaterial(Phase{1});
-
+        
         if auto
             disp(['Auto detected material: ' Phase{1}])
         end

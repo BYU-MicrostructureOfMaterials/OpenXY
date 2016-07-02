@@ -8,7 +8,7 @@ function Settings = HREBSDMain(Settings)
 % tic
 if Settings.EnableProfiler; profile on; end;
 if Settings.DisplayGUI; disp('Dont forget to change PC if the image is cropped by ReadEBSDImage.m'); end;
-
+    
 %Sets default color scheme for all figures and axes
 set(0,'DefaultFigureColormap',jet);
 

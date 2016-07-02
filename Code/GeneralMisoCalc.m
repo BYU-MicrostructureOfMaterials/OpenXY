@@ -13,7 +13,7 @@ if all(size(A)==[1,3]) && all(size(B)==[1,3])
 end
     
 
-if strcmp(lattice,'cubic') || strcmp(lattice,'tetragonal')
+if strcmp(lattice,'cubic')
     
     SymOps=gensymops;
     
@@ -21,10 +21,10 @@ elseif strcmp(lattice,'hexagonal')
     
     SymOps=gensymopsHex;
     
-% elseif strcmp(lattice,'tetragonal') % requires axis input
-%     
-%     SymOps=gensymopsTet;
-%     
+elseif strcmp(lattice,'tetragonal') % requires axis input
+    
+    SymOps=gensymopsTet(3);
+    
 else
     disp('no lattice type declared (cubic, hexagonal or tetragonal) for GeneralMisoCalc, assuming cubic');
       SymOps=gensymops;
