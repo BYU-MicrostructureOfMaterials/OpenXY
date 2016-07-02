@@ -15,8 +15,10 @@ else
     end
 end
 
-delete(gcp('nocreate'))
-parpool(4);
+ppool = gcp('nocreate');
+if isempty(ppool)
+    parpool(Settings.DoParallel);
+end
 tic
 
 %Try to filter out useless points based on CI and Fit
