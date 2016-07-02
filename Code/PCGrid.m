@@ -15,8 +15,7 @@ else
     end
 end
 
-delete(gcp('nocreate'))
-parpool(4);
+disp('Starting PC Grid')
 tic
 
 %Try to filter out useless points based on CI and Fit
@@ -24,9 +23,9 @@ Inds = Inds(Settings.CI(Inds) > 0.1 & Settings.Fit(Inds) < 1.2);
 numpats = length(Inds);
 
 %Apply Naive Plane Fit
-xstar = Settings.ScanParams.xstar-Settings.XData/Settings.PhosphorSize;
-ystar = Settings.ScanParams.ystar+Settings.YData/Settings.PhosphorSize*sin(Settings.SampleTilt-Settings.CameraElevation);
-zstar = Settings.ScanParams.zstar+Settings.YData/Settings.PhosphorSize*cos(Settings.SampleTilt-Settings.CameraElevation);
+xstar = PCSettings.xstar-Settings.XData/Settings.PhosphorSize;
+ystar = PCSettings.ystar+Settings.YData/Settings.PhosphorSize*sin(Settings.SampleTilt-Settings.CameraElevation);
+zstar = PCSettings.zstar+Settings.YData/Settings.PhosphorSize*cos(Settings.SampleTilt-Settings.CameraElevation);
 
 %Extract out Settings
 Av = Settings.AccelVoltage*1000; %put it in eV from KeV
@@ -62,7 +61,7 @@ ImageFilter = Settings.ImageFilter;
 Angles = Settings.Angles(Inds,:);
 
 for dir = 1:3
-    parfor qq = 1:numpats
+    for qq = 1:numpats
         PC0 = zeros(1,3);
         Ind=Inds(qq);
         PC0(1) = xstar(qq);
