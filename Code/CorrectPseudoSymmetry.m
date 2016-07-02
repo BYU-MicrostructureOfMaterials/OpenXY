@@ -34,7 +34,9 @@ function [orientation,tet] = CorrectPseudoSymmetry(Settings)
     tic
     
     %Use Tetragonality to Correct Psuedosymmetry
-    for ImageInd = 1:Settings.ScanLength
+    for i = 1:Settings.ScanLength
+        
+        ImageInd = Settings.Inds(i);
         
         %Get variables from Settings
         xstar = Settings.XStar(ImageInd);
@@ -74,47 +76,47 @@ function [orientation,tet] = CorrectPseudoSymmetry(Settings)
         [F(:,:,3),SSE3,XX3] = CalcF(RefImage3,ScanImage,pseudo(:,:,3),eye(3),ImageInd,Settings,curMaterial,0);
         
         %Choose orientation with lowest tetragonality
-        tet(ImageInd,1) = CalcTet(F(:,:,1));
-        tet(ImageInd,2) = CalcTet(F(:,:,2));
-        tet(ImageInd,3) = CalcTet(F(:,:,3));
-        [~,minInd] = max(tet(ImageInd,:));
+        tet(i,1) = CalcTet(F(:,:,1));
+        tet(i,2) = CalcTet(F(:,:,2));
+        tet(i,3) = CalcTet(F(:,:,3));
+        [~,minInd] = max(tet(i,:));
         
         %if GeneralMisoCalc(pseudo(:,:,minInd),euler2gmat(CorrectAngles(ImageInd,:)),'tetragonal')>1
         %    disp('Greater than 1');
         %end
         
         %[~,gr] = CalcDefGradientTensor(ScanImage,Settings,ImageInd,pseudo(:,:,minInd));
-        tet_corr{ImageInd} = pseudo(:,:,minInd);
+        tet_corr{i} = pseudo(:,:,minInd);
             
         %Choose orientation with highest cross-correlation coefficient
         XX(1) = CrossCorrelationCoefficient(RefImage1,ScanImage);
         XX(2) = CrossCorrelationCoefficient(RefImage2,ScanImage);
         XX(3) = CrossCorrelationCoefficient(RefImage3,ScanImage);
         [~,maxInd] = max(XX);
-        XX_corr{ImageInd} = pseudo(:,:,maxInd);
+        XX_corr{i} = pseudo(:,:,maxInd);
         
         %Choose orientation with highest Mutual Information
         MI(1) = CalcMutualInformation(RefImage1,ScanImage);
         MI(2) = CalcMutualInformation(RefImage2,ScanImage);
         MI(3) = CalcMutualInformation(RefImage3,ScanImage);
         [~,maxInd] = max(MI);
-        MI_corr{ImageInd} = pseudo(:,:,maxInd);
+        MI_corr{i} = pseudo(:,:,maxInd);
         
         %Choose orientation with highest shift confidence
         SC(1) = mean(XX1(:,3));
         SC(2) = mean(XX2(:,3));
         SC(3) = mean(XX3(:,3));
         [~,maxInd] = max(SC);
-        SC_corr{ImageInd} = pseudo(:,:,maxInd);
+        SC_corr{i} = pseudo(:,:,maxInd);
         
         %Choose orientation with lowest SSE
         SSE(1) = SSE1;
         SSE(2) = SSE2;
         SSE(3) = SSE3;
         [~,minInd] = min(SSE);
-        SSE_corr{ImageInd} = pseudo(:,:,minInd);
+        SSE_corr{i} = pseudo(:,:,minInd);
         
-        waitbar(ImageInd/(Settings.ScanLength),w);
+        waitbar(i/(Settings.ScanLength),w);
     end
     orientation = [tet_corr XX_corr MI_corr SC_corr SSE_corr];
     toc
