@@ -22,7 +22,7 @@ function varargout = ROISettingsGUI(varargin)
 
 % Edit the above text to modify the response to help ROISettingsGUI
 
-% Last Modified by GUIDE v2.5 17-Jun-2016 13:21:18
+% Last Modified by GUIDE v2.5 02-Jul-2016 14:13:14
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -135,7 +135,6 @@ axis equal
 %Draw Filtered Image
 handles.Settings = Settings;
 guidata(hObject, handles);
-UpdateImage(handles);
 handles = guidata(hObject);
 
 %Draw Simulated Pattern
@@ -167,6 +166,7 @@ axis equal
 ROIStylePopup_Callback(handles.ROIStylePopup, eventdata, handles)
 handles.Settings = Settings;
 guidata(hObject, handles);
+UpdateImage(handles);
 
 % UIWAIT makes ROISettingsGUI wait for user response (see UIRESUME)
 uiwait(handles.ROISettingsGUI);
@@ -532,17 +532,17 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-% --- Executes on button press in PlotROI.
-function PlotROI_Callback(hObject, eventdata, handles)
-% hObject    handle to PlotROI (see GCBO)
+% --- Executes on button press in HideROIs.
+function HideROIs_Callback(hObject, eventdata, handles)
+% hObject    handle to HideROIs (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hint: get(hObject,'Value') returns toggle state of PlotROI
+% Hint: get(hObject,'Value') returns toggle state of HideROIs
 UpdateImage(handles)
 
 function UpdateImage(handles)
-if get(handles.PlotROI,'Value')
+if ~get(handles.HideROIs,'Value')
     UpdateROIDisplay(handles)
 else
     UpdateImageDisplay(handles)
