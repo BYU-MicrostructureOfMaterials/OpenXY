@@ -54,6 +54,9 @@ Settings.Ny = h5read(filepath, [HeaderName 'nRows']);
 Settings.ScanLength = size(Settings.CI,1);
 Settings.ImageNamesList = DataName; %Store location of Pattern Data
 Settings.imsize = [ScanData.PatternWidth ScanData.PatternHeight];
+Settings.PixelSize = min(ScanData.PatternHeight,ScanData.PatternWidth);
+Settings.ROISize = round((Settings.ROISizePercent * .01)*Settings.PixelSize);
+Settings.PhosphorSize = Settings.PixelSize * Settings.mperpix;
 
 %Import Material Data
 Mat = struct();

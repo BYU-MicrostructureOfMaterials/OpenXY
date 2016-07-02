@@ -94,6 +94,9 @@ end
 if isfield(NewSettings,'grainID') && strcmp(Settings.GrainRefImageType,'Manual')
     Settings.grainID = NewSettings.grainID;
 end
+if isfield(NewSettings,'Inds')
+    Settings.Inds = NewSettings.Inds;
+end
 
 end
 

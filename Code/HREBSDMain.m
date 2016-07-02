@@ -12,12 +12,12 @@ if Settings.DisplayGUI; disp('Dont forget to change PC if the image is cropped b
 %Sets default color scheme for all figures and axes
 set(0,'DefaultFigureColormap',jet);
 
+Settings = HREBSDPrep(Settings);
+Inds = Settings.Inds;
+
 %Common to all scan types
 data.cols = Settings.Nx;
 data.rows = Settings.Ny;
-
-Settings = HREBSDPrep(Settings);
-Inds = Settings.Inds;
 
 %% Run Analysis
 %Use a parfor loop if allowed multiple processors.
@@ -83,7 +83,7 @@ else
 %         disp(ImageInd)
         
         [F{ImageInd}, g{ImageInd}, U{ImageInd}, SSE{ImageInd}, XX{ImageInd}] = ...
-            GetDefGradientTensor(ImageInd,Settings,Settings.Phase{ImageInd});
+            GetDefGradientTensor(Inds(ImageInd),Settings,Settings.Phase{ImageInd});
         
         % commented out this (outputs strain matrix - I think - DTF 5/15/14)
 %         if strcmp(Settings.ScanType,'L')

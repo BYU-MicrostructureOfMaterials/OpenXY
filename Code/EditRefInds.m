@@ -1,4 +1,4 @@
-function RefInd = EditRefInds(grainID,ImageNames,ScanData,mapsize,ScanType,AutoRefInds,ImageFilt,Inds)
+function RefInd = EditRefInds(ScanFilePath,grainID,ImageNames,ScanData,mapsize,ScanType,AutoRefInds,imsize,ImageFilt,Inds)
 if nargin<8
     Inds = 0;
 end
@@ -107,7 +107,12 @@ while morepoints
                 pos = get(main,'Position');
                 pat = figure('Position',[pos(1)+pos(3)+15 pos(2) pos(3) pos(4)]);
             end
-            pattern = ReadEBSDImage(ImageNames{ind,1},ImageFilt);
+            if size(ImageNames,1)>1
+                pattern = ReadEBSDImage(ImageNames{ind,1},ImageFilt);
+            else
+                pattern = ReadH5Pattern(ScanFilePath,ImageNames,...
+                    imsize,ImageFilt,ind);
+            end
             imagesc(pattern); colormap gray;
             title(['CI: ' num2str(ScanData(ind,1)) ' Fit: ' num2str(ScanData(ind,2))]);
         elseif button == 3

@@ -35,7 +35,7 @@ function Inds = SelectCalibrationPoints(mapsize,IQ,Angles)
         end 
     end
     
-    ScanType = FindScanType([Nx Ny],length(im(:)));
+    ScanType = FindScanType([Nx Ny],numel(im(:,:,1)));
     if strcmp(ScanType,'Hexagonal')
         Nx = Nx-1;
     end
