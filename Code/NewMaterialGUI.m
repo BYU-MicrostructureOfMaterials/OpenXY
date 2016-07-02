@@ -138,6 +138,11 @@ handles.output = 0;
 % Update handles structure
 guidata(hObject, handles);
 
+if ~isempty(varargin)
+    MaterialStruct = varargin{1};
+    ImportMaterial(handles,eventdata,MaterialStruct);
+end
+
 % UIWAIT makes NewMaterialGUI wait for user response (see UIRESUME)
 uiwait(handles.NewMaterial);
 

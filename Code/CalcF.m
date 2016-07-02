@@ -84,11 +84,11 @@ else
     Qsc=g;
 end
 [g U]=poldec(Qsc);
-if sum(sum(U-eye(3)))>1e-10
+if sum(sum(U-eye(3)))>1e-6
     error('g must be a pure rotation');
 end
 Qcs=Qsc';
-if sum(sum(Qsc*Qcs-eye(3)))>1e-10
+if sum(sum(Qsc*Qcs-eye(3)))>1e-6 %Changed by BEJ June 2016 to account for single precision orientations
     error('the orientation matrix has issues')
 end
 
@@ -739,7 +739,7 @@ if Settings.DoShowPlot
     drawnow
     text = get(gca,'title');
     if ~isempty(text.String)
-        [num,iter] = strtok(text.String(6:end));
+        [num,iter] = strtok(text.String{2}(6:end));
         num = str2num(num);
         iter = str2num(iter);
         if num == Ind
@@ -750,7 +750,8 @@ if Settings.DoShowPlot
     else
         iter = 1;
     end
-    title(['Image ' num2str(Ind) ' (' num2str(iter) ')'])
+    set(0,'currentfigure',100);
+    title({'Reference Image';['Image ' num2str(Ind) ' (' num2str(iter) ')']})
     
     try
         set(0,'currentfigure',101);
@@ -777,7 +778,7 @@ if Settings.DoShowPlot
         plot([roixc(i) roixc(i)+cx(i)],[roiyc(i) roiyc(i)+cy(i)],'b.-')
     end
     drawnow
-    title(['Image ' num2str(Ind) ' (' num2str(iter) ')'])
+    title({'Experimental Image';['Image ' num2str(Ind) ' (' num2str(iter) ')']})
     U
     SSE
 % keyboard

@@ -21,9 +21,6 @@ end
 % F=F*Qsc'*V'*inv(Qsc');;
 Qcs=Qsc';
 % A=Qsc*F'*Qcs;
-if sum(sum(Qsc*Qcs-eye(3)))>1e-10
-    error('the orientation matrix has issues')
-end
 
 % Phospher to sample
 Qps=[0 -cos(alpha) -sin(alpha);...

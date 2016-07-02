@@ -15,10 +15,17 @@ DoLGrid = strcmp(Settings.ScanType,'L');
 
 XX = zeros(Settings.NumROIs,3);
 
+H5Images = false;
+if size(Settings.ImageNamesList,1)==1
+    H5Images = true;
+    H5ImageParams = {Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter};
+end
+
 if DoLGrid
     
     %the LImageNamesList field is a cell of length three containing the
     %L-grid image paths.
+        
     ImagePaths = Settings.LImageNamesList(ImageInd,:);
     ImagePath = ImagePaths{2};
     LegAPath = ImagePaths{1};
@@ -44,11 +51,15 @@ if DoLGrid
     
 else
     
-    ImagePath = Settings.ImageNamesList{ImageInd};
-    if strcmp(Settings.ImageFilterType,'standard')
-        ScanImage = ReadEBSDImage(ImagePath,Settings.ImageFilter);
+    if H5Images
+        ScanImage = ReadH5Pattern(H5ImageParams{:},ImageInd);
     else
-        ScanImage = localthresh(ImagePath);
+        ImagePath = Settings.ImageNamesList{ImageInd};
+        if strcmp(Settings.ImageFilterType,'standard')
+            ScanImage = ReadEBSDImage(ImagePath,Settings.ImageFilter);
+        else
+            ScanImage = localthresh(ImagePath);
+        end
     end
     g = euler2gmat(Settings.Angles(ImageInd,1) ...
         ,Settings.Angles(ImageInd,2),Settings.Angles(ImageInd,3));
@@ -133,15 +144,15 @@ switch Settings.HROIMMethod
             clear global rs cs Gs
             [F1,SSE1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,Settings.RefImageInd);
         else
-        RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av);
+        RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av,ImageInd);
         
         clear global rs cs Gs
         [F1,SSE1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
         
-            for iq=1:5
+        for iq=1:5
             [rr,uu]=poldec(F1); % extract the rotation part of the deformation, rr
             gr=rr'*gr; % correct the rotation component of the deformation so that it doesn't affect strain calc
-            RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av);
+            RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av,ImageInd);
             
             clear global rs cs Gs
             [F1,SSE1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
@@ -217,17 +228,21 @@ switch Settings.HROIMMethod
     case 'Real'
         %Find the grain of scan image and get the reference image for that
         %grain
-        RefImagePath = Settings.RefImageNames{ImageInd}; % original line
-        RefInd=Settings.RefInd(ImageInd);
-        if strcmp(Settings.ImageFilterType,'standard')
-            RefImage = ReadEBSDImage(RefImagePath,Settings.ImageFilter);
+        RefImageInd = Settings.RefInd(ImageInd);
+        if H5Images
+            RefImage = ReadH5Pattern(H5ImageParams{:},RefImageInd);
         else
-            RefImage = localthresh(RefImagePath);
+            RefImagePath = Settings.ImageNamesList{RefImageInd}; % original line
+            if strcmp(Settings.ImageFilterType,'standard')
+                RefImage = ReadEBSDImage(RefImagePath,Settings.ImageFilter);
+            else
+                RefImage = localthresh(RefImagePath);
+            end
         end
         
         clear global rs cs Gs
 %         disp(RefImagePath);
-        [F1,SSE1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,RefInd);
+        [F1,SSE1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,RefImageInd);
         
     case 'Hybrid'
         %Use simulated pattern method on one reference image then use

@@ -163,9 +163,35 @@ end
 
 grains=reshape(grains,(nx),(ny));
 
+if ny==1 %Temporary fix to avoid error in cleanup.m line 33 - BEJ 6/17/16
+    small = 1;
+end
+
 if clean==1
     [grains,grainsize] = cleanup(grains,grainsize,small);
 end
+
+%Serialize Grain IDs
+[gIDs,~,ic] = unique(grains);
+newIDs = 1:length(gIDs);
+grains = newIDs(ic);
+
+found = zeros(length(unique(grains)),1);
+ID = 1;
+for i = 1:numel(grains)
+   cur = grains(i);
+   [ismem,ia] = ismember(cur,found);
+   if ~ismem
+       found(ID) = cur;
+       curID = ID;
+       ID = ID + 1;
+   else
+       curID = ia;
+   end
+   grains(i) = curID;
+end
+
+
 
 sizes=grains;
 sizes(:,:)=grainsize(grains(:,:));

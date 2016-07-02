@@ -25,9 +25,7 @@ data = GetFileData(GrainFilePath,'#');
 tline = '#';
 while ~feof(fid)
     if strcmp(tline(1),'#') == 1
-        
         tline = fgetl(fid);       
-        
     else
         
         position = ftell(fid);
@@ -47,7 +45,7 @@ while ~feof(fid)
                 GrainFileVals{13}=[];
             end
         end
-        disp(unique(GrainFileVals{11}(:)));
+        %disp(unique(GrainFileVals{11}(:)));
     end
 end
 

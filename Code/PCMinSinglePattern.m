@@ -35,8 +35,12 @@ pixsize = Settings.PixelSize;
 Material = ReadMaterial(Settings.Phase{Ind});
 
 % keyboard
-ImagePath = Settings.ImageNamesList{Ind};
-ScanImage = ReadEBSDImage(ImagePath,Settings.ImageFilter);
+if size(Settings.ImageNamesList,1)>1
+    ImagePath = Settings.ImageNamesList{Ind};
+    ScanImage = ReadEBSDImage(ImagePath,Settings.ImageFilter);
+else
+    ScanImage = ReadH5Pattern(Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter,Ind);
+end
 
 [roixc,roiyc]= GetROIs(ScanImage,Settings.NumROIs,pixsize,Settings.ROISize,...
     Settings.ROIStyle);
@@ -75,7 +79,7 @@ switch Algorithm
                 mperpix = Settings.mperpix;
                 curMaterial=cell2mat(Settings.Phase(Ind)); %****may need updating for material of this point - where is that info?
                 for i = 1:3
-                    I1 = genEBSDPatternHybrid_fromEMSoft(g,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av);
+                    I1 = genEBSDPatternHybrid_fromEMSoft(g,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av,Ind);
                     
                     clear global rs cs Gs
                     %     [F SSE] = CalcF(I1,I0,g,F,ImageInd,Settings,Settings.Material); % old version

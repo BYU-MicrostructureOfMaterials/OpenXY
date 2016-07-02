@@ -1,23 +1,9 @@
-function array = Hex2Array (vector, NColsOdd, NColsEven)
-
-r = 1;
-c = 1;
-for i = 1:length(vector)
-    
-    array(r,c) = vector(i);
-    c = c + 1;
-    if mod(r,2) == 1 %Odd
-        if c > NColsOdd
-            c = 1;
-            r = r + 1;
-        end
-    else %Even
-        if c > NColsEven
-            c = 1;
-            r = r + 1;
-        end
-    end
+function array = Hex2Array (vector, NColsOdd)
+if size(vector,1)<size(vector,2)
+    vector = vector';
 end
-array = array(:,1:end-1);
-        
+NColsEven = NColsOdd-1;
+[ScanLength,width] = size(vector);
+vector(NColsOdd:NColsOdd+NColsEven:ScanLength,:) = [];
+array = permute(reshape(vector,NColsEven,width,[]),[3 1 2]);
             

@@ -41,6 +41,7 @@ copyParam('Material',GetMaterialsList);
 copyParam('DoParallel');
 copyParam('DoShowPlot');
 copyParam('DoPCStrainMin');
+copyParam('GrainVals');
 
 %% ROI/Filter Settings
 %ROI Settings
@@ -54,12 +55,15 @@ copyParam('ImageFilterType',{'standard','localthresh'});
 
 %% Advanced Settings
 %HROIM Settings
+copyParam('DoStrain');
 copyParam('HROIMMethod',{'Simulated', 'Real', 'Dynamic Simulated'});
 copyParam('IterationLimit');
 copyParam('RefImageInd');
 copyParam('StandardDeviation');
 copyParam('MisoTol');
-copyParam('GrainRefImageType',{'Min Kernel Avg Miso','IQ > Fit > CI'});
+copyParam('GrainRefImageType',{'Min Kernel Avg Miso','IQ > Fit > CI','Manual'});
+copyParam('GrainMethod',{'Grain File','Find Grains'});
+copyParam('MinGrainSize');
 
 %Dislocation Density Settings
 copyParam('CalcDerivatives');
@@ -67,6 +71,7 @@ copyParam('DoDDS');
 copyParam('NumSkipPts');
 copyParam('IQCutoff');
 copyParam('DDSMethod',{'Nye-Kroner', 'Nye-Kroner (Pantleon)','Distortion Matching'});
+copyParam('rdoptions')
 
 %Kernel Average Misorientation
 copyParam('KernelAvgMisoPath');
@@ -80,10 +85,18 @@ copyParam('CameraAzimuthal');
 copyParam('mperpix');
 
 %% Other
+if isfield(NewSettings,'PCList')
+    Settings.PCList = NewSettings.PCList;
+end
 if isfield(NewSettings,'ScanData')
     Settings.ScanData = NewSettings.ScanData;
 end
-
+if isfield(NewSettings,'grainID') && strcmp(Settings.GrainRefImageType,'Manual')
+    Settings.grainID = NewSettings.grainID;
+end
+if isfield(NewSettings,'Inds')
+    Settings.Inds = NewSettings.Inds;
+end
 
 end
 

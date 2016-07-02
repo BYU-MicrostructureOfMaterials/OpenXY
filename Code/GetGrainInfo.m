@@ -1,8 +1,10 @@
-function [ grainID, Phase ] = GetGrainInfo( ScanFilePath, Material, ScanParams, Angles, MaxMisorientation )
+function [ grainID, Phase ] = GetGrainInfo( ScanFilePath, Material, ScanParams, Angles, MaxMisorientation, GrainMethod, MinGrainSize)
 %GETGRAININFO Returns grainID and material for HKL and OIM data
 %   INPUTS: ScanFilePath-Full path to .ang or .ctf file
+%               OR 1x2 cell array of Grain File Vals to skip reading grain file
 %           Material-Manual material selection from MainGUI. Looks for 'Auto-detect' parameter
-%           ScanParams-Struct of info gathered from ScanFile
+%           ScanParams-Struct of info gathered from ScanFile. Add in Nx,
+%               Ny, and ScanType
 %           Angles-ScanLength x 3 matrix of euler angles, from ScanFile.
 %               Used by findgrain.m for HKL data.
 %           MaxMisorientation-Param need for findgrains.m
@@ -16,9 +18,24 @@ function [ grainID, Phase ] = GetGrainInfo( ScanFilePath, Material, ScanParams, 
 %           Grain file has the same name as the .ang file
 %
 %   Written by Brian Jackson 4/28/2015
-
+clean = true;
+if nargin < 7
+    MinGrainSize = 10;
+elseif MinGrainSize == 0
+    clean = false;
+end
+ReadFile = true;
+if iscell(ScanFilePath) && all(size(ScanFilePath)==[1,2])
+    ReadFile = false;
+    ext = '.ang';
+else
 [path, name, ext] = fileparts(ScanFilePath);
-if strcmp(ext,'.ang')
+end
+
+
+if ~strcmp(ext,'.ctf')
+    if strcmp(GrainMethod,'Grain File')
+        if ReadFile
     GrainFilePath = fullfile(path,[name '.txt']);
     if ~exist(GrainFilePath,'file')
         button = questdlg('No matching grain file was found. Would you like to manually select a grain file?','Grain file not found');
@@ -34,19 +51,28 @@ if strcmp(ext,'.ang')
     end
     GrainFileVals = ReadGrainFile(GrainFilePath);
     grainID = GrainFileVals{9};
-    if strcmp(Material,'Auto-detect')
         Phase=lower(GrainFileVals{11});
     else
-        Phase = cell(length(GrainFileVals{1}),1);
+            grainID = ScanFilePath{1};
+            Phase = ScanFilePath{2};
+            clear ScanFilePath
+        end
+        if strcmp(Material,'Auto-detect');
+            disp(['Auto Detected Material: ' Phase{1}])
+        else
+            Phase = cell(length(Phase),1);
         Phase(:) = {Material};
     end
     Phase = ValidatePhase(Phase);
-    
-elseif strcmp(ext,'.ctf')
+    end
+end
+if strcmp(GrainMethod,'Find Grains')
     Phase = cell(length(Angles),1); 
     if strcmp(Material,'Auto-detect')
         ind = 1;
-        auto = 1;
+        if ~iscell(ScanParams.material)
+            ScanParams.material = cellstr(ScanParams.material);
+        end
         if length(ScanParams.material) > 1
             [ind,ok] = listdlg('ListString',ScanParams.material,'PromptString',...
                 {'More than one phase detected.';'Mutli-phase scans not currently supported.';'Select one:'},...
@@ -55,24 +81,37 @@ elseif strcmp(ext,'.ctf')
         end
         Phase(:)={lower(ScanParams.material{ind})};
         Material = ScanParams.material{ind};
+        disp(['Auto Detected Material: ' Material])
     else
         Phase(:) = {Material};
     end
     Phase = ValidatePhase(Phase);
     if ~isempty(Phase)
         MaterialData = ReadMaterial(Phase{1});
-        
+
         if auto
             disp(['Auto detected material: ' Phase{1}])
         end
         
         %Set up params for findgrains.m
-        angles = reshape(Angles,ScanParams.NumColsOdd,ScanParams.NumRows,3);
-        clean = true;
-        small = true;
+        if strcmp(ScanParams.ScanType,'Square')
+            angles = reshape(Angles,ScanParams.Nx,ScanParams.Ny,3);
+        else
+            angles = permute(Hex2Array(Angles,ScanParams.Nx),[2 1 3]);
+        end
         mistol = MaxMisorientation*pi/180;
-        [grainID] = findgrains(angles, MaterialData.lattice, clean, small,mistol);
-        grainID = reshape(grainID, ScanParams.NumColsOdd*ScanParams.NumRows,1);
+        grainID = findgrains(angles, MaterialData.lattice, clean, MinGrainSize,mistol);
+        
+        %Convert back to vector
+        if strcmp(ScanParams.ScanType,'Square')
+            grainID = grainID(:);
+        elseif strcmp(ScanParams.ScanType,'Hexagonal')
+            grainID(1:2:ScanParams.Ny,end+1) = grainID(1:2:ScanParams.Ny,end);
+            grainID(2:2:ScanParams.Ny,end) = NaN;
+            grainID = grainID(:);
+            grainID(isnan(grainID)) = [];
+        end
+        
     else
         grainID = {};
     end

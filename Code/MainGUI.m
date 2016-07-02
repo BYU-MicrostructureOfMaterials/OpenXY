@@ -22,7 +22,7 @@ function varargout = MainGUI(varargin)
 
 % Edit the above text to modify the response to help MainGUI
 
-% Last Modified by GUIDE v2.5 20-Oct-2015 16:00:34
+% Last Modified by GUIDE v2.5 14-Jun-2016 08:30:11
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -148,9 +148,11 @@ else
     set(handles.ProcessorsPopup,'Value',handles.Settings.DoParallel);
 end
 ProcessorsPopup_Callback(handles.ProcessorsPopup,eventdata,handles);
+
 %Files
 [fpath,name,ext] = fileparts(handles.Settings.ScanFilePath);
-SetScanFields(handles,[name ext],fpath);
+if strcmp(ext,'.h5'); filterind = 2; else filterind = 1; end;
+SetScanFields(handles,[name ext],fpath,filterind);
 handles = guidata(hObject);
 [fpath,name,ext] = fileparts(handles.Settings.FirstImagePath);
 SetImageFields(handles,[name ext],fpath);
@@ -200,11 +202,11 @@ wd = pwd;
 if ~strcmp(handles.FileDir,pwd)
     cd(handles.FileDir);
 end
-[name, path] = uigetfile({'*.ang;*.ctf','Scan Files (*.ang,*.ctf)'},'Select a Scan File');
+[name, path, filterind] = uigetfile({'*.ang;*.ctf','Scan Files (*.ang,*.ctf)';'*.h5','OIM HDF5 Files (*.h5)'},'Select a Scan File');
 cd(wd);
-SetScanFields(handles,name,path);
+SetScanFields(handles,name,path,filterind);
 
-function SetScanFields(handles,name,path)
+function SetScanFields(handles,name,path,filterind)
 if name ~= 0
     handles.FileDir = path;
     prevName = get(handles.ScanNameText,'String');
@@ -230,11 +232,23 @@ if name ~= 0
         MaterialPopup_Callback(handles.MaterialPopup, [], handles);
         handles = guidata(handles.MainGUI);
         
-        %Get Image Names
-        if handles.ImageLoaded
-            handles.Settings.ImageNamesList = ImportImageNamesList(handles.Settings);
+        if filterind == 1 %Not h5
+            %Get Image Names
+            if handles.ImageLoaded
+                handles.Settings.ImageNamesList = ImportImageNamesList(handles.Settings);
+            end
+        else
+            set(handles.SelectImageButton,'Enable','off');
+            handles.ImageLoaded = 1;
+            set(handles.FirstImageNameText,'String','N/A');
+            set(handles.ImageFolderText,'String','N/A');
+            set(handles.ImageSizeText,'String','N/A');
         end
     end 
+    %Remove Subscan
+    if all(isfield(handles.Settings,{'Inds','Resize'}))
+        handles.Settings = rmfield(handles.Settings,{'Inds','Resize'});
+    end
     handles.ScanFileLoaded = true;
 elseif ~handles.ScanFileLoaded
     set(handles.ScanNameText,'String','Select a Scan');
@@ -297,7 +311,7 @@ if name ~= 0
         set(handles.ImageFolderText,'String',path);
         set(handles.ImageFolderText,'TooltipString',path);
         
-        [x,y] = size(ReadEBSDImage(fullfile(path,name),handles.Settings.ImageFilter));
+        [x,y] = size(imread(fullfile(path,name)));
         improp = dir(fullfile(path,name));
         SizeStr = [num2str(x) 'x' num2str(y) ' (' num2str(round(improp.bytes/1024)) ' KB)'];
         set(handles.ImageSizeText,'String',SizeStr);
@@ -305,6 +319,7 @@ if name ~= 0
         handles.Settings.PixelSize = x;
         handles.Settings.ROISize = round((handles.Settings.ROISizePercent * .01)*handles.Settings.PixelSize);
         handles.Settings.PhosphorSize = handles.Settings.PixelSize * handles.Settings.mperpix;
+        handles.Settings.imsize = [x,y];
         
         %Get Image Names
         if handles.ScanFileLoaded
@@ -444,18 +459,14 @@ function MaterialPopup_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns MaterialPopup contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from MaterialPopup
-Settings = handles.Settings;
 Material = GetPopupString(hObject);
 handles.Settings.Material = Material;
+
 if handles.ScanFileLoaded
-    [handles.Settings.grainID, handles.Settings.Phase] = GetGrainInfo(...
-        Settings.ScanFilePath, Material, Settings.ScanParams, Settings.Angles, Settings.MisoTol);
-    if isempty(handles.Settings.Phase)
-        handles.ScanFileLoaded = 0;
-    end
-    if length(handles.Settings.Phase) > handles.Settings.ScanLength %Cropped Scan
-        handles.Settings.Phase = handles.Settings.Phase(1:handles.Settings.ScanLength);
-        handles.Settings.grainID = handles.Settings.grainID(1:handles.Settings.ScanLength);
+    if strcmp(Material,'Auto-detect')
+        handles.Settings.Phase = handles.Settings.GrainVals.Phase;
+    else
+        handles.Settings.Phase(1:handles.Settings.ScanLength) = {Material};
     end
 end
 guidata(hObject, handles);
@@ -615,7 +626,11 @@ function AdvancedSettings_Callback(hObject, eventdata, handles)
 % hObject    handle to AdvancedSettings (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.Settings = AdvancedSettingsGUI(handles.Settings,get(handles.MainGUI,'Position'));
+if handles.ScanFileLoaded && handles.ImageLoaded
+    handles.Settings = AdvancedSettingsGUI(handles.Settings,get(handles.MainGUI,'Position'));
+else
+    warndlg({'Cannot open ROI Settings menu'; 'Must select scan file data and first image'},'OpenXY: Invalid Operation');
+end
 guidata(hObject,handles);
 
 % --------------------------------------------------------------------
@@ -632,7 +647,7 @@ function PCCalSettings_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 if handles.ScanFileLoaded && handles.ImageLoaded
-    handles.Settings = PCCalGUI(handles.Settings,get(handles.MainGUI,'Position'));
+    handles.Settings = PCGUI(handles.Settings,get(handles.MainGUI,'Position'));
 else
     warndlg({'Cannot open PC Calibration menu'; 'Must select scan file data and first image'},'OpenXY: Invalid Operation');
 end
@@ -693,3 +708,25 @@ else
     warndlg({'Cannot run test'; 'Must select scan file data and first image'},'OpenXY: Invalid Operation');
 end
 guidata(hObject,handles);
+
+
+% --- Executes on button press in SubScan.
+function SubScan_Callback(hObject, eventdata, handles)
+% hObject    handle to SubScan (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if handles.ScanFileLoaded
+    [im, PlotType] = ChoosePlot([handles.Settings.Nx handles.Settings.Ny],handles.Settings.IQ,handles.Settings.Angles);
+    [X,Y] = SelectSubscan(im,PlotType);
+    Inds = 1:handles.Settings.ScanLength;
+    IndMap = vec2map(Inds,handles.Settings.Nx,handles.Settings.ScanType);
+    SubInds = IndMap(Y(1):Y(2),X(1):X(2));
+    handles.Settings.Inds = reshape(SubInds',[numel(SubInds) 1]);
+    
+    %Update Size
+    newsize = fliplr(size(SubInds));
+    handles.Settings.Resize = newsize;
+    SizeStr =  [num2str(newsize(1)) 'x' num2str(newsize(2)) ' (Subscan)'];
+    set(handles.ScanSizeText,'String',SizeStr);
+    guidata(handles.MainGUI,handles);
+end
