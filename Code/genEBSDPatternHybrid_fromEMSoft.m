@@ -97,7 +97,7 @@ cd(EMdataPath);
 [status,cmdout] = system(['"' fullfile(EMsoftPath,'bin','EMEBSD') '" ' inputfile]);
 cd(OpenXYPath);
 %!EMEBSD EMEBSDexample.nml
-disp(cmdout)
+%disp(cmdout)
 %generate pic
 h5infostruct=h5info(datafilepath);
 data1=h5read(h5infostruct.Filename,'/EMData/EBSDpatterns');

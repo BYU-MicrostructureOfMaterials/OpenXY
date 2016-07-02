@@ -10,4 +10,3 @@ for i = 1:Settings.Nx
         Correction(i,j) = GeneralMisoCalc(euler2gmat(CorrectAngles(i,:)),orientation{i,j},'tetragonal');
     end
 end
-plot(MisAng(1:100))
