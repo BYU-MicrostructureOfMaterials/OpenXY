@@ -1,7 +1,7 @@
-function orientation = CorrectPseudoSymmetry(Settings)
+function [orientation,tet] = CorrectPseudoSymmetry(Settings)
 
-    BinningScale = 0.25;
-    lambda = 0.1;
+    BinningScale = 1;
+    lambda = 500;
     
     %Account for Binning
     Settings.PixelSize = size(imresize(zeros(Settings.PixelSize),BinningScale),1); %Correct image size
@@ -18,8 +18,8 @@ function orientation = CorrectPseudoSymmetry(Settings)
     Settings.roixc = roixc;
     Settings.roiyc = roiyc;
     
-    ScanFileData = ReadScanFile('/Volumes/Shared/TiAl/Scans/TiAl_Sim.ctf');
-    CorrectAngles = [ScanFileData{1:3}];
+    %ScanFileData = ReadScanFile('/Volumes/Shared/TiAl/Scans/TiAl_Sim_Line_Short.ctf');
+    %CorrectAngles = [ScanFileData{1:3}];
     
     
     %Initialize Variables
@@ -28,12 +28,13 @@ function orientation = CorrectPseudoSymmetry(Settings)
     MI_corr = tet_corr;
     SC_corr = tet_corr;
     SSE_corr = tet_corr;
+    tet = zeros(Settings.ScanLength,3);
     
     w = waitbar(0,'Progress');
     tic
     
     %Use Tetragonality to Correct Psuedosymmetry
-    for ImageInd = 1:Settings.ScanLength/Settings.Ny
+    for ImageInd = 1:Settings.ScanLength
         
         %Get variables from Settings
         xstar = Settings.XStar(ImageInd);
@@ -43,9 +44,6 @@ function orientation = CorrectPseudoSymmetry(Settings)
 
         %Extract cross-correlation information
         g = euler2gmat(Settings.Angles(ImageInd,:));
-        F(:,:,1) = Settings.data.F{ImageInd};
-        XX1 = Settings.XX{ImageInd};
-        SSE1 = Settings.data.SSE{ImageInd};
         
         %Re-read in EBSD Image
         ScanImage = ReadEBSDImage(Settings.ImageNamesList{ImageInd},Settings.ImageFilter);
@@ -61,7 +59,7 @@ function orientation = CorrectPseudoSymmetry(Settings)
 %         [F2,SSE2,XX2] = CalcF(RefImage2,ScanImage,pseudo(:,:,2),eye(3),ImageInd,Settings,curMaterial,0);
 %         [F3,SSE3,XX3] = CalcF(RefImage3,ScanImage,pseudo(:,:,3),eye(3),ImageInd,Settings,curMaterial,0);
         
-        Settings.DoShowPlot = 1;
+        %Settings.DoShowPlot = 1;
         
         [F(:,:,1),gr,SSE1,XX1] = CalcDefGradientTensor(ScanImage,Settings,ImageInd,g);
         pseudo = gr;
@@ -76,14 +74,14 @@ function orientation = CorrectPseudoSymmetry(Settings)
         [F(:,:,3),SSE3,XX3] = CalcF(RefImage3,ScanImage,pseudo(:,:,3),eye(3),ImageInd,Settings,curMaterial,0);
         
         %Choose orientation with lowest tetragonality
-        tet(1) = CalcTet(F(:,:,1));
-        tet(2) = CalcTet(F(:,:,2));
-        tet(3) = CalcTet(F(:,:,3));
-        [~,minInd] = min(abs(tet));
+        tet(ImageInd,1) = CalcTet(F(:,:,1));
+        tet(ImageInd,2) = CalcTet(F(:,:,2));
+        tet(ImageInd,3) = CalcTet(F(:,:,3));
+        [~,minInd] = max(tet(ImageInd,:));
         
-        if GeneralMisoCalc(pseudo(:,:,minInd),euler2gmat(CorrectAngles(ImageInd,:)),'tetragonal')>1
-            disp('Greater than 1');
-        end
+        %if GeneralMisoCalc(pseudo(:,:,minInd),euler2gmat(CorrectAngles(ImageInd,:)),'tetragonal')>1
+        %    disp('Greater than 1');
+        %end
         
         %[~,gr] = CalcDefGradientTensor(ScanImage,Settings,ImageInd,pseudo(:,:,minInd));
         tet_corr{ImageInd} = pseudo(:,:,minInd);
@@ -116,7 +114,7 @@ function orientation = CorrectPseudoSymmetry(Settings)
         [~,minInd] = min(SSE);
         SSE_corr{ImageInd} = pseudo(:,:,minInd);
         
-        waitbar(ImageInd/(Settings.ScanLength/Settings.Ny),w);
+        waitbar(ImageInd/(Settings.ScanLength),w);
     end
     orientation = [tet_corr XX_corr MI_corr SC_corr SSE_corr];
     toc
