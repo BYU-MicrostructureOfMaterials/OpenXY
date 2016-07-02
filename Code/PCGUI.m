@@ -275,7 +275,10 @@ elseif strcmp(type,'Grid')
         if isempty(PCData.CalibrationIndices)
             warndlg('No Calibration Indices Selected. Calibration Aborted')
         else
-            PCData = PCGrid(Settings,PCSettings{7});
+            PCData.xstar = PCSettings{1};
+            PCData.ystar = PCSettings{2};
+            PCData.zstar = PCSettings{3};
+            PCData = PCGrid(Settings,PCData);
         
             %Add to PC List
             Settings.PCList(end+1,:) = {PCData.xstar PCData.ystar PCData.zstar...
