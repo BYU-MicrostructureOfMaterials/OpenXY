@@ -2,7 +2,7 @@ function [ grainID, Phase ] = GetGrainInfo( ScanFilePath, Material, ScanParams, 
 %GETGRAININFO Returns grainID and material for HKL and OIM data
 %   INPUTS: ScanFilePath-Full path to .ang or .ctf file
 %               OR 1x2 cell array of Grain File Vals to skip reading grain file
-%           Material-Manual material selection from MainGUI. Looks for 'Auto-detect' parameter
+%           Material-Manual material selection from MainGUI. Looks for 'Scan File' parameter
 %           ScanParams-Struct of info gathered from ScanFile. Add in Nx,
 %               Ny, and ScanType
 %           Angles-ScanLength x 3 matrix of euler angles, from ScanFile.
@@ -57,19 +57,19 @@ if ~strcmp(ext,'.ctf')
             Phase = ScanFilePath{2};
             clear ScanFilePath
         end
-        if strcmp(Material,'Auto-detect');
+        if strcmp(Material,'Scan File');
             disp(['Auto Detected Material: ' Phase{1}])
         else
             Phase = cell(length(Phase),1);
-        Phase(:) = {Material};
-    end
+            Phase(:) = {Material};
+        end
     Phase = ValidatePhase(Phase);
     end
 end
 if strcmp(GrainMethod,'Find Grains')
     Phase = cell(length(Angles),1); 
     auto = 0;
-    if strcmp(Material,'Auto-detect')
+    if strcmp(Material,'Scan File')
         ind = 1;
         if ~iscell(ScanParams.material)
             ScanParams.material = cellstr(ScanParams.material);
