@@ -4,9 +4,12 @@ if nargin<8
 end
 
 %Get background maps
+g = euler2gmat(ScanData(:,4:6));
+GrainMap = vec2map(grainID,mapsize(1),ScanType);
 CI = vec2map(ScanData(:,1),mapsize(1),ScanType)./max(ScanData(:,1));
 Fit = vec2map(ScanData(:,2),mapsize(1),ScanType)./max(ScanData(:,2));
 IQ = vec2map(ScanData(:,3),mapsize(1),ScanType)./max(ScanData(:,3));
+IPF = PlotIPF(g,mapsize,ScanType,0);
 bg = 1;
 bgtitle = 'none';
 pat = -1;
@@ -19,13 +22,14 @@ subT = sprintf('Secondary value: %s',bgtitle);
 Nx = mapsize(1);
 Ny = mapsize(2);
 
-GrainMap = vec2map(grainID,mapsize(1),ScanType);
+Map = GrainMap;
 if size(GrainMap,1) == 1 %Line Scans
-    newsize = round(size(GrainMap,2)/6);
-    GrainMap = repmat(GrainMap,newsize,1);
+    newsize = round(size(Map,2)/6);
+    Map = repmat(Map,newsize,1);
     CI = repmat(CI,newsize,1);
     Fit = repmat(Fit,newsize,1);
     IQ = repmat(IQ,newsize,1);
+    IPF = repmat(IPF,newsize,1,1);
     mapsize(2) = newsize;
 end
 
@@ -51,7 +55,7 @@ if Inds ~= 0
     
     
     %Plot Inds
-    [Xind,Yind] = ind2sub2([size(GrainMap,2) size(GrainMap,1)],Inds,ScanType);
+    [Xind,Yind] = ind2sub2([size(Map,2) size(Map,1)],Inds,ScanType);
     plot(Xind,Yind,'kd','MarkerFaceColor','k')
 else
     Xind = zeros(1); Yind = zeros(1); Grain = zeros(1);
@@ -72,7 +76,7 @@ while morepoints
     end
     
     if ~isempty(x)
-        sze = [size(GrainMap,2),size(GrainMap,1)];
+        sze = [size(Map,2),size(Map,1)];
         ind = sub2ind2(sze,round(x),round(y),ScanType);
         grn = grainID(ind);
         if button == 1
@@ -126,24 +130,27 @@ while morepoints
     %Background 
     switch bg
         case 1
-            background = ones(mapsize(2),mapsize(1));
-            bgtitle = 'none';
+            Map = GrainMap;
+            bgtitle = 'grainID';
         case 2
-            background = Fit;
-            bgtitle = 'Fit';
+            Map = IPF;
+            bgtitle = 'IPF';
         case 3
-            background = CI;
+            Map = CI;
             bgtitle = 'Confidence Index';
         case 4
-            background = IQ;
+            Map = IQ;
             bgtitle = 'Image Quality';
+        case 5
+            Map = Fit;
+            bgtitle = 'Fit';
     end
     subT = sprintf('Secondary value: %s',bgtitle);
     
     %Plot Points
     figure(main);
     cla
-    imagesc(GrainMap.*background);
+    imagesc(Map);
     hold on
     plot(Xind,Yind,'kd','MarkerFaceColor','k')
     %title(Title{:})
@@ -167,7 +174,7 @@ RefInd = IndsAll(ic);
 
 %Plot Points
 cla
-imagesc(GrainMap);
+imagesc(Map);
 hold on
 plot(Xind,Yind,'kd','MarkerFaceColor','k')
 %title(Title{:})
