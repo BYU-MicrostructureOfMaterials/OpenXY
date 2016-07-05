@@ -263,7 +263,7 @@ switch HROIMMethod
             valid = 1;
             if isfield(handles.Settings,'Phase')
                 mats = unique(handles.Settings.Phase);
-            elseif strcmp(handles.Settings.Material,'Auto-detect')
+            elseif strcmp(handles.Settings.Material,'Scan File')
                 valid = 0;
                 warndlgpause({'Material must be specified before selecting Simulation-Dynamic','Resetting to kinematic simulation'},'Select Material');
                 SetPopupValue(hObject,'Simulated-Kinematic');
@@ -951,7 +951,8 @@ end
 
 %Manually Edit Inds
 handles.GrainMap = OpenGrainMap(handles);
-RefInd = EditRefInds(handles.Settings.ScanFilePath,handles.Settings.grainID,handles.Settings.ImageNamesList,[handles.Settings.CI handles.Settings.Fit handles.Settings.IQ],...
+ScanData = [handles.Settings.CI handles.Settings.Fit handles.Settings.IQ handles.Settings.Angles]
+RefInd = EditRefInds(handles.Settings.ScanFilePath,handles.Settings.grainID,handles.Settings.ImageNamesList,ScanData,...
     [handles.Settings.Nx handles.Settings.Ny],handles.Settings.ScanType,handles.AutoRefInds,...
     handles.Settings.imsize,handles.Settings.ImageFilter,Inds);
 

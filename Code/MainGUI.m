@@ -463,7 +463,7 @@ Material = GetPopupString(hObject);
 handles.Settings.Material = Material;
 
 if handles.ScanFileLoaded
-    if strcmp(Material,'Auto-detect')
+    if strcmp(Material,'Scan File')
         handles.Settings.Phase = handles.Settings.GrainVals.Phase;
     else
         handles.Settings.Phase(1:handles.Settings.ScanLength) = {Material};
