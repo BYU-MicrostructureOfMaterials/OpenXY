@@ -29,41 +29,54 @@ switch ScanType
             bottomcol = NColsEven;
         end
         
-        if mod(skippts,2) %Odd, single point in each direction
+        if mod(ceil(skippts),2) %Two Ref A's
+            spacing = floor(ceil(skippts)/2);
+            toprow = Ind<=NColsOdd+c*(spacing);
+            oddright = mod(Ind,c)==NColsOdd;
+            oddleft = mod(Ind,c)==1;
+            
+            %Ref A (top left)
+            RefIndA(toprow) = Ind(toprow)+NColsEven+c*spacing;
+            RefIndA(~toprow) = Ind(~toprow)-NColsOdd-c*spacing;
+            %Ref D (middle)
+            RefIndAA(toprow) = Ind(toprow)+NColsOdd+c*spacing;
+            RefIndAA(~toprow) = Ind(~toprow)-NColsEven-c*spacing;
+            %Keep edge inds adjacent
+            RefIndAA(oddright) = RefIndA(oddright);
+            RefIndA(oddleft) = RefIndAA(oddleft);
+            RefIndA = [RefIndA' RefIndAA'];
+        else %Single Ref A
             toprow = Ind<=c*(floor(skippts/2)+1);
             RefIndA(toprow) = Ind(toprow)+c*(floor(skippts/2)+1);
             RefIndA(~toprow) = Ind(~toprow)-c*(floor(skippts/2)+1);
+            RefIndA = RefIndA';
+        end
+        
+        if mod(skippts,1) > 0 %Two Ref C's
+            spacing = floor(skippts);
+            toprow = Ind<=NColsOdd;
+            bottomrow = ScanLength-Ind<bottomcol;
+            idx = mod(Ind,c);
+            rightside = idx==NColsOdd | (idx==0 & spacing>0) | ...
+                c-idx<spacing | ... %Even rows
+                NColsOdd-idx<=spacing & idx <= NColsOdd; %Odd rows
             
+            RefIndC(rightside) = Ind(rightside)-NColsOdd-spacing;
+            RefIndC(~rightside) = Ind(~rightside)-NColsEven+spacing;
+            RefIndCC(rightside) = Ind(rightside)+NColsEven-spacing;
+            RefIndCC(~rightside) = Ind(~rightside)+NColsOdd+spacing;
+            
+            RefIndCC(bottomrow) = RefIndC(bottomrow);
+            RefIndC(toprow) = RefIndCC(toprow);
+            RefIndC = [RefIndC' RefIndCC'];
+        else %Single Ref C
             idx = mod(Ind,c);
             rightside = idx==NColsOdd | idx==0 | ...
                 c-idx<=floor(skippts/2) | ...
                 NColsOdd-idx<=floor(skippts/2) & idx <= NColsOdd;
             RefIndC(rightside) = Ind(rightside)-(floor(skippts/2)+1);
             RefIndC(~rightside) = Ind(~rightside)+(floor(skippts/2)+1);
-        else %Even, two points in each direction
-            toprow = Ind<=NColsOdd*(floor(skippts/2)+1);
-            bottomrow = ScanLength-Ind<bottomcol+c*(floor(skippts/2));
-            oddright = mod(Ind,c)==NColsOdd;
-            oddleft = mod(Ind,c)==1;
-            
-            %Ref A (top left)
-            RefIndA(toprow) = Ind(toprow)+NColsEven;
-            RefIndA(~toprow) = Ind(~toprow)-NColsOdd;
-            %Ref D (middle)
-            RefIndD(toprow) = Ind(toprow)+NColsOdd;
-            RefIndD(~toprow) = Ind(~toprow)-NColsEven;
-            %Keep edge inds adjacent
-            RefIndD(oddright) = RefIndA(oddright);
-            RefIndA(oddleft) = RefIndD(oddleft);
-            
-            %Ref C (bottom right)
-            RefIndC(bottomrow) = RefIndD(bottomrow);
-            RefIndC(~bottomrow) = Ind(~bottomrow)+NColsOdd;
-            RefIndC(oddright & ~bottomrow) = Ind(oddright & ~bottomrow)+NColsEven;
-            
-            
+            RefIndC = RefIndC';
         end
-    otherwise
-        
-        
+            
 end
