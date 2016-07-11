@@ -1,10 +1,34 @@
-% code to read angles from .ang file and calculate nye tensor and total GND
-% density for each point in the scan
-% DTF May 3 2016
-% partly from Ruggles RDScan.m
-% currently fudges it for hexagonal scan - so only accurate for square scan
-
 function alpha_data = GNDfromOIM(datain)
+%GNDfromOIM
+%alpha_data = GNDfromOIM(datain)
+%
+%Calculates the nye tensor and total GND for each point in the scan using
+%orientations. Options to skip a specific number of points and average the
+%orientation using the surrounding points. 
+%
+%By default the Nye tensor is calculated using the misorientation between b
+%and c, and b and c. 
+%
+%With smoothing, all of the surround points are used and averaged.
+%
+%              AC - A - Ac
+%               |   |   |
+%               C - b - c
+%               |   |   |
+%              aC - a - ac
+%
+%Currently fudges it for hexagonal scan - so only accurate for square scan
+%
+%INPUTS
+%Option 1: No input. Will be prompted to select either an OpenXY AnalysisParams file or a .ang file
+%Option 2: Settings structure. Will use corrected orientations.
+%Option 3: ScanFilePath. Reads in orientations from .ang file. Prompted to
+%   enter necessary material information
+%
+%Partly from Ruggles RDScan.m
+%DTF May 3 2016
+%Edited by BEJ July 2016
+
 if nargin == 1
     matorang = isstruct(datain);
     if matorang
@@ -103,7 +127,7 @@ else
 end
 
 smooth = 0;
-skip = 2;
+skip = 0;
 aangle = zeros(m-skip-1,n-skip-1);
 cangle = aangle;
 amiso = zeros(3,3,m-skip-1,n-skip-1);
