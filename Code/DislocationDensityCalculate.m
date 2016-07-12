@@ -1,4 +1,4 @@
-function DislocationDensityCalculate(Settings,MaxMisorientation,IQcutoff,VaryStepSizeI)
+function alpha_data = DislocationDensityCalculate(Settings,MaxMisorientation,IQcutoff,VaryStepSizeI)
 %DISLOCATIONDENSITYOUTPUT
 %DislocationDensityOutput(Settings,Components, cmin, cmax, MaxMisorientation)
 %code bits for this function taken from Step2_DisloDens_Lgrid_useF_2.m
@@ -19,6 +19,10 @@ Allg(Settings.Inds,:) = NewAngles;
 Inds = Settings.Inds;
 ImageFilter=Settings.ImageFilter;
 special=0;
+if ~isfield(Settings,'EasyDD')
+    Settings.EasyDD = 0;
+end
+EasyDD = Settings.EasyDD;
 
 if strcmp(VaryStepSizeI,'a')
     numruntimes=floor(min(r,c)/2)-1;
@@ -189,17 +193,31 @@ if ~strcmp(Settings.ScanType,'L')
         end
 
         parfor (cnt = 1:N)% Change for parallel computing
-            [AllFa{cnt},AllSSEa(cnt),AllFc{cnt},AllSSEc(cnt), misang(cnt)] = ...
-                DDCalc(DDSettings{cnt},lattice{cnt},ImageFilter,Settings);
+            if ~EasyDD
+                [AllFa{cnt},AllSSEa(cnt),AllFc{cnt},AllSSEc(cnt), misang(cnt)] = ...
+                    DDCalc(DDSettings{cnt},lattice{cnt},ImageFilter,Settings);
+            else
+                [AllFa{cnt},AllFc{cnt}, misang(cnt)] = ...
+                    DDCalcEasy(DDSettings{cnt},lattice{cnt},Settings);
+                AllSSEa(cnt) = 0;
+                AllSSEc(cnt) = 0;
+            end
             ppm.increment();
         end
         ppm.delete();
     else
         h = waitbar(0,'Single Processor Progress');
         for cnt = 1:N
-            [AllFa{cnt},AllSSEa(cnt),AllFc{cnt},AllSSEc(cnt), misang(cnt)] = ...
-                DDCalc(DDSettings{cnt},lattice{cnt},ImageFilter,Settings);
-            waitbar(cnt/N,h);
+            if ~EasyDD
+                [AllFa{cnt},AllSSEa(cnt),AllFc{cnt},AllSSEc(cnt), misang(cnt)] = ...
+                    DDCalc(DDSettings{cnt},lattice{cnt},ImageFilter,Settings);
+            else
+                [AllFa{cnt},AllFc{cnt}, misang(cnt)] = ...
+                    DDCalcEasy(DDSettings{cnt},lattice{cnt},Settings);
+                AllSSEa(cnt) = 0;
+                AllSSEc(cnt) = 0;
+            end
+            waitbar(cnt/N,h)
         end
         close(h);
     end
@@ -627,6 +645,65 @@ function [AllFa,AllSSEa,AllFc,AllSSEc, misang] = DDCalc(DDSettings,lattice,Image
     end
 end
 
+function [AllFa,AllFc,misang] = DDCalcEasy(DDSettings,lattice, Settings)
+
+    
+    skippts = Settings.NumSkipPts;
+    
+    %Check Pattern Source
+    H5Images = false;
+    if size(Settings.ImageNamesList,1)==1
+        H5Images = true;
+        H5ImageParams = {Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter};
+    end
+    
+    %Extract Dim variables
+    r = Settings.data.rows;%
+    
+    %Extract Variables 
+    RefIndA = DDSettings{1,1};
+    cnt = DDSettings{1,2};
+    RefIndC = DDSettings{1,3};
+    
+    Amat = DDSettings{2,1};
+    g_b = DDSettings{2,2};
+    Cmat = DDSettings{2,3};
+    
+    if size(DDSettings,2) > 3
+        RefIndA1 = RefIndA;
+        RefIndA2 = DDSettings{2,4};       
+    end
+    
+    misanglea=GeneralMisoCalc(g_b,Amat,lattice);
+    misanglec=GeneralMisoCalc(g_b,Cmat,lattice);
+    misang=max([misanglea misanglec]);
+    
+    Fbinv = inv(Settings.data.F{cnt});
+    % first, evaluate point a
+    if r > 1 %Not Line Scan
+        if ~strcmp(Settings.ScanType,'Hexagonal') || (strcmp(Settings.ScanType,'Hexagonal') && skippts>0)
+            AllFa = Settings.data.F{RefIndA}*Fbinv;
+        else
+            AllFa1 = Settings.data.F{RefIndA1}*Fbinv;
+            AllFa2 = Settings.data.F{RefIndA2}*Fbinv;
+            AllFa=0.5*(AllFa1+AllFa2);
+        end
+
+        % scale a direction step F tensor for different step size 
+        if strcmp(Settings.ScanType,'Hexagonal')
+            AllFatemp=AllFa-eye(3);
+            AllFatemp=AllFatemp/sqrt(3)*2;
+            AllFa=AllFatemp+eye(3);
+        end
+    else
+        AllFa= -eye(3);
+    end
+    % then, evaluate point c
+    AllFc = Settings.data.F{RefIndC}*Fbinv;
+
+
+end
+
 function DDSettings = GetDDSettings(cnt,Allg,Dims,ScanType,skippts)
     extra_a = false;
     
@@ -664,7 +741,7 @@ function DDSettings = GetDDSettings(cnt,Allg,Dims,ScanType,skippts)
         NColsOdd = c;
         NColsEven = c-1;
         c = NColsOdd+NColsEven;
-        ScanLength = NumColsOdd*r - floor(r/2);
+        ScanLength = NColsOdd*r - floor(r/2);
         
         leftside=1:c:ScanLength;
         rightside=NColsOdd:c:ScanLength;
