@@ -10,13 +10,16 @@ switch ScanType
             RefIndA(~toprow) = Ind(~toprow)-c*(skippts+1);
         elseif r == 1
             RefIndA = Ind;
-        end 
+        end
+        RefIndA = RefIndA';
         
         %Image C
         rightside = mod(Ind,c)==0 | (c-mod(Ind,c))<=skippts;
         RefIndC(rightside) = Ind(rightside)-(skippts+1);
         RefIndC(~rightside) = Ind(~rightside)+(skippts+1);
+        RefIndC = RefIndC';
     case 'Hexagonal'
+        skippts = skippts + 0.5; %Change to step size
         c = scansize(1);
         r = scansize(2);
         NColsOdd = c;
