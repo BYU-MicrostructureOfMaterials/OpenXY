@@ -341,93 +341,26 @@ alpha_filt=alpha;
 c = Oldsize(1);
 r = Oldsize(2);
 
-if strcmp(Settings.ScanType,'Square') ||  strcmp(Settings.ScanType,'LtoSquare') % Square grid
-    misang=zeros(Settings.ScanLength,1);
-    misanglea=zeros(Settings.ScanLength,1);
-    misanglec=zeros(Settings.ScanLength,1);
-    MisAngleInds=zeros(Settings.ScanLength,3);
-    for i=1:Settings.ScanLength
-        ind = Inds(i);
-        bnum=ind;
-        if r > 1 
-            if ind <= c*(skippts+1)
-                anum=bnum+c*(skippts+1);
-            else
-                anum=bnum-c*(skippts+1);
-            end
-        elseif r == 1
-            anum = bnum;
-        end
-        if mod(ind,c)==0 || (c-mod(ind,c))<=skippts
-            cnum=bnum-(skippts+1);
-        else
-            cnum=bnum+(skippts+1);
-        end
-        
-        iq = min([Settings.IQ(anum),Settings.IQ(bnum),Settings.IQ(cnum)]);% Is data.IQ shaped the same as ImageNamesList
-        %IQcutoff = 0; % bad Jay, I ought to put this as an option somewhere in the OutputPlotting.m GUI
-        if (iq<=IQcutoff)
-            alpha_filt(:,:,i)=0;
-        end
-        
-        Amat=euler2gmat(Allg(anum,:));
-        Bmat=euler2gmat(Allg(bnum,:));
-        Cmat=euler2gmat(Allg(cnum,:));
-        misanglea(i)=GeneralMisoCalc(Bmat,Amat,lattice{ind});
-        misanglec(i)=GeneralMisoCalc(Bmat,Cmat,lattice{ind});
-        misang(i)=max([misanglea(i) misanglec(i)]);
-        if (misang(i)>MaxMisorientation)
-            alpha_filt(:,:,i)=0;
-        end
-        if Settings.grainID(bnum)~=Settings.grainID(anum) || Settings.grainID(bnum)~=Settings.grainID(cnum)
-            alpha_filt(:,:,i)=0;
-        end
-        
-%         if intensityr(i)<50
-% %   Find the best way to threshold images with
-% %         little or no pattern.
-%             alpha_filt(:,:,i)=0;
-%         end
-        
-        MisAngleInds(i,:) = [anum bnum cnum];
-        if alpha_filt(:,:,i)==0
-            discount=discount+1;
-        end
-    end
-end
-
-if strcmp(Settings.ScanType,'L') % L grid
-    clear Allg
-    phi1=Settings.data.phi1rn;
-    PHI=Settings.data.PHIrn;
-    phi2=Settings.data.phi2rn;
-    Allg=[phi1 PHI phi2];
+%Filter alpha data
+for i=1:Settings.ScanLength
+    ind = Inds(i);
     
-    for i=1:length(data.Fa)
-        anum = i*3-2;
-        bnum = i*3-1;
-        cnum = i*3;
-        iq = data.IQ{i};
-%         iq = min([data.IQ{anum},data.IQ{bnum},data.IQ{cnum}]);
-        IQcutoff = 0; % bad Jay, I ought to put this as an option somewhere in the OutputPlotting.m GUI
-        if (iq<=IQcutoff)
-            alpha_filt(:,:,i)=0;
-        end
-        
-        Amat=euler2gmat(Allg(anum,:));
-        Bmat=euler2gmat(Allg(anum,:));
-        Cmat=euler2gmat(Allg(anum,:));
-        misanglea=GeneralMisoCalc(Bmat,Amat,lattice{i});
-        misanglec=GeneralMisoCalc(Bmat,Cmat,lattice{i});
-        misang(i)=max([misanglea misanglec]);
-        if (misang(i)>MaxMisorientation)
-            alpha_filt(:,:,i)=0;
-        end
-        if alpha_filt(:,:,i)==0
-            discount=discount+1;
-        end
+    %Filter by Misorientation
+    if (misang(i)>MaxMisorientation)
+        alpha_filt(:,:,i)=0;
+    end
+    
+    %Filter Grain Boundaries
+    if Settings.grainID(RefInds(i,2))~=Settings.grainID(RefInds(i,1)) || Settings.grainID(RefInds(i,2))~=Settings.grainID(RefInds(i,3))
+        alpha_filt(:,:,i)=0;
+    end
+    
+    %Count Filtered points
+    if alpha_filt(:,:,i)==0
+        discount=discount+1;
     end
 end
+MisAngleInds = RefInds;
 
 alpha_total3(1,:)=3.*(abs(alpha_filt(1,3,:))+abs(alpha_filt(2,3,:))+abs(alpha_filt(3,3,:)));
 alpha_total5(1,:)=9/5.*(abs(alpha_filt(1,3,:))+abs(alpha_filt(2,3,:))+abs(alpha_filt(3,3,:))+abs(alpha_filt(2,1,:))+abs(alpha_filt(1,2,:)));
