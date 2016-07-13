@@ -111,8 +111,6 @@ if ~strcmp(Settings.ScanType,'Hexagonal')
 end
 % adjust these values for a new grid
 
-stepsize = stepsize_orig*(skippts+1);
-
 % End of setup for different step size
 disp(Settings.ScanType)
 if ~strcmp(Settings.ScanType,'L')
@@ -164,7 +162,11 @@ if ~strcmp(Settings.ScanType,'L')
     end
     
     %Set up Parameters
-    [RefInds,Refg] = GetDDSettings(Settings.Inds,Allg,Oldsize,ScanType,skippts);
+    [RefInds,Refg,NumInds] = GetDDSettings(Settings.Inds,Allg,Oldsize,ScanType,skippts);
+    
+    %Preallocate
+    misanglea = zeros(Settings.ScanLength,1);
+    misanglec = zeros(Settings.ScanLength,1);
     
     %Perform Calculation
     if Settings.DoParallel > 1
@@ -192,10 +194,10 @@ if ~strcmp(Settings.ScanType,'L')
 
         parfor (cnt = 1:N)% Change for parallel computing
             if ~EasyDD
-                [AllFa{cnt},AllSSEa(cnt),AllFc{cnt},AllSSEc(cnt), misang(cnt)] = ...
+                [AllFa{cnt},AllSSEa(cnt),AllFc{cnt},AllSSEc(cnt), misanglea(cnt),misanglec(cnt)] = ...
                     DDCalc(RefInds(cnt,:),Refg(:,:,:,cnt),lattice{cnt},ImageFilter,Settings);
             else
-                [AllFa{cnt},AllFc{cnt}, misang(cnt)] = ...
+                [AllFa{cnt},AllFc{cnt}, misanglea(cnt),misanglec(cnt)] = ...
                     DDCalcEasy(RefInds(cnt,:),Refg(:,:,:,cnt),lattice{cnt},Settings);
                 AllSSEa(cnt) = 0;
                 AllSSEc(cnt) = 0;
@@ -207,10 +209,10 @@ if ~strcmp(Settings.ScanType,'L')
         h = waitbar(0,'Single Processor Progress');
         for cnt = 1:N
             if ~EasyDD
-                [AllFa{cnt},AllSSEa(cnt),AllFc{cnt},AllSSEc(cnt), misang(cnt)] = ...
+                [AllFa{cnt},AllSSEa(cnt),AllFc{cnt},AllSSEc(cnt), misanglea(cnt),misanglec(cnt)] = ...
                     DDCalc(RefInds(cnt,:),Refg(:,:,:,cnt),lattice{cnt},ImageFilter,Settings);
             else
-                [AllFa{cnt},AllFc{cnt}, misang(cnt)] = ...
+                [AllFa{cnt},AllFc{cnt},misanglea(cnt),misanglec(cnt)] = ...
                     DDCalcEasy(RefInds(cnt,:),Refg(:,:,:,cnt),lattice{cnt},Settings);
                 AllSSEa(cnt) = 0;
                 AllSSEc(cnt) = 0;
@@ -224,6 +226,8 @@ if ~strcmp(Settings.ScanType,'L')
     data.SSEa=AllSSEa;
     data.Fc=AllFc;
     data.SSEc=AllSSEc;
+    
+    misang = max(misanglea,misanglec);
 
 end
 if strcmp(Settings.ScanType,'Hexagonal')
@@ -271,11 +275,21 @@ end
     clear FaArray FaList FcArray FcList
 % end
 
-NoiseCutoff=log10((0.006*pi/180)/(stepsize*max(b))); %lower cutoff filters noise below resolution level
-disp(stepsize)
-LowerCutoff=log10(1/stepsize^2);
+%Determine Step Size
+if strcmp(ScanType,'Hexagonal')
+    step = skippts+0.5;
+    stepsizea = stepsize_orig*(ceil(step)*sqrt(3)/2);
+    stepsizec = stepsize_orig*step;
+else
+    stepsizea = stepsize_orig*(skippts+1);
+    stepsizec = stepsizea;
+end
+
+NoiseCutoff=log10((0.006*pi/180)/(stepsizea*max(b))); %lower cutoff filters noise below resolution level
+disp(stepsizea)
+LowerCutoff=log10(1/stepsizea^2);
 MinCutoff=max([LowerCutoff(:),NoiseCutoff(:)]);
-UpperCutoff=log10(1/(min(b)*stepsize));
+UpperCutoff=log10(1/(min(b)*stepsizea));
 alpha_data.Fa=FaSample;
 alpha_data.Fc=FcSample;
 
@@ -284,26 +298,26 @@ disp(['UpperCutoff: ',num2str(UpperCutoff)])
 
 % Beta(i,j,k(Fc=1 or Fa=2),point number)=0;
 
-Beta(1,1,2,:)=-(FaSample(1,1,:)-1)/stepsize;
+Beta(1,1,2,:)=-(FaSample(1,1,:)-1)/stepsizea;
 % Beta(1,2,2,:)=-FaSample(1,2,:)/stepsize;
-Beta(1,3,2,:)=-FaSample(1,3,:)/stepsize;
+Beta(1,3,2,:)=-FaSample(1,3,:)/stepsizea;
 % Beta(1,1,1,:)=(FcSample(1,1,:)-1)/stepsize;
-Beta(1,2,1,:)=FcSample(1,2,:)/stepsize;
-Beta(1,3,1,:)=FcSample(1,3,:)/stepsize;
+Beta(1,2,1,:)=FcSample(1,2,:)/stepsizec;
+Beta(1,3,1,:)=FcSample(1,3,:)/stepsizec;
 
-Beta(2,1,2,:)=-(FaSample(2,1,:))/stepsize;
+Beta(2,1,2,:)=-(FaSample(2,1,:))/stepsizea;
 % Beta(2,2,2,:)=-(FaSample(2,2,:)-1)/stepsize;
-Beta(2,3,2,:)=-FaSample(2,3,:)/stepsize;
-Beta(2,2,1,:)=(FcSample(2,2,:)-1)/stepsize;
+Beta(2,3,2,:)=-FaSample(2,3,:)/stepsizea;
+Beta(2,2,1,:)=(FcSample(2,2,:)-1)/stepsizec;
 % Beta(2,1,1,:)=FcSample(2,1,:)/stepsize;
-Beta(2,3,1,:)=FcSample(2,3,:)/stepsize;
+Beta(2,3,1,:)=FcSample(2,3,:)/stepsizec;
 
-Beta(3,1,2,:)=-FaSample(3,1,:)/stepsize;
+Beta(3,1,2,:)=-FaSample(3,1,:)/stepsizea;
 % Beta(3,2,2,:)=-FaSample(3,2,:)/stepsize;
-Beta(3,3,2,:)=-(FaSample(3,3,:)-1)/stepsize;
+Beta(3,3,2,:)=-(FaSample(3,3,:)-1)/stepsizea;
 % Beta(3,1,1,:)=FcSample(3,1,:)/stepsize;
-Beta(3,2,1,:)=FcSample(3,2,:)/stepsize;
-Beta(3,3,1,:)=(FcSample(3,3,:)-1)/stepsize;
+Beta(3,2,1,:)=FcSample(3,2,:)/stepsizec;
+Beta(3,3,1,:)=(FcSample(3,3,:)-1)/stepsizec;
 % keyboard
 alpha(1,1,:)=shiftdim(Beta(1,2,3,:)-Beta(1,3,2,:))./shiftdim(b(Inds));
 alpha(1,2,:)=shiftdim(Beta(1,3,1,:)-Beta(1,1,3,:))./shiftdim(b(Inds));
@@ -436,12 +450,14 @@ alpha_data.misanglec=misanglec;
 alpha_data.MisAngleInds=MisAngleInds;
 alpha_data.discount=discount;
 % alpha_data.intensityr=intensityr;
-alpha_data.stepsize=stepsize;
+alpha_data.stepsizea=stepsizea;
+alpha_data.stepsizec=stepsizec;
 alpha_data.b=b(Inds);
+alpha_data.NumInds = NumInds;
 
 if special==1
     disp('special')
-    disp(num2str(stepsize))
+    disp(num2str(stepsizea))
     Settings.OutputPath=[AnalysisParamsPath(1:end-8),'Skip',num2str(skippts),'.ang.mat']; 
     save(Settings.OutputPath,'Settings');
     save(Settings.OutputPath ,'alpha_data','-append'); 
@@ -531,18 +547,12 @@ save(AnalysisParamsPath ,'alpha_data','-append');
 
 end
 
-function [AllFa,AllSSEa,AllFc,AllSSEc, misang] = DDCalc(RefInd,RefG,lattice,ImageFilter,Settings)
+function [AllFa,AllSSEa,AllFc,AllSSEc, misanglea, misanglec] = DDCalc(RefInd,RefG,lattice,ImageFilter,Settings)
 
-    image_a = 0;
-    image_a1 = 0;
     image_a2= 0;
-    image_c = 0;
-    Amat = 0;
-    Cmat = 0;
-    RefIndA = 0;
-    RefIndA1 = 0;
     RefIndA2 = 0;
-    RefIndC = 0;
+    image_c2 = 0;
+    RefIndC2 = 0;
     
     skippts = Settings.NumSkipPts;
     
@@ -581,22 +591,18 @@ function [AllFa,AllSSEa,AllFc,AllSSEc, misang] = DDCalc(RefInd,RefG,lattice,Imag
         step = skippts+0.5;
         Cind = 4;
         if mod(ceil(step),2) %Two Ref A's
-            image_a1 = image_a;
-            RefIndA1 = RefIndA;
             RefIndA2 = RefInd(4);
             if ~H5Images
-                image_a2 = ReadEBSDImage(Settings.ImageNamesList{RefIndA1},ImageFilter);
+                image_a2 = ReadEBSDImage(Settings.ImageNamesList{RefIndA},ImageFilter);
             else
                 image_a2 = ReadH5Pattern(H5ImageParams{:},RefIndA2);
             end
             Cind = 5;
         end
         if mod(step,1) > 0 %Two Ref C's
-            image_c1 = image_c;
-            RefIndC1 = RefIndC;
             RefIndC2 = RefInd(Cind);
             if ~H5Images
-                image_c2 = ReadEBSDImage(Settings.ImageNamesList{RefIndC1},ImageFilter);
+                image_c2 = ReadEBSDImage(Settings.ImageNamesList{RefIndC},ImageFilter);
             else
                 image_c2 = ReadH5Pattern(H5ImageParams{:},RefIndC2);
             end
@@ -605,14 +611,13 @@ function [AllFa,AllSSEa,AllFc,AllSSEc, misang] = DDCalc(RefInd,RefG,lattice,Imag
     
     misanglea=GeneralMisoCalc(g_b,Amat,lattice);
     misanglec=GeneralMisoCalc(g_b,Cmat,lattice);
-    misang=max([misanglea misanglec]);
     % evaluate points a and c using Wilk's method with point b as the
     % reference pattern
     %         imgray=rgb2gray(imread(ImagePath)); % this can add significant time for large scans
     %         intensityr(cnt)=mean(imgray(:));
 
-    if (isempty(image_b)) || (isempty(image_a) && (~strcmp(Settings.ScanType,'Hexagonal'))) || (isempty(image_c)) ||... 
-            (strcmp(Settings.ScanType,'Hexagonal') && skippts == 0 && (isempty(image_a1) || isempty(image_a2)))
+    if (isempty(image_a)) || (isempty(image_b)) ||  (isempty(image_c)) || ...
+            (RefIndA2>0 && isempty(image_a2)) || (RefIndC2>0 && isempty(image_c2))
         AllFa= -eye(3);
         AllSSEa=101;
         AllFc=-eye(3);
@@ -620,24 +625,15 @@ function [AllFa,AllSSEa,AllFc,AllSSEc, misang] = DDCalc(RefInd,RefG,lattice,Imag
     else
         % first, evaluate point a
         if r > 1 %Not Line Scan
-
+            
             clear global rs cs Gs
-            if ~strcmp(Settings.ScanType,'Hexagonal') || (strcmp(Settings.ScanType,'Hexagonal') && skippts>0)
-
-                    [AllFa,AllSSEa] = CalcF(image_b,image_a,g_b,eye(3),cnt,Settings,Settings.Phase{cnt}, RefIndA);
-
+            if RefIndA2 == 0
+                [AllFa,AllSSEa] = CalcF(image_b,image_a,g_b,eye(3),cnt,Settings,Settings.Phase{cnt}, RefIndA);
             else
-                [AllFa1,AllSSEa1] = CalcF(image_b,image_a1,g_b,eye(3),cnt,Settings,Settings.Phase{cnt},RefIndA1);
+                [AllFa1,AllSSEa1] = CalcF(image_b,image_a ,g_b,eye(3),cnt,Settings,Settings.Phase{cnt},RefIndA );
                 [AllFa2,AllSSEa2] = CalcF(image_b,image_a2,g_b,eye(3),cnt,Settings,Settings.Phase{cnt},RefIndA2);
                 AllFa=0.5*(AllFa1+AllFa2);
                 AllSSEa=0.5*(AllSSEa1+AllSSEa2);
-            end
-
-            % scale a direction step F tensor for different step size 
-            if strcmp(Settings.ScanType,'Hexagonal')
-                AllFatemp=AllFa-eye(3);
-                AllFatemp=AllFatemp/sqrt(3)*2;
-                AllFa=AllFatemp+eye(3);
             end
         else
             AllFa= -eye(3);
@@ -646,17 +642,18 @@ function [AllFa,AllSSEa,AllFc,AllSSEc, misang] = DDCalc(RefInd,RefG,lattice,Imag
 
         % then, evaluate point c
         clear global rs cs Gs
-        if ~strcmp(Settings.ScanType,'Hexagonal') || (strcmp(Settings.ScanType,'Hexagonal') && skippts>0)
-
-            [AllFc,AllSSEc] = CalcF(image_b,image_c,g_b,eye(3),cnt,Settings,Settings.Phase{cnt},RefIndC);
-
+        if RefIndC2 == 0
+            [AllFc,AllSSEc] = CalcF(image_b,image_c ,g_b,eye(3),cnt,Settings,Settings.Phase{cnt},RefIndC);
         else
-            [AllFc,AllSSEc] = CalcF(image_b,image_c,g_b,eye(3),cnt,Settings,Settings.Phase{cnt},RefIndC);
+            [AllFc1,AllSSEc1] = CalcF(image_b,image_c ,g_b,eye(3),cnt,Settings,Settings.Phase{cnt},RefIndC );
+            [AllFc2,AllSSEc2] = CalcF(image_b,image_c2,g_b,eye(3),cnt,Settings,Settings.Phase{cnt},RefIndC2);
+            AllFc=0.5*(AllFc1+AllFc2);
+            AllSSEc=0.5*(AllSSEc1+AllSSEc2);
         end
     end
 end
 
-function [AllFa,AllFc,misang] = DDCalcEasy(DDSettings,lattice, Settings)
+function [AllFa,AllFc,misanglea,misanglec] = DDCalcEasy(DDSettings,lattice, Settings)
 
     
     skippts = Settings.NumSkipPts;
@@ -687,7 +684,6 @@ function [AllFa,AllFc,misang] = DDCalcEasy(DDSettings,lattice, Settings)
     
     misanglea=GeneralMisoCalc(g_b,Amat,lattice);
     misanglec=GeneralMisoCalc(g_b,Cmat,lattice);
-    misang=max([misanglea misanglec]);
     
     Fbinv = inv(Settings.data.F{cnt});
     % first, evaluate point a
@@ -715,7 +711,7 @@ function [AllFa,AllFc,misang] = DDCalcEasy(DDSettings,lattice, Settings)
 
 end
 
-function [RefInd,Refg] = GetDDSettings(Inds,Angles,Dims,ScanType,skippts)
+function [RefInd,Refg,NumInds] = GetDDSettings(Inds,Angles,Dims,ScanType,skippts)
     if size(Inds,1) == 1
         Inds = Inds';
     end
@@ -724,13 +720,17 @@ function [RefInd,Refg] = GetDDSettings(Inds,Angles,Dims,ScanType,skippts)
     [RefIndA,RefIndC] = GetAdjacentInds(Dims,Inds,skippts,ScanType);
     RefInd = [RefIndA(:,1) Inds RefIndC(:,1)];
     
+    NumInds.A = 1;
+    NumInds.C = 1;
     if strcmp(ScanType,'Hexagonal')
         step = skippts+0.5;
         if mod(ceil(step),2) %Two Ref A's
             RefInd = [RefInd RefIndA(:,2)];
+            NumInds.A = 2;
         end
         if mod(step,1) > 0 %Two Ref C's
             RefInd = [RefInd RefIndC(:,2)];
+            NumInds.C = 2;
         end
     end
     
