@@ -539,7 +539,11 @@ elseif str2double(UserInput) < 0
     set(hObject, 'String', Settings.NumSkipPts);
     warndlg('Input must be positive');
 else
-    set(hObject, 'String', round(str2double(UserInput)));
+    if strcmp(Settings.ScanType,'Hexagonal')
+        set(hObject, 'String', round(str2double(UserInput)*2)/2);
+    else
+        set(hObject, 'String', round(str2double(UserInput)));
+    end
 end
 handles.Settings.NumSkipPts = get(hObject,'String');
 
