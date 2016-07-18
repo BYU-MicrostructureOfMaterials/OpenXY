@@ -141,7 +141,24 @@ dCshift = zeros(1,length(roixc));
 
 
 %% Go over each ROI
-for i=1:length(roixc)
+if size(RefImage)~=size(ScanImage)
+       RefImage=ScanImage;
+        disp('No Ref Image')
+end
+
+PixelSize = Settings.PixelSize;
+ROISize = Settings.ROISize;
+
+for i = 1:length(roixc)
+    rc = roiyc(i);
+    cc = roixc(i);
+    rrange=round(rc-ROISize/2):round(rc-ROISize/2)+ROISize-1;
+    crange=round(cc-ROISize/2):round(cc-ROISize/2)+ROISize-1;
+    RefROI_mat(:,:,i) = RefImage(rrange,crange);
+    ScanROI_mat(:,:,i) = ScanImage(rrange,crange);
+end
+
+for (i=1:length(roixc))
     rc=roiyc(i);
     cc=roixc(i);
     %This is a vector describing a position on the screen in
@@ -157,39 +174,37 @@ for i=1:length(roixc)
     %     Xs=Qsc'*Xc;
     n = Qps*[0,0,-1]';
     %shift from sample origin to phospher origin described in sample frame
-    c = Qps*[0;0;-zstar]*Settings.PixelSize;
+    c = Qps*[0;0;-zstar]*PixelSize;
     
-    rrange=round(rc-Settings.ROISize/2):round(rc-Settings.ROISize/2)+Settings.ROISize-1;
-    crange=round(cc-Settings.ROISize/2):round(cc-Settings.ROISize/2)+Settings.ROISize-1;
+    rrange=round(rc-ROISize/2):round(rc-ROISize/2)+ROISize-1;
+    crange=round(cc-ROISize/2):round(cc-ROISize/2)+ROISize-1;
     %
     %     if method == 1% method = 0 was just for testing and as not used here.
     
-    if size(RefImage)~=size(ScanImage)
-        RefImage=ScanImage;
-        disp('No Ref Image')
-    end
-    
     %Calculate Cross-Correlation Coefficient
-    RefROI = RefImage(rrange,crange);
-    ScanROI = ScanImage(rrange,crange);
+    RefROI = RefROI_mat(:,:,i);
+    ScanROI = ScanROI_mat(:,:,i);
     
     RefROI = RefROI - mean(RefROI(:));
     ScanROI = ScanROI - mean(ScanROI(:));
-    XX(i,1) = sum(sum(RefROI.*ScanROI/(std(RefROI(:))*std(ScanROI))))/numel(RefROI);
+    XX_1 = sum(sum(RefROI.*ScanROI/(std(RefROI(:))*std(ScanROI))))/numel(RefROI);
     
     %Perform Cross-Correlation
     [rimage, dxshift, dyshift] = custfftxc((RefImage(rrange,crange)),...
         (ScanImage(rrange,crange)),0,RefImage,rc,cc,custfilt,windowfunc);%this is the screen shift in the F(i-1) frame
      
     %Calculate Confidence of Shift
-    XX(i,2) = (max(rimage(:))-mean(rimage(:)))/std(rimage(:));
+    XX_2 = (max(rimage(:))-mean(rimage(:)))/std(rimage(:));
     
     %Calculate Mutual Information (Requires Image Processing Toolbox)
     if isfield(Settings,'CalcMI') && Settings.CalcMI
-    XX(i,3) = CalcMutualInformation(RefROI,ScanROI);
+    XX_3 = CalcMutualInformation(RefROI,ScanROI);
     else
-        XX(i,3) = 0;
+        XX_3 = 0;
     end
+    
+    %XX_mat
+    XX(i,:) = [XX_1, XX_2, XX_3];    
     
     if RefInd~=0 % new if statement for when there is a single ref image DTF 7/16/14 this is to adjust PC in Wilkinson method for that single ref case ***need to do it for all wilkinson cases***
          tx=(xstar-Settings.XStar(RefInd))*Settings.PixelSize; % vector on phosphor between PC of ref and PC of measured; uses notation from PCsensitivity paper
