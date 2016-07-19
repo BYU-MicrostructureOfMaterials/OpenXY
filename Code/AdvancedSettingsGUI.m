@@ -545,7 +545,7 @@ else
         set(hObject, 'String', round(str2double(UserInput)));
     end
 end
-handles.Settings.NumSkipPts = get(hObject,'String');
+handles.Settings.NumSkipPts = str2double(get(hObject,'String'));
 
 %Updates handles object
 guidata(hObject, handles);
