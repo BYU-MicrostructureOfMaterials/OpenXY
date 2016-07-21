@@ -1,6 +1,6 @@
 %% Section 1
 
-tmp=load('/Users/Adams/Documents/CalcF_ROIs.mat');
+tmp=load('Settings');
 Settings = tmp.Settings;
 clear tmp
 
@@ -22,18 +22,21 @@ clear tmp
         Settings.ROIStyle);
     Settings.roixc = roixc;
     Settings.roiyc = roiyc;
+    Settings = HREBSDPrep(Settings);
 %end
 %% Section 2
 
 profile on
 tic
 for i = 1:100
-CalcF_original(RefImage,ScanImage,g,Fo,Ind,Settings,curMaterial,RefInd);
+CalcF(RefImage,ScanImage,g,Fo,Ind,Settings,curMaterial,RefInd);
 end
 time_serial = toc;
 profile off
 profile viewer
 
+
+%% Parallelized
 profile on
 tic
 for i = 1:100
