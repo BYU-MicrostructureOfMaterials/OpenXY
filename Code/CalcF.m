@@ -158,7 +158,7 @@ for i = 1:length(roixc)
     ScanROI_mat(:,:,i) = ScanImage(rrange,crange);
 end
 
-for (i=1:length(roixc))
+parfor (i=1:length(roixc))
     rc=roiyc(i);
     cc=roixc(i);
     %This is a vector describing a position on the screen in
@@ -176,8 +176,6 @@ for (i=1:length(roixc))
     %shift from sample origin to phospher origin described in sample frame
     c = Qps*[0;0;-zstar]*PixelSize;
     
-    rrange=round(rc-ROISize/2):round(rc-ROISize/2)+ROISize-1;
-    crange=round(cc-ROISize/2):round(cc-ROISize/2)+ROISize-1;
     %
     %     if method == 1% method = 0 was just for testing and as not used here.
     
@@ -187,11 +185,11 @@ for (i=1:length(roixc))
     
     RefROI = RefROI - mean(RefROI(:));
     ScanROI = ScanROI - mean(ScanROI(:));
-    XX_1 = sum(sum(RefROI.*ScanROI/(std(RefROI(:))*std(ScanROI))))/numel(RefROI);
+    XX_1 = sum(sum(RefROI.*ScanROI/(std(RefROI(:))*std(ScanROI(:)))))/numel(RefROI);
     
     %Perform Cross-Correlation
-    [rimage, dxshift, dyshift] = custfftxc((RefImage(rrange,crange)),...
-        (ScanImage(rrange,crange)),0,RefImage,rc,cc,custfilt,windowfunc);%this is the screen shift in the F(i-1) frame
+    [rimage, dxshift, dyshift] = custfftxc(RefROI,...
+        ScanROI,0,RefImage,rc,cc,custfilt,windowfunc);%this is the screen shift in the F(i-1) frame
      
     %Calculate Confidence of Shift
     XX_2 = (max(rimage(:))-mean(rimage(:)))/std(rimage(:));
@@ -215,7 +213,7 @@ for (i=1:length(roixc))
          dxshift=dxshift-tx-spminussx; % corrected ROI shift taking into account PC shift
          dyshift=dyshift-ty-spminussy; %****NOT SURE ABOUT SIGN ON THIS
     end
-    [xshift0,yshift0] = Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,cc,rc,Fo,Settings.PixelSize,alpha);%this is the screen shift in the g (hough) frame *****not used***
+    %[xshift0,yshift0] = Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,cc,rc,Fo,Settings.PixelSize,alpha);%this is the screen shift in the g (hough) frame *****not used***
     
     %     else
     %         [ro uo]=poldec(Fo);
