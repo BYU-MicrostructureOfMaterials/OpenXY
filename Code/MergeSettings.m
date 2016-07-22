@@ -97,6 +97,8 @@ end
 if isfield(NewSettings,'Inds')
     Settings.Inds = NewSettings.Inds;
 end
-
+if isfield(NewSettings,'RefInd')
+    Settings.RefInd = NewSettings.RefInd;
+end
 end
 

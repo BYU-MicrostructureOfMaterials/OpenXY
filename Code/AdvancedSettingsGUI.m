@@ -468,6 +468,10 @@ switch GrainRefType
         ToggleGrainMap_Callback(handles.ToggleGrainMap,eventdata,handles);
     case 'Manual'
         grainIDs = unique(handles.Settings.grainID);
+        if ~isfield(handles.Settings,'RefInd')
+            handles.AutoRefInds = UpdateAutoInds(handles,handles.Settings.GrainRefImageType);
+            handles.Settings.RefInd = handles.AutoRefInds;
+        end
         RefGrainIDs = handles.Settings.grainID(unique(handles.Settings.RefInd));
         if length(grainIDs) ~= length(RefGrainIDs) || ~all(sort(grainIDs)==sort(RefGrainIDs))
             w = warndlg('Grains have changed. New reference indices must be selected.');
@@ -955,7 +959,7 @@ end
 
 %Manually Edit Inds
 handles.GrainMap = OpenGrainMap(handles);
-ScanData = [handles.Settings.CI handles.Settings.Fit handles.Settings.IQ handles.Settings.Angles]
+ScanData = [handles.Settings.CI handles.Settings.Fit handles.Settings.IQ handles.Settings.Angles];
 RefInd = EditRefInds(handles.Settings.ScanFilePath,handles.Settings.grainID,handles.Settings.ImageNamesList,ScanData,...
     [handles.Settings.Nx handles.Settings.Ny],handles.Settings.ScanType,handles.AutoRefInds,...
     handles.Settings.imsize,handles.Settings.ImageFilter,Inds);
