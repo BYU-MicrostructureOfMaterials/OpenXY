@@ -8,10 +8,11 @@ function [phi1, PHI, phi2]=gmat2euler(g)
 % phi2=acos(g(2,3)/sqrt(g(2,3)^2+g(1,3)^2));
 % %phi1=asin(g(3,1)/sqrt(sum(g(:,1).^2))*sqrt(sum(g(:,3).^2)/sum(g(1:2,3).^2)));
 % phi1=asin(g(3,1)/sin(PHI));
+tol = 1e-10;
 TWOPI=2*pi;
-if g(3,3) > 0.9999999
+if g(3,3) > 1-tol
     PHI=0.0;
-    if g(1,1) > 0.9999999
+    if g(1,1) > 1-tol
         phi1=0.0;
     elseif g(1,1) < -1.0
         phi1 = pi;
@@ -29,9 +30,9 @@ if g(3,3) > 0.9999999
         phi1 = TWOPI-phi1;
     end
     phi2=0.0;
-elseif g(3,3) < -0.9999999
+elseif g(3,3) < -1+tol
     PHI=0.0;
-    if g(1,1) > 0.9999999
+    if g(1,1) > 1-tol
         phi1 = 0.0;
     elseif g(1,1) < -1.0
         phi1 = pi;
@@ -50,7 +51,6 @@ elseif g(3,3) < -0.9999999
     end
    
     phi2=atan2(g(1,3),g(2,3));
-   
 else
     if g(3,3) > 1
         temp=1.0;
