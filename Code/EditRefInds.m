@@ -74,9 +74,9 @@ while morepoints
     elseif y < 1
         y = 1;
     end
+    sze = [size(Map,2),size(Map,1)];
     
     if ~isempty(x)
-        sze = [size(Map,2),size(Map,1)];
         ind = sub2ind2(sze,round(x),round(y),ScanType);
         grn = grainID(ind);
         if button == 1

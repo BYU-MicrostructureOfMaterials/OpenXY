@@ -29,30 +29,30 @@ if iscell(ScanFilePath) && all(size(ScanFilePath)==[1,2])
     ReadFile = false;
     ext = '.ang';
 else
-[path, name, ext] = fileparts(ScanFilePath);
+    [path, name, ext] = fileparts(ScanFilePath);
 end
 
 
 if ~strcmp(ext,'.ctf')
     if strcmp(GrainMethod,'Grain File')
         if ReadFile
-    GrainFilePath = fullfile(path,[name '.txt']);
-    if ~exist(GrainFilePath,'file')
-        button = questdlg('No matching grain file was found. Would you like to manually select a grain file?','Grain file not found');
-        if strcmp(button,'Yes')
-            w = pwd;
-            cd(path);
-            [name, path] = uigetfile({'*.txt', 'Grain Files (*.txt)'},'Select a Grain File');
-            GrainFilePath = fullfile(path,name);
-            cd(w);
+            GrainFilePath = fullfile(path,[name '.txt']);
+            if ~exist(GrainFilePath,'file')
+                button = questdlg('No matching grain file was found. Would you like to manually select a grain file?','Grain file not found');
+                if strcmp(button,'Yes')
+                    w = pwd;
+                    cd(path);
+                    [name, path] = uigetfile({'*.txt', 'Grain Files (*.txt)'},'Select a Grain File');
+                    GrainFilePath = fullfile(path,name);
+                    cd(w);
+                else
+                    error('No grain matching ground file was found');
+                end
+            end
+            GrainFileVals = ReadGrainFile(GrainFilePath);
+            grainID = GrainFileVals{9};
+            Phase=lower(GrainFileVals{11});
         else
-            error('No grain matching ground file was found');
-        end
-    end
-    GrainFileVals = ReadGrainFile(GrainFilePath);
-    grainID = GrainFileVals{9};
-        Phase=lower(GrainFileVals{11});
-    else
             grainID = ScanFilePath{1};
             Phase = ScanFilePath{2};
             clear ScanFilePath
@@ -63,7 +63,7 @@ if ~strcmp(ext,'.ctf')
             Phase = cell(length(Phase),1);
             Phase(:) = {Material};
         end
-    Phase = ValidatePhase(Phase);
+        Phase = ValidatePhase(Phase);
     end
 end
 if strcmp(GrainMethod,'Find Grains')
