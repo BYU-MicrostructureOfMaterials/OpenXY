@@ -175,7 +175,7 @@ for i=1:length(roixc)
     
     RefROI = RefROI - mean(RefROI(:));
     ScanROI = ScanROI - mean(ScanROI(:));
-    XX(i,1) = sum(sum(RefROI.*ScanROI/(std(RefROI(:))*std(ScanROI))))/numel(RefROI);
+    XX(i,1) = sum(sum(RefROI.*ScanROI/(std(RefROI(:))*std(ScanROI(:)))))/numel(RefROI);
     
     %Perform Cross-Correlation
     [rimage, dxshift, dyshift] = custfftxc((RefImage(rrange,crange)),...
