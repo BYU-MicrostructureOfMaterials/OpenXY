@@ -311,7 +311,7 @@ if name ~= 0
         set(handles.ImageFolderText,'String',path);
         set(handles.ImageFolderText,'TooltipString',path);
         
-        [x,y] = size(imread(fullfile(path,name)));
+        [x,y,~] = size(imread(fullfile(path,name)));
         improp = dir(fullfile(path,name));
         SizeStr = [num2str(x) 'x' num2str(y) ' (' num2str(round(improp.bytes/1024)) ' KB)'];
         set(handles.ImageSizeText,'String',SizeStr);
@@ -463,7 +463,7 @@ Material = GetPopupString(hObject);
 handles.Settings.Material = Material;
 
 if handles.ScanFileLoaded
-    if strcmp(Material,'Auto-detect')
+    if strcmp(Material,'Scan File')
         handles.Settings.Phase = handles.Settings.GrainVals.Phase;
     else
         handles.Settings.Phase(1:handles.Settings.ScanLength) = {Material};

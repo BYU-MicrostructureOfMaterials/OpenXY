@@ -263,7 +263,7 @@ switch HROIMMethod
             valid = 1;
             if isfield(handles.Settings,'Phase')
                 mats = unique(handles.Settings.Phase);
-            elseif strcmp(handles.Settings.Material,'Auto-detect')
+            elseif strcmp(handles.Settings.Material,'Scan File')
                 valid = 0;
                 warndlgpause({'Material must be specified before selecting Simulation-Dynamic','Resetting to kinematic simulation'},'Select Material');
                 SetPopupValue(hObject,'Simulated-Kinematic');
@@ -468,6 +468,10 @@ switch GrainRefType
         ToggleGrainMap_Callback(handles.ToggleGrainMap,eventdata,handles);
     case 'Manual'
         grainIDs = unique(handles.Settings.grainID);
+        if ~isfield(handles.Settings,'RefInd')
+            handles.AutoRefInds = UpdateAutoInds(handles,handles.Settings.GrainRefImageType);
+            handles.Settings.RefInd = handles.AutoRefInds;
+        end
         RefGrainIDs = handles.Settings.grainID(unique(handles.Settings.RefInd));
         if length(grainIDs) ~= length(RefGrainIDs) || ~all(sort(grainIDs)==sort(RefGrainIDs))
             w = warndlg('Grains have changed. New reference indices must be selected.');
@@ -539,9 +543,13 @@ elseif str2double(UserInput) < 0
     set(hObject, 'String', Settings.NumSkipPts);
     warndlg('Input must be positive');
 else
+    if strcmp(Settings.ScanType,'Hexagonal')
+        set(hObject, 'String', round(str2double(UserInput)*2)/2);
+    else
     set(hObject, 'String', round(str2double(UserInput)));
 end
-handles.Settings.NumSkipPts = get(hObject,'String');
+end
+handles.Settings.NumSkipPts = str2double(get(hObject,'String'));
 
 %Updates handles object
 guidata(hObject, handles);
@@ -951,7 +959,8 @@ end
 
 %Manually Edit Inds
 handles.GrainMap = OpenGrainMap(handles);
-RefInd = EditRefInds(handles.Settings.ScanFilePath,handles.Settings.grainID,handles.Settings.ImageNamesList,[handles.Settings.CI handles.Settings.Fit handles.Settings.IQ],...
+ScanData = [handles.Settings.CI handles.Settings.Fit handles.Settings.IQ handles.Settings.Angles];
+RefInd = EditRefInds(handles.Settings.ScanFilePath,handles.Settings.grainID,handles.Settings.ImageNamesList,ScanData,...
     [handles.Settings.Nx handles.Settings.Ny],handles.Settings.ScanType,handles.AutoRefInds,...
     handles.Settings.imsize,handles.Settings.ImageFilter,Inds);
 

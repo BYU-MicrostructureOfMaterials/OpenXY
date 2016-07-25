@@ -5,32 +5,30 @@ function MI = CalcMutualInformation(ImageA,ImageB)
 %       I_B is the entropy of image B
 %       I_AB is the entropy of the combined probability histograms for image A and B
 
-
 Ia = ConvertToInt8(ImageA);
 Ib = ConvertToInt8(ImageB);
 
-%Get Image Histograms
-Pa = imhist(Ia);
-Pb = imhist(Ib);
-Pab = Pa+Pb;
+%Calculate Normalized Joint Histogram (Probability)
+pJ = accumarray([uint16(Ia(:))+1 uint16(Ib(:))+1], 1) / numel(Ia);
 
-%Remove Zero Entries from Probability vector
-Pa = Pa(Pa>0);
-Pb = Pb(Pb>0);
-Pab = Pab(Pab>0);
+%Calculate Joint Entropy
+pJ_NZ = pJ;
+pJ_NZ(pJ_NZ==0) = [];
+eJ = -sum(pJ_NZ.*log2(pJ_NZ));
 
-%Normalize Probabilities
-Pa = Pa ./ numel(Ia);
-Pb = Pb ./ numel(Ib);
-Pab = Pab ./ (numel(Ia)+numel(Ib));
+%Get individual Normalized Histograms (Probability)
+pA = sum(pJ,2);
+pB = sum(pJ,1);
 
-%Calculate Entropies
-I_A = -sum(Pa.*log2(Pa));
-I_B = -sum(Pb.*log2(Pb));
-I_AB = -sum(Pab.*log2(Pab));
+%Calculate Individual Entropies
+pA_NZ = pA;
+pB_NZ = pB;
+pA_NZ(pA_NZ==0) = [];
+pB_NZ(pB_NZ==0) = [];
+eA = -sum(pA_NZ.*log2(pA_NZ));
+eB = -sum(pB_NZ.*log2(pB_NZ));
 
-MI = I_A+I_B-I_AB;
-
+MI = eA+eB-eJ;
 end
 
 function I = ConvertToInt8(Image)
