@@ -22,7 +22,7 @@ function [F1,gr,SSE,XX] = CalcDefGradientTensor(ScanImage,Settings,ImageInd,gr)
     Settings.roiyc = roiyc;
     Settings.PixelSize = pixsize;
     
-    RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av);
+    RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av,ImageInd);
     
     clear global rs cs Gs
     [F1,SSE,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
@@ -30,7 +30,7 @@ function [F1,gr,SSE,XX] = CalcDefGradientTensor(ScanImage,Settings,ImageInd,gr)
     for iq=1:3
         rr=poldec(F1); % extract the rotation part of the deformation, rr
         gr=rr'*gr; % correct the rotation component of the deformation so that it doesn't affect strain calc
-        RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av);
+        RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av,ImageInd);
 
         clear global rs cs Gs
         [F1,SSE,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);

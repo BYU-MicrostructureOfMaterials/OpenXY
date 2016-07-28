@@ -22,7 +22,7 @@ function varargout = PCEdit(varargin)
 
 % Edit the above text to modify the response to help PCEdit
 
-% Last Modified by GUIDE v2.5 13-Jun-2016 11:42:27
+% Last Modified by GUIDE v2.5 05-Jul-2016 08:14:04
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -109,11 +109,13 @@ switch Type
             set(handles.deltapc,'String',input{7}.deltapc);
             set(handles.GridPlotPanel,'Visible','on')
             set(handles.PointPanel,'Visible','off')
+            set(handles.threshedit,'String',input{7}.thresh);
         else %New PC
             PanelPos = get(handles.GridPlotPanel,'Position');
             set(handles.numpats,'String',100); handles.PCData.numpats = 100;
             set(handles.numpc,'String',40); handles.PCData.numpc = 40;
             set(handles.deltapc,'String',0.06/40); handles.PCData.deltapc = 0.06/handles.PCData.numpc;
+            set(handles.threshedit,'String',5e-3); handles.PCData.thresh = 5e-3;
             set(handles.SelectPoints,'Enable','off')
             set(handles.GridPlotPanel,'Visible','off')
             set(handles.PointPanel,'Visible','on','Position',PanelPos)
@@ -565,11 +567,11 @@ if isfield(handles,'PCData')
         cla
     end
     if get(handles.XStarFit,'Value')
-        EvalPCGrid(handles.PCData.StrainPoints(:,:,1),handles.PCData.PCPoints(:,:,1));
+        EvalPCGrid(handles.PCData.StrainPoints(:,:,1),handles.PCData.PCPoints(:,:,1),handles.PCData.thresh);
     elseif get(handles.YStarFit,'Value')
-        EvalPCGrid(handles.PCData.StrainPoints(:,:,2),handles.PCData.PCPoints(:,:,2));
+        EvalPCGrid(handles.PCData.StrainPoints(:,:,2),handles.PCData.PCPoints(:,:,2),handles.PCData.thresh);
     elseif get(handles.ZStarFit,'Value')
-        EvalPCGrid(handles.PCData.StrainPoints(:,:,3),handles.PCData.PCPoints(:,:,3));
+        EvalPCGrid(handles.PCData.StrainPoints(:,:,3),handles.PCData.PCPoints(:,:,3),handles.PCData.thresh);
     else
         if ishandle(handles.fig)
             close(handles.fig)
@@ -617,3 +619,32 @@ function ClearPoints_Callback(hObject, eventdata, handles)
 handles.PCData.CalibrationIndices = [];
 guidata(handles.PCEdit,handles);
 UpdatePlot(handles);
+
+
+
+function threshedit_Callback(hObject, eventdata, handles)
+% hObject    handle to threshedit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of threshedit as text
+%        str2double(get(hObject,'String')) returns contents of threshedit as a double
+handles.PCData.thresh = str2double(get(hObject,'String'));
+handles.xstar = EvalPCGrid(handles.PCData.StrainPoints(:,:,1),handles.PCData.PCPoints(:,:,1),handles.PCData.thresh,0);
+handles.ystar = EvalPCGrid(handles.PCData.StrainPoints(:,:,2),handles.PCData.PCPoints(:,:,2),handles.PCData.thresh,0);
+handles.zstar = EvalPCGrid(handles.PCData.StrainPoints(:,:,3),handles.PCData.PCPoints(:,:,3),handles.PCData.thresh,0);
+guidata(handles.PCEdit,handles);
+UpdatePC(handles);
+GridPlotPanel_SelectionChangedFcn(handles.GridPlotPanel, eventdata, handles)
+
+% --- Executes during object creation, after setting all properties.
+function threshedit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to threshedit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end

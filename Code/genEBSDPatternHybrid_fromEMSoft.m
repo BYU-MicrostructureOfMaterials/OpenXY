@@ -37,7 +37,12 @@ anglefile= ['OpenXY_euler' num2str(ImageInd) '.txt'];  %fullfile(OpenXYPath,'tem
 [phi1,PHI,phi2]=gmat2euler(g); % in radians
 
 %Write testeuler.txt file
-fid=fopen(fullfile(EMdataPath,anglefile),'w');
+fid=fopen(fullfile(EMdataPath,anglefile),'w+');
+if fid == -1
+    disp(fullfile(EMdataPath,anglefile));
+    anglefile = ['OpenXY_euler_' num2str(randi(10000,1)) '.txt'];
+    fid = fopen(fullfile(EMdataPath,anglefile),'w+');
+end
 
 fprintf(fid,'eu\n');
 fprintf(fid,'1\n');
@@ -103,11 +108,15 @@ cd(OpenXYPath);
 %!EMEBSD EMEBSDexample.nml
 %disp(cmdout)
 %generate pic
-h5infostruct=h5info(datafilepath);
-data1=h5read(h5infostruct.Filename,'/EMData/EBSDpatterns');
 pic=zeros(numsx,numsy);
-pic(:,:)=data1(:,:,1);
-pic=flipud(pic');   % flip to correct OIM reference frame (swap TD and RD)
+if ~exist(datafilepath,'file')
+    disp(cmdout)
+else
+    h5infostruct=h5info(datafilepath);
+    data1=h5read(h5infostruct.Filename,'/EMData/EBSDpatterns');
+    pic(:,:)=data1(:,:,1);
+    pic=flipud(pic');   % flip to correct OIM reference frame (swap TD and RD)
+end
 %imagesc(pic)
 %colormap 'gray'
 delete(fullfile(EMdataPath,datafile), inputfile, fullfile(EMdataPath,anglefile));

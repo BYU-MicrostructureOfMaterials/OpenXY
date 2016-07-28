@@ -1,5 +1,6 @@
 function [orientation,tet] = CorrectPseudoSymmetry(Settings)
-
+    Settings = HREBSDPrep(Settings);
+    
     BinningScale = 1;
     lambda = 500;
     
@@ -30,25 +31,64 @@ function [orientation,tet] = CorrectPseudoSymmetry(Settings)
     SSE_corr = tet_corr;
     tet = zeros(Settings.ScanLength,3);
     
-    w = waitbar(0,'Progress');
+    %Get Inds
+    if ~isfield(Settings,'Inds')
+        Settings.Inds = (1:Settings.ScanLength)';
+    end
+    
+    %Set up parallel processing
+    Settings.DoParallel = 2;
+    if Settings.DoParallel > 1
+        ppool = gcp('nocreate');
+        if isempty(ppool)
+            parpool(Settings.DoParallel);
+        end 
+        if ~any(strcmp(javaclasspath,fullfile(pwd,'java')))
+            pctRunOnAll javaaddpath('java')
+        end
+    else
+        if ~any(strcmp(javaclasspath,fullfile(pwd,'java')))
+            javaaddpath('java')
+        end
+    end
     tic
+    
+    
+    disp('Starting cross-correlation');
+    ppm = ParforProgMon('Cross Correlation Analysis ',Settings.ScanLength,1,400,50);
+    %h = waitbar(0,'Pseudo Progress');
+    
+    %Extract variables from Settings to reduce parfor overhead
+    Inds = Settings.Inds;
+    XStar = Settings.XStar(Inds);
+    YStar = Settings.YStar(Inds);
+    ZStar = Settings.ZStar(Inds);
+    Angles = Settings.Angles(Inds,:);
+    ImNames = Settings.ImageNamesList(Inds);
+    ImageFilter = Settings.ImageFilter;
     
     %Use Tetragonality to Correct Psuedosymmetry
     for i = 1:Settings.ScanLength
         
-        ImageInd = Settings.Inds(i);
+        F = zeros(3,3,3);
+        XX = zeros(3,1);
+        MI = zeros(3,1);
+        SC = zeros(3,1);
+        SSE = zeros(3,1);
+        
+        ImageInd = Inds(i);
         
         %Get variables from Settings
-        xstar = Settings.XStar(ImageInd);
-        ystar = Settings.YStar(ImageInd);
-        zstar = Settings.ZStar(ImageInd);
+        xstar = XStar(i);
+        ystar = YStar(i);
+        zstar = ZStar(i);
         curMaterial = 'TiAl';%Settings.Phase{ImageInd};
 
         %Extract cross-correlation information
-        g = euler2gmat(Settings.Angles(ImageInd,:));
+        g = euler2gmat(Angles(i,:));
         
         %Re-read in EBSD Image
-        ScanImage = ReadEBSDImage(Settings.ImageNamesList{ImageInd},Settings.ImageFilter);
+        ScanImage = ReadEBSDImage(ImNames{i},ImageFilter);
         ScanImage = PoissonNoise(imresize(ScanImage,BinningScale),lambda);
         
         %Get other possible orientations
@@ -69,16 +109,14 @@ function [orientation,tet] = CorrectPseudoSymmetry(Settings)
         
         %Correct PseudoSymmetry
         [~,pseudo(:,:,2:3)] = GetPseudoOrientations(gr);
-        RefImage1 = genEBSDPatternHybrid_fromEMSoft(pseudo(:,:,1),xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av);
-        RefImage2 = genEBSDPatternHybrid_fromEMSoft(pseudo(:,:,2),xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av);
-        RefImage3 = genEBSDPatternHybrid_fromEMSoft(pseudo(:,:,3),xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av);
+        RefImage1 = genEBSDPatternHybrid_fromEMSoft(pseudo(:,:,1),xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av,ImageInd);
+        RefImage2 = genEBSDPatternHybrid_fromEMSoft(pseudo(:,:,2),xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av,ImageInd);
+        RefImage3 = genEBSDPatternHybrid_fromEMSoft(pseudo(:,:,3),xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av,ImageInd);
         [F(:,:,2),SSE2,XX2] = CalcF(RefImage2,ScanImage,pseudo(:,:,2),eye(3),ImageInd,Settings,curMaterial,0);
         [F(:,:,3),SSE3,XX3] = CalcF(RefImage3,ScanImage,pseudo(:,:,3),eye(3),ImageInd,Settings,curMaterial,0);
         
         %Choose orientation with lowest tetragonality
-        tet(i,1) = CalcTet(F(:,:,1));
-        tet(i,2) = CalcTet(F(:,:,2));
-        tet(i,3) = CalcTet(F(:,:,3));
+        tet(i,:) = [CalcTet(F(:,:,1)) CalcTet(F(:,:,2)) CalcTet(F(:,:,3))];
         [~,minInd] = max(tet(i,:));
         
         %if GeneralMisoCalc(pseudo(:,:,minInd),euler2gmat(CorrectAngles(ImageInd,:)),'tetragonal')>1
@@ -116,9 +154,13 @@ function [orientation,tet] = CorrectPseudoSymmetry(Settings)
         [~,minInd] = min(SSE);
         SSE_corr{i} = pseudo(:,:,minInd);
         
-        waitbar(i/(Settings.ScanLength),w);
+        ppm.increment();
+        %waitbar(i/Settings.ScanLength,h);
     end
+    assignin('base','tet_corr','tet_corr_import');
+    ppm.delete();
+    
     orientation = [tet_corr XX_corr MI_corr SC_corr SSE_corr];
     toc
-    
+    `
 end

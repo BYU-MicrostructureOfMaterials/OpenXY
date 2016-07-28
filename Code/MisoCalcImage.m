@@ -1,6 +1,6 @@
-function MisoCalcImage(g,dims)
+function MisoCalcImage(g,dims,ScanType)
 figure
-IPF_map = PlotIPF(g,dims);
+IPF_map = PlotIPF(g,dims,ScanType);
 
 redo = 1;
 while redo

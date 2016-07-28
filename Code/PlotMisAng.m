@@ -1,4 +1,7 @@
-function [MaxMisAng,MisAng] = PlotMisAng(g,dims)
+function [MaxMisAng,MisAng] = PlotMisAng(g,dims,layout)
+if nargin<3
+    layout = 'cross';
+end
 top = 1:dims(1);
 bottom = prod(dims)-dims(1)+1:prod(dims);
 left = 1:dims(1):prod(dims);
@@ -32,19 +35,49 @@ for i = 1:prod(dims)
     MisAng(i,4) = GeneralMisoCalc(g(:,:,i),g(:,:,t),'tetragonal');
     MaxMisAng(i) = max(MisAng(i,:));
 end
-map = reshape(MaxMisAng,dims(1),dims(2));
-mapr = reshape(MisAng(:,1),dims(1),dims(2));
-mapb = reshape(MisAng(:,2),dims(1),dims(2));
-mapl = reshape(MisAng(:,3),dims(1),dims(2));
-mapt = reshape(MisAng(:,4),dims(1),dims(2));
-figure
-subplot(3,3,2)
-image(mapl)
-subplot(3,3,4)
-image(mapt)
-subplot(3,3,5)
-image(map)
-subplot(3,3,6)
-image(mapb)
-subplot(3,3,8)
-image(mapr)
+map = reshape(MaxMisAng,dims(1),dims(2))';
+mapr = reshape(MisAng(:,1),dims(1),dims(2))';
+mapb = reshape(MisAng(:,2),dims(1),dims(2))';
+mapl = reshape(MisAng(:,3),dims(1),dims(2))';
+mapt = reshape(MisAng(:,4),dims(1),dims(2))';
+switch layout
+    case 'cross'
+        figure
+        subplot(3,3,2)
+        imagesc(mapl)
+        subplot(3,3,4)
+        imagesc(mapt)
+        subplot(3,3,5)
+        imagesc(map)
+        subplot(3,3,6)
+        imagesc(mapb)
+        subplot(3,3,8)
+        imagesc(mapr)
+    case 'top'
+        figure
+        imagesc(mapt)
+    case 'bottom'
+        figure
+        imagesc(mapb)
+    case 'left'
+        figure
+        image(mapl)
+    case 'right'
+        figure
+        imagesc(mapr)
+    case 'total'
+        figure
+        imagesc(map)
+    case 'all'
+        figure
+        imagesc(mapl)
+        figure
+        imagesc(mapr)
+        figure
+        imagesc(mapt)
+        figure
+        imagesc(mapb)
+        figure
+        imagesc(map)
+        
+end

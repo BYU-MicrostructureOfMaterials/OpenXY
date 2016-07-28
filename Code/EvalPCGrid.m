@@ -1,6 +1,8 @@
-function [PCopt,pp] = EvalPCGrid(strainvals,pcvals,plots)
-thresh = 5e-3;
+function [PCopt,pp] = EvalPCGrid(strainvals,pcvals,thresh,plots)
 if nargin < 3
+    thresh = 5e-1;
+end
+if nargin < 4
     plots = 1;
 end
 [numpats] = size(strainvals);
@@ -38,7 +40,7 @@ if plots
     for i=1:nlow
         plot(pcvals_filt(nn(i),:),strainvals_filt(nn(i),:),'*'); 
     end
-    plot(medianPC,thismean); ylim([0 0.01]);
+    plot(medianPC,thismean);
     plot(medianPC,PCfit,'k','LineWidth',1);
     scatter(PCopt,minstrain,'kd','MarkerFaceColor','k');
 end
