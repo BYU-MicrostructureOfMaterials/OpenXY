@@ -111,11 +111,15 @@ while morepoints
                 pos = get(main,'Position');
                 pat = figure('Position',[pos(1)+pos(3)+15 pos(2) pos(3) pos(4)]);
             end
-            if size(ImageNames,1)>1
-                pattern = ReadEBSDImage(ImageNames{ind,1},ImageFilt);
+            if ~isempty(ImageNames)
+                if size(ImageNames,1)>1
+                    pattern = ReadEBSDImage(ImageNames{ind,1},ImageFilt);
+                else
+                    pattern = ReadH5Pattern(ScanFilePath,ImageNames,...
+                        imsize,ImageFilt,ind);
+                end
             else
-                pattern = ReadH5Pattern(ScanFilePath,ImageNames,...
-                    imsize,ImageFilt,ind);
+                pattern = imread('NoImage.jpg');
             end
             imagesc(pattern); colormap gray;
             title(['CI: ' num2str(ScanData(ind,1)) ' Fit: ' num2str(ScanData(ind,2))]);
