@@ -5,6 +5,12 @@ function Settings = HREBSDPrep(Settings)
 %are the same size and square.
 fftw('planner','exhaustive');
 
+%% Orientation-based GND Option
+if strcmp(Settings.GNDMethod,'Orientation') && ~Settings.DoStrain
+    Settings.PixelSize = 0;
+    Settings.PhosphorSize = 3700;
+end
+
 %FirstPic = ReadEBSDImage(Settings.FirstImagePath,Settings.ImageFilter);
 Settings.largefftmeth = fftw('wisdom');
 %Settings.PixelSize = size(FirstPic,1);
