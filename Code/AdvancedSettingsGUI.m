@@ -22,7 +22,7 @@ function varargout = AdvancedSettingsGUI(varargin)
 
 % Edit the above text to modify the response to help AdvancedSettingsGUI
 
-% Last Modified by GUIDE v2.5 20-Jun-2016 08:19:13
+% Last Modified by GUIDE v2.5 29-Jul-2016 11:18:16
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -106,6 +106,12 @@ end
 %Min Grain Size
 set(handles.MinGrainSize,'String',num2str(Settings.MinGrainSize))
 
+%Dislocation Density Method
+GNDMethods = {'Full Cross-Correlation','Partial Cross-Correlation','Orientation-based'};
+set(handles.GNDMethod,'String',GNDMethods);
+val = find(~cellfun('isempty',strfind(GNDMethods,Settings.GNDMethod)));
+set(handles.GNDMethod,'Value',val);
+
 %Calculate Dislocation Density
 set(handles.DoDD,'Value', Settings.CalcDerivatives);
 %Number of Skip Points
@@ -167,6 +173,7 @@ handles.Settings = Settings;
 handles.GrainMap = -1;
 
 %Update Components
+GNDMethod_Callback(handles.GNDMethod, eventdata, handles)
 DoStrain_Callback(handles.DoStrain, eventdata, handles);
 GrainMethod_Callback(handles.GrainMethod, eventdata, handles);
 handles = guidata(hObject);
@@ -511,12 +518,16 @@ if get(hObject,'Value')
     set(handles.DoSplitDD,'Enable','on');
     set(handles.SkipPoints,'Enable','on');
     set(handles.IQCutoff,'Enable','on');
+    set(handles.GNDMethod,'Enable','on');
+    GNDMethod_Callback(handles.GNDMethod, eventdata, handles);
     DoSplitDD_Callback(handles.DoSplitDD, eventdata, handles);
     handles = guidata(hObject);
 else
+    set(handles.DoStrain,'Enable','on');
     set(handles.DoSplitDD,'Enable','off');
     set(handles.SkipPoints,'Enable','off');
     set(handles.IQCutoff,'Enable','off');
+    set(handles.GNDMethod,'Enable','off');
     DoSplitDD_Callback(handles.DoSplitDD, eventdata, handles);
     handles = guidata(hObject);
 end
@@ -546,8 +557,8 @@ else
     if strcmp(Settings.ScanType,'Hexagonal')
         set(hObject, 'String', round(str2double(UserInput)*2)/2);
     else
-        set(hObject, 'String', round(str2double(UserInput)));
-    end
+    set(hObject, 'String', round(str2double(UserInput)));
+end
 end
 handles.Settings.NumSkipPts = str2double(get(hObject,'String'));
 
@@ -960,9 +971,16 @@ end
 %Manually Edit Inds
 handles.GrainMap = OpenGrainMap(handles);
 ScanData = [handles.Settings.CI handles.Settings.Fit handles.Settings.IQ handles.Settings.Angles];
-RefInd = EditRefInds(handles.Settings.ScanFilePath,handles.Settings.grainID,handles.Settings.ImageNamesList,ScanData,...
+if ~isfield(handles.Settings,'ImageNamesList')
+    ImageNamesList = {};
+    imsize = [];
+else
+    ImageNamesList = handles.Settings.ImageNamesList;
+    imsize = handles.Settings.imsize;
+end
+RefInd = EditRefInds(handles.Settings.ScanFilePath,handles.Settings.grainID,ImageNamesList,ScanData,...
     [handles.Settings.Nx handles.Settings.Ny],handles.Settings.ScanType,handles.AutoRefInds,...
-    handles.Settings.imsize,handles.Settings.ImageFilter,Inds);
+    imsize,handles.Settings.ImageFilter,Inds);
 
 %Check if anything changed
 if ~strcmp(GrainRefType,'Manual') && ~all(RefInd==handles.AutoRefInds)
@@ -1003,3 +1021,43 @@ else
     GrainMap = handles.GrainMap;
 end
 set(handles.ToggleGrainMap,'Value',1,'BackgroundColor',[1 1 0])
+
+
+% --- Executes on selection change in GNDMethod.
+function GNDMethod_Callback(hObject, eventdata, handles)
+% hObject    handle to GNDMethod (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns GNDMethod contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from GNDMethod
+contents = get(hObject,'String');
+set(handles.DoStrain,'Enable','on');
+sel = contents{get(hObject,'Value')};
+switch sel
+    case 'Full Cross-Correlation'
+        handles.Settings.GNDMethod = 'Full';
+    case 'Partial Cross-Correlation'
+        handles.Settings.GNDMethod = 'Partial';
+        handles.Settings.DoStrain = 1;
+        set(handles.DoStrain,'Value',1);
+        DoStrain_Callback(handles.DoStrain, eventdata, handles);
+        set(handles.DoStrain,'Enable','off');
+    case 'Orientation-based'
+        handles.Settings.GNDMethod = 'Orientation';
+        
+end
+guidata(hObject,handles);
+
+% --- Executes during object creation, after setting all properties.
+function GNDMethod_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to GNDMethod (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
