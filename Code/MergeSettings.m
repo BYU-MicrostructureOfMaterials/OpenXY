@@ -66,6 +66,7 @@ copyParam('GrainMethod',{'Grain File','Find Grains'});
 copyParam('MinGrainSize');
 
 %Dislocation Density Settings
+copyParam('GNDMethod',{'Full','Partial','Orientation'});
 copyParam('CalcDerivatives');
 copyParam('DoDDS');
 copyParam('NumSkipPts');
