@@ -175,7 +175,12 @@ if Settings.CalcDerivatives
     VaryStepSizeI = Settings.NumSkipPts;
     
     if Settings.DisplayGUI; disp('Starting Dislocation Density Calculation'); end;
-    DislocationDensityCalculate(Settings,MaxMisorientation,IQcutoff,VaryStepSizeI)
+    if strcmp(Settings.GNDMethod,'Orientation')
+        alpha_data = GNDfromOIM(Settings);
+        save(SaveFile ,'alpha_data','-append'); 
+    else
+        DislocationDensityCalculate(Settings,MaxMisorientation,IQcutoff,VaryStepSizeI)
+    end
     
     % Split Dislocation Density (Code by Tim Ruggles, added 3/5/2015)
     if Settings.DoDDS
