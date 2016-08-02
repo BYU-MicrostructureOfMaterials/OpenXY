@@ -212,11 +212,11 @@ for i = 1:m-skip
         if numpts>0
             quat=[];
             for k=1:numpts
-                quat=[quat gmat2quat(squeeze(misoave(k,:,:)))];% put misorientation matrix into quaternion space to average
+                quat=[quat rmat2quat(squeeze(misoave(k,:,:)))];% put misorientation matrix into quaternion space to average
             end
             avg = sum(quat,2)/numpts;
             avg = avg/norm(avg);
-            R=quat2gmat(avg);
+            R=quat2rmat(avg);
             
             betaderiv2(:,:,i,j) = (R - eye(3))/(-stepsize*(1+skip));% this is the elastic distortion derivative in the 2-direction
         else
@@ -276,11 +276,11 @@ for i = 1:m-skip
         if numpts>0
             quat=[];
             for k=1:numpts
-                quat=[quat gmat2quat(squeeze(misoave(k,:,:)))]; % put misorientation matrix into quaternion space to average
+                quat=[quat rmat2quat(squeeze(misoave(k,:,:)))]; % put misorientation matrix into quaternion space to average
             end
             avg = sum(quat,2)/numpts;
             avg = avg/norm(avg);
-            R=quat2gmat(avg);
+            R=quat2rmat(avg);
             betaderiv1(:,:,i,j) = (R - eye(3))/(stepsize*(1+skip)); % this is the elastic distortion derivative in the 1-direction
         else
             betaderiv1(:,:,i,j) = zeros(3);

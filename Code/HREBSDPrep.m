@@ -16,9 +16,6 @@ Settings.largefftmeth = fftw('wisdom');
 %Settings.PixelSize = size(FirstPic,1);
 Settings.ROISize = round((Settings.ROISizePercent * .01)*Settings.PixelSize);
 
-%% Add Sub-folder(s)
-addpath('DDS');
-
 %% EMSoft Setup
 if strcmp(Settings.HROIMMethod,'Dynamic Simulated')
     %Check Path

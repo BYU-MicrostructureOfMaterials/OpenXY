@@ -80,11 +80,13 @@ if ~strcmp(pwd,XYpath)
     path(p);
 end
 addpath(genpath(XYpath));
+addpath('quaternions')
+addpath('DDS')
 
 %Add sub folder(s)
 if ~exist('temp','dir')
     mkdir('temp');
-end 
+end
 
 
 % Check for Required Matlab Toolboxes
