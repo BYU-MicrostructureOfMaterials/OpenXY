@@ -43,6 +43,7 @@ Settings.GrainMethod = 'Grain File'; %{'Grain File','Find Grains'}
 Settings.MinGrainSize = 0;
 %Dislocation Density Settings
 Settings.CalcDerivatives = false;
+Settings.GNDMethod = 'Full'; %{'Full','Partial','Orientation'}
 Settings.NumSkipPts = 0;
 Settings.IQCutoff = 0;
 %Split Dislocation Density

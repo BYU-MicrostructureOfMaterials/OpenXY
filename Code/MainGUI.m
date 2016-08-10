@@ -149,6 +149,11 @@ else
 end
 ProcessorsPopup_Callback(handles.ProcessorsPopup,eventdata,handles);
 
+%Orientation-based GND
+if strcmp(handles.Settings.GNDMethod,'Orientation') && ~handles.Settings.DoStrain
+    handles.ImageLoaded = true;
+end
+
 %Files
 [fpath,name,ext] = fileparts(handles.Settings.ScanFilePath);
 if strcmp(ext,'.h5'); filterind = 2; else filterind = 1; end;
@@ -626,11 +631,15 @@ function AdvancedSettings_Callback(hObject, eventdata, handles)
 % hObject    handle to AdvancedSettings (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-if handles.ScanFileLoaded && handles.ImageLoaded
+if handles.ScanFileLoaded
     handles.Settings = AdvancedSettingsGUI(handles.Settings,get(handles.MainGUI,'Position'));
 else
-    warndlg({'Cannot open ROI Settings menu'; 'Must select scan file data and first image'},'OpenXY: Invalid Operation');
+    warndlg({'Cannot open Advanced Settings menu'; 'Must select scan file data.'},'OpenXY: Invalid Operation');
 end
+if strcmp(handles.Settings.GNDMethod,'Orientation') && ~handles.Settings.DoStrain
+    handles.ImageLoaded = true;
+end
+enableRunButton(handles)
 guidata(hObject,handles);
 
 % --------------------------------------------------------------------

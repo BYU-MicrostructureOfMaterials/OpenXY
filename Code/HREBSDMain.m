@@ -27,7 +27,7 @@ end
 
 %Initialize Variables
 F = repmat({zeros(3)},1,Settings.ScanLength);
-g = repmat({zeros(3)},1,Settings.ScanLength);
+g = zeros(3,3,Settings.ScanLength);
 U = repmat({zeros(3)},1,Settings.ScanLength);
 SSE = repmat({0},1,Settings.ScanLength);
 XX = repmat({zeros(Settings.NumROIs,3)},1,Settings.ScanLength);
@@ -59,7 +59,7 @@ if Settings.DoParallel > 1
         %or a structure F.a F.b F.c of deformation gradient tensors for
         %each point in the L grid
         
-        [F{ImageInd}, g{ImageInd}, U{ImageInd}, SSE{ImageInd}, XX{ImageInd}] = ...
+        [F{ImageInd}, g(:,:,ImageInd), U{ImageInd}, SSE{ImageInd}, XX{ImageInd}] = ...
             GetDefGradientTensor(Inds(ImageInd),Settings,Settings.Phase{ImageInd});
         
         %{
@@ -82,7 +82,7 @@ else
         %         tic
 %         disp(ImageInd)
         
-        [F{ImageInd}, g{ImageInd}, U{ImageInd}, SSE{ImageInd}, XX{ImageInd}] = ...
+        [F{ImageInd}, g(:,:,ImageInd), U{ImageInd}, SSE{ImageInd}, XX{ImageInd}] = ...
             GetDefGradientTensor(Inds(ImageInd),Settings,Settings.Phase{ImageInd});
         
         % commented out this (outputs strain matrix - I think - DTF 5/15/14)
@@ -102,6 +102,8 @@ else
 end
 Time = toc/60;
 if Settings.DisplayGUI; disp(['Time to finish: ' num2str(Time) ' minutes']); end;
+else
+   g = euler2gmat(Settings.Angles);
 end
 
 %% Save output and write to .ang file
@@ -129,14 +131,13 @@ for jj = 1:Settings.ScanLength
         data.Fc{jj} = F{jj}.c;
     else
         
-        [phi1 PHI phi2] = gmat2euler(g{jj});
+        [phi1 PHI phi2] = gmat2euler(g(:,:,jj));
         Settings.SSE{jj} = SSE{jj};
-        Settings.g{jj} = g{jj};
         data.SSE{jj} = SSE{jj};
         data.F{jj} = F{jj};
-        data.phi1rn{jj} = phi1;
-        data.PHIrn{jj} = PHI;
-        data.phi2rn{jj} = phi2;
+        data.phi1rn(jj) = phi1;
+        data.PHIrn(jj) = PHI;
+        data.phi2rn(jj) = phi2;
         
     end
     
@@ -175,7 +176,12 @@ if Settings.CalcDerivatives
     VaryStepSizeI = Settings.NumSkipPts;
     
     if Settings.DisplayGUI; disp('Starting Dislocation Density Calculation'); end;
-    DislocationDensityCalculate(Settings,MaxMisorientation,IQcutoff,VaryStepSizeI)
+    if strcmp(Settings.GNDMethod,'Orientation')
+        alpha_data = GNDfromOIM(Settings);
+        save(SaveFile ,'alpha_data','-append'); 
+    else
+        DislocationDensityCalculate(Settings,MaxMisorientation,IQcutoff,VaryStepSizeI)
+    end
     
     % Split Dislocation Density (Code by Tim Ruggles, added 3/5/2015)
     if Settings.DoDDS
