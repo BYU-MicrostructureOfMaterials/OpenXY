@@ -161,6 +161,12 @@ for i=1:length(roixc)
     
     rrange=round(rc-Settings.ROISize/2):round(rc-Settings.ROISize/2)+Settings.ROISize-1;
     crange=round(cc-Settings.ROISize/2):round(cc-Settings.ROISize/2)+Settings.ROISize-1;
+    
+    if any(rrange>Settings.PixelSize)
+        rrange = rrange - (rrange(end)-Settings.PixelSize);
+    elseif any(rrange<0)
+        rrange = rrange - rrange(1);
+    end
     %
     %     if method == 1% method = 0 was just for testing and as not used here.
     
