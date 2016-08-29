@@ -388,21 +388,21 @@ alpha_data.stepsizec=stepsizec;
 alpha_data.b=b(Inds);
 alpha_data.NumInds = NumInds;
 
-if special==1
-    disp('special')
-    disp(num2str(stepsizea))
-    Settings.OutputPath=[AnalysisParamsPath(1:end-8),'Skip',num2str(skippts),'.ang.mat']; 
-    save(Settings.OutputPath,'Settings');
-    save(Settings.OutputPath ,'alpha_data','-append'); 
-elseif strcmp(Settings.ScanType,'LtoSquare')
-    disp('LtoSquare')
-    Settings.OutputPath=[AnalysisParamsPath(1:end-8),'LtoSquare.ang.mat'];
-    save(Settings.OutputPath ,'Settings');     
-    save(Settings.OutputPath ,'alpha_data','-append'); 
-else
-    disp('Normal Norman')
-    save(AnalysisParamsPath ,'alpha_data','-append'); 
-end
+% if special==1
+%     disp('special')
+%     disp(num2str(stepsizea))
+%     Settings.OutputPath=[AnalysisParamsPath(1:end-8),'Skip',num2str(skippts),'.ang.mat']; 
+%     save(Settings.OutputPath,'Settings');
+%     save(Settings.OutputPath ,'alpha_data','-append'); 
+% elseif strcmp(Settings.ScanType,'LtoSquare')
+%     disp('LtoSquare')
+%     Settings.OutputPath=[AnalysisParamsPath(1:end-8),'LtoSquare.ang.mat'];
+%     save(Settings.OutputPath ,'Settings');     
+%     save(Settings.OutputPath ,'alpha_data','-append'); 
+% else
+%     disp('Normal Norman')
+%     save(AnalysisParamsPath ,'alpha_data','-append'); 
+% end
     
 % pgnd=logspace(11,17);
 % Lupper=1./sqrt(pgnd);
@@ -586,12 +586,12 @@ function [AllFa,AllSSEa,AllFc,AllSSEc, misanglea, misanglec] = DDCalc(RefInd,Ref
     end
 end
 
-function [AllFa,AllFc,misanglea,misanglec] = DDCalcEasy(DDSettings,lattice, Settings)
+function [AllFa,AllFc,misanglea,misanglec] = DDCalcEasy(RefInd,RefG,lattice, Settings)
 
     
     skippts = Settings.NumSkipPts;
     
-    %Check Pattern Source
+%     %Check Pattern Source
     H5Images = false;
     if size(Settings.ImageNamesList,1)==1
         H5Images = true;
@@ -601,31 +601,50 @@ function [AllFa,AllFc,misanglea,misanglec] = DDCalcEasy(DDSettings,lattice, Sett
     %Extract Dim variables
     r = Settings.data.rows;%
     
+%     %Extract Variables ***DTF commented these out and swapped for next
+%     lines due to errors in program - possibly I don't have updated code
+%     ***
+%     RefIndA = DDSettings{1,1};
+%     cnt = DDSettings{1,2};
+%     RefIndC = DDSettings{1,3};
+%     
+%     Amat = DDSettings{2,1};
+%     g_b = DDSettings{2,2};
+%     Cmat = DDSettings{2,3};
+    
     %Extract Variables 
-    RefIndA = DDSettings{1,1};
-    cnt = DDSettings{1,2};
-    RefIndC = DDSettings{1,3};
+    RefIndA = RefInd(1);
+    cnt = RefInd(2);
+    RefIndC = RefInd(3);
     
-    Amat = DDSettings{2,1};
-    g_b = DDSettings{2,2};
-    Cmat = DDSettings{2,3};
+    Amat = RefG(:,:,1);
+    g_b = RefG(:,:,2);
+    Cmat = RefG(:,:,3);
     
-    if size(DDSettings,2) > 3
+%     if size(DDSettings,2) > 3
+%         RefIndA1 = RefIndA;
+%         RefIndA2 = DDSettings{2,4};       
+%     end
+    
+    if size(RefInd) > 3
         RefIndA1 = RefIndA;
-        RefIndA2 = DDSettings{2,4};       
+        RefIndA2 = RefInd(4);       
     end
     
-    misanglea=GeneralMisoCalc(g_b,Amat,lattice);
+    misanglea=GeneralMisoCalc(g_b,Amat,lattice); %need to check the second A-point if hexagonal scan grid***
     misanglec=GeneralMisoCalc(g_b,Cmat,lattice);
     
-    Fbinv = inv(Settings.data.F{cnt});
+    Fbinv = inv(g_b'*Settings.data.F{cnt}*g_b); % in sample frame
+%      Fbinv = inv(Settings.data.F{cnt}); % in crystal frame
     % first, evaluate point a
     if r > 1 %Not Line Scan
         if ~strcmp(Settings.ScanType,'Hexagonal') || (strcmp(Settings.ScanType,'Hexagonal') && skippts>0)
-            AllFa = Settings.data.F{RefIndA}*Fbinv;
+            AllFa = g_b*Amat'*Settings.data.F{RefIndA}*Amat*Fbinv*g_b'; %put Fa in sample frame, then put the whole thing back in crystal
+%             AllFa = Settings.data.F{RefIndA}*Fbinv; %leave in crystal
         else
-            AllFa1 = Settings.data.F{RefIndA1}*Fbinv;
-            AllFa2 = Settings.data.F{RefIndA2}*Fbinv;
+            Amat2=euler2gmat(Settings.data.NewAngles(RefIndA2,1),Settings.data.NewAngles(RefIndA2,2),Settings.data.NewAngles(RefIndA2,3));
+            AllFa1 = g_b*Amat'*Settings.data.F{RefIndA1}*Amat*Fbinv*g_b';
+            AllFa2 = g_b*Amat2'*Settings.data.F{RefIndA2}*Amat2*Fbinv*g_b';
             AllFa=0.5*(AllFa1+AllFa2);
         end
 
@@ -639,7 +658,8 @@ function [AllFa,AllFc,misanglea,misanglec] = DDCalcEasy(DDSettings,lattice, Sett
         AllFa= -eye(3);
     end
     % then, evaluate point c
-    AllFc = Settings.data.F{RefIndC}*Fbinv;
+    AllFc = g_b*Cmat'*Settings.data.F{RefIndC}*Cmat*Fbinv*g_b'; %sample then back to crystal
+%     AllFc = Settings.data.F{RefIndC}*Fbinv; %crystal
 
 
 end

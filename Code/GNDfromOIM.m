@@ -4,10 +4,10 @@ function alpha_data = GNDfromOIM(datain)
 %
 %Calculates the nye tensor and total GND for each point in the scan using
 %orientations. Options to skip a specific number of points and average the
-%orientation using the surrounding points. 
+%orientation using the surrounding points.
 %
 %By default the Nye tensor is calculated using the misorientation between b
-%and c, and b and c. 
+%and c, and b and c.
 %
 %With smoothing, all of the surround points are used and averaged.
 %
@@ -50,6 +50,9 @@ if matorang
         nphi1 = real(cell2mat(Settings.data.phi1rn));
         nPHI =  real(cell2mat(Settings.data.PHIrn));
         nphi2 =  real(cell2mat(Settings.data.phi2rn));
+        %          nphi1 = Settings.Angles(:,1);
+        %         nPHI =  Settings.Angles(:,2);
+        %         nphi2 =  Settings.Angles(:,3);
     else
         nphi1 = real((Settings.data.phi1rn));
         nPHI =  real((Settings.data.PHIrn));
@@ -62,7 +65,11 @@ if matorang
     YData = Settings.YData;
     CI = Settings.CI;
     Fit = Settings.Fit;
-    M=ReadMaterial(cell2mat(Settings.Phase(1)));
+    if isfield(Settings,'Phase')
+        M=ReadMaterial(cell2mat(Settings.Phase(1)));
+    else
+        M=ReadMaterial(Settings.Material);
+    end
     lattype=M.lattice;
     bavg=M.Burgers;
     maxmiso=Settings.MisoTol;
@@ -117,7 +124,7 @@ if n*m>length(IQ) % assume hex scan in this case*******only temporary and not ac
     ysq = Hex2Array(YData,ncolodd,ncoleven);
     iqRS = Hex2Array(IQ,ncolodd,ncoleven);
     [m,n]=size(iqRS);
-else   
+else
     xsq = reshape(XData,n,m)';
     ysq = reshape(YData,n,m)';
     nphi1 = reshape(nphi1,n,m)';
@@ -137,12 +144,12 @@ for i=1:m-skip-1    % work out all misorientations between points and right (cmi
     for j=1:n-skip-1
         thisg = euler2gmat(nphi1(i,j),nPHI(i,j),nphi2(i,j));
         thisa = euler2gmat(nphi1(i+1+skip,j),nPHI(i+1+skip,j),nphi2(i+1+skip,j)); % -y goes with i
-        [angle,Axis,deltaG]=GeneralMisoCalc(thisg,thisa,lattype);
+        [angle,Axis,deltaG]=GeneralMisoCalcSym(thisg,thisa,lattype);
         aangle(i,j) = angle;
-        amiso(:,:,i,j) = thisg'*(deltaG)*thisg;
+        amiso(:,:,i,j) = (thisg'*(deltaG)*thisg)'; % transpose since it should be active rather than passive rotation
         thisc = euler2gmat(nphi1(i,j+1+skip),nPHI(i,j+1+skip),nphi2(i,j+1+skip));
-        [angle,Axis,deltaG]=GeneralMisoCalc(thisg,thisc,lattype);
-        cmiso(:,:,i,j) = thisg'*(deltaG)*thisg;
+        [angle,Axis,deltaG]=GeneralMisoCalcSym(thisg,thisc,lattype);
+        cmiso(:,:,i,j) = (thisg'*(deltaG)*thisg)';
         cangle(i,j) = angle;
     end
 end
@@ -216,7 +223,7 @@ for i = 1:m-skip
             end
             avg = sum(quat,2)/numpts;
             avg = avg/norm(avg);
-            R=quat2rmat(avg);
+            R=quat2rmat(avg)'; % transpose because for some reason sending to quaternion space and pack transposes it
             
             betaderiv2(:,:,i,j) = (R - eye(3))/(-stepsize*(1+skip));% this is the elastic distortion derivative in the 2-direction
         else
@@ -280,7 +287,7 @@ for i = 1:m-skip
             end
             avg = sum(quat,2)/numpts;
             avg = avg/norm(avg);
-            R=quat2rmat(avg);
+            R=quat2rmat(avg)';
             betaderiv1(:,:,i,j) = (R - eye(3))/(stepsize*(1+skip)); % this is the elastic distortion derivative in the 1-direction
         else
             betaderiv1(:,:,i,j) = zeros(3);

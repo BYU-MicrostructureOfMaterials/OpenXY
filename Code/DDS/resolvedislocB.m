@@ -61,8 +61,6 @@ if L1
             error('only types 1-3 defined')
     end
 
-    %options = optimset('TolCon', 1e3, 'Algorithm', 'active-set', 'display','off');%'MaxFunEvals',3000, 
-    options = optimoptions(@linprog,'Algorithm', 'interior-point', 'display','off','OptimalityTolerance',1e3);
     
     if x0type
         x0 = A\alphavec;
@@ -70,9 +68,12 @@ if L1
         x0 = zeros(length(minimizer),1);
     end
 
+    options = optimoptions('linprog', 'Algorithm', 'dual-simplex','MaxIter',2000, 'Display', 'off', 'TolFun', .1, 'TolCon', 1e-3);
     rhopm = linprog(minimizer,[],[],A,alphavec,zeros(2*ntypes,1),1e16*ones(2*ntypes,1), x0, options);
 
-
+    if isempty(rhopm)
+        rhopm = zeros(size(minimizer));
+    end
     
     
 else
@@ -80,4 +81,9 @@ else
 
 end
 
+
 rho = rhopm(1:ntypes) - rhopm(ntypes+1:2*ntypes);
+
+
+
+

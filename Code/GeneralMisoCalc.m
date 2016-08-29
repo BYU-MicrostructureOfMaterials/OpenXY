@@ -37,6 +37,7 @@ deltaG = A*B';
 Axis(1) = 0;
 Axis(2) = 0;
 Axis(3) = 0;
+gMx=zeros(3);
 
 for i = 1:length(SymOps(:,1,1))
     sym(:,:) = SymOps(i,:,:);
