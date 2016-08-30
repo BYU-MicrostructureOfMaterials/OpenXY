@@ -50,7 +50,12 @@ if ~exist(ImagePath,'file')
 end
 
 %disp(['Reading: ' ImagePath])
-Image = imread(ImagePath);
+try
+    Image = imread(ImagePath);
+catch
+    Image = [];
+    disp(['Error reading : ' ImagePath])
+end
 %disp(['Success: ' ImagePath])
 Image = single(Image);
 if ndims(Image) == 3

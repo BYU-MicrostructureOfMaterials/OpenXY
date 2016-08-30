@@ -1,13 +1,13 @@
-function alpha_data = GNDfromOIM(datain)
+function alpha_data = GNDfromOIM(datain,bavg,lattice,maxmiso)
 %GNDfromOIM
 %alpha_data = GNDfromOIM(datain)
 %
 %Calculates the nye tensor and total GND for each point in the scan using
 %orientations. Options to skip a specific number of points and average the
-%orientation using the surrounding points.
+%orientation using the surrounding points. 
 %
 %By default the Nye tensor is calculated using the misorientation between b
-%and c, and b and c.
+%and c, and b and c. 
 %
 %With smoothing, all of the surround points are used and averaged.
 %
@@ -29,15 +29,19 @@ function alpha_data = GNDfromOIM(datain)
 %DTF May 3 2016
 %Edited by BEJ July 2016
 
+% 8/3/2016 58 seconds
+
+
+%Handle inputs
 if nargin == 1
-    matorang = isstruct(datain);
-    if matorang
+    ismat = isstruct(datain);
+    if ismat
         Settings = datain;
         clear datain;
     end
 else
-    matorang=input('.mat file (1) or .ang file (0)? ');
-    if matorang
+    ismat=input('.mat file (1) or .ang file (0)? ');
+    if ismat
         [picname, picpath] = uigetfile('*.mat','AnalysisParams(.mat) file');
         temp = load([picpath picname]);
         Settings = temp.Settings;
@@ -45,100 +49,71 @@ else
     end
 end
 
-if matorang
-    if iscell(Settings.data.phi1rn)==1
-        nphi1 = real(cell2mat(Settings.data.phi1rn));
-        nPHI =  real(cell2mat(Settings.data.PHIrn));
-        nphi2 =  real(cell2mat(Settings.data.phi2rn));
-        %          nphi1 = Settings.Angles(:,1);
-        %         nPHI =  Settings.Angles(:,2);
-        %         nphi2 =  Settings.Angles(:,3);
+%Read in Scan File
+if ~ismat
+    [FileName, FilePath] = uigetfile('*.ang','OIM .ang file');
+    Settings = GetHROIMDefaultSettings;
+    Settings = ImportScanInfo(Settings,FileName,FilePath);
+end
+    
+
+% Read Data from Settings
+if isfield(Settings,'data')
+    Angles = Settings.NewAngles;
     else
-        nphi1 = real((Settings.data.phi1rn));
-        nPHI =  real((Settings.data.PHIrn));
-        nphi2 =  real((Settings.data.phi2rn));
+    Angles = Settings.Angles;
     end
-    n = Settings.data.cols;
-    m = Settings.data.rows;
-    IQ = cell2mat(Settings.data.IQ);
+n = Settings.Nx;
+m = Settings.Ny;
+IQ = Settings.IQ;
     XData = Settings.XData;
     YData = Settings.YData;
-    CI = Settings.CI;
-    Fit = Settings.Fit;
-    if isfield(Settings,'Phase')
-        M=ReadMaterial(cell2mat(Settings.Phase(1)));
-    else
-        M=ReadMaterial(Settings.Material);
-    end
+M = ReadMaterial(Settings.Phase{1});
     lattype=M.lattice;
     bavg=M.Burgers;
     maxmiso=Settings.MisoTol;
     ScanLength=m*n;
     stepsize = (XData(3)-XData(2))*1e-6;    %***** can ystep be different?????
-else
-    if nargin == 1
-        ScanFileData = ReadAngFile(datain);
-    else
-        ScanFileData = ReadAngFile;
-    end
-    bavg=input('What is the average Burgers vector length? (SI units): ');
-    lt=input('Is lattice hexagonal (1) or cubic (2)?: ');
-    if (lt==1)
-        lattype = 'hexagonal';
-    else
-        lattype = 'cubic';
-    end
-    maxmiso=input('What is the maximum misorientation (degrees) for valid GND calculations (e.g. 5)? ');
-    ScanLength = size(ScanFileData{1},1);
-    % nphi1 = zeros(ScanLength,1);
-    % nPHI=nphi1;
-    % nphi2=nphi1;
-    % XData = zeros(ScanLength,1);
-    % YData = zeros(ScanLength,1);
-    % IQ = zeros(ScanLength,1);
-    % CI = zeros(ScanLength,1);
-    % Fit = zeros(ScanLength,1);
     
-    %Read ScanFile Data into Settings
-    nphi1 = ScanFileData{1};
-    nPHI = ScanFileData{2};
-    nphi2 = ScanFileData{3};
-    XData = ScanFileData{4};
-    YData = ScanFileData{5};
-    IQ = ScanFileData{6};
-    CI = ScanFileData{7};
-    Fit = ScanFileData{10};
+AngMap = vec2map(Angles,n,Settings.ScanType);
+XMap = vec2map(Angles,n,Settings.ScanType);
+YMap = vec2map(Angles,n,Settings.ScanType);
+IQMap = vec2map(IQ,n,Settings.ScanType);
     
-    n = length(unique(XData));
-    m = length(unique(YData));
-    stepsize = (XData(3) - XData(2))*1e-6;
-end
-
-if n*m>length(IQ) % assume hex scan in this case*******only temporary and not accurate - needs to account for shifted columns
+if strcmp(Settings.ScanType,'Hexagonal')
     ncolodd=floor(n/2)+1;
     ncoleven=ncolodd-1;
-    nphi1 = Hex2Array(nphi1,ncolodd,ncoleven);
-    nPHIrnsq = Hex2Array(nPHI,ncolodd,ncoleven);
-    nphi2 = Hex2Array(nphi2,ncolodd,ncoleven);
+    nphi1 = Hex2Array(Angles(:,1),ncolodd,ncoleven);
+    nPHI = Hex2Array(Angles(:,2),ncolodd,ncoleven);
+    nphi2 = Hex2Array(Angles(:,3),ncolodd,ncoleven);
     xsq = Hex2Array(XData,ncolodd,ncoleven);
     ysq = Hex2Array(YData,ncolodd,ncoleven);
     iqRS = Hex2Array(IQ,ncolodd,ncoleven);
     [m,n]=size(iqRS);
-else
+else   
     xsq = reshape(XData,n,m)';
     ysq = reshape(YData,n,m)';
-    nphi1 = reshape(nphi1,n,m)';
-    nPHI = reshape(nPHI,n,m)';
-    nphi2 = reshape(nphi2,n,m)';
+    nphi1 = reshape(Angles(:,1),n,m)';
+    nPHI = reshape(Angles(:,2),n,m)';
+    nphi2 = reshape(Angles(:,3),n,m)';
     iqRS = reshape(IQ,n,m)';
 end
 
 smooth = 0;
 skip = 0;
+
 aangle = zeros(m-skip-1,n-skip-1);
 cangle = aangle;
 amiso = zeros(3,3,m-skip-1,n-skip-1);
 cmiso = amiso;
+
+
+[RefIndA,RefIndC] = GetAdjacentInds([n,m],1:ScanLength,skip,Settings.ScanType);
+q = euler2quat(Angles);
+q_symops = rmat2quat(permute(gensymopsHex,[3 2 1]));
+[misoa,~,~,deltaa] = quatMisoSym(q,q(RefIndA,:),q_symops,'element');
+[misob,~,~,deltab] = quatMisoSym(q,q(RefIndA,:),q_symops,'element');
+
 
 for i=1:m-skip-1    % work out all misorientations between points and right (cmiso) and down (amiso) neighbors
     for j=1:n-skip-1
@@ -154,11 +129,23 @@ for i=1:m-skip-1    % work out all misorientations between points and right (cmi
     end
 end
 
-%              AC - A - Ac
+
+%
+%              aC - a - ac
 %               |   |   |
 %               C - b - c
 %               |   |   |
-%              aC - a - ac
+%              AC - A - Ac
+
+Ind = (1:ScanLength)';
+Ind = vec2map(Ind,n,Settings.ScanType);
+
+toprow = Ind<=n*(skippts+1);
+botrow = Ind<ScanLength-n*(skippts+1);
+rightside = mod(Ind,n)==0 | (n-mod(Ind,n))<=skippts;
+leftside = mod(Ind,n)<=skippts+1;
+
+
 
 betaderiv1 = zeros(3,3,m,n);
 betaderiv2 = betaderiv1;
@@ -221,7 +208,7 @@ for i = 1:m-skip
             for k=1:numpts
                 quat=[quat rmat2quat(squeeze(misoave(k,:,:)))];% put misorientation matrix into quaternion space to average
             end
-            avg = sum(quat,2)/numpts;
+            avg = sum(quat,1)/numpts;
             avg = avg/norm(avg);
             R=quat2rmat(avg)'; % transpose because for some reason sending to quaternion space and pack transposes it
             
@@ -285,7 +272,7 @@ for i = 1:m-skip
             for k=1:numpts
                 quat=[quat rmat2quat(squeeze(misoave(k,:,:)))]; % put misorientation matrix into quaternion space to average
             end
-            avg = sum(quat,2)/numpts;
+            avg = sum(quat,1)/numpts;
             avg = avg/norm(avg);
             R=quat2rmat(avg)';
             betaderiv1(:,:,i,j) = (R - eye(3))/(stepsize*(1+skip)); % this is the elastic distortion derivative in the 1-direction
@@ -309,9 +296,9 @@ alpha(2,1,:,:)=-1*betaderiv2(2,3,:,:)/bavg; % alpha(2,1)
 alpha(3,1,:,:)=-1*betaderiv2(3,3,:,:)/bavg; % alpha(3,1)
 
 % Calculate 3 possible L1 norms of Nye tensor for total disloction density
-alpha_total3(:,:)=3.*(abs(alpha(1,3,:,:))+abs(alpha(2,3,:,:))+abs(alpha(3,3,:,:)));
-alpha_total5(:,:)=9/5.*(abs(alpha(1,3,:,:))+abs(alpha(2,3,:,:))+abs(alpha(3,3,:,:))+abs(alpha(2,1,:,:))+abs(alpha(1,2,:,:)));
-alpha_total9(:,:)=abs(alpha(1,3,:,:))+abs(alpha(2,3,:,:))+abs(alpha(3,3,:,:))+abs(alpha(1,1,:,:))+abs(alpha(2,1,:,:))+abs(alpha(3,1,:,:))+abs(alpha(1,2,:,:))+abs(alpha(2,2,:,:))+abs(alpha(3,2,:,:));
+alpha_total3(:,:)=30/10.*(abs(alpha(1,3,:,:))+abs(alpha(2,3,:,:))+abs(alpha(3,3,:,:)));
+alpha_total5(:,:)=30/14.*(abs(alpha(1,3,:,:))+abs(alpha(2,3,:,:))+abs(alpha(3,3,:,:))+abs(alpha(2,1,:,:))+abs(alpha(1,2,:,:)));
+alpha_total9(:,:)=30/20.*abs(alpha(1,3,:,:))+abs(alpha(2,3,:,:))+abs(alpha(3,3,:,:))+abs(alpha(1,1,:,:))+abs(alpha(2,1,:,:))+abs(alpha(3,1,:,:))+abs(alpha(1,2,:,:))+abs(alpha(2,2,:,:))+abs(alpha(3,2,:,:));
 
 alpha_data.alpha = alpha;
 alpha_data.alpha_total3 = alpha_total3;
