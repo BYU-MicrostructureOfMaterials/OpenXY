@@ -1,4 +1,4 @@
-function alpha_data = GNDfromOIM(datain)
+function alpha_data = GNDfromOIM(datain,bavg,lattice,maxmiso)
 %GNDfromOIM
 %alpha_data = GNDfromOIM(datain)
 %
@@ -29,15 +29,19 @@ function alpha_data = GNDfromOIM(datain)
 %DTF May 3 2016
 %Edited by BEJ July 2016
 
+% 8/3/2016 58 seconds
+
+
+%Handle inputs
 if nargin == 1
-    matorang = isstruct(datain);
-    if matorang
+    ismat = isstruct(datain);
+    if ismat
         Settings = datain;
         clear datain;
     end
 else
-    matorang=input('.mat file (1) or .ang file (0)? ');
-    if matorang
+    ismat=input('.mat file (1) or .ang file (0)? ');
+    if ismat
         [picname, picpath] = uigetfile('*.mat','AnalysisParams(.mat) file');
         temp = load([picpath picname]);
         Settings = temp.Settings;
@@ -45,74 +49,43 @@ else
     end
 end
 
-if matorang
-    if iscell(Settings.data.phi1rn)==1
-        nphi1 = real(cell2mat(Settings.data.phi1rn));
-        nPHI =  real(cell2mat(Settings.data.PHIrn));
-        nphi2 =  real(cell2mat(Settings.data.phi2rn));
-    else
-        nphi1 = real((Settings.data.phi1rn));
-        nPHI =  real((Settings.data.PHIrn));
-        nphi2 =  real((Settings.data.phi2rn));
-    end
-    n = Settings.data.cols;
-    m = Settings.data.rows;
-    IQ = cell2mat(Settings.data.IQ);
-    XData = Settings.XData;
-    YData = Settings.YData;
-    CI = Settings.CI;
-    Fit = Settings.Fit;
-    M=ReadMaterial(cell2mat(Settings.Phase(1)));
-    lattype=M.lattice;
-    bavg=M.Burgers;
-    maxmiso=Settings.MisoTol;
-    ScanLength=m*n;
-    stepsize = (XData(3)-XData(2))*1e-6;    %***** can ystep be different?????
-else
-    if nargin == 1
-        ScanFileData = ReadAngFile(datain);
-    else
-        ScanFileData = ReadAngFile;
-    end
-    bavg=input('What is the average Burgers vector length? (SI units): ');
-    lt=input('Is lattice hexagonal (1) or cubic (2)?: ');
-    if (lt==1)
-        lattype = 'hexagonal';
-    else
-        lattype = 'cubic';
-    end
-    maxmiso=input('What is the maximum misorientation (degrees) for valid GND calculations (e.g. 5)? ');
-    ScanLength = size(ScanFileData{1},1);
-    % nphi1 = zeros(ScanLength,1);
-    % nPHI=nphi1;
-    % nphi2=nphi1;
-    % XData = zeros(ScanLength,1);
-    % YData = zeros(ScanLength,1);
-    % IQ = zeros(ScanLength,1);
-    % CI = zeros(ScanLength,1);
-    % Fit = zeros(ScanLength,1);
-    
-    %Read ScanFile Data into Settings
-    nphi1 = ScanFileData{1};
-    nPHI = ScanFileData{2};
-    nphi2 = ScanFileData{3};
-    XData = ScanFileData{4};
-    YData = ScanFileData{5};
-    IQ = ScanFileData{6};
-    CI = ScanFileData{7};
-    Fit = ScanFileData{10};
-    
-    n = length(unique(XData));
-    m = length(unique(YData));
-    stepsize = (XData(3) - XData(2))*1e-6;
+%Read in Scan File
+if ~ismat
+    [FileName, FilePath] = uigetfile('*.ang','OIM .ang file');
+    Settings = GetHROIMDefaultSettings;
+    Settings = ImportScanInfo(Settings,FileName,FilePath);
 end
+    
 
-if n*m>length(IQ) % assume hex scan in this case*******only temporary and not accurate - needs to account for shifted columns
+% Read Data from Settings
+if isfield(Settings,'data')
+    Angles = Settings.NewAngles;
+else
+    Angles = Settings.Angles;
+end
+n = Settings.Nx;
+m = Settings.Ny;
+IQ = Settings.IQ;
+XData = Settings.XData;
+YData = Settings.YData;
+M = ReadMaterial(Settings.Phase{1});
+lattype=M.lattice;
+bavg=M.Burgers;
+maxmiso=Settings.MisoTol;
+ScanLength=m*n;
+stepsize = (XData(3)-XData(2))*1e-6;    %***** can ystep be different?????
+
+AngMap = vec2map(Angles,n,Settings.ScanType);
+XMap = vec2map(Angles,n,Settings.ScanType);
+YMap = vec2map(Angles,n,Settings.ScanType);
+IQMap = vec2map(IQ,n,Settings.ScanType);
+
+if strcmp(Settings.ScanType,'Hexagonal')
     ncolodd=floor(n/2)+1;
     ncoleven=ncolodd-1;
-    nphi1 = Hex2Array(nphi1,ncolodd,ncoleven);
-    nPHIrnsq = Hex2Array(nPHI,ncolodd,ncoleven);
-    nphi2 = Hex2Array(nphi2,ncolodd,ncoleven);
+    nphi1 = Hex2Array(Angles(:,1),ncolodd,ncoleven);
+    nPHI = Hex2Array(Angles(:,2),ncolodd,ncoleven);
+    nphi2 = Hex2Array(Angles(:,3),ncolodd,ncoleven);
     xsq = Hex2Array(XData,ncolodd,ncoleven);
     ysq = Hex2Array(YData,ncolodd,ncoleven);
     iqRS = Hex2Array(IQ,ncolodd,ncoleven);
