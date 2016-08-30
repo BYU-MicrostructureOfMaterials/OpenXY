@@ -57,13 +57,28 @@ function OutputPlotting_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.output = hObject;
 
 OutputTypesList = {'Strain','Dislocation Density','Split Dislocation Density','Tetragonality'};
-set(handles.OptionsPopup,'String',OutputTypesList);
 
-if length(varargin) == 1
-    input = varargin{1};
-    set(handles.SettingsFileEdit,'String',input{1});
-    loadSettings(input{1},handles);
+
+if length(varargin) >= 1
+    if isstruct(varargin{1})
+        handles.Settings = varargin{1};
+        set(handles.SettingsFileEdit,'String', [handles.Settings.AnalysisParamsPath '.mat']);
+        if length(varargin) > 1
+            handles.alpha_data = varargin{2};
+        end
+        if length(varargin) > 2
+            handles.DDSettings = varargin{3};
+        end
+        if handles.Settings.Ny == 1
+            OutputTypesList = [OutputTypesList 'Line Scan Plot'];
+        end
+    else
+        input = varargin{1};
+        set(handles.SettingsFileEdit,'String',input{1});
+        loadSettings(input{1},handles);
+    end
 end
+set(handles.OptionsPopup,'String',OutputTypesList);
 
 smin = -0.05; % range for colormap of strain
 smax = 0.05;
