@@ -93,18 +93,27 @@ if strcmp(Settings.ScanType,'Hexagonal')
 else   
     xsq = reshape(XData,n,m)';
     ysq = reshape(YData,n,m)';
-    nphi1 = reshape(nphi1,n,m)';
-    nPHI = reshape(nPHI,n,m)';
-    nphi2 = reshape(nphi2,n,m)';
+    nphi1 = reshape(Angles(:,1),n,m)';
+    nPHI = reshape(Angles(:,2),n,m)';
+    nphi2 = reshape(Angles(:,3),n,m)';
     iqRS = reshape(IQ,n,m)';
 end
 
 smooth = 0;
 skip = 0;
+
 aangle = zeros(m-skip-1,n-skip-1);
 cangle = aangle;
 amiso = zeros(3,3,m-skip-1,n-skip-1);
 cmiso = amiso;
+
+
+[RefIndA,RefIndC] = GetAdjacentInds([n,m],1:ScanLength,skip,Settings.ScanType);
+q = euler2quat(Angles);
+q_symops = rmat2quat(permute(gensymopsHex,[3 2 1]));
+[misoa,~,~,deltaa] = quatMisoSym(q,q(RefIndA,:),q_symops,'element');
+[misob,~,~,deltab] = quatMisoSym(q,q(RefIndA,:),q_symops,'element');
+
 
 for i=1:m-skip-1    % work out all misorientations between points and right (cmiso) and down (amiso) neighbors
     for j=1:n-skip-1
@@ -125,6 +134,22 @@ end
 %               C - b - c
 %               |   |   |
 %              aC - a - ac
+%
+%              aC - a - ac
+%               |   |   |
+%               C - b - c
+%               |   |   |
+%              AC - A - Ac
+
+Ind = (1:ScanLength)';
+Ind = vec2map(Ind,n,Settings.ScanType);
+
+toprow = Ind<=n*(skippts+1);
+botrow = Ind<ScanLength-n*(skippts+1);
+rightside = mod(Ind,n)==0 | (n-mod(Ind,n))<=skippts;
+leftside = mod(Ind,n)<=skippts+1;
+
+
 
 betaderiv1 = zeros(3,3,m,n);
 betaderiv2 = betaderiv1;
@@ -187,7 +212,7 @@ for i = 1:m-skip
             for k=1:numpts
                 quat=[quat rmat2quat(squeeze(misoave(k,:,:)))];% put misorientation matrix into quaternion space to average
             end
-            avg = sum(quat,2)/numpts;
+            avg = sum(quat,1)/numpts;
             avg = avg/norm(avg);
             R=quat2rmat(avg);
             
@@ -251,7 +276,7 @@ for i = 1:m-skip
             for k=1:numpts
                 quat=[quat rmat2quat(squeeze(misoave(k,:,:)))]; % put misorientation matrix into quaternion space to average
             end
-            avg = sum(quat,2)/numpts;
+            avg = sum(quat,1)/numpts;
             avg = avg/norm(avg);
             R=quat2rmat(avg);
             betaderiv1(:,:,i,j) = (R - eye(3))/(stepsize*(1+skip)); % this is the elastic distortion derivative in the 1-direction
