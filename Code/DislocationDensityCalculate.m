@@ -19,10 +19,11 @@ Allg(Settings.Inds,:) = NewAngles;
 Inds = Settings.Inds;
 ImageFilter=Settings.ImageFilter;
 special=0;
-if ~isfield(Settings,'EasyDD')
-    Settings.EasyDD = 0;
+if isfield(Settings,'GNDMethod') && strcmp(Settings.GNDMethod,'Partial')
+    EasyDD = 1;
+else
+    EasyDD = 0;
 end
-EasyDD = Settings.EasyDD;
 
 if strcmp(VaryStepSizeI,'a')
     numruntimes=floor(min(r,c)/2)-1;
@@ -586,7 +587,7 @@ function [AllFa,AllSSEa,AllFc,AllSSEc, misanglea, misanglec] = DDCalc(RefInd,Ref
     end
 end
 
-function [AllFa,AllFc,misanglea,misanglec] = DDCalcEasy(DDSettings,lattice, Settings)
+function [AllFa,AllFc,misanglea,misanglec] = DDCalcEasy(RefInd, RefG, lattice, Settings)
 
     
     skippts = Settings.NumSkipPts;
@@ -602,17 +603,24 @@ function [AllFa,AllFc,misanglea,misanglec] = DDCalcEasy(DDSettings,lattice, Sett
     r = Settings.data.rows;%
     
     %Extract Variables 
-    RefIndA = DDSettings{1,1};
-    cnt = DDSettings{1,2};
-    RefIndC = DDSettings{1,3};
+    RefIndA = RefInd(1);
+    cnt = RefInd(2);
+    RefIndC = RefInd(3);
     
-    Amat = DDSettings{2,1};
-    g_b = DDSettings{2,2};
-    Cmat = DDSettings{2,3};
+    Amat = RefG(:,:,1);
+    g_b = RefG(:,:,2);
+    Cmat = RefG(:,:,3);
     
-    if size(DDSettings,2) > 3
-        RefIndA1 = RefIndA;
-        RefIndA2 = DDSettings{2,4};       
+    if strcmp(Settings.ScanType,'Hexagonal')
+        step = skippts+0.5;
+        Cind = 4;
+        if mod(ceil(step),2) %Two Ref A's
+            RefIndA2 = RefInd(4);
+            Cind = 5;
+        end
+        if mod(step,1) > 0 %Two Ref C's
+            RefIndC2 = RefInd(Cind);
+        end
     end
     
     misanglea=GeneralMisoCalc(g_b,Amat,lattice);
