@@ -1042,7 +1042,11 @@ switch sel
         handles.Settings.DoStrain = 1;
         set(handles.DoStrain,'Value',1);
         DoStrain_Callback(handles.DoStrain, eventdata, handles);
-        set(handles.DoStrain,'Enable','off');
+        if ~isfield(handles.Settings,'data')
+            set(handles.DoStrain,'Enable','off');
+        else
+            set(handles.DoStrain,'Enable','on');
+        end
     case 'Orientation-based'
         handles.Settings.GNDMethod = 'Orientation';
         

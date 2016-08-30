@@ -101,5 +101,16 @@ end
 if isfield(NewSettings,'RefInd')
     Settings.RefInd = NewSettings.RefInd;
 end
+
+%% Pull in Previous Data
+if isfield(NewSettings,'data')
+    sel = questdlg('The Analysis file has previous data. Would you like to import it?','Previous Analysis Detected','Yes','No','Yes');
+    if strcmp(sel,'Yes')
+        Settings.data = NewSettings.data;
+        Settings.NewAngles = NewSettings.NewAngles;
+    end
+end
+    
+
 end
 
