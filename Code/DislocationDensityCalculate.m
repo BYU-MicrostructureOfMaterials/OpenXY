@@ -148,11 +148,24 @@ if ~strcmp(Settings.ScanType,'L')
     end
     
     %Get Material Info
-    for p=1:FullLength
-        Material = ReadMaterial(lower(Settings.Phase{p}));
-        lattice{p}=Material.lattice;
-        Burgers(p)=Material.Burgers;
+    
+    %for p=1:FullLength
+        %Material = ReadMaterial(lower(Settings.Phase{p}));
+        %lattice{p}=Material.lattice;
+        %Burgers(p)=Material.Burgers;
+    %end
+%%%%%%%%%%%%%%%%%%%%    
+    Phase = Settings.Phase;
+    Unique_Phases = unique(Phase);
+    NumPhases = length(Unique_Phases);
+    Material = Settings.Mat;
+    
+    for i = 1:NumPhases;
+       lattice(i,:) = Material.lattice;
+       Burgers(i,:) = Material.Burgers;
     end
+%%%%%%%%%%%%%%%%%%%    
+    
     b = Burgers;
     if isempty(b)
        errordlg('No Burgers vector specified for this material in Materials sub-folder).','Error');

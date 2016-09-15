@@ -1,5 +1,5 @@
 
-function [AngFileVals ScanParams FileName FilePath ] = ReadAngFile(FilePath,FileName)
+function [AngFileVals, ScanParams, FileName, FilePath ] = ReadAngFile(FilePath,FileName)
 %READANGFILE
 %[AngFileVals ScanParams FileName FilePath ] = ReadAngFile(FilePath,FileName)
 %Fast reading .ang files of any size. 
@@ -18,7 +18,7 @@ elseif nargin == 2
     fid = fopen([FilePath FileName]);
     data = GetFileData([FilePath FileName],'#');
 else
-    [FileName FilePath] = uigetfile('*.ang','OIM .ang file');
+    [FileName, FilePath] = uigetfile('*.ang','OIM .ang file');
     fid = fopen([FilePath FileName]);
     data = GetFileData([FilePath FileName],'#');
 end

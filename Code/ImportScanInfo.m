@@ -108,8 +108,8 @@ ScanParams = Settings.ScanParams;
 ScanParams.ScanType = Settings.ScanType;
 ScanParams.Nx = Settings.Nx;
 ScanParams.Ny = Settings.Ny;
-[Settings.grainID,Settings.Phase] = GetGrainInfo(ScanPath,Settings.Material,ScanParams,...
-    Settings.Angles,Settings.MisoTol,Settings.GrainMethod,0); %Don't use cleanup
+[Settings.grainID,Settings.Phase,Settings.Mat] = GetGrainInfo(ScanPath,Settings.Material,ScanParams,...
+    Settings.Angles,Settings.MisoTol,Settings.GrainMethod,0, ScanFileData); %Don't use cleanup
 Settings.GrainVals.grainID = Settings.grainID;
 Settings.GrainVals.Phase = Settings.Phase;
 

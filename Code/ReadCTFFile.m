@@ -48,7 +48,7 @@ while ~feof(ctf)
         ScanParamsData('XStep','xstep');
         ScanParamsData('YStep','ystep');
         ScanParamsData('KV','AccelVoltage');
-        ScanParamsData('TiltAngle','SampleTilt');
+        ScanParamsData('TiltAngle','SampleTilt');     
     else
         %Read in data table
         fseek(ctf,-length(tline)-2,'cof');

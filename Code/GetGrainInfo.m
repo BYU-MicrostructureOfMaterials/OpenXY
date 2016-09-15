@@ -1,4 +1,4 @@
-function [ grainID, Phase ] = GetGrainInfo( ScanFilePath, Material, ScanParams, Angles, MaxMisorientation, GrainMethod, MinGrainSize)
+function [grainID, Phase, Mat] = GetGrainInfo(ScanFilePath, Material, ScanParams, Angles, MaxMisorientation, GrainMethod, MinGrainSize, ScanFileData)
 %GETGRAININFO Returns grainID and material for HKL and OIM data
 %   INPUTS: ScanFilePath-Full path to .ang or .ctf file
 %               OR 1x2 cell array of Grain File Vals to skip reading grain file
@@ -29,67 +29,75 @@ if iscell(ScanFilePath) && all(size(ScanFilePath)==[1,2])
     ReadFile = false;
     ext = '.ang';
 else
-[path, name, ext] = fileparts(ScanFilePath);
+    [path, name, ext] = fileparts(ScanFilePath);
 end
 
 
 if ~strcmp(ext,'.ctf')
     if strcmp(GrainMethod,'Grain File')
         if ReadFile
-    GrainFilePath = fullfile(path,[name '.txt']);
-    if ~exist(GrainFilePath,'file')
-        button = questdlg('No matching grain file was found. Would you like to manually select a grain file?','Grain file not found');
-        if strcmp(button,'Yes')
-            w = pwd;
-            cd(path);
-            [name, path] = uigetfile({'*.txt', 'Grain Files (*.txt)'},'Select a Grain File');
-            GrainFilePath = fullfile(path,name);
-            cd(w);
+            GrainFilePath = fullfile(path,[name '.txt']);
+            if ~exist(GrainFilePath,'file')
+                button = questdlg('No matching grain file was found. Would you like to manually select a grain file?','Grain file not found');
+                if strcmp(button,'Yes')
+                    w = pwd;
+                    cd(path);
+                    [name, path] = uigetfile({'*.txt', 'Grain Files (*.txt)'},'Select a Grain File');
+                    GrainFilePath = fullfile(path,name);
+                    cd(w);
+                else
+                    error('No grain matching ground file was found');
+                end
+            end
+            GrainFileVals = ReadGrainFile(GrainFilePath);
+            grainID = GrainFileVals{9};
+            Phase=lower(GrainFileVals{11});
         else
-            error('No grain matching ground file was found');
-        end
-    end
-    GrainFileVals = ReadGrainFile(GrainFilePath);
-    grainID = GrainFileVals{9};
-        Phase=lower(GrainFileVals{11});
-    else
             grainID = ScanFilePath{1};
             Phase = ScanFilePath{2};
             clear ScanFilePath
         end
+        
+        
+        
         if strcmp(Material,'Scan File');
             disp(['Auto Detected Material: ' Phase{1}])
         else
             Phase = cell(length(Phase),1);
-        Phase(:) = {Material};
-    end
-    Phase = ValidatePhase(Phase);
+            Phase(:) = {Material};
+        end
+        Phase = ValidatePhase(Phase);
     end
 end
 if strcmp(GrainMethod,'Find Grains')
-    Phase = cell(length(Angles),1); 
+    %Phase = cell(length(Angles),1);
+    Phase = ScanFileData{1,9};
     auto = 0;
     if strcmp(Material,'Scan File')
-        ind = 1;
         if ~iscell(ScanParams.material)
             ScanParams.material = cellstr(ScanParams.material);
         end
         if length(ScanParams.material) > 1
             [ind,ok] = listdlg('ListString',ScanParams.material,'PromptString',...
-                {'More than one phase detected.';'Mutli-phase scans not currently supported.';'Select one:'},...
-                'SelectionMode','single','Name','Select Phase','ListSize',[180 100]);
+            {'More than one phase detected.';'Mutli- and Single phase scans are supported.';'Select all desired phases:'},...
+            'SelectionMode','multiple','Name','Select Phase','ListSize',[180 100]);
+            num = length(ScanParams.material);
+            for i = 1:num
+                PhaseNames(i,:)={lower(ScanParams.material{i})};
+                disp(['Auto Detected Material: ' PhaseNames(i,:)])
+            end
             if ~ok, ind = 1; end;
         end
-        Phase(:)={lower(ScanParams.material{ind})};
-        Material = ScanParams.material{ind};
-        disp(['Auto Detected Material: ' Material])
-    else
+   else
         Phase(:) = {Material};
-    end
-    Phase = ValidatePhase(Phase);
-    if ~isempty(Phase)
-        MaterialData = ReadMaterial(Phase{1});
-        
+   end
+   PhaseNames = ValidatePhase(PhaseNames);
+   if ~isempty(Phase)
+       NumPhases = length(PhaseNames);
+       for i = 1:NumPhases
+           Mat(i,:) = ReadMaterial(PhaseNames{i});
+       end
+        MaterialData = Mat;
         if auto
             disp(['Auto detected material: ' Phase{1}])
         end
@@ -101,25 +109,31 @@ if strcmp(GrainMethod,'Find Grains')
             angles = permute(Hex2Array(Angles,ScanParams.Nx),[2 1 3]);
         end
         mistol = MaxMisorientation*pi/180;
-        grainID = findgrains(angles, MaterialData.lattice, clean, MinGrainSize,mistol);
-        
+        lat = strcmp(MaterialData(1,1).lattice,MaterialData(2,1).lattice);
+        if lat == 1
+            grainID = findgrains(angles, MaterialData(1,1).lattice, clean, MinGrainSize,mistol);  
+        elseif lat > 1
+            errordlg('Multiple phases with different lattice structures detected.  Cubic lattice assumed for all phases and scan points.','Multiple Lattices');
+            grainID = findgrains(angles, 'cubic', clean, MinGrainSize, mistol);
         %Convert back to vector
-        if strcmp(ScanParams.ScanType,'Square')
-            grainID = grainID(:);
-        elseif strcmp(ScanParams.ScanType,'Hexagonal')
-            grainID(1:2:ScanParams.Ny,end+1) = grainID(1:2:ScanParams.Ny,end);
-            grainID(2:2:ScanParams.Ny,end) = NaN;
-            grainID = grainID(:);
-            grainID(isnan(grainID)) = [];
-        end
+            if strcmp(ScanParams.ScanType,'Square')
+                grainID = grainID(:);
+            elseif strcmp(ScanParams.ScanType,'Hexagonal')
+                grainID(1:2:ScanParams.Ny,end+1) = grainID(1:2:ScanParams.Ny,end);
+                grainID(2:2:ScanParams.Ny,end) = NaN;
+                grainID = grainID(:);
+                grainID(isnan(grainID)) = [];
+            end
         
-    else
-        grainID = {};
-    end
+        else
+            grainID = {};
+        end
+   end
 end
 function Phase = ValidatePhase(Phase)
     %Validate Material Detection
     MaterialsList = GetMaterialsList(2);
+    l = length(Phase);
     if ~all(ismember(Phase,MaterialsList))
         invalidMats = unique(Phase(~ismember(Phase,MaterialsList)));
         er = errordlg(['Auto material detection failed. "' strjoin(invalidMats,', ') '" not found in list of known materials'],'Material Detection');
@@ -131,7 +145,19 @@ function Phase = ValidatePhase(Phase)
                     Materials = GetMaterialsList(3);
                     [index, ok] = listdlg('PromptString','Select a Material','ListString',Materials,'SelectionMode','single','Name','Material Selection');
                     if ok
-                        Phase(:) = {Materials{index}};
+                        p = length(invalidMats);
+                        if p == 1
+                            for q = 1:l
+                                comp = strcmp(Phase{q,:},invalidMats{p});
+                                if comp == 1
+                                    Phase(q,:) = Materials(index);
+                                end
+                            end
+%                         else % will be needed if the length of
+%                         invalidMats is greater than 1.
+                                
+                        end
+%                         Phase(:) = {Materials{index}};    
                         break;
                     else
                         op = 'Cancel';
@@ -153,6 +179,4 @@ function Phase = ValidatePhase(Phase)
         end
     end
 end
-
 end
-
