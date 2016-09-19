@@ -9,7 +9,7 @@ tic
 
 %Calculate Dislocation Density
 data = Settings.data;
-AnalysisParamsPath=[Settings.AnalysisParamsPath '.mat'];
+AnalysisParamsPath=Settings.AnalysisParamsPath;
 r = data.rows;%
 c = data.cols;%
 stepsize_orig = abs((data.xpos(3)-data.xpos(2))/1e6); %units in meters. This is for square grid

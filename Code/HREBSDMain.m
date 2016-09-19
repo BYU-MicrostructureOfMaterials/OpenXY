@@ -171,9 +171,9 @@ end
 %% Save Analysis
 %Save deformation gradient, rotation, strain tensors, and SSE.
 [OutputPath, FileName, ~] = fileparts(Settings.OutputPath);
-SaveFile = fullfile(OutputPath,['AnalysisParams_' FileName]);
+SaveFile = fullfile(OutputPath,['AnalysisParams_' FileName '.mat']);
 Settings.AnalysisParamsPath = SaveFile;
-save([SaveFile '.mat'], 'Settings');
+save(SaveFile, 'Settings');
 
 %% Calculate derivatives
 if Settings.CalcDerivatives
@@ -190,12 +190,8 @@ if Settings.CalcDerivatives
     end
     
     % Split Dislocation Density (Code by Tim Ruggles, added 3/5/2015)
-    if Settings.DoDDS
-        Settings.rdoptions.stress = eye(3);
-        Settings.rdoptions.gbangmin = 20;
-        [rhos, ss, rhoKAM, iqRS, gbs, nphi1, nPHI, nphi2, rdoptions] = RDCalc(Settings.rdoptions);
-        
-        temp = load([Settings.AnalysisParamsPath '.mat']);
+    if Settings.DoDDS       
+        temp = load(Settings.AnalysisParamsPath);
         alpha_data = temp.alpha_data;
         clear temp
         [rhos, DDSettings] = SplitDD(Settings, alpha_data, Settings.DDSMethod);
@@ -229,5 +225,5 @@ end
 
 %% Output Plotting
 % save([OutputPathWithSlash 'Data_' FileName],'data');
-input{1} = [SaveFile '.mat'];
+input{1} = SaveFile;
 OutputPlotting(input); %moved here due to error writing ang file for vaudin files ****
