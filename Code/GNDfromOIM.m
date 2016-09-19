@@ -60,9 +60,9 @@ end
 % Read Data from Settings
 if isfield(Settings,'data')
     Angles = Settings.NewAngles;
-    else
+else
     Angles = Settings.Angles;
-    end
+end
 n = Settings.Nx;
 m = Settings.Ny;
 IQ = Settings.IQ;
@@ -110,10 +110,11 @@ cmiso = amiso;
 
 [RefIndA,RefIndC] = GetAdjacentInds([n,m],1:ScanLength,skip,Settings.ScanType);
 q = euler2quat(Angles);
-q_symops = rmat2quat(permute(gensymopsHex,[3 2 1]));
-[misoa,~,~,deltaa] = quatMisoSym(q,q(RefIndA,:),q_symops,'element');
-[misob,~,~,deltab] = quatMisoSym(q,q(RefIndA,:),q_symops,'element');
-
+q_symops = rmat2quat(permute(gensymops,[3 2 1]));
+[anglea,~,~,deltaa] = quatMisoSym(q,q(RefIndA,:),q_symops,'element');
+[anglec,~,~,deltac] = quatMisoSym(q,q(RefIndC,:),q_symops,'element');
+misoa = quatconj(quatmult(quatconj(q),quatmult(deltaa,q,'element'),'element'));
+misoc = quatconj(quatmult(quatconj(q),quatmult(deltac,q,'element'),'element'));
 
 for i=1:m-skip-1    % work out all misorientations between points and right (cmiso) and down (amiso) neighbors
     for j=1:n-skip-1
@@ -140,12 +141,70 @@ end
 Ind = (1:ScanLength)';
 Ind = vec2map(Ind,n,Settings.ScanType);
 
-toprow = Ind<=n*(skippts+1);
-botrow = Ind<ScanLength-n*(skippts+1);
-rightside = mod(Ind,n)==0 | (n-mod(Ind,n))<=skippts;
-leftside = mod(Ind,n)<=skippts+1;
+toprow = Ind<=n*(skip+1);
+botrow = Ind>ScanLength-n*(skip+1);
+rightside = mod(Ind,n)==0 | (n-mod(Ind,n))<=skip;
+leftside = mod(Ind,n)<=skip+1 & mod(Ind,n)>0;
+corners = Ind == 1 | Ind == n | Ind == ScanLength-n+1 | Ind == ScanLength;
+
+%X-Direction
+m11 = zeros(ScanLength,4);
+m12 = m11; m13 = m11; m14 = m11; m15 = m11; m16 = m11;
+m11(~toprow & ~leftside,:) = misoa(Ind(~toprow & ~leftside)-1,:);
+m12(~toprow,:) = misoa(Ind(~toprow),:);
+m13(~toprow & ~rightside,:) = misoa(Ind(~toprow & ~rightside)+1,:);
+m14(~botrow & ~leftside,:) = misoa(Ind(~botrow & ~leftside)-1+n,:);
+m15(~botrow,:) = misoa(Ind(~botrow)+n,:);
+m16(~botrow & ~rightside,:) = misoa(Ind(~botrow & ~rightside)+1+n,:);
+
+%6 points
+avgmisoa = zeros(size(misoa));
+avgmisoa(~(toprow | botrow | rightside | leftside),:) = ...
+   (m11(~(toprow | botrow | rightside | leftside),:)+...
+    m12(~(toprow | botrow | rightside | leftside),:)+...
+    m13(~(toprow | botrow | rightside | leftside),:)+...
+    m14(~(toprow | botrow | rightside | leftside),:)+...
+    m15(~(toprow | botrow | rightside | leftside),:)+...
+    m16(~(toprow | botrow | rightside | leftside),:))/6;
+%3 points
+avgmisoa((toprow | botrow) & ~corners,:) = ...
+   (m11((toprow | botrow) & ~corners,:)+...
+    m12((toprow | botrow) & ~corners,:)+...
+    m13((toprow | botrow) & ~corners,:)+...
+    m14((toprow | botrow) & ~corners,:)+...
+    m15((toprow | botrow) & ~corners,:)+...
+    m16((toprow | botrow) & ~corners,:))/3;
+avgmisoa2 = avgmisoa;
+%4 points
+avgmisoa(rightside & ~corners,:) = ...
+   (m11(rightside & ~corners,:)+...
+    m12(rightside & ~corners,:)+...
+    m13(rightside & ~corners,:)+...
+    m14(rightside & ~corners,:)+...
+    m15(rightside & ~corners,:)+...
+    m16(rightside & ~corners,:))/4;
+avgmisoa(leftside & ~corners,:) = ...
+   (m11(leftside & ~corners,:)+...
+    m12(leftside & ~corners,:)+...
+    m13(leftside & ~corners,:)+...
+    m14(leftside & ~corners,:)+...
+    m15(leftside & ~corners,:)+...
+    m16(leftside & ~corners,:))/4;
+avgmisoa2(leftside | rightside,:) = ...
+   (m11(leftside | rightside,:)+...
+    m12(leftside | rightside,:)+...
+    m13(leftside | rightside,:)+...
+    m14(leftside | rightside,:)+...
+    m15(leftside | rightside,:)+...
+    m16(leftside | rightside,:))/4;
 
 
+t2 = cat(3,m11(rightside,:),...
+    m12(rightside,:),...
+    m13(rightside,:),...
+    m14(rightside,:),...
+    m15(rightside,:),...
+    m16(rightside,:));
 
 betaderiv1 = zeros(3,3,m,n);
 betaderiv2 = betaderiv1;
@@ -305,7 +364,15 @@ alpha_data.alpha_total3 = alpha_total3;
 alpha_data.alpha_total5 = alpha_total5;
 alpha_data.alpha_total9 = alpha_total9;
 
+alphalist = reshape(alpha,3,3,ScanLength);
+GNDAvg = mean(alphalist(1,3,alphalist(1,3,:)>0));
+GNDStd = std(alphalist(1,3,alphalist(1,3,:)>0));
+fprintf('Alpha(1,3) Avg: %g\n',GNDAvg);
+fprintf('Alpha(1,3) Std: %g\n',GNDStd);
+assignin('base','GNDAvg',GNDAvg);
+assignin('base','GNDStd',GNDStd)
+
 figure
-imagesc(log10(alpha_total3))
+imagesc(real(squeeze(log10(alpha(1,3,:,:)))))
 title('GND density using Alpha3')
 
