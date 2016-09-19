@@ -323,6 +323,7 @@ switch HROIMMethod
         set(handles.HROIMlabel,'String','Ref Image Index');
         if handles.Settings.RefImageInd == 0
             handles.Settings.RefImageInd = 1;
+            handles.Settings.RefInd(1:handles.Settings.ScanLength) = 1;
         end
         set(handles.HROIMedit,'String',num2str(handles.Settings.RefImageInd));
         set(handles.HROIMedit,'Enable','on');
@@ -375,6 +376,7 @@ switch HROIMMethod
         if isfield(handles.Settings,'ScanLength') && ...
                 input > 0 && input <= handles.Settings.ScanLength
             handles.Settings.RefImageInd = round(input);
+            handles.Settings.RefInd(1:handles.Settings.ScanLength) = round(input);
             set(hObject,'String',num2str(round(input)));
             ToggleGrainMap_Callback(handles.ToggleGrainMap,eventdata,handles);
         else
