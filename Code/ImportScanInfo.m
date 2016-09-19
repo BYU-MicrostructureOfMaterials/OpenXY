@@ -1,7 +1,10 @@
 function Settings = ImportScanInfo(Settings,name,path)
-
 %Read Scan File
-ScanPath = fullfile(path,name);
+if nargin == 2
+    ScanPath = name;   
+else
+    ScanPath = fullfile(path,name);
+end
 [~,~,ext] = fileparts(ScanPath);
 
 %Normal Scan File
