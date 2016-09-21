@@ -66,14 +66,14 @@ end
 n = Settings.Nx;
 m = Settings.Ny;
 IQ = Settings.IQ;
-    XData = Settings.XData;
-    YData = Settings.YData;
+XData = Settings.XData;
+YData = Settings.YData;
 M = ReadMaterial(Settings.Phase{1});
-    lattype=M.lattice;
-    bavg=M.Burgers;
-    maxmiso=Settings.MisoTol;
-    ScanLength=m*n;
-    stepsize = (XData(3)-XData(2))*1e-6;    %***** can ystep be different?????
+lattype=M.lattice;
+bavg=M.Burgers;
+maxmiso=Settings.MisoTol;
+ScanLength=m*n;
+stepsize = (XData(3)-XData(2))*1e-6;    %***** can ystep be different?????
     
 AngMap = vec2map(Angles,n,Settings.ScanType);
 XMap = vec2map(Angles,n,Settings.ScanType);
@@ -99,8 +99,16 @@ else
     iqRS = reshape(IQ,n,m)';
 end
 
-smooth = 0;
+smooth = 1;
 skip = 0;
+
+%Convert Euler Angles to Orientation Matrices
+g = euler2gmat(Angles);
+
+%Get Indices of points above to the right
+[RefIndA,RefIndC] = GetAdjacentInds([n m],1:ScanLength,skip,Settings.ScanType);
+
+
 
 aangle = zeros(m-skip-1,n-skip-1);
 cangle = aangle;
@@ -120,22 +128,43 @@ for i=1:m-skip-1    % work out all misorientations between points and right (cmi
     for j=1:n-skip-1
         thisg = euler2gmat(nphi1(i,j),nPHI(i,j),nphi2(i,j));
         thisa = euler2gmat(nphi1(i+1+skip,j),nPHI(i+1+skip,j),nphi2(i+1+skip,j)); % -y goes with i
-        [angle,Axis,deltaG]=GeneralMisoCalcSym(thisg,thisa,lattype);
+        [angle,Axis,deltaG(:,:,i,j)]=GeneralMisoCalcSym(thisg,thisa,lattype);
         aangle(i,j) = angle;
-        amiso(:,:,i,j) = (thisg'*(deltaG)*thisg)'; % transpose since it should be active rather than passive rotation
+        amiso(:,:,i,j) = (thisg'*(deltaG(:,:,i,j))*thisg)'; % transpose since it should be active rather than passive rotation
         thisc = euler2gmat(nphi1(i,j+1+skip),nPHI(i,j+1+skip),nphi2(i,j+1+skip));
-        [angle,Axis,deltaG]=GeneralMisoCalcSym(thisg,thisc,lattype);
-        cmiso(:,:,i,j) = (thisg'*(deltaG)*thisg)';
+        [angle,Axis,deltaG(:,:,i,j)]=GeneralMisoCalcSym(thisg,thisc,lattype);
+        cmiso(:,:,i,j) = (thisg'*(deltaG(:,:,i,j))*thisg)';
         cangle(i,j) = angle;
     end
 end
+amiso = zeros(3,3,ScanLength);
+cmiso = amiso;
+clear cangle aangle amiso2 deltaG2 deltaG
+for i = 1:ScanLength
+    thisg = g(:,:,i);
+    thisa = g(:,:,RefIndA(i));
+    [aangle(i),~,deltaG(:,:,i)]=GeneralMisoCalcSym(thisg,thisa,lattype);
+    amiso(:,:,i) = (thisg'*(deltaG(:,:,i))*thisg)'; % transpose since it should be active rather than passive rotation
+    [aangle2(i),~,~,deltaG2(i,:)] = quatMisoSym(q(i,:),q(RefIndA(i),:),q_symops,'element');
+    amiso2(:,:,i) = quat2rmat(quatconj(quatmult(quatconj(q(i,:)),quatmult(deltaG2(i,:),q(i,:),'element'),'element')));
+    
+    
+    thisc = g(:,:,RefIndC(i));
+    [angle,~,deltaG(:,:,i)]=GeneralMisoCalcSym(thisg,thisc,lattype);
+    cmiso(:,:,i) = (thisg'*(deltaG(:,:,i))*thisg)';
+    cangle(i) = angle;
+end
+amiso = permute(reshape(permute(amiso,[3 1 2]),Settings.Nx,Settings.Ny,3,3),[3 4 2 1]);
+cmiso = permute(reshape(permute(cmiso,[3 1 2]),Settings.Nx,Settings.Ny,3,3),[3 4 2 1]);
+aangle = vec2map(aangle',Settings.Nx,Settings.ScanType);
+cangle = vec2map(cangle',Settings.Nx,Settings.ScanType);
 
 
 %
 %              aC - a - ac
-%               |   |   |
+%          m11->|   |   |<-m13
 %               C - b - c
-%               |   |   |
+%          m14->|   |   |<-m16
 %              AC - A - Ac
 
 Ind = (1:ScanLength)';
@@ -150,12 +179,26 @@ corners = Ind == 1 | Ind == n | Ind == ScanLength-n+1 | Ind == ScanLength;
 %X-Direction
 m11 = zeros(ScanLength,4);
 m12 = m11; m13 = m11; m14 = m11; m15 = m11; m16 = m11;
+
 m11(~toprow & ~leftside,:) = misoa(Ind(~toprow & ~leftside)-1,:);
 m12(~toprow,:) = misoa(Ind(~toprow),:);
 m13(~toprow & ~rightside,:) = misoa(Ind(~toprow & ~rightside)+1,:);
 m14(~botrow & ~leftside,:) = misoa(Ind(~botrow & ~leftside)-1+n,:);
 m15(~botrow,:) = misoa(Ind(~botrow)+n,:);
 m16(~botrow & ~rightside,:) = misoa(Ind(~botrow & ~rightside)+1+n,:);
+
+test = (sum(m11,2)~=0)+(sum(m12,2)~=0)+(sum(m13,2)~=0)+...
+    (sum(m14,2)~=0)+(sum(m15,2)~=0)+(sum(m16,2)~=0);
+
+numpts = ones(Settings.ScanLength,1)*6;
+numpts((toprow | botrow) & ~corners) = 3;
+numpts((leftside | rightside) & ~corners) = 4;
+numpts(corners) = 2;
+
+avgmisoa = (m11+m12+m13+m14+m15+m16)./repmat(numpts,1,4);
+avgmisoa = quatnorm(avgmisoa);
+avgmisoa_R = quat2rmat(avgmisoa);
+bd2 = (avgmisoa_R - repmat(eye(3),1,1,ScanLength)) / stepsize*(skip+1);
 
 %6 points
 avgmisoa = zeros(size(misoa));
@@ -190,13 +233,7 @@ avgmisoa(leftside & ~corners,:) = ...
     m14(leftside & ~corners,:)+...
     m15(leftside & ~corners,:)+...
     m16(leftside & ~corners,:))/4;
-avgmisoa2(leftside | rightside,:) = ...
-   (m11(leftside | rightside,:)+...
-    m12(leftside | rightside,:)+...
-    m13(leftside | rightside,:)+...
-    m14(leftside | rightside,:)+...
-    m15(leftside | rightside,:)+...
-    m16(leftside | rightside,:))/4;
+
 
 
 t2 = cat(3,m11(rightside,:),...
@@ -270,6 +307,7 @@ for i = 1:m-skip
             avg = sum(quat,1)/numpts;
             avg = avg/norm(avg);
             R=quat2rmat(avg)'; % transpose because for some reason sending to quaternion space and pack transposes it
+            R2(:,:,i,j) = R;
             
             betaderiv2(:,:,i,j) = (R - eye(3))/(-stepsize*(1+skip));% this is the elastic distortion derivative in the 2-direction
         else
@@ -329,11 +367,12 @@ for i = 1:m-skip
         if numpts>0
             quat=[];
             for k=1:numpts
-                quat=[quat rmat2quat(squeeze(misoave(k,:,:)))]; % put misorientation matrix into quaternion space to average
+                quat=[quat; rmat2quat(squeeze(misoave(k,:,:)))]; % put misorientation matrix into quaternion space to average
             end
             avg = sum(quat,1)/numpts;
             avg = avg/norm(avg);
             R=quat2rmat(avg)';
+            
             betaderiv1(:,:,i,j) = (R - eye(3))/(stepsize*(1+skip)); % this is the elastic distortion derivative in the 1-direction
         else
             betaderiv1(:,:,i,j) = zeros(3);
