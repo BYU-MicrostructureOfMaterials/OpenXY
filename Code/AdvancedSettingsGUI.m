@@ -262,7 +262,7 @@ switch HROIMMethod
             %Check if Monte-Carlo Simulation data has been generated
             valid = 1;
             if isfield(handles.Settings,'Phase')
-                mats = unique(handles.Settings.Phase);
+                mats = unique(handles.Settings.PhaseNames);
             elseif strcmp(handles.Settings.Material,'Scan File')
                 valid = 0;
                 warndlgpause({'Material must be specified before selecting Simulation-Dynamic','Resetting to kinematic simulation'},'Select Material');
@@ -585,7 +585,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 % --- Executes on button press in DoSplitDD.
-function DoSplitDD_Callback(hObject, eventdata, handles)
+function DoSplitDD_Callback(hObject, eventdata, handles, Settings)
 % hObject    handle to DoSplitDD (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -596,7 +596,7 @@ valid = 0;
 j = 1;
 allMaterials = unique(Settings.Phase);
 for i = 1:length(allMaterials)
-    M = ReadMaterial(allMaterials{i});
+    M(i,:) = Settings.Mat(i); %M = ReadMaterial(allMaterials{i});
     if isfield(M,'SplitDD')
         valid = 1;
     else

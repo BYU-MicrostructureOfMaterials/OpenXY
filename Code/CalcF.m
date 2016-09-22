@@ -21,7 +21,7 @@ function [F, SSE, XX] = CalcF(RefImage,ScanImage,g,Fo,Ind,Settings,curMaterial,R
 %
 %% handle inputs
 
-Material = Settings.Mat(Settings.Phase(ind));
+Material = Settings.Mat(Settings.Phase(Ind));
 g0 = g;
 RefImage=double(RefImage);
 ScanImage=double(ScanImage);

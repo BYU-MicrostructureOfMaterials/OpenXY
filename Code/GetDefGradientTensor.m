@@ -83,7 +83,7 @@ sampletilt = Settings.SampleTilt;
 elevang = Settings.CameraElevation;
 
 pixsize = Settings.PixelSize;
-Material = Settings.Mat; %Material = ReadMaterial(curMaterial);  % this should depend on the crystal structure maybe not here
+Material = Settings.Mat(Settings.Phase(ImageInd));  % this should depend on the crystal structure maybe not here
 paramspat={xstar;ystar;zstar;pixsize;Av;sampletilt;elevang;Material.Fhkl;Material.dhkl;Material.hkl};
 % for new Dr. Fullwood condition
 

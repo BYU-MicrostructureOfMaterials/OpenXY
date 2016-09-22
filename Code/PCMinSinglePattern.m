@@ -32,7 +32,7 @@ elevang = Settings.CameraElevation;
 
 pixsize = Settings.PixelSize;
 
-Material = ReadMaterial(Settings.Phase{Ind});
+Material = Settings.Mat(Settings.Phase(Ind));  %Material = ReadMaterial(Settings.Phase{Ind});
 
 % keyboard
 if size(Settings.ImageNamesList,1)>1

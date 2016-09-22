@@ -36,7 +36,7 @@ sampletilt = Settings.SampleTilt;
 elevang = Settings.CameraElevation;
 pixsize = Settings.PixelSize;
 if length(unique(Settings.Phase)) == 1
-    Material = ReadMaterial(Settings.Phase{1});
+    Material = Settings.Mat(1); %Can hard code it because in this instance, there is only one Phase.  %Material = ReadMaterial(Settings.Phase{1});
     lattice = Material.lattice;
     a1 = Material.a1;
     b1 = Material.b1;

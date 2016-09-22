@@ -146,7 +146,16 @@ end
 if isempty(Image)
     Image = ReadEBSDImage('demo.bmp', Settings.ImageFilter);
 end
-Material = ReadMaterial(Settings.Phase{1});
+
+%Added in the two lines below
+NumPhases = length(unique(Settings.Phase));
+for i = 1:NumPhases
+%With this set up, it only shows the second of the two phases.  Should I
+%write it so that it will show images for each Phase?
+    
+%Original Code
+%Material = ReadMaterial(Settings.Phase{1});
+Material = Settings.Mat(i);
 paramspat={Settings.ScanParams.xstar;Settings.ScanParams.ystar;Settings.ScanParams.zstar;...
     size(Image,1);Settings.AccelVoltage*1000;Settings.SampleTilt;Settings.CameraElevation;...
     Material.Fhkl;Material.dhkl;Material.hkl};
@@ -161,6 +170,9 @@ set(gca,'ycolor',get(gcf,'color'));
 set(gca,'ytick',[]);
 set(gca,'xtick',[]);
 axis equal
+%Original Code (above)
+
+end
 
 % Update handles structure
 ROIStylePopup_Callback(handles.ROIStylePopup, eventdata, handles)

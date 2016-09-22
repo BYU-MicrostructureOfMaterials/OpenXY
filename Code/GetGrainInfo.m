@@ -1,4 +1,4 @@
-function [grainID, Phase, Mat] = GetGrainInfo(ScanFilePath, Material, ScanParams, Angles, MaxMisorientation, GrainMethod, MinGrainSize, ScanFileData)
+function [grainID, Phase, Mat, PhaseNames] = GetGrainInfo(ScanFilePath, Material, ScanParams, Angles, MaxMisorientation, GrainMethod, MinGrainSize, ScanFileData)
 %GETGRAININFO Returns grainID and material for HKL and OIM data
 %   INPUTS: ScanFilePath-Full path to .ang or .ctf file
 %               OR 1x2 cell array of Grain File Vals to skip reading grain file
@@ -50,23 +50,42 @@ if ~strcmp(ext,'.ctf')
                 end
             end
             GrainFileVals = ReadGrainFile(GrainFilePath);
+            if ~isempty(GrainFileVals{12})
+                GrainFileVals{11} = strcat(GrainFileVals{11}, GrainFileVals{12});
+                GrainFileVals{12} = [];
+            end
             grainID = GrainFileVals{9};
-            Phase=lower(GrainFileVals{11});
+            Phase = ScanFileData{9};
+            num = unique(Phase);
+            NumPhases = length(num);
+            if length(NumPhases) > 1
+                [ind,ok] = listdlg('ListString',ScanParams.material,'PromptString',...
+                {'More than one phase detected.';'Mutli- and Single phase scans are supported.';'Select all desired phases:'},...
+                'SelectionMode','multiple','Name','Select Phase','ListSize',[180 100]);
+                    for i = 1:NumPhases
+                        PhaseNames(i,:)={lower(ScanParams.material{i})};
+                        disp(['Auto Detected Material: ' PhaseNames(i,:)])
+                    end
+            else 
+                PhaseNames = {lower(ScanParams.material)};
+                disp(['Auto Detected Material: ' PhaseNames])
+            end
+             PhaseNames = ValidatePhase(PhaseNames);
+            for i = 1:NumPhases
+                Mat(i,:) = ReadMaterial(PhaseNames{i});
+            end
+            MaterialData = Mat;
         else
             grainID = ScanFilePath{1};
             Phase = ScanFilePath{2};
             clear ScanFilePath
-        end
-        
-        
-        
+        end 
         if strcmp(Material,'Scan File');
-            disp(['Auto Detected Material: ' Phase{1}])
+            disp(['Auto Detected Material: ' PhaseNames{1}])
         else
             Phase = cell(length(Phase),1);
             Phase(:) = {Material};
         end
-        Phase = ValidatePhase(Phase);
     end
 end
 if strcmp(GrainMethod,'Find Grains')
@@ -89,7 +108,7 @@ if strcmp(GrainMethod,'Find Grains')
             if ~ok, ind = 1; end;
         end
    else
-        Phase(:) = {Material};
+        PhaseNames(:) = {Material};
    end
    PhaseNames = ValidatePhase(PhaseNames);
    if ~isempty(Phase)
