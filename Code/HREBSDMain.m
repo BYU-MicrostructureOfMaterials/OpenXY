@@ -183,7 +183,7 @@ if Settings.CalcDerivatives
     
     if Settings.DisplayGUI; disp('Starting Dislocation Density Calculation'); end;
     if strcmp(Settings.GNDMethod,'Orientation')
-        alpha_data = GNDfromOIM(Settings);
+        alpha_data = GNDfromOIM(Settings,1,Settings.NumSkipPts);
         save(SaveFile ,'alpha_data','-append'); 
     else
         DislocationDensityCalculate(Settings,MaxMisorientation,IQcutoff,VaryStepSizeI);

@@ -33,7 +33,7 @@ withquat = true; %Use quaternion method
 maxmisofilter = true; %Filter using misorientation
 
 %Handle inputs
-if nargin == 1
+if nargin > 1
     ismat = isstruct(datain);
     if ismat
         Settings = datain;
@@ -63,27 +63,32 @@ if isfield(Settings,'data')
 else
     Angles = Settings.Angles;
 end
+if ~isfield(Settings,'Inds')
+    Settings.Inds = (1:Settings.ScanLength)';
+end
 n = Settings.Nx;
 m = Settings.Ny;
-IQ = Settings.IQ;
-XData = Settings.XData;
-YData = Settings.YData;
+IQ = Settings.IQ(Settings.Inds);
+XData = Settings.XData(Settings.Inds);
+YData = Settings.YData(Settings.Inds);
 M = ReadMaterial(Settings.Phase{1});
 lattype=M.lattice;
 bavg=M.Burgers;
 maxmiso=Settings.MisoTol;
-ScanLength=m*n;
+ScanLength=Settings.ScanLength;
 stepsize = (XData(3)-XData(2))*1e-6;    %***** can ystep be different?????
 
 if strcmp(Settings.ScanType,'Hexagonal')
-    ncolodd=floor(n/2)+1;
-    ncoleven=ncolodd-1;
-    nphi1 = Hex2Array(Angles(:,1),ncolodd,ncoleven);
-    nPHI = Hex2Array(Angles(:,2),ncolodd,ncoleven);
-    nphi2 = Hex2Array(Angles(:,3),ncolodd,ncoleven);
-    xsq = Hex2Array(XData,ncolodd,ncoleven);
-    ysq = Hex2Array(YData,ncolodd,ncoleven);
-    iqRS = Hex2Array(IQ,ncolodd,ncoleven);
+    NColsOdd=n;
+    NColsEven=NColsOdd-1;
+    NCols = 2*n-1;
+    n = NColsEven;
+    nphi1 = Hex2Array(Angles(:,1),NColsOdd,NColsEven);
+    nPHI = Hex2Array(Angles(:,2),NColsOdd,NColsEven);
+    nphi2 = Hex2Array(Angles(:,3),NColsOdd,NColsEven);
+    xsq = Hex2Array(XData,NColsOdd,NColsEven);
+    ysq = Hex2Array(YData,NColsOdd,NColsEven);
+    iqRS = Hex2Array(IQ,NColsOdd,NColsEven);
     [m,n]=size(iqRS);
 else
     xsq = reshape(XData,n,m)';
@@ -96,6 +101,10 @@ end
 
 %Get Indices of points above to the right
 [RefIndA,RefIndC] = GetAdjacentInds([n,m],1:ScanLength,skip,Settings.ScanType);
+if strcmp(Settings.ScanType,'Hexagonal')
+    RefIndA = RefIndA(:,1);
+    RefIndC = RefIndC(:,1);
+end
 
 if withquat
     
@@ -123,87 +132,158 @@ if withquat
         misangc(real(anglec)>maxmiso*pi/180) = false;
     end
     
-    %Set up ID vectors for scan edges
-    Ind = (1:ScanLength)';
     
-    toprow = Ind<=n*(skip+1);
-    botrow = Ind>ScanLength-n*(skip+1);
-    rightside = mod(Ind,n)==0 | (n-mod(Ind,n))<=skip;
-    leftside = mod(Ind,n)<=skip+1 & mod(Ind,n)>0;
-    corners = Ind == 1 | Ind == n | Ind == ScanLength-n+1 | Ind == ScanLength;
-    
-    %                m21 m22
-    %                 ?   ?
-    %              aC - a - ac
-    %          m11?|   |    |?m13
-    %               C - b - c
-    %          m14?|   |    |?m16
-    %              AC - A - Ac
-    %                 ?   ?
-    %                m25 m26
-    
-    %% X-Direction
-    m11 = zeros(ScanLength,4);
-    m12 = m11; m13 = m11; m14 = m11; m15 = m11; m16 = m11;
     
     if smooth
-        %Get surrounding misorientations for smoothing
-        m11(~toprow & ~leftside,:) = misoa(Ind(~toprow & ~leftside)-1,:);
-        m12(~toprow,:) = misoa(Ind(~toprow),:);
-        m13(~toprow & ~rightside,:) = misoa(Ind(~toprow & ~rightside)+1,:);
-        m14(~botrow & ~leftside,:) = misoa(Ind(~botrow & ~leftside)-1+n,:);
-        m15(~botrow,:) = misoa(Ind(~botrow)+n,:);
-        m16(~botrow & ~rightside,:) = misoa(Ind(~botrow & ~rightside)+1+n,:);
-        
-        %Matrix with number of points to average
-        numpts = ones(Settings.ScanLength,1)*6;
-        numpts((toprow | botrow) & ~corners) = 3;
-        numpts((leftside | rightside) & ~corners) = 4;
-        numpts(corners) = 2;
-        
-        %Calculate average misorietation
-        avgmisoa = (m11+m12+m13+m14+m15+m16)./repmat(numpts,1,4).*repmat(misanga,1,4);
-        avgmisoa = quatnorm(avgmisoa);
+        switch Settings.ScanType
+            case 'Square'
+                
+                %Set up ID vectors for scan edges
+                Ind = (1:ScanLength)';
+                toprow = Ind<=n*(skip+1);
+                botrow = Ind>ScanLength-n*(skip+1);
+                rightside = mod(Ind,n)==0 | (n-mod(Ind,n))<=skip;
+                leftside = mod(Ind,n)<=skip+1 & mod(Ind,n)>0;
+                corners = Ind == 1 | Ind == n | Ind == ScanLength-n+1 | Ind == ScanLength;
+                
+                %X-Direction
+                m11 = zeros(ScanLength,4);
+                m12 = m11; m13 = m11; m14 = m11; m15 = m11; m16 = m11;
+                m11(~toprow & ~leftside,:) = misoa(Ind(~toprow & ~leftside)-(1+skip),:);
+                m12(~toprow,:) = misoa(Ind(~toprow),:);
+                m13(~toprow & ~rightside,:) = misoa(Ind(~toprow & ~rightside)+(1+skip),:);
+                m14(~botrow & ~leftside,:) = misoa(Ind(~botrow & ~leftside)-(1+skip)+n*(1+skip),:);
+                m15(~botrow,:) = misoa(Ind(~botrow)+n*(1+skip),:);
+                m16(~botrow & ~rightside,:) = misoa(Ind(~botrow & ~rightside)+(1+skip)+n*(1+skip),:);
+                %Matrix with number of points to average
+                numpts = ones(Settings.ScanLength,1)*6;
+                numpts((toprow | botrow) & ~corners) = 3;
+                numpts((leftside | rightside) & ~corners) = 4;
+                numpts(corners) = 2;
+                %Calculate average misorietation
+                avgmisoa = (m11+m12+m13+m14+m15+m16)./repmat(numpts,1,4).*repmat(misanga,1,4);
+                avgmisoa = quatnorm(avgmisoa);
+                
+                %Y-Direction
+                m21 = zeros(ScanLength,4);
+                m22 = m21; m23 = m21; m24 = m21; m25 = m21; m26 = m21;
+                m21(~toprow & ~leftside,:) = misoc(Ind(~toprow & ~leftside)-n*(1+skip)-(1+skip),:);
+                m22(~toprow & ~rightside,:) = misoc(Ind(~toprow & ~rightside)-n*(1+skip),:);
+                m23(~leftside,:) = misoc(Ind(~leftside)-(1+skip),:);
+                m24(~rightside,:) = misoc(Ind(~rightside),:);
+                m25(~botrow & ~leftside,:) = misoc(Ind(~botrow & ~leftside)+n*(1+skip)-(1+skip),:);
+                m26(~botrow & ~rightside,:) = misoc(Ind(~botrow & ~rightside)+n*(1+skip),:);
+                %Matrix with number of points to average
+                numpts = ones(Settings.ScanLength,1)*6;
+                numpts((toprow | botrow) & ~corners) = 4;
+                numpts((leftside | rightside) & ~corners) = 3;
+                numpts(corners) = 2;
+                %Calculate average misorietation
+                avgmisoc = (m21+m22+m23+m24+m25+m26)./repmat(numpts,1,4).*repmat(misangc,1,4);
+                avgmisoc = quatnorm(avgmisoc);
+                
+            case 'Hexagonal'
+                if skip > 1
+                    skip = 1;
+                    w = warndlg('Skips greater than 1 not yet implemented for Hexagonal Scans');
+                    uiwait(w,3)
+                end
+                
+                %Set up ID vectors for scan edges
+                Ind = (1:ScanLength)';
+                IndM = mod(Ind,NColsOdd+NColsEven);
+                IndsM = Hex2Array(IndM,NColsOdd,true);
+                Inds = Hex2Array(Ind,NColsOdd,true);
+                if mod(m,2)
+                    botcol = NColsOdd;
+                else
+                    botcol = NColsEven;
+                end
+                toprow = Ind<=NColsOdd*(skip+1)-floor((skip+1)/2);
+                botrow = ScanLength+1-Ind<=NColsOdd*(skip+1)-floor((skip+1)/2);
+                oddleft = IndM<=1+skip & IndM>0;
+                oddright = IndM<=NColsOdd & IndM>=NColsOdd-skip;
+                oddleft2 = IndM<=2+skip & IndM>0;
+                oddright2 = IndM<=NColsOdd & IndM>=NColsOdd-skip-1;
+                evenleft = IndM>NColsOdd & IndM<=NColsOdd+skip+1;
+                evenright = IndM==0 | IndM>=(NCols-skip);
+                
+                %X-Direction
+                m11 = zeros(ScanLength,4);
+                m12 = m11; m13 = m11; m14 = m11; m15 = m11; m16 = m11;
+                m11(~toprow & ~oddleft2 & ~evenleft,:) = misoa(Ind(~toprow & ~oddleft2 & ~evenleft)-(1+skip),:);
+                m12(~toprow & ~oddleft,:) = misoa(Ind(~toprow & ~oddleft),:);
+                m13(~toprow & ~oddright & ~evenright,:) = misoa(Ind(~toprow & ~oddright & ~evenright)+(1+skip),:);
+                m14(~botrow & ~oddleft & ~evenleft,:) = misoa(Ind(~botrow & ~oddleft & ~evenleft)+NColsOdd*(1+skip)-(1+skip),:);
+                m15(~botrow & ~oddright,:) = misoa(Ind(~botrow & ~oddright)+NColsOdd*(1+skip),:);
+                m16(~botrow & ~oddright2 & ~evenright,:) = misoa(Ind(~botrow & ~oddright2 & ~evenright)+NColsOdd*(1+skip)+(1+skip),:);
+                numpts = (sum(m11,2)>0)+(sum(m12,2)>0)+(sum(m13,2)>0)+...
+                    (sum(m14,2)>0)+(sum(m15,2)>0)+(sum(m16,2)>0);
+                I = true(ScanLength,1);
+                I = ~botrow & ~oddleft & ~evenleft;
+                %Calculate average misorietation
+                avgmisoa = (m11+m12+m13+m14+m15+m16)./repmat(numpts,1,4).*repmat(misanga,1,4);
+                avgmisoa = quatnorm(avgmisoa);
+                
+                %Y-Direction
+                m21 = zeros(ScanLength,4);
+                m22 = m21; m23 = m21; m24 = m21; m25 = m21; m26 = m21;
+                m21(~toprow & ~oddleft2 & ~evenleft,:) = misoc(Ind(~toprow & ~oddleft2 & ~evenleft)-NColsOdd-(1+skip),:);
+                m22(~toprow & ~oddleft & ~oddright,:) = misoc(Ind(~toprow & ~oddleft & ~oddright)-NColsOdd,:);
+                m23(~oddleft & ~evenleft,:) = misoc(Ind(~oddleft & ~evenleft)-(1+skip),:);
+                m24(~oddright & ~evenright,:) = misoc(Ind(~oddright & ~evenright),:);
+                m25(~botrow & ~oddleft & ~oddright,:) = misoc(Ind(~botrow & ~oddleft & ~oddright)+NColsOdd-(1+skip),:);
+                m26(~botrow & ~oddright2 & ~evenright,:) = misoc(Ind(~botrow & ~oddright2 & ~evenright)+NColsOdd,:);
+                numpts = (sum(m21,2)>0)+(sum(m22,2)>0)+(sum(m23,2)>0)+...
+                    (sum(m24,2)>0)+(sum(m25,2)>0)+(sum(m26,2)>0);
+                %Calculate average misorietation
+                avgmisoc = (m21+m22+m23+m24+m25+m26)./repmat(numpts,1,4).*repmat(misangc,1,4);
+                avgmisoc = quatnorm(avgmisoc);
+                
+        end
     else
         avgmisoa = misoa;
-    end
-    avgmisoa_R = quat2rmat(avgmisoa);
-    
-    %Calculate Beta derivatives
-    bd2 = (avgmisoa_R - repmat(eye(3),1,1,ScanLength)) / (-stepsize*(skip+1));
-    bd2 = permute(reshape(permute(bd2,[3 1 2]),Settings.Nx,Settings.Ny,3,3),[4 3 2 1]);
-    
-    %% Y-Direction
-    m21 = zeros(ScanLength,4);
-    m22 = m21; m23 = m21; m24 = m21; m25 = m21; m26 = m21;
-    
-    if smooth
-        %Get surrounding misorientations for smoothing
-        m21(~toprow & ~leftside,:) = misoc(Ind(~toprow & ~leftside)-n-1,:);
-        m22(~toprow & ~rightside,:) = misoc(Ind(~toprow & ~rightside)-n,:);
-        m23(~leftside,:) = misoc(Ind(~leftside)-1,:);
-        m24(~rightside,:) = misoc(Ind(~rightside),:);
-        m25(~botrow & ~leftside,:) = misoc(Ind(~botrow & ~leftside)+n-1,:);
-        m26(~botrow & ~rightside,:) = misoc(Ind(~botrow & ~rightside)+n,:);
-        
-        %Matrix with number of points to average
-        numpts = ones(Settings.ScanLength,1)*6;
-        numpts((toprow | botrow) & ~corners) = 4;
-        numpts((leftside | rightside) & ~corners) = 3;
-        numpts(corners) = 2;
-        
-        %Calculate average misorietation
-        avgmisoc = (m21+m22+m23+m24+m25+m26)./repmat(numpts,1,4).*repmat(misangc,1,4);
-        avgmisoc = quatnorm(avgmisoc);
-    else
         avgmisoc = misoc;
     end
-    avgmisoc_R = quat2rmat(avgmisoc);
+    
+    %                Square                                     Hexagonal
+    %
+    %                m21 m22                                     m21 m22
+    %                 |   |                                       |   |
+    %              aC - a - ac                                 aC - a - ac  
+    %          m11->|   |    |<-m13                        m11-> \   \    \<-m13 
+    %               C - b - c                                     C - b - c
+    %          m14->|   |    |<-m16                           m14->\   \    \<-m16
+    %              AC - A - Ac                                      AC - A - AC
+    %                 |   |                                            |   |
+    %                m25 m26                                          m25 m26
+    
+    
     
     %Calculate Beta derivatives
+    avgmisoc_R = quat2rmat(avgmisoc);
     bd1 = (avgmisoc_R - repmat(eye(3),1,1,ScanLength)) / (stepsize*(skip+1));
-    bd1 = permute(reshape(permute(bd1,[3 1 2]),Settings.Nx,Settings.Ny,3,3),[4 3 2 1]);
+    avgmisoa_R = quat2rmat(avgmisoa);
+    bd2 = (avgmisoa_R - repmat(eye(3),1,1,ScanLength)) / (-stepsize*(skip+1));
     
+    betaderiv2 = permute(bd2,[2 1 3]);
+    betaderiv1 = permute(bd1,[2 1 3]);
+    
+    if strcmp(Settings.ScanType,'Square')
+        bd1 = permute(reshape(permute(bd1,[3 1 2]),Settings.Nx,Settings.Ny,3,3),[4 3 2 1]);
+        bd2 = permute(reshape(permute(bd2,[3 1 2]),Settings.Nx,Settings.Ny,3,3),[4 3 2 1]);
+    else
+        bd1 = permute(bd1,[3 1 2]);
+        bd1 = cat(4,Hex2Array(bd1(:,:,1),NColsOdd),...
+            Hex2Array(bd1(:,:,2),NColsOdd),...
+            Hex2Array(bd1(:,:,3),NColsOdd));
+        bd1 = permute(bd1,[4 3 1 2]);
+        bd2 = permute(bd2,[3 1 2]);
+        bd2 = cat(4,Hex2Array(bd2(:,:,1),NColsOdd),...
+            Hex2Array(bd2(:,:,2),NColsOdd),...
+            Hex2Array(bd2(:,:,3),NColsOdd));
+        bd2 = permute(bd2,[4 3 1 2]);
+    end
     betaderiv2 = bd2;
     betaderiv1 = bd1;
     
@@ -397,6 +477,7 @@ end
 
 % Caculate the Nye Tensor
 alpha=zeros(3,3,m,n);
+clear alpha alpha_total3
 alpha(1,3,:,:)=(betaderiv2(1,1,:,:) - betaderiv1(1,2,:,:))/bavg; % alpha(1,3)
 alpha(2,3,:,:)=(betaderiv2(2,1,:,:) - betaderiv1(2,2,:,:))/bavg; % alpha(2,3)
 alpha(3,3,:,:)=(betaderiv2(3,1,:,:) - betaderiv1(3,2,:,:))/bavg; % alpha(3,3)
@@ -433,6 +514,6 @@ fprintf('Alpha(1,3) Std: %g\n',GNDStd);
 figure
 imagesc(real(alpha_total3))
 title('GND density using Alpha3')
-caxis([1e10 1e15])
+caxis([1e10 1e13])
 colorbar
 
