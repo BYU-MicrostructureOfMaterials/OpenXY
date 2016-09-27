@@ -19,9 +19,10 @@ Settings.ScanType = 'Square'; % 'Square' or 'Hexagonl'
 Settings.Material = 'tantalum'; % What material do you want to use
 Settings.DoParallel = 3; % How many cores do you want running the jobs
 Settings.ROISizePercent = 25; % How large do you want your ROIs
-Settings.NumROIs = 40; % Number of ROIs
+Settings.NumROIs = 20; % Number of ROIs
 Settings.ROIStyle = 'Radial'; % 'Radial' or 'Grid'
-Settings.DoStrain = 1; % Do you want to calculate strain or not
+Settings.DoStrain = 0; % Do you want to calculate strain or not
+Settings.CalcDerivatives = 1; % Do you want to calculated dislocaiton density
 Settings.HROIMMethod = 'Real'; %'Simulated', 'Real', or 'Dynamic Simulated'
 Settings.PlaneFit = 'From Tiff Images'; % Pattern center method
 Settings.mperpix = 25.5; % Microns/Pixel
@@ -57,7 +58,7 @@ for sc = 1:numfiles % Loops through all your scans that you selected
     ang_file=dir([curfilepath '\*.ctf']); % Normaly you want '\*.ang'. For Oxford you want '\*.ctf'
     Settings.ScanFilePath=[curfilepath '\' ang_file.name];
     [path,name,ext]=fileparts(Settings.ScanFilePath);
-    image_file=dir([curfilepath '\' name '\*_000001.*']); % Normaly you want '\*x0y0.*'. You may need to change this depending on your nameing system
+    image_file=dir([curfilepath '\' name '\0_0.*']); % Normaly you want '\*x0y0.*'. You may need to change this depending on your nameing system
     Settings.FirstImagePath=[curfilepath '\' name '\' image_file.name];
     Settings.OutputPath=[curfilepath '\OpenXY_Results.ang'];
     
@@ -88,7 +89,9 @@ for sc = 1:numfiles % Loops through all your scans that you selected
     
     %Get Image Names
     if ~isempty(Settings.FirstImagePath)
-        Settings.ImageNamesList = GetImageNamesList(Settings.ScanType, ...
+        % Normaly use GetImageNamesList function. If your files are just
+        % named #_#.tiff then change to Batch_GetImageNamesList
+        Settings.ImageNamesList = Batch_GetImageNamesList(Settings.ScanType, ...  
             Settings.ScanLength,[Settings.Nx Settings.Ny], Settings.FirstImagePath, ...
             [Settings.XData(1),Settings.YData(1)], [XStep, YStep]);
     end
@@ -105,7 +108,7 @@ for sc = 1:numfiles % Loops through all your scans that you selected
     Ny = Settings.Ny;
     
     if Ny>1
-        getdat = [1 2 Nx+1];
+        getdat = [1 2 Nx];% This is usually Nx+1 but sometimes this needs to be Nx (when files are named 0_0.tiff)
     else
         getdat = [1 2];
     end
