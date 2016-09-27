@@ -96,6 +96,13 @@ if vv==0; error('Exited by user'); end
 
 n = Settings.data.cols;
 m = Settings.data.rows;
+if isfield(alpha_data,'stepsize')
+    stepsize = alpha_data.stepsize;
+elseif isfield(alpha_data,'stepsizea')
+    stepsize = alpha_data.stepsizea;
+else
+    stepsize = (Settings.XData(2)-Settings.XData(1))*(Settings.NumSkipPts+1);
+end
 
 if iscell(Settings.data.phi1rn)==1
     phi1rn = real(cell2mat(Settings.data.phi1rn));
@@ -148,7 +155,7 @@ if (alphaorbeta==11) | (strcmp(alphaorbeta, 'Distortion Matching'))
     Fctemp = alpha_data.Fc;
     Fatemp2 = zeros(3,3,length(Fatemp));
     Fctemp2 = zeros(3,3,length(Fatemp));
-    stepsize = alpha_data.stepsize;
+    
     
     for i = 1:length(Fatemp)
         Fatemp2(:,:,i) = ((Fatemp(:,:,i)) - [1 0 0;0 1 0;0 0 1])./stepsize;

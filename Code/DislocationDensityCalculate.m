@@ -7,6 +7,8 @@ function alpha_data = DislocationDensityCalculate(Settings,MaxMisorientation,IQc
 format compact
 tic
 
+StrainOnly = false;
+
 %Calculate Dislocation Density
 data = Settings.data;
 AnalysisParamsPath=Settings.AnalysisParamsPath;
@@ -228,6 +230,12 @@ if ~strcmp(Settings.ScanType,'L')
     data.Fc=AllFc;
     data.SSEc=AllSSEc;
     
+    if StrainOnly
+        for i = 1:Settings.ScanLength
+            AllFa{i} = poldec(AllFa{i});
+        end
+    end
+    
     misang = max(misanglea,misanglec);
 
 end
@@ -344,7 +352,6 @@ r = Oldsize(2);
 
 %Filter alpha data
 for i=1:Settings.ScanLength
-    ind = Inds(i);
     
     %Filter by Misorientation
     if (misang(i)>MaxMisorientation)
@@ -600,7 +607,7 @@ function [AllFa,AllFc,misanglea,misanglec] = DDCalcEasy(RefInd, RefG, lattice, S
     end
     
     %Extract Dim variables
-    r = Settings.data.rows;%
+    r = Settings.Ny;%
     
     %Extract Variables 
     RefIndA = RefInd(1);

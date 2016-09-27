@@ -1,7 +1,13 @@
 function plotrhosplusminus(Settings, alpha_data, rhos, DDSettings)
 
 
-stepsize = alpha_data.stepsize;
+if isfield(alpha_data,'stepsize')
+    stepsize = alpha_data.stepsize;
+elseif isfield(alpha_data,'stepsizea')
+    stepsize = alpha_data.stepsizea;
+else
+    stepsize = (Settings.XData(2)-Settings.XData(1))*(Settings.NumSkipPts+1);
+end
 n = Settings.data.cols;
 m = Settings.data.rows;
 
