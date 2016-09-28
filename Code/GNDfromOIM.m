@@ -11,11 +11,17 @@ function alpha_data = GNDfromOIM(datain,smooth,skip)
 %
 %With smoothing, all of the surround points are used and averaged.
 %
-%              AC - A - Ac
-%               |   |   |
-%               C - b - c
-%               |   |   |
-%              aC - a - ac
+%                Square                                     Hexagonal
+%
+%                m21 m22                                     m21 m22
+%                 |   |                                       |   |
+%              aC - a - ac                                 aC - a - ac  
+%          m11->|   |    |<-m13                        m11-> \   \    \<-m13 
+%               C - b - c                                     C - b - c
+%          m14->|   |    |<-m16                           m14->\   \    \<-m16
+%              AC - A - Ac                                      AC - A - AC
+%                 |   |                                            |   |
+%                m25 m26                                          m25 m26
 %
 %Currently fudges it for hexagonal scan - so only accurate for square scan
 %
@@ -246,28 +252,11 @@ if withquat
         avgmisoc = misoc;
     end
     
-    %                Square                                     Hexagonal
-    %
-    %                m21 m22                                     m21 m22
-    %                 |   |                                       |   |
-    %              aC - a - ac                                 aC - a - ac  
-    %          m11->|   |    |<-m13                        m11-> \   \    \<-m13 
-    %               C - b - c                                     C - b - c
-    %          m14->|   |    |<-m16                           m14->\   \    \<-m16
-    %              AC - A - Ac                                      AC - A - AC
-    %                 |   |                                            |   |
-    %                m25 m26                                          m25 m26
-    
-    
-    
     %Calculate Beta derivatives
     avgmisoc_R = quat2rmat(avgmisoc);
     bd1 = (avgmisoc_R - repmat(eye(3),1,1,ScanLength)) / (stepsize*(skip+1));
     avgmisoa_R = quat2rmat(avgmisoa);
     bd2 = (avgmisoa_R - repmat(eye(3),1,1,ScanLength)) / (-stepsize*(skip+1));
-    
-    betaderiv2 = permute(bd2,[2 1 3]);
-    betaderiv1 = permute(bd1,[2 1 3]);
     
     if strcmp(Settings.ScanType,'Square')
         bd1 = permute(reshape(permute(bd1,[3 1 2]),Settings.Nx,Settings.Ny,3,3),[4 3 2 1]);
