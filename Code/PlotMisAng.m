@@ -1,4 +1,20 @@
 function [MaxMisAng,MisAng] = PlotMisAng(g,dims,layout)
+%PLOTMISANG
+% [MaxMisAng,MisAng] = PlotMisang(g,dims,layout)
+% 
+% INPUTS
+%   g: 3x3xN matrix of orientation matrices
+%   dims: Dimensions of the scan [Nx Ny]
+%   layout: Selects which plots are shown
+%       cross: 5 plots. Center is the max in any of the 4 directions.
+%           Others are the miorientation with the point at that side (top graph
+%           is a plot of the misorientation of the point with the top
+%           neightbor)
+%       top, left, right, bottom: Plot of misorientation of the point with
+%           the specified neighbor
+%       total: max misorientation of in any direction
+%       all: Returns all of the plots as separate figures
+
 if nargin<3
     layout = 'cross';
 end
