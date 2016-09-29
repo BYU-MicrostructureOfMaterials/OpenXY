@@ -11,17 +11,16 @@ tic
 data = Settings.data;
 r = data.rows;%
 c = data.cols;%
-ImageNamesList=Settings.ImageNamesList;
 NColsOdd=[];
 NColsEven=[];
 if strcmp(Settings.ScanType,'Hexagonal')
     NColsOdd = c;
     NColsEven = c-1;
-    leftside=1:c:length(ImageNamesList);
-    rightside=NColsOdd:c:length(ImageNamesList);
-    rightside=[rightside,c:c:length(ImageNamesList)];
+    leftside=1:c:Settings.ScanLength;
+    rightside=NColsOdd:c:Settings.ScanLength;
+    rightside=[rightside,c:c:Settings.ScanLength];
     rightside=sort(rightside);
-    topside=rightside(end-1)+1:length(ImageNamesList);
+    topside=rightside(end-1)+1:Settings.ScanLength;
 end
 
 alpha_total3 = alpha_data.alpha_total3;

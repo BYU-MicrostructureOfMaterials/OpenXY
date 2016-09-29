@@ -6,7 +6,7 @@ function Settings = HREBSDPrep(Settings)
 fftw('planner','exhaustive');
 
 %% Orientation-based GND Option
-if strcmp(Settings.GNDMethod,'Orientation') && ~Settings.DoStrain
+if strcmp(Settings.GNDMethod,'Orientation') && ~Settings.DoStrain && ~isfield(Settings,'PixelSize')
     Settings.PixelSize = 0;
     Settings.PhosphorSize = 3700;
 end
@@ -15,9 +15,6 @@ end
 Settings.largefftmeth = fftw('wisdom');
 %Settings.PixelSize = size(FirstPic,1);
 Settings.ROISize = round((Settings.ROISizePercent * .01)*Settings.PixelSize);
-
-%% Add Sub-folder(s)
-addpath('DDS');
 
 %% EMSoft Setup
 if strcmp(Settings.HROIMMethod,'Dynamic Simulated')
@@ -116,7 +113,7 @@ end
 % image - image b in the case of an L-grid scan)
 if ~strcmp(Settings.HROIMMethod,'Simulated')&& ~isfield(Settings,'RefInd')
     if Settings.RefImageInd~=0
-        Settings.RefInd(1:Settings.ScanLength)= Settings.RefImageInd;
+        Settings.RefInd(1:Settings.ScanLength,1)= Settings.RefImageInd;
     else
         if strcmp(Settings.GrainRefImageType,'Min Kernel Avg Miso')
             Settings.RefInd = GetRefImageInds(...

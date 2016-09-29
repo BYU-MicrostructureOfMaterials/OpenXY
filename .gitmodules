@@ -1,0 +1,3 @@
+[submodule "Code/quaternions"]
+	path = Code/quaternions
+	url = https://github.com/BYU-MicrostructureOfMaterials/quaternions

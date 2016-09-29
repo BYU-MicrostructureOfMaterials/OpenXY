@@ -6,7 +6,7 @@ Settings = HREBSDPrep(Settings);
 %% Plot Setup
 n = Settings.Nx;
 m = Settings.Ny;
-[im,PlotType] = ChoosePlot([n m],Settings.IQ,Settings.Angles);
+[im,PlotType] = ChoosePlot([n m],Settings.IQ(Settings.Inds),Settings.Angles(Settings.Inds,:));
 
 if strcmp(Settings.ScanType,'Square')
     indi = 1:1:m*n;
@@ -16,7 +16,7 @@ if strcmp(Settings.ScanType,'Square')
     end
 elseif strcmp(Settings.ScanType,'Hexagonal')
     NumColsOdd = n;
-    indi = 1:length(Settings.IQ);
+    indi = 1:length(Settings.Inds);
     indi = Hex2Array(indi,NumColsOdd);
 end
 

@@ -22,7 +22,7 @@ function varargout = AdvancedSettingsGUI(varargin)
 
 % Edit the above text to modify the response to help AdvancedSettingsGUI
 
-% Last Modified by GUIDE v2.5 29-Jul-2016 11:18:16
+% Last Modified by GUIDE v2.5 23-Sep-2016 13:47:52
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -122,26 +122,10 @@ set(handles.IQCutoff,'String',num2str(Settings.IQCutoff));
 %SplitDD
 %Do SplitDD
 set(handles.DoSplitDD,'Value',Settings.DoDDS);
-%Weighting
-minscheme = {'No weighting', 'Energy','CRSS'};
-set(handles.SplitDDMethod,'String',minscheme);
-set(handles.SplitDDMethod,'Value',Settings.rdoptions.minscheme);
-%Optimization
-L1 = {'L1','L2','L1 from L2'};
-set(handles.SplitDDOpt,'String',L1);
-x0type = Settings.rdoptions.x0type; L1 = Settings.rdoptions.L1;
-if x0type && L1
-    val = 3;
-elseif x0type && ~L1
-    val = 2;
-elseif ~x0type && L1
-    val = 1;
-end
-set(handles.SplitDDOpt,'Value',val)
-%Nye
-Nye = {'alphai3','Pantleon'};
-set(handles.SplitDDNye,'String',Nye);
-set(handles.SplitDDNye,'Value',Settings.rdoptions.Pantleon+1);
+DDSMethods = {'Nye-Kroner','Nye-Kroner (Pantleon))','Distortion Matching'};
+set(handles.DDSMethod,'String',DDSMethods);
+index = find(strcmp(DDSMethods,Settings.DDSMethod));
+set(handles.DDSMethod,'Value',index)
 
 %Kernel Avg Miso
 if iscell(Settings.KernelAvgMisoPath)
@@ -323,6 +307,7 @@ switch HROIMMethod
         set(handles.HROIMlabel,'String','Ref Image Index');
         if handles.Settings.RefImageInd == 0
             handles.Settings.RefImageInd = 1;
+            handles.Settings.RefInd(1:handles.Settings.ScanLength) = 1;
         end
         set(handles.HROIMedit,'String',num2str(handles.Settings.RefImageInd));
         set(handles.HROIMedit,'Enable','on');
@@ -375,6 +360,7 @@ switch HROIMMethod
         if isfield(handles.Settings,'ScanLength') && ...
                 input > 0 && input <= handles.Settings.ScanLength
             handles.Settings.RefImageInd = round(input);
+            handles.Settings.RefInd(1:handles.Settings.ScanLength) = round(input);
             set(hObject,'String',num2str(round(input)));
             ToggleGrainMap_Callback(handles.ToggleGrainMap,eventdata,handles);
         else
@@ -557,7 +543,7 @@ else
     if strcmp(Settings.ScanType,'Hexagonal')
         set(hObject, 'String', round(str2double(UserInput)*2)/2);
     else
-    set(hObject, 'String', round(str2double(UserInput)));
+        set(hObject, 'String', round(str2double(UserInput)));
     end
 end
 handles.Settings.NumSkipPts = str2double(get(hObject,'String'));
@@ -639,9 +625,7 @@ end
 if strcmp(get(hObject,'Enable'),'off')
     enable = 'off';
 end
-set(handles.SplitDDMethod,'Enable',enable);
-set(handles.SplitDDOpt,'Enable',enable);
-set(handles.SplitDDNye,'Enable',enable);
+set(handles.DDSMethod,'Enable',enable);
 handles.Settings.DoDDS = get(hObject,'Value');
 guidata(hObject,handles);
 
@@ -718,14 +702,14 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-% --- Executes on selection change in SplitDDNye.
-function SplitDDNye_Callback(hObject, eventdata, handles)
-% hObject    handle to SplitDDNye (see GCBO)
+% --- Executes on selection change in DDSMethod.
+function DDSMethod_Callback(hObject, eventdata, handles)
+% hObject    handle to DDSMethod (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns SplitDDNye contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from SplitDDNye
+% Hints: contents = cellstr(get(hObject,'String')) returns DDSMethod contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from DDSMethod
 contents = cellstr(get(hObject,'String'));
 val = contents{get(hObject,'Value')};
 handles.Settings.rdoptions.Pantleon = strcmp(val,'Pantleon');
@@ -733,8 +717,8 @@ guidata(hObject,handles);
 
 
 % --- Executes during object creation, after setting all properties.
-function SplitDDNye_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to SplitDDNye (see GCBO)
+function DDSMethod_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to DDSMethod (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -1042,7 +1026,11 @@ switch sel
         handles.Settings.DoStrain = 1;
         set(handles.DoStrain,'Value',1);
         DoStrain_Callback(handles.DoStrain, eventdata, handles);
-        set(handles.DoStrain,'Enable','off');
+        if ~isfield(handles.Settings,'data')
+            set(handles.DoStrain,'Enable','off');
+        else
+            set(handles.DoStrain,'Enable','on');
+        end
     case 'Orientation-based'
         handles.Settings.GNDMethod = 'Orientation';
         

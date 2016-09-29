@@ -4,13 +4,19 @@ Matlab tool for performing cross-correlation analysis of EBSD patterns using rea
 Calculates dislocation density.
 
 Files Needed:
-Grain file (.txt)
-OIM file (.ang)
+Scan Files (.ang and .txt, or .ctf and .cpr)
 EBSD scan images
 
 To Run:
 Matlab Version: 2012a or later (for parallel processing). 2014a or later reccommended.
 Open and run Run_OpenXY.m
+
+To Clone:
+This repository includes a submodule. To clone with the submodule run the following commands in the root directory of the repository:
+git submodule init
+git submodule update
+OR clone the whole repository at once with the --recursive argument
+git clone --recursive https://github.com/BYU-MicrostructureOfMaterials/OpenXY.git
 
 In case of an error:
 Write an email to BYUOpenXY@gmail.com with "Error Report" in subject. 

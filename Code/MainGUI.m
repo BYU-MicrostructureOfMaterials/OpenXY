@@ -80,11 +80,13 @@ if ~strcmp(pwd,XYpath)
     path(p);
 end
 addpath(genpath(XYpath));
+addpath('quaternions')
+addpath('DDS')
 
 %Add sub folder(s)
 if ~exist('temp','dir')
     mkdir('temp');
-end 
+end
 
 
 % Check for Required Matlab Toolboxes
@@ -728,7 +730,7 @@ if handles.ScanFileLoaded
     [im, PlotType] = ChoosePlot([handles.Settings.Nx handles.Settings.Ny],handles.Settings.IQ,handles.Settings.Angles);
     [X,Y] = SelectSubscan(im,PlotType);
     Inds = 1:handles.Settings.ScanLength;
-    IndMap = vec2map(Inds,handles.Settings.Nx,handles.Settings.ScanType);
+    IndMap = vec2map(Inds',handles.Settings.Nx,handles.Settings.ScanType);
     SubInds = IndMap(Y(1):Y(2),X(1):X(2));
     handles.Settings.Inds = reshape(SubInds',[numel(SubInds) 1]);
     

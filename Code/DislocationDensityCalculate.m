@@ -7,9 +7,11 @@ function alpha_data = DislocationDensityCalculate(Settings,MaxMisorientation,IQc
 format compact
 tic
 
+StrainOnly = false;
+
 %Calculate Dislocation Density
 data = Settings.data;
-AnalysisParamsPath=[Settings.AnalysisParamsPath '.mat'];
+AnalysisParamsPath=Settings.AnalysisParamsPath;
 r = data.rows;%
 c = data.cols;%
 stepsize_orig = abs((data.xpos(3)-data.xpos(2))/1e6); %units in meters. This is for square grid
@@ -19,10 +21,11 @@ Allg(Settings.Inds,:) = NewAngles;
 Inds = Settings.Inds;
 ImageFilter=Settings.ImageFilter;
 special=0;
-if ~isfield(Settings,'EasyDD')
-    Settings.EasyDD = 0;
+if isfield(Settings,'GNDMethod') && strcmp(Settings.GNDMethod,'Partial')
+    EasyDD = 1;
+else
+    EasyDD = 0;
 end
-EasyDD = Settings.EasyDD;
 
 if strcmp(VaryStepSizeI,'a')
     numruntimes=floor(min(r,c)/2)-1;
@@ -131,12 +134,12 @@ if ~strcmp(Settings.ScanType,'L')
    % Allg=data.g;
    % ScanType=Settings.ScanType;
    % intensityr=zeros(size(ImageNamesList));
-    
+
     N = Settings.ScanLength;
     
     lattice=cell(N,1);
     Burgers=zeros(N,1);
-    
+
     %Get info for Subscans
     if isfield(Settings,'Resize') && ~all(Settings.Resize == [c r])
         Oldsize = Settings.Resize;
@@ -216,7 +219,7 @@ if ~strcmp(Settings.ScanType,'L')
                     DDCalcEasy(RefInds(cnt,:),Refg(:,:,:,cnt),lattice{cnt},Settings);
                 AllSSEa(cnt) = 0;
                 AllSSEc(cnt) = 0;
-            end
+        end
             waitbar(cnt/N,h)
         end
         close(h);
@@ -226,6 +229,12 @@ if ~strcmp(Settings.ScanType,'L')
     data.SSEa=AllSSEa;
     data.Fc=AllFc;
     data.SSEc=AllSSEc;
+
+    if StrainOnly
+        for i = 1:Settings.ScanLength
+            AllFa{i} = poldec(AllFa{i});
+end
+    end
     
     misang = max(misanglea,misanglec);
 
@@ -342,29 +351,28 @@ c = Oldsize(1);
 r = Oldsize(2);
 
 %Filter alpha data
-for i=1:Settings.ScanLength
-    ind = Inds(i);
-    
+    for i=1:Settings.ScanLength
+        
     %Filter by Misorientation
-    if (misang(i)>MaxMisorientation)
-        alpha_filt(:,:,i)=0;
-    end
-    
+        if (misang(i)>MaxMisorientation)
+            alpha_filt(:,:,i)=0;
+        end
+        
     %Filter Grain Boundaries
     if Settings.grainID(RefInds(i,2))~=Settings.grainID(RefInds(i,1)) || Settings.grainID(RefInds(i,2))~=Settings.grainID(RefInds(i,3))
-        alpha_filt(:,:,i)=0;
-    end
-    
+            alpha_filt(:,:,i)=0;
+        end
+        
     %Count Filtered points
-    if alpha_filt(:,:,i)==0
-        discount=discount+1;
+        if alpha_filt(:,:,i)==0
+            discount=discount+1;
+        end
     end
-end
 MisAngleInds = RefInds;
 
-alpha_total3(1,:)=3.*(abs(alpha_filt(1,3,:))+abs(alpha_filt(2,3,:))+abs(alpha_filt(3,3,:)));
-alpha_total5(1,:)=9/5.*(abs(alpha_filt(1,3,:))+abs(alpha_filt(2,3,:))+abs(alpha_filt(3,3,:))+abs(alpha_filt(2,1,:))+abs(alpha_filt(1,2,:)));
-alpha_total9(1,:)=abs(alpha_filt(1,3,:))+abs(alpha_filt(2,3,:))+abs(alpha_filt(3,3,:))+abs(alpha_filt(1,1,:))+abs(alpha_filt(2,1,:))+abs(alpha_filt(3,1,:))+abs(alpha_filt(1,2,:))+abs(alpha_filt(2,2,:))+abs(alpha_filt(3,2,:));
+alpha_total3(1,:)=30/10.*(abs(alpha_filt(1,3,:))+abs(alpha_filt(2,3,:))+abs(alpha_filt(3,3,:)));
+alpha_total5(1,:)=30/14.*(abs(alpha_filt(1,3,:))+abs(alpha_filt(2,3,:))+abs(alpha_filt(3,3,:))+abs(alpha_filt(2,1,:))+abs(alpha_filt(1,2,:)));
+alpha_total9(1,:)=30/20.*abs(alpha_filt(1,3,:))+abs(alpha_filt(2,3,:))+abs(alpha_filt(3,3,:))+abs(alpha_filt(1,1,:))+abs(alpha_filt(2,1,:))+abs(alpha_filt(3,1,:))+abs(alpha_filt(1,2,:))+abs(alpha_filt(2,2,:))+abs(alpha_filt(3,2,:));
 
 
 %save averaged alphas to a file.
@@ -388,21 +396,21 @@ alpha_data.stepsizec=stepsizec;
 alpha_data.b=b(Inds);
 alpha_data.NumInds = NumInds;
 
-if special==1
-    disp('special')
-    disp(num2str(stepsizea))
-    Settings.OutputPath=[AnalysisParamsPath(1:end-8),'Skip',num2str(skippts),'.ang.mat']; 
-    save(Settings.OutputPath,'Settings');
-    save(Settings.OutputPath ,'alpha_data','-append'); 
-elseif strcmp(Settings.ScanType,'LtoSquare')
-    disp('LtoSquare')
-    Settings.OutputPath=[AnalysisParamsPath(1:end-8),'LtoSquare.ang.mat'];
-    save(Settings.OutputPath ,'Settings');     
-    save(Settings.OutputPath ,'alpha_data','-append'); 
-else
-    disp('Normal Norman')
-    save(AnalysisParamsPath ,'alpha_data','-append'); 
-end
+% if special==1
+%     disp('special')
+%     disp(num2str(stepsizea))
+%     Settings.OutputPath=[AnalysisParamsPath(1:end-8),'Skip',num2str(skippts),'.ang.mat']; 
+%     save(Settings.OutputPath,'Settings');
+%     save(Settings.OutputPath ,'alpha_data','-append'); 
+% elseif strcmp(Settings.ScanType,'LtoSquare')
+%     disp('LtoSquare')
+%     Settings.OutputPath=[AnalysisParamsPath(1:end-8),'LtoSquare.ang.mat'];
+%     save(Settings.OutputPath ,'Settings');     
+%     save(Settings.OutputPath ,'alpha_data','-append'); 
+% else
+%     disp('Normal Norman')
+%     save(AnalysisParamsPath ,'alpha_data','-append'); 
+% end
     
 % pgnd=logspace(11,17);
 % Lupper=1./sqrt(pgnd);
@@ -558,10 +566,10 @@ function [AllFa,AllSSEa,AllFc,AllSSEc, misanglea, misanglec] = DDCalc(RefInd,Ref
     else
         % first, evaluate point a
         if r > 1 %Not Line Scan
-            
+
             clear global rs cs Gs
             if RefIndA2 == 0
-                [AllFa,AllSSEa] = CalcF(image_b,image_a,g_b,eye(3),cnt,Settings,Settings.Phase{cnt}, RefIndA);
+                    [AllFa,AllSSEa] = CalcF(image_b,image_a,g_b,eye(3),cnt,Settings,Settings.Phase{cnt}, RefIndA);
             else
                 [AllFa1,AllSSEa1] = CalcF(image_b,image_a ,g_b,eye(3),cnt,Settings,Settings.Phase{cnt},RefIndA );
                 [AllFa2,AllSSEa2] = CalcF(image_b,image_a2,g_b,eye(3),cnt,Settings,Settings.Phase{cnt},RefIndA2);
@@ -586,69 +594,80 @@ function [AllFa,AllSSEa,AllFc,AllSSEc, misanglea, misanglec] = DDCalc(RefInd,Ref
     end
 end
 
-function [AllFa,AllFc,misanglea,misanglec] = DDCalcEasy(DDSettings,lattice, Settings)
+function [AllFa,AllFc,misanglea,misanglec] = DDCalcEasy(RefInd, RefG, lattice, Settings)
+    
 
-    
     skippts = Settings.NumSkipPts;
-    
+        
     %Check Pattern Source
     H5Images = false;
     if size(Settings.ImageNamesList,1)==1
         H5Images = true;
         H5ImageParams = {Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter};
-    end
-    
+        end
+
     %Extract Dim variables
-    r = Settings.data.rows;%
-    
+    r = Settings.Ny;%
+        
     %Extract Variables 
-    RefIndA = DDSettings{1,1};
-    cnt = DDSettings{1,2};
-    RefIndC = DDSettings{1,3};
-    
-    Amat = DDSettings{2,1};
-    g_b = DDSettings{2,2};
-    Cmat = DDSettings{2,3};
-    
-    if size(DDSettings,2) > 3
-        RefIndA1 = RefIndA;
-        RefIndA2 = DDSettings{2,4};       
+    RefIndA = RefInd(1);
+    cnt = RefInd(2);
+    RefIndC = RefInd(3);
+
+    Amat = RefG(:,:,1);
+    g_b = RefG(:,:,2);
+    Cmat = RefG(:,:,3);
+
+    if strcmp(Settings.ScanType,'Hexagonal')
+        step = skippts+0.5;
+        Cind = 4;
+        if mod(ceil(step),2) %Two Ref A's
+            RefIndA2 = RefInd(4);
+            Cind = 5;
+        end
+        if mod(step,1) > 0 %Two Ref C's
+            RefIndC2 = RefInd(Cind);
+        end
     end
-    
-    misanglea=GeneralMisoCalc(g_b,Amat,lattice);
+                
+    misanglea=GeneralMisoCalc(g_b,Amat,lattice); %need to check the second A-point if hexagonal scan grid***
     misanglec=GeneralMisoCalc(g_b,Cmat,lattice);
-    
-    Fbinv = inv(Settings.data.F{cnt});
+                
+    Fbinv = inv(g_b'*Settings.data.F{cnt}*g_b); % in sample frame
+%      Fbinv = inv(Settings.data.F{cnt}); % in crystal frame
     % first, evaluate point a
     if r > 1 %Not Line Scan
         if ~strcmp(Settings.ScanType,'Hexagonal') || (strcmp(Settings.ScanType,'Hexagonal') && skippts>0)
-            AllFa = Settings.data.F{RefIndA}*Fbinv;
-        else
-            AllFa1 = Settings.data.F{RefIndA1}*Fbinv;
-            AllFa2 = Settings.data.F{RefIndA2}*Fbinv;
+            AllFa = g_b*Amat'*Settings.data.F{RefIndA}*Amat*Fbinv*g_b'; %put Fa in sample frame, then put the whole thing back in crystal
+%             AllFa = Settings.data.F{RefIndA}*Fbinv; %leave in crystal
+                else
+            Amat2=euler2gmat(Settings.data.NewAngles(RefIndA2,1),Settings.data.NewAngles(RefIndA2,2),Settings.data.NewAngles(RefIndA2,3));
+            AllFa1 = g_b*Amat'*Settings.data.F{RefIndA1}*Amat*Fbinv*g_b';
+            AllFa2 = g_b*Amat2'*Settings.data.F{RefIndA2}*Amat2*Fbinv*g_b';
             AllFa=0.5*(AllFa1+AllFa2);
-        end
-
+                end
+                
         % scale a direction step F tensor for different step size 
         if strcmp(Settings.ScanType,'Hexagonal')
             AllFatemp=AllFa-eye(3);
             AllFatemp=AllFatemp/sqrt(3)*2;
             AllFa=AllFatemp+eye(3);
         end
-    else
+                else
         AllFa= -eye(3);
-    end
+            end
     % then, evaluate point c
-    AllFc = Settings.data.F{RefIndC}*Fbinv;
+    AllFc = g_b*Cmat'*Settings.data.F{RefIndC}*Cmat*Fbinv*g_b'; %sample then back to crystal
+%     AllFc = Settings.data.F{RefIndC}*Fbinv; %crystal
 
-
-end
+            
+            end
 
 function [RefInd,Refg,NumInds] = GetDDSettings(Inds,Angles,Dims,ScanType,skippts)
     if size(Inds,1) == 1
         Inds = Inds';
-    end
-    
+        end
+       
     %Get Reference Images
     [RefIndA,RefIndC] = GetAdjacentInds(Dims,Inds,skippts,ScanType);
     RefInd = [RefIndA(:,1) Inds RefIndC(:,1)];
@@ -664,11 +683,11 @@ function [RefInd,Refg,NumInds] = GetDDSettings(Inds,Angles,Dims,ScanType,skippts
         if mod(step,1) > 0 %Two Ref C's
             RefInd = [RefInd RefIndC(:,2)];
             NumInds.C = 2;
-        end
+    end
     end
     
     %Get Reference Angles
     g = euler2gmat(Angles);
     Refg = permute(reshape(g(:,:,RefInd),3,3,length(Inds),[]),[1 2 4 3]);
-     
+    
 end

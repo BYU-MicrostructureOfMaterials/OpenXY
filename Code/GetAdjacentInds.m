@@ -1,4 +1,10 @@
 function [RefIndA,RefIndC] = GetAdjacentInds(scansize,Ind,skippts,ScanType)
+%
+%    a
+%    |
+%    b - c
+%
+
 switch ScanType
     case 'Square'
         c = scansize(1);
