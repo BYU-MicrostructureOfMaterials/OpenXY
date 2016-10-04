@@ -83,7 +83,7 @@ else
 %         disp(ImageInd)
         
         [F{ImageInd}, g{ImageInd}, U{ImageInd}, SSE{ImageInd}, XX{ImageInd}] = ...
-            GetDefGradientTensor(Inds(ImageInd),Settings,Settings.Phase{ImageInd});
+            GetDefGradientTensor(Inds(ImageInd),Settings,Settings.PhaseNamesList{ImageInd});
         
         % commented out this (outputs strain matrix - I think - DTF 5/15/14)
 %         if strcmp(Settings.ScanType,'L')

@@ -1,4 +1,4 @@
-function [grainID, Phase, Mat, PhaseNames] = GetGrainInfo(ScanFilePath, Material, ScanParams, Angles, MaxMisorientation, GrainMethod, MinGrainSize, ScanFileData)
+function [grainID, Phase, Mat, PhaseNames, PhaseNamesList] = GetGrainInfo(ScanFilePath, Material, ScanParams, Angles, MaxMisorientation, GrainMethod, MinGrainSize, ScanFileData)
 %GETGRAININFO Returns grainID and material for HKL and OIM data
 %   INPUTS: ScanFilePath-Full path to .ang or .ctf file
 %               OR 1x2 cell array of Grain File Vals to skip reading grain file
@@ -70,7 +70,10 @@ if ~strcmp(ext,'.ctf')
                 PhaseNames = {lower(ScanParams.material)};
                 disp(['Auto Detected Material: ' PhaseNames])
             end
-             PhaseNames = ValidatePhase(PhaseNames);
+            for i = 1:length(PhaseNames)
+                PhaseNamesList = strrep(Phase, i, ScanParams.material{i});
+            end
+            PhaseNames = ValidatePhase(PhaseNames);
             for i = 1:NumPhases
                 Mat(i,:) = ReadMaterial(PhaseNames{i});
             end
@@ -109,7 +112,15 @@ if strcmp(GrainMethod,'Find Grains')
         end
    else
         PhaseNames(:) = {Material};
-   end
+    end
+    PhaseNamesList = num2cell(Phase);
+    for i = 1:length(Phase);
+        for j = 1:length(PhaseNames)
+            if PhaseNamesList{i} == j
+                PhaseNamesList{i} = PhaseNames{j};
+            end
+        end
+    end    
    PhaseNames = ValidatePhase(PhaseNames);
    if ~isempty(Phase)
        NumPhases = length(PhaseNames);

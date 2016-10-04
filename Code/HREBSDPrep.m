@@ -139,10 +139,10 @@ if ~isfield(Settings,'XStar')
     end
 end
 %% Add material data from ReadMaterial to Settings
-Phase = Settings.Phase;
-Unique_Phases = unique(Phase);
-NumPhases = length(Unique_Phases);
-for i = 1:NumPhases;
-    Mat = ReadMaterial(Unique_Phases{i});
-end
-Settings.Mat = Mat;
+% Phase = Settings.Phase;
+% Unique_Phases = unique(Phase);
+% NumPhases = length(Unique_Phases);
+% for i = 1:NumPhases;
+%     Mat = ReadMaterial(Unique_Phases{i});
+% end
+% Settings.Mat = Mat;

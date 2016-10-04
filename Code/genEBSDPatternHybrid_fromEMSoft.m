@@ -63,7 +63,7 @@ fprintf(fid,'! pattern center coordinates in units of pixels\n');
 fprintf(fid,'xpc=%g\n',xpc);
 fprintf(fid,'ypc=%g\n',ypc);
 fprintf(fid,'! name of angle file (euler angles or quaternions)\n');
-fprintf(fid,'anglefile=''%s''\n',anglefile);
+fprintf(fid,'anglefile=''%s''\n',fullfile(EMdataPath,anglefile));
 fprintf(fid,'! ''tsl'' or ''hkl'' Euler angle convention parameter\n');
 fprintf(fid,'eulerconvention=''tsl''\n');
 fprintf(fid,'! name of EBSD master output file\n');
