@@ -147,22 +147,31 @@ if isempty(Image)
     Image = ReadEBSDImage('demo.bmp', Settings.ImageFilter);
 end
 
+%Added in the two lines below
+NumPhases = length(Settings.PhaseNames);
+for i = 1:NumPhases
+%With this set up, it only shows the second of the two phases.  Should I
+%write it so that it will show images for each Phase?
+    
+%Original Code
 %Material = ReadMaterial(Settings.Phase{1});
 Material = Settings.Mat(i);
 paramspat={Settings.ScanParams.xstar;Settings.ScanParams.ystar;Settings.ScanParams.zstar;...
     size(Image,1);Settings.AccelVoltage*1000;Settings.SampleTilt;Settings.CameraElevation;...
     Material.Fhkl;Material.dhkl;Material.hkl};
 g=euler2gmat(Settings.Angles(1,1),Settings.Angles(1,2),Settings.Angles(1,3));
-handles.GenImage = genEBSDPatternHybrid(g,paramspat,eye(3),Material.lattice,Material.a1,Material.b1,Material.c1,Material.axs);
-handles.GenImage = custimfilt(handles.GenImage, Settings.ImageFilter(1), Settings.ImageFilter(2),Settings.ImageFilter(3),Settings.ImageFilter(4));
+handles.GenImage.i = genEBSDPatternHybrid(g,paramspat,eye(3),Material.lattice,Material.a1,Material.b1,Material.c1,Material.axs);
+handles.GenImage.i = custimfilt(handles.GenImage, Settings.ImageFilter(1), Settings.ImageFilter(2),Settings.ImageFilter(3),Settings.ImageFilter(4));
 axes(handles.SimPat);
-imagesc(handles.GenImage)
+imagesc(handles.GenImage.i)
 drawnow
 set(gca,'xcolor',get(gcf,'color'));
 set(gca,'ycolor',get(gcf,'color'));
 set(gca,'ytick',[]);
 set(gca,'xtick',[]);
 axis equal
+%Original Code (above)
+
 end
 
 % Update handles structure
