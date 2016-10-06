@@ -30,6 +30,7 @@ XX = zeros(Settings.ScanLength,3);
 MI = zeros(Settings.ScanLength,3);
 SC = zeros(Settings.ScanLength,3);
 SSE = zeros(Settings.ScanLength,3);
+gr = zeros(3,3,3,Settings.ScanLength);
 
 %Get Inds
 if ~isfield(Settings,'Inds')
@@ -68,16 +69,19 @@ for i = 1:Settings.ScanLength
         ScanImage = PoissonNoise(ScanImage,lambda);
     end
     
-    [F(:,:,1),gr,SSE1,SC1] = CalcDefGradientTensor(ScanImage,Settings,ImageInd,g(:,:,i));
-    pseudo = gr; 
+    [F(:,:,1),gr(:,:,1,i),SSE1,SC1] = CalcDefGradientTensor(ScanImage,Settings,ImageInd,g(:,:,i));
+    pseudo = gr(:,:,1,i); 
     
     %Cross-correlate pseudosymmetric orientations
-    [~,pseudo(:,:,2:3)] = GetPseudoOrientations(gr);
-    RefImage(:,:,1) = genEBSDPatternHybrid_fromEMSoft(pseudo(:,:,1),xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av,ImageInd);
-    RefImage(:,:,2) = genEBSDPatternHybrid_fromEMSoft(pseudo(:,:,2),xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av,ImageInd);
-    RefImage(:,:,3) = genEBSDPatternHybrid_fromEMSoft(pseudo(:,:,3),xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av,ImageInd);
-    [F(:,:,2),SSE2,SC2] = CalcF(RefImage(:,:,2),ScanImage,pseudo(:,:,2),eye(3),ImageInd,Settings,curMaterial,0);
-    [F(:,:,3),SSE3,SC3] = CalcF(RefImage(:,:,3),ScanImage,pseudo(:,:,3),eye(3),ImageInd,Settings,curMaterial,0);
+    [~,pseudo(:,:,2:3)] = GetPseudoOrientations(pseudo);
+    [F(:,:,2),gr(:,:,2,i),SSE2,SC2] = CalcDefGradientTensor(ScanImage,Settings,ImageInd,pseudo(:,:,2));
+    [F(:,:,3),gr(:,:,3,i),SSE3,SC3] = CalcDefGradientTensor(ScanImage,Settings,ImageInd,pseudo(:,:,3));
+    
+%     RefImage(:,:,1) = genEBSDPatternHybrid_fromEMSoft(pseudo(:,:,1),xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av,ImageInd);
+%     RefImage(:,:,2) = genEBSDPatternHybrid_fromEMSoft(pseudo(:,:,2),xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av,ImageInd);
+%     RefImage(:,:,3) = genEBSDPatternHybrid_fromEMSoft(pseudo(:,:,3),xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av,ImageInd);
+%     [F(:,:,2),SSE2,SC2] = CalcF(RefImage(:,:,2),ScanImage,pseudo(:,:,2),eye(3),ImageInd,Settings,curMaterial,0);
+%     [F(:,:,3),SSE3,SC3] = CalcF(RefImage(:,:,3),ScanImage,pseudo(:,:,3),eye(3),ImageInd,Settings,curMaterial,0);
     
     %Choose orientation with lowest tetragonality
     tet(i,:) = [CalcTet(F(:,:,1)) CalcTet(F(:,:,2)) CalcTet(F(:,:,3))];
@@ -128,3 +132,4 @@ coefs(:,:,4) = SSE;
 stuff.pseudo = pseudo_out;
 stuff.Index = Index;
 stuff.F = F_out;
+stuff.gr = gr;
