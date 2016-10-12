@@ -48,7 +48,7 @@ fclose(fid);
 fid=fopen(inputfile,'w');
 
 fprintf(fid,'&EBSDdata\n');
-fprintf(fid,'! template file for the CTEMEBSD program\n');
+fprintf(fid,'! template file for the EMEBSD program\n');
 fprintf(fid,'!\n');
 fprintf(fid,'! distance between scintillator and illumination point [microns]\n');
 fprintf(fid,'L=%g\n',L);
@@ -59,18 +59,22 @@ fprintf(fid,'delta=%g\n',delta);
 fprintf(fid,'! number of CCD pixels along x and y\n');
 fprintf(fid,'numsx=%g\n',numsx);
 fprintf(fid,'numsy=%g\n',numsy);
+fprintf(fid,'energymin = 10.0\n'); % these extra 3 lines from Marc de Graef in email Aug 12 2015
+fprintf(fid,'energymax =%f\n', Av/1000); %beam voltage in kV
 fprintf(fid,'! pattern center coordinates in units of pixels\n');
 fprintf(fid,'xpc=%g\n',xpc);
 fprintf(fid,'ypc=%g\n',ypc);
-fprintf(fid,'! name of angle file (euler angles or quaternions)\n');
+fprintf(fid,'! angle between normal of sample and detector\n');
+fprintf(fid,'omega=0/n');
+fprintf(fid,'! name of angle file (euler angles or quaternions); path relative to EMdatapathname\n');
 fprintf(fid,'anglefile=''%s''\n',fullfile(EMdataPath,anglefile));
 fprintf(fid,'! ''tsl'' or ''hkl'' Euler angle convention parameter\n');
 fprintf(fid,'eulerconvention=''tsl''\n');
-fprintf(fid,'! name of EBSD master output file\n');
+fprintf(fid,'! name of EBSD master output file; path relative to EMdatapathname\n');
 fprintf(fid,'masterfile=''%s''\n',masterfile);
-fprintf(fid,'! name of Monte Carlo output file\n');
+fprintf(fid,'! name of Monte Carlo output file; path relative to EMdatapathname\n');
 fprintf(fid,'energyfile=''%s''\n',energyfile);
-fprintf(fid,'! name of output file\n');
+fprintf(fid,'! name of output file; path relative to EMdatapathname\n');
 fprintf(fid,'datafile=''%s''\n',datafile);
 fprintf(fid,'! incident beam current [nA]\n');
 fprintf(fid,'beamcurrent=%g\n',beamcurrent);
@@ -88,9 +92,10 @@ fprintf(fid,'! should a circular mask be applied to the data? ''y'', ''n''\n');
 fprintf(fid,'maskpattern=''n''\n');
 fprintf(fid,'! number of threads (default = 1)\n');
 fprintf(fid,'nthreads=1\n');
-fprintf(fid,'energymin = 10.0\n'); % these extra 3 lines from Marc de Graef in email Aug 12 2015
-fprintf(fid,'energymax =%f\n', Av/1000); %beam voltage in kV
+fprintf(fid,'! energy averaging method (0 for full, 1 for approximate)\n');
 fprintf(fid,'energyaverage = 0\n');
+fprintf(fid,'! spatial averaging method (''y'' or ''n''; can''t be used with approximate energy average)\n');
+fprintf(fid,'spatialaverage = ''n''\n');
 fprintf(fid,'/\n');
 
 fclose(fid);
