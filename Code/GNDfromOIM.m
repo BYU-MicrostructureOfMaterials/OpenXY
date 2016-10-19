@@ -43,7 +43,7 @@ if nargin < 2
     smooth = 1;
     skip = 0;
 end
-if nargin > 1
+if nargin > 0
     ismat = isstruct(datain);
     if ismat
         Settings = datain;
@@ -486,7 +486,7 @@ alpha_total3(:,:)=30/10.*(abs(alpha(1,3,:,:))+abs(alpha(2,3,:,:))+abs(alpha(3,3,
 alpha_total5(:,:)=30/14.*(abs(alpha(1,3,:,:))+abs(alpha(2,3,:,:))+abs(alpha(3,3,:,:))+abs(alpha(2,1,:,:))+abs(alpha(1,2,:,:)));
 alpha_total9(:,:)=30/20.*abs(alpha(1,3,:,:))+abs(alpha(2,3,:,:))+abs(alpha(3,3,:,:))+abs(alpha(1,1,:,:))+abs(alpha(2,1,:,:))+abs(alpha(3,1,:,:))+abs(alpha(1,2,:,:))+abs(alpha(2,2,:,:))+abs(alpha(3,2,:,:));
 
-alpha_data.alpha = alpha;
+alpha_data.alpha = reshape(permute(alpha,[1 2 4 3]),3,3,Settings.ScanLength); % Convert to vector of rotation matrices
 alpha_data.alpha_total3 = alpha_total3;
 alpha_data.alpha_total5 = alpha_total5;
 alpha_data.alpha_total9 = alpha_total9;
@@ -500,12 +500,13 @@ alpha_data.alpha_total9 = alpha_total9;
 % figure
 % imagesc(real(squeeze(log10(alpha(1,3,:,:)))))
 
+alpha13 = vec2map(squeeze(alpha_data.alpha(1,3,:,:)),Settings.Nx,Settings.ScanType);
 GNDAvg = mean(alpha_total3(alpha_total3>0));
 GNDStd = std(alpha_total3(alpha_total3>0));
-fprintf('Alpha(1,3) Avg: %g\n',GNDAvg);
-fprintf('Alpha(1,3) Std: %g\n',GNDStd);
+fprintf('AlphaTotal3 Avg: %g\n',GNDAvg);
+fprintf('AlphaTotal3 Std: %g\n',GNDStd);
 figure
-imagesc(real(alpha_total3))
+imagesc(real(alpha13))
 title('GND density using Alpha3')
 caxis([1e10 1e13])
 colorbar
