@@ -136,9 +136,6 @@ coefs(:,:,4) = SSE;
 stuff.pseudo = pseudo_out;
 stuff.Index = Index;
 stuff.F = F_out;
-<<<<<<< Updated upstream
 stuff.gr = gr;
-=======
 
 save(filename, 'orientation', 'tet', 'coefs', 'stuff');
->>>>>>> Stashed changes
