@@ -38,13 +38,18 @@ if ~isfield(Settings,'Inds')
 end
 
 %Extract variables from Settings to reduce parfor overhead
+Settings.Phase(:) ={'TiAl'};
 Inds = Settings.Inds;
 XStar = Settings.XStar(Inds);
 YStar = Settings.YStar(Inds);
 ZStar = Settings.ZStar(Inds);
 ImNames = Settings.ImageNamesList(Inds);
-ImageFilter = Settings.ImageFilter;
+ImageFilter = [0 200 0 0];
 g = euler2gmat(Settings.Angles(Inds,:));
+
+%Set fields for best results
+Settings.ImageFilter = [0, 200, 0, 0];
+Settings.StandardDeviation = 4;
 
 imsize = Settings.PixelSize;
 
