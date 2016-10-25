@@ -8,6 +8,10 @@ end
 BinningScale = bin;
 lambda = noise;
 
+%Set filename and pathname for saving
+[file, path] = uiputfile('*.mat', 'Save As');
+filename = fullfile(path,file);
+
 %Account for Binning
 Settings.PixelSize = size(imresize(zeros(Settings.PixelSize),BinningScale),1); %Correct image size
 Settings.ROISize = round((Settings.ROISizePercent * .01)*Settings.PixelSize);
@@ -134,4 +138,9 @@ coefs(:,:,4) = SSE;
 stuff.pseudo = pseudo_out;
 stuff.Index = Index;
 stuff.F = F_out;
+<<<<<<< Updated upstream
 stuff.gr = gr;
+=======
+
+save(filename, 'orientation', 'tet', 'coefs', 'stuff');
+>>>>>>> Stashed changes
