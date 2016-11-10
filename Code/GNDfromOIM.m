@@ -258,24 +258,26 @@ if withquat
     
     %Calculate Beta derivatives
     avgmisoc_R = quat2rmat(avgmisoc);
+    %avgmisoc_R(:,:,~misangc) = -Inf;
     bd1 = (avgmisoc_R - repmat(eye(3),1,1,ScanLength)) / (stepsize*(skip+1));
     avgmisoa_R = quat2rmat(avgmisoa);
+    %avgmisoa_R(:,:,~misanga) = -Inf;
     bd2 = (avgmisoa_R - repmat(eye(3),1,1,ScanLength)) / (-stepsize*(skip+1));
     
     if strcmp(Settings.ScanType,'Square')
         bd1 = permute(reshape(permute(bd1,[3 1 2]),Settings.Nx,Settings.Ny,3,3),[4 3 2 1]);
         bd2 = permute(reshape(permute(bd2,[3 1 2]),Settings.Nx,Settings.Ny,3,3),[4 3 2 1]);
     else
-        bd1 = permute(bd1,[3 1 2]);
-        bd1 = cat(4,Hex2Array(bd1(:,:,1),NColsOdd),...
-            Hex2Array(bd1(:,:,2),NColsOdd),...
-            Hex2Array(bd1(:,:,3),NColsOdd));
-        bd1 = permute(bd1,[4 3 1 2]);
-        bd2 = permute(bd2,[3 1 2]);
-        bd2 = cat(4,Hex2Array(bd2(:,:,1),NColsOdd),...
-            Hex2Array(bd2(:,:,2),NColsOdd),...
-            Hex2Array(bd2(:,:,3),NColsOdd));
-        bd2 = permute(bd2,[4 3 1 2]);
+%         bd1 = permute(bd1,[3 1 2]);
+%         bd1 = cat(4,Hex2Array(bd1(:,:,1),NColsOdd),...
+%             Hex2Array(bd1(:,:,2),NColsOdd),...
+%             Hex2Array(bd1(:,:,3),NColsOdd));
+%         bd1 = permute(bd1,[4 3 1 2]);
+%         bd2 = permute(bd2,[3 1 2]);
+%         bd2 = cat(4,Hex2Array(bd2(:,:,1),NColsOdd),...
+%             Hex2Array(bd2(:,:,2),NColsOdd),...
+%             Hex2Array(bd2(:,:,3),NColsOdd));
+%         bd2 = permute(bd2,[4 3 1 2]);
     end
     betaderiv2 = bd2;
     betaderiv1 = bd1;
@@ -469,8 +471,7 @@ else
 end
 
 % Caculate the Nye Tensor
-alpha=zeros(3,3,m,n);
-clear alpha alpha_total3
+alpha=zeros(3,3,ScanLength);
 alpha(1,3,:,:)=(betaderiv2(1,1,:,:) - betaderiv1(1,2,:,:))/bavg; % alpha(1,3)
 alpha(2,3,:,:)=(betaderiv2(2,1,:,:) - betaderiv1(2,2,:,:))/bavg; % alpha(2,3)
 alpha(3,3,:,:)=(betaderiv2(3,1,:,:) - betaderiv1(3,2,:,:))/bavg; % alpha(3,3)
@@ -482,11 +483,13 @@ alpha(2,1,:,:)=-1*betaderiv2(2,3,:,:)/bavg; % alpha(2,1)
 alpha(3,1,:,:)=-1*betaderiv2(3,3,:,:)/bavg; % alpha(3,1)
 
 % Calculate 3 possible L1 norms of Nye tensor for total disloction density
-alpha_total3(:,:)=30/10.*(abs(alpha(1,3,:,:))+abs(alpha(2,3,:,:))+abs(alpha(3,3,:,:)));
-alpha_total5(:,:)=30/14.*(abs(alpha(1,3,:,:))+abs(alpha(2,3,:,:))+abs(alpha(3,3,:,:))+abs(alpha(2,1,:,:))+abs(alpha(1,2,:,:)));
-alpha_total9(:,:)=30/20.*abs(alpha(1,3,:,:))+abs(alpha(2,3,:,:))+abs(alpha(3,3,:,:))+abs(alpha(1,1,:,:))+abs(alpha(2,1,:,:))+abs(alpha(3,1,:,:))+abs(alpha(1,2,:,:))+abs(alpha(2,2,:,:))+abs(alpha(3,2,:,:));
+%alpha = reshape(permute(alpha,[1 2 4 3]),3,3,Settings.ScanLength); % Convert to vector of rotation matrices
+alpha(:,:,~misanga | ~misangc) = -Inf;
+alpha_total3(:,:)=30/10.*(abs(alpha(1,3,:))+abs(alpha(2,3,:))+abs(alpha(3,3,:)));
+alpha_total5(:,:)=30/14.*(abs(alpha(1,3,:))+abs(alpha(2,3,:))+abs(alpha(3,3,:))+abs(alpha(2,1,:))+abs(alpha(1,2,:)));
+alpha_total9(:,:)=30/20.*abs(alpha(1,3,:))+abs(alpha(2,3,:))+abs(alpha(3,3,:))+abs(alpha(1,1,:))+abs(alpha(2,1,:))+abs(alpha(3,1,:))+abs(alpha(1,2,:))+abs(alpha(2,2,:))+abs(alpha(3,2,:));
 
-alpha_data.alpha = reshape(permute(alpha,[1 2 4 3]),3,3,Settings.ScanLength); % Convert to vector of rotation matrices
+alpha_data.alpha = alpha;
 alpha_data.alpha_total3 = alpha_total3;
 alpha_data.alpha_total5 = alpha_total5;
 alpha_data.alpha_total9 = alpha_total9;
