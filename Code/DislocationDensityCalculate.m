@@ -352,23 +352,23 @@ c = Oldsize(1);
 r = Oldsize(2);
 
 %Filter alpha data
-    for i=1:Settings.ScanLength
-        
+for i=1:Settings.ScanLength
+    
     %Filter by Misorientation
-        if (misang(i)>MaxMisorientation)
-            alpha_filt(:,:,i)=0;
-        end
-        
+    if (misang(i)>MaxMisorientation)
+        alpha_filt(:,:,i)=0;
+    end
+    
     %Filter Grain Boundaries
     if Settings.grainID(RefInds(i,2))~=Settings.grainID(RefInds(i,1)) || Settings.grainID(RefInds(i,2))~=Settings.grainID(RefInds(i,3))
-            alpha_filt(:,:,i)=0;
-        end
-        
-    %Count Filtered points
-        if alpha_filt(:,:,i)==0
-            discount=discount+1;
-        end
+        alpha_filt(:,:,i)=0;
     end
+    
+    %Count Filtered points
+    if alpha_filt(:,:,i)==0
+        discount=discount+1;
+    end
+end
 MisAngleInds = RefInds;
 
 alpha_total3(1,:)=30/10.*(abs(alpha_filt(1,3,:))+abs(alpha_filt(2,3,:))+abs(alpha_filt(3,3,:)));
