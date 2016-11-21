@@ -737,6 +737,11 @@ if Settings.DoShowPlot
         plot([roixc(i) roixc(i)+cx(i)],[roiyc(i) roiyc(i)+cy(i)],'b.-')
     end
     drawnow
+    try
+        set(0,'currentfigure',101);
+    catch
+        figure(101);
+    end
     text = get(gca,'title');
     if ~isempty(text.String)
         [num,iter] = strtok(text.String{2}(6:end));
@@ -751,13 +756,13 @@ if Settings.DoShowPlot
         iter = 1;
     end
     set(0,'currentfigure',100);
-    title({'Reference Image';['Image ' num2str(Ind) ' (' num2str(iter) ')']})
-    
-    try
-        set(0,'currentfigure',101);
-    catch
-        figure(101);
+    if RefInd~=0
+        title({'Reference Image';['Image ' num2str(RefInd) ' (' num2str(iter) ')']})
+    else
+        title({'Simulated Reference Image';[' (' num2str(iter) ')']})
     end
+    
+    set(0,'currentfigure',101);
     [cx cy]=Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,roixc,roiyc,F,Settings.PixelSize,alpha);
     cla
     imagesc(ScanImage);
