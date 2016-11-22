@@ -265,8 +265,8 @@ if withquat
     bd2 = (avgmisoa_R - repmat(eye(3),1,1,ScanLength)) / (-stepsize*(skip+1));
     
     if strcmp(Settings.ScanType,'Square')
-        bd1 = permute(reshape(permute(bd1,[3 1 2]),Settings.Nx,Settings.Ny,3,3),[4 3 2 1]);
-        bd2 = permute(reshape(permute(bd2,[3 1 2]),Settings.Nx,Settings.Ny,3,3),[4 3 2 1]);
+%         bd1 = permute(reshape(permute(bd1,[3 1 2]),Settings.Nx,Settings.Ny,3,3),[4 3 2 1]);
+%         bd2 = permute(reshape(permute(bd2,[3 1 2]),Settings.Nx,Settings.Ny,3,3),[4 3 2 1]);
     else
 %         bd1 = permute(bd1,[3 1 2]);
 %         bd1 = cat(4,Hex2Array(bd1(:,:,1),NColsOdd),...
