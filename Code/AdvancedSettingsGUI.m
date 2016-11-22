@@ -302,6 +302,7 @@ switch HROIMMethod
         set(handles.EditRefPoints,'Enable','on')
         handles.Settings.HROIMMethod = 'Real';
         GrainRefType_Callback(handles.GrainRefType, eventdata, handles);
+        set(handles.GrainRefType,'Enable','on');
         handles = guidata(hObject);
     case 'Real-Single Ref'
         set(handles.HROIMlabel,'String','Ref Image Index');
@@ -316,6 +317,9 @@ switch HROIMMethod
         GrainRefType_Callback(handles.GrainRefType, eventdata, handles);
         handles = guidata(hObject);
         handles.Settings.HROIMMethod = 'Real';
+        handles.Settings.GrainRefImageType = 'Manual';
+        SetPopupValue(handles.GrainRefType,'Manual');
+        set(handles.GrainRefType,'Enable','off');
 end
 guidata(hObject,handles);
 
