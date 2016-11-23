@@ -1,9 +1,13 @@
 function Settings = ImportScanInfo(Settings,name,path)
 %Read Scan File
-if nargin == 2
-    ScanPath = name;   
-else
-    ScanPath = fullfile(path,name);
+switch nargin
+    case 1
+        [name,path] = uigetfile({'*.ang;*.ctf','Scan Files (*.ang,*.ctf)';'*.h5','OIM HDF5 Files (*.h5)'},'Select a Scan File');
+        ScanPath = fullfile(path,name);
+    case 2
+        ScanPath = name;
+    otherwise
+        ScanPath = fullfile(path,name);
 end
 [~,~,ext] = fileparts(ScanPath);
 
@@ -124,6 +128,10 @@ end
 
 %Crop Scan
 Settings = CropScan(Settings);
+if length(Settings.grainID) ~= length(Settings.XData)
+    error('Grain file and Scan file have a different number of points')
+end
+
 end
 
 

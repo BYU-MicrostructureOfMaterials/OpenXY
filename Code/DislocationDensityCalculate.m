@@ -7,7 +7,7 @@ function alpha_data = DislocationDensityCalculate(Settings,MaxMisorientation,IQc
 format compact
 tic
 
-StrainOnly = false;
+NoStrain = false;
 
 %Calculate Dislocation Density
 data = Settings.data;
@@ -177,9 +177,7 @@ if ~strcmp(Settings.ScanType,'L')
         if isempty(pool)
             pool = parpool(Settings.DoParallel);
         end
-        if any(strcmp(javaclasspath,fullfile(pwd,'java')))
-            pctRunOnAll javaaddpath('java')
-        end
+        pctRunOnAll javaaddpath('java')
         ppm = ParforProgMon( 'Dislocation Density Progress ', N , 1, 400, 50);
         
         NumberOfCores = Settings.DoParallel;
@@ -224,17 +222,20 @@ if ~strcmp(Settings.ScanType,'L')
         end
         close(h);
     end
+    
+    if NoStrain
+        for i = 1:Settings.ScanLength
+            AllFa{i} = poldec(AllFa{i});
+            AllFc{i} = poldec(AllFc{i});
+        end
+    end
             
     data.Fa=AllFa;
     data.SSEa=AllSSEa;
     data.Fc=AllFc;
     data.SSEc=AllSSEc;
 
-    if StrainOnly
-        for i = 1:Settings.ScanLength
-            AllFa{i} = poldec(AllFa{i});
-end
-    end
+    
     
     misang = max(misanglea,misanglec);
 
@@ -351,23 +352,23 @@ c = Oldsize(1);
 r = Oldsize(2);
 
 %Filter alpha data
-    for i=1:Settings.ScanLength
-        
+for i=1:Settings.ScanLength
+    
     %Filter by Misorientation
-        if (misang(i)>MaxMisorientation)
-            alpha_filt(:,:,i)=0;
-        end
-        
+    if (misang(i)>MaxMisorientation)
+        alpha_filt(:,:,i)=0;
+    end
+    
     %Filter Grain Boundaries
     if Settings.grainID(RefInds(i,2))~=Settings.grainID(RefInds(i,1)) || Settings.grainID(RefInds(i,2))~=Settings.grainID(RefInds(i,3))
-            alpha_filt(:,:,i)=0;
-        end
-        
-    %Count Filtered points
-        if alpha_filt(:,:,i)==0
-            discount=discount+1;
-        end
+        alpha_filt(:,:,i)=0;
     end
+    
+    %Count Filtered points
+    if alpha_filt(:,:,i)==0
+        discount=discount+1;
+    end
+end
 MisAngleInds = RefInds;
 
 alpha_total3(1,:)=30/10.*(abs(alpha_filt(1,3,:))+abs(alpha_filt(2,3,:))+abs(alpha_filt(3,3,:)));

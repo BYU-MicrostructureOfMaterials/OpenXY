@@ -300,7 +300,8 @@ switch HROIMMethod
         set(handles.HROIMedit,'Enable','off');
         set(handles.GrainRefType,'Enable','on');
         set(handles.EditRefPoints,'Enable','on')
-        handles.Settings.HROIMMethod = 'Real';  
+        handles.Settings.HROIMMethod = 'Real';
+        handles.Settings.RefInd = 
         GrainRefType_Callback(handles.GrainRefType, eventdata, handles);
         set(handles.GrainRefType,'Enable','on');
         handles = guidata(hObject);
@@ -465,7 +466,7 @@ switch GrainRefType
         ToggleGrainMap_Callback(handles.ToggleGrainMap,eventdata,handles);
     case 'Manual'
         grainIDs = unique(handles.Settings.grainID);
-        if ~isfield(handles.Settings,'RefInd') || isempty(handles.Settings.RefInd)
+        if ~isfield(handles.Settings,'RefInd') || 
             handles.AutoRefInds = UpdateAutoInds(handles,handles.Settings.GrainRefImageType);
             handles.Settings.RefInd = handles.AutoRefInds;
         end
