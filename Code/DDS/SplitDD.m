@@ -104,7 +104,11 @@ else
     stepsize = (Settings.XData(2)-Settings.XData(1))*(Settings.NumSkipPts+1);
 end
 
-if iscell(Settings.data.phi1rn)==1
+if isfield(Settings,'NewAngles')
+    phi1rn = real(Settings.NewAngles(:,1));
+    PHIrn = real(Settings.NewAngles(:,2));
+    phi2rn = real(Settings.NewAngles(:,3));
+elseif iscell(Settings.data.phi1rn)==1
     phi1rn = real(cell2mat(Settings.data.phi1rn));
     PHIrn =  real(cell2mat(Settings.data.PHIrn));
     phi2rn =  real(cell2mat(Settings.data.phi2rn));
@@ -132,7 +136,11 @@ end
 % reorient the reference orientation for each grain as close as possible to
 % origin, and then each point in the grain as close as possible to this to
 % make the reference frames for slip systems consistent
-bestgmat=zeros(3,3,n*m);
+if isfield(Settings,'Resize')
+    bestgmat=zeros(3,3,prod(Settings.Resize));
+else
+    bestgmat=zeros(3,3,n*m);
+end
 for i=1:m*n
     if bestgmat(:,:,Settings.RefInd(i))==0
         gmat = euler2gmat(phi1rn(Settings.RefInd(i)),PHIrn(Settings.RefInd(i)), phi2rn(Settings.RefInd(i)));
