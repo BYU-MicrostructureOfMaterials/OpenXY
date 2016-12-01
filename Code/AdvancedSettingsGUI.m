@@ -122,7 +122,7 @@ set(handles.IQCutoff,'String',num2str(Settings.IQCutoff));
 %SplitDD
 %Do SplitDD
 set(handles.DoSplitDD,'Value',Settings.DoDDS);
-DDSMethods = {'Nye-Kroner','Nye-Kroner (Pantleon))','Distortion Matching'};
+DDSMethods = {'Nye-Kroner','Nye-Kroner (Pantleon)','Distortion Matching'};
 set(handles.DDSMethod,'String',DDSMethods);
 index = find(strcmp(DDSMethods,Settings.DDSMethod));
 set(handles.DDSMethod,'Value',index)
@@ -163,7 +163,6 @@ HROIMMethod_Callback(handles.HROIMMethod, eventdata, handles)
 handles = guidata(hObject);
 DoDD_Callback(handles.DoDD, eventdata, handles);
 handles = guidata(hObject);
-
 guidata(hObject, handles);
 
 % UIWAIT makes AdvancedSettingsGUI wait for user response (see UIRESUME)
@@ -716,6 +715,7 @@ function DDSMethod_Callback(hObject, eventdata, handles)
 %        contents{get(hObject,'Value')} returns selected item from DDSMethod
 contents = cellstr(get(hObject,'String'));
 val = contents{get(hObject,'Value')};
+handles.Settings.DDSMethod = val;
 handles.Settings.rdoptions.Pantleon = strcmp(val,'Pantleon');
 guidata(hObject,handles);
 
