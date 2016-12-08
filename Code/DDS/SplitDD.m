@@ -41,7 +41,7 @@ DDSettings.matchoice = matchoice;
 force = 0;
 stress = 0;
 minscheme_list = {'Min. density','Min. energy','CRSSfactor','Schmid+CRSS', 'CRSS + l'};
-[minscheme,vv] = listdlg('PromptString','Select minimization scheme','SelectionMode','single','ListString',minscheme_list);
+[minscheme,vv] = listdlg('PromptString','Select minimization scheme','SelectionMode','single','ListString',minscheme_list,'InitialValue',2);
 if vv==0
     warndlg('Nothing selected: skipping split dislocation density calculation','Split Dislocation Density')
     rhos = [];
@@ -51,7 +51,7 @@ DDSettings.Minimization_Scheme = minscheme_list{minscheme};
 DDSettings.minscheme = minscheme;
 
 op_list = {'Least squares','Origin'};
-[x0type,vv] = listdlg('PromptString','Select optimization startpoint','SelectionMode','single','ListString',op_list);
+[x0type,vv] = listdlg('PromptString','Select optimization startpoint','SelectionMode','single','ListString',op_list,'InitialValue',2);
 if vv==0
     warndlg('Nothing selected: skipping split dislocation density calculation','Split Dislocation Density')
     rhos = [];
@@ -94,8 +94,8 @@ if vv==0; error('Exited by user'); end
 
 %% Work out beta derivatives and/or alpha
 
-n = Settings.data.cols;
-m = Settings.data.rows;
+n = Settings.Nx;
+m = Settings.Ny;
 if isfield(alpha_data,'stepsize')
     stepsize = alpha_data.stepsize;
 elseif isfield(alpha_data,'stepsizea')
