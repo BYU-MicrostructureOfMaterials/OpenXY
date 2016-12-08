@@ -484,12 +484,14 @@ alpha(3,1,:,:)=-1*betaderiv2(3,3,:,:)/bavg; % alpha(3,1)
 
 % Calculate 3 possible L1 norms of Nye tensor for total disloction density
 %alpha = reshape(permute(alpha,[1 2 4 3]),3,3,Settings.ScanLength); % Convert to vector of rotation matrices
-alpha(:,:,~misanga | ~misangc) = -Inf;
-alpha_total3(:,:)=30/10.*(abs(alpha(1,3,:))+abs(alpha(2,3,:))+abs(alpha(3,3,:)));
-alpha_total5(:,:)=30/14.*(abs(alpha(1,3,:))+abs(alpha(2,3,:))+abs(alpha(3,3,:))+abs(alpha(2,1,:))+abs(alpha(1,2,:)));
-alpha_total9(:,:)=30/20.*abs(alpha(1,3,:))+abs(alpha(2,3,:))+abs(alpha(3,3,:))+abs(alpha(1,1,:))+abs(alpha(2,1,:))+abs(alpha(3,1,:))+abs(alpha(1,2,:))+abs(alpha(2,2,:))+abs(alpha(3,2,:));
+alpha_filt = alpha;
+alpha_filt(:,:,~misanga | ~misangc) = 0;
+alpha_total3(:,:)=30/10.*(abs(alpha_filt(1,3,:))+abs(alpha_filt(2,3,:))+abs(alpha_filt(3,3,:)));
+alpha_total5(:,:)=30/14.*(abs(alpha_filt(1,3,:))+abs(alpha_filt(2,3,:))+abs(alpha_filt(3,3,:))+abs(alpha_filt(2,1,:))+abs(alpha_filt(1,2,:)));
+alpha_total9(:,:)=30/20.*abs(alpha_filt(1,3,:))+abs(alpha_filt(2,3,:))+abs(alpha_filt(3,3,:))+abs(alpha_filt(1,1,:))+abs(alpha_filt(2,1,:))+abs(alpha_filt(3,1,:))+abs(alpha_filt(1,2,:))+abs(alpha_filt(2,2,:))+abs(alpha_filt(3,2,:));
 
 alpha_data.alpha = alpha;
+alpha_data.alpha_filt = alpha_filt;
 alpha_data.alpha_total3 = alpha_total3;
 alpha_data.alpha_total5 = alpha_total5;
 alpha_data.alpha_total9 = alpha_total9;
