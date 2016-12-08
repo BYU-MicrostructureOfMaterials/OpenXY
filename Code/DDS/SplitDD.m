@@ -10,20 +10,21 @@ for i = 1:length(allMaterials)
     end
 end
 
-if length(matList) > 1
-    [matchoose,vv] = listdlg('PromptString','Select the material type','SelectionMode','single','ListString',matList);
-    if vv==0
-        warndlg('Nothing selected: skipping split dislocation density calculation','Split Dislocation Density');
-        rhos = [];
-        return;
-    end
-elseif isempty(matList)
-    warndlg(['No SplitDD material data for ' allMaterials{1}, ' Exiting SplitDD calculation'],'Split Dislocation Density');
-    rhos = [];
-    return;
-else
-    matchoose = 1;
-end
+% if length(matList) > 1
+%     [matchoose,vv] = listdlg('PromptString','Select the material type','SelectionMode','single','ListString',matList);
+%     if vv==0
+%         warndlg('Nothing selected: skipping split dislocation density calculation','Split Dislocation Density');
+%         rhos = [];
+%         return;
+%     end
+% elseif isempty(matList)
+%     warndlg(['No SplitDD material data for ' allMaterials{1}, ' Exiting SplitDD calculation'],'Split Dislocation Density');
+%     rhos = [];
+%     return;
+% else
+%     matchoose = 1;
+% end
+matchoose = 1;
 matchoice = matList{matchoose};
 [bedge,ledge, bscrew,lscrew,v, normals, crssfactor, type] = choosemat(matchoice);
 
@@ -47,16 +48,19 @@ if vv==0
     rhos = [];
     return;
 end
+
 DDSettings.Minimization_Scheme = minscheme_list{minscheme};
 DDSettings.minscheme = minscheme;
 
 op_list = {'Least squares','Origin'};
+
 [x0type,vv] = listdlg('PromptString','Select optimization startpoint','SelectionMode','single','ListString',op_list,'InitialValue',2);
 if vv==0
     warndlg('Nothing selected: skipping split dislocation density calculation','Split Dislocation Density')
     rhos = [];
     return;
 end
+
 DDSettings.Opt_Start = op_list{x0type};
 DDSettings.x0type = x0type;
 
@@ -87,7 +91,7 @@ if minscheme == 4
     
     stress = (rot')*stress*rot;
 end
-if vv==0; error('Exited by user'); end
+% if vv==0; error('Exited by user'); end
 
 
 
@@ -156,8 +160,8 @@ for i=1:m*n
     end
 end
 
-
-
+alphaorbeta
+alphaorbeta = 'Nye-Kroner (Pantleon)';
 if (alphaorbeta==11) | (strcmp(alphaorbeta, 'Distortion Matching'))
     Fatemp = alpha_data.Fa;
     Fctemp = alpha_data.Fc;
@@ -233,12 +237,12 @@ if NumberOfCores>1 %if parallel processing
             matlabpool('local',NumberOfCores);
         end
     end
-    if any(strcmp(javaclasspath,fullfile(pwd,'java')))
-        pctRunOnAll javaaddpath('java')
-    end
+%     if any(strcmp(javaclasspath,fullfile(pwd,'java')))
+%         pctRunOnAll javaaddpath('java')
+%     end
     
     disp(['Starting cross-correlation: ' num2str(m*n) ' points']);
-    ppm = ParforProgMon( 'Split Dislocation Density ', m*n,1,400,50 );
+%     ppm = ParforProgMon( 'Split Dislocation Density ', m*n,1,400,50 );
     
     parfor i = 1:m*n
         gmat = squeeze(bestgmat(:,:,i));
@@ -249,7 +253,11 @@ if NumberOfCores>1 %if parallel processing
                     rhos(:,i)=0;
                 else
                     merp = alphavecp(1:3,i);
-                    rhos(:,i)=resolvedislocB(merp,0,minscheme,matchoice,gmat,1, x0type);
+                    try
+                        rhos(:,i)=resolvedislocB(merp,0,minscheme,matchoice,gmat,1, x0type);
+                    catch
+                        rhos(:,i) = -1;
+                    end
                 end
             case 'Distortion Matching'
                 if beta(:,i)==0;
@@ -263,7 +271,11 @@ if NumberOfCores>1 %if parallel processing
                     rhos(:,i)=0;
                 else
                     merp = alphavecp(:,i);
-                    rhos(:,i)=resolvedislocB(merp,1,minscheme,matchoice,gmat,1, x0type);
+                    try
+                        rhos(:,i)=resolvedislocB(merp,1,minscheme,matchoice,gmat,1, x0type);
+                    catch
+                        rhos(:,i) = -1;
+                    end
                 end
             case 11
                 if beta(:,i)==0;
@@ -279,7 +291,7 @@ if NumberOfCores>1 %if parallel processing
                     rhos(:,i)=resolvedisloc(merp,11,minscheme,matchoice,gmat,stress, stepsize^2, x0type);
                 end
         end
-        ppm.increment();
+%         ppm.increment();
     end
 else
     h = waitbar(0.1,'splitting');
