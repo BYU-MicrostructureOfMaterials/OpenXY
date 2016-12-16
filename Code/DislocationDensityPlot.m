@@ -36,7 +36,11 @@ alpha = alpha_data.alpha;
 
 
 if strcmp(Settings.ScanType,'Square') ||  strcmp(Settings.ScanType,'LtoSquare')
-    ind = alpha_data.misang < 8.5;
+    if isfield(alpha_data,'misang')        
+        ind = alpha_data.misang < 8.5;
+    else
+        ind = 1:Settings.ScanLength';
+    end
     ind = reshape(ind,[c r])';
     
     alpha_total3=reshape(alpha_total3, [c r])';
