@@ -16,6 +16,22 @@ Settings.largefftmeth = fftw('wisdom');
 %Settings.PixelSize = size(FirstPic,1);
 Settings.ROISize = round((Settings.ROISizePercent * .01)*Settings.PixelSize);
 
+%% Import Scan (for Fast GUI)
+if ~isfield(Settings,'Angles')
+    Settings = ImportScanInfo(Settings,Settings.ScanFilePath);
+    Settings.ImageNamesList = ImportImageNamesList(Settings);
+    
+    if strcmp(Settings.GrainMethod,'Find Grains')
+        Settings.grainID = GetGrainInfo(Settings.ScanFilePath,Settings.Phase{1},Settings.ScanParams,Settings.Angles,...
+            Settings.MisoTol,Settings.GrainMethod,Settings.MinGrainSize);
+    end
+end
+
+%% Validate SplitDD Materials
+if ~CheckSplitDDMaterials(unique(Settings.Phase))
+    Settings.DoDDS = false;
+end
+
 %% EMSoft Setup
 if strcmp(Settings.HROIMMethod,'Dynamic Simulated')
     %Check Path

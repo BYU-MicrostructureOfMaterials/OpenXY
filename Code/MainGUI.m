@@ -58,8 +58,30 @@ handles.output = hObject;
 handles.Settings = GetHROIMDefaultSettings();
 
 %Loads saved Settings data into GUI
+handles.Fast = false;
 if ~isempty(varargin)
-    handles.Settings = MergeSettings(handles.Settings,varargin{1});
+    switch length(varargin)
+        case 1
+            if isstruct(varargin{1})
+                handles.Settings = MergeSettings(handles.Settings,varargin{1});
+            elseif (ischar(varargin{1}) && strcmp(varargin{1},'Fast')) || (islogical(varargin{1}) && varargin{1})
+                handles.Fast = true;
+            end 
+        case 2
+            if isstruct(varargin{1})
+                handles.Settings = MergeSettings(handles.Settings,varargin{1});
+            end
+            if (ischar(varargin{2}) && strcmp(varargin{2},'Fast')) || (islogical(varargin{2}) && varargin{2})
+                handles.Fast = true;
+            end
+    end
+    
+end
+
+%Set up Fast GUI
+if handles.Fast
+    set(handles.SubScan,'Enable','off');
+    set(handles.TestButton,'Enable','off');
 end
 
 %Load System Settings
@@ -150,6 +172,7 @@ else
     set(handles.ProcessorsPopup,'Value',handles.Settings.DoParallel);
 end
 ProcessorsPopup_Callback(handles.ProcessorsPopup,eventdata,handles);
+handles = guidata(hObject);
 
 %Orientation-based GND
 if strcmp(handles.Settings.GNDMethod,'Orientation') && ~handles.Settings.DoStrain
@@ -219,39 +242,44 @@ if name ~= 0
     prevName = get(handles.ScanNameText,'String');
     prevFolder = get(handles.ScanFolderText,'String');
     if ~strcmp(prevName,name) || ~strcmp(prevFolder,path) || ~isfield(handles.Settings,'ScanParams')
-        handles.Settings = ImportScanInfo(handles.Settings,name,path);
-        
         %Update GUI labels
         set(handles.ScanNameText,'String',name);
         set(handles.ScanNameText,'TooltipString',name);
         set(handles.ScanFolderText,'String',path);
         set(handles.ScanFolderText,'TooltipString',path);
         
-        %Set ScanType
-        SetPopupValue(handles.ScanTypePopup,handles.Settings.ScanType);
-        
-        %Validate Scan Size
-        SizeStr =  [num2str(handles.Settings.Nx) 'x' num2str(handles.Settings.Ny)];
-        set(handles.ScanSizeText,'String',SizeStr);
-        
-        %Check if Material Read worked
-        handles.ScanFileLoaded = true;
-        MaterialPopup_Callback(handles.MaterialPopup, [], handles);
-        handles = guidata(handles.MainGUI);
-        
-        if filterind == 1 %Not h5
-            %Get Image Names
-            if handles.ImageLoaded
-                handles.Settings.ImageNamesList = ImportImageNamesList(handles.Settings);
-            end
+        if handles.Fast
+            handles.Settings.ScanFilePath = fullfile(path,name);
         else
-            set(handles.SelectImageButton,'Enable','off');
-            handles.ImageLoaded = 1;
-            set(handles.FirstImageNameText,'String','N/A');
-            set(handles.ImageFolderText,'String','N/A');
-            set(handles.ImageSizeText,'String','N/A');
+            handles.Settings = ImportScanInfo(handles.Settings,name,path);
+
+            %Set ScanType
+            SetPopupValue(handles.ScanTypePopup,handles.Settings.ScanType);
+
+            %Validate Scan Size
+            SizeStr =  [num2str(handles.Settings.Nx) 'x' num2str(handles.Settings.Ny)];
+            set(handles.ScanSizeText,'String',SizeStr);
+
+            %Check if Material Read worked
+            handles.ScanFileLoaded = true;
+            MaterialPopup_Callback(handles.MaterialPopup, [], handles);
+            handles = guidata(handles.MainGUI);
+
+            if filterind == 1 %Not h5
+                %Get Image Names
+                if handles.ImageLoaded
+                    handles.Settings.ImageNamesList = ImportImageNamesList(handles.Settings);
+                end
+            else
+                set(handles.SelectImageButton,'Enable','off');
+                handles.ImageLoaded = 1;
+                set(handles.FirstImageNameText,'String','N/A');
+                set(handles.ImageFolderText,'String','N/A');
+                set(handles.ImageSizeText,'String','N/A');
+            end
         end
-    end 
+    end
+    
     %Remove Subscan
     if all(isfield(handles.Settings,{'Inds','Resize'}))
         handles.Settings = rmfield(handles.Settings,{'Inds','Resize'});
@@ -265,29 +293,6 @@ elseif ~handles.ScanFileLoaded
 end
 guidata(handles.SelectScanButton, handles);
 enableRunButton(handles);
-
-function ImageNamesList = ImportImageNamesList(Settings)
-X = unique(Settings.XData);
-Y = unique(Settings.YData);
-
-%Step size in x and y
-if strcmp(Settings.ScanType,'Square')
-    XStep = X(2)-X(1);
-    if length(Y) > 1
-        YStep = Y(2)-Y(1);
-    else
-        YStep = 0; %Line Scans
-    end
-else
-    XStep = X(3)-X(1);
-    YStep = Y(3)-Y(1);
-end
-%Get Image Names
-if ~isempty(Settings.FirstImagePath)
-    ImageNamesList = GetImageNamesList(Settings.ScanType, ...
-        Settings.ScanLength,[Settings.Nx Settings.Ny], Settings.FirstImagePath, ...
-        [Settings.XData(1),Settings.YData(1)], [XStep, YStep]);
-end
 
 % --- Executes on button press in SelectImageButton.
 function SelectImageButton_Callback(hObject, eventdata, handles)
@@ -329,7 +334,7 @@ if name ~= 0
         handles.Settings.imsize = [x,y];
         
         %Get Image Names
-        if handles.ScanFileLoaded
+        if handles.ScanFileLoaded && ~handles.Fast
             handles.Settings.ImageNamesList = ImportImageNamesList(handles.Settings);
         end
         
@@ -469,7 +474,7 @@ function MaterialPopup_Callback(hObject, eventdata, handles)
 Material = GetPopupString(hObject);
 handles.Settings.Material = Material;
 
-if handles.ScanFileLoaded
+if handles.ScanFileLoaded && ~handles.Fast
     if strcmp(Material,'Scan File')
         handles.Settings.Phase = handles.Settings.GrainVals.Phase;
     else
@@ -565,7 +570,7 @@ temp = load('Settings.mat');
 PrevSettings = temp.Settings;
 clear temp
 RestoreDefaultSettings_Callback(hObject, eventdata, handles);
-MainGUI(PrevSettings);
+MainGUI(PrevSettings,handles.Fast);
 
 % --------------------------------------------------------------------
 function LoadAnalysis_Callback(hObject, eventdata, handles)
@@ -577,7 +582,7 @@ if name ~= 0
     temp = load([path name]);
     if isfield(temp,'Settings')
         NewSettings = temp.Settings;
-        MainGUI(NewSettings);
+        MainGUI(NewSettings,handles.Fast);
     else
         warndlg('No Settings structure found in file');
     end
@@ -601,7 +606,7 @@ function RestoreDefaultSettings_Callback(hObject, eventdata, handles)
 % hObject    handle to RestoreDefaultSettings (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-MainGUI;
+MainGUI(handles.Fast);
 
 % --------------------------------------------------------------------
 function Close_Callback(hObject, eventdata, handles)
@@ -634,7 +639,7 @@ function AdvancedSettings_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 if handles.ScanFileLoaded
-    handles.Settings = AdvancedSettingsGUI(handles.Settings,get(handles.MainGUI,'Position'));
+    handles.Settings = AdvancedSettingsGUI(handles.Settings,get(handles.MainGUI,'Position'),handles.Fast);
 else
     warndlg({'Cannot open Advanced Settings menu'; 'Must select scan file data.'},'OpenXY: Invalid Operation');
 end

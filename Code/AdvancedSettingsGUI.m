@@ -56,14 +56,24 @@ function AdvancedSettingsGUI_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.output = hObject;
 
 %Accept Settings from MainGUI or Load Settings.mat
+handles.Fast = false;
 if isempty(varargin)
     stemp=load('Settings.mat');
     Settings = stemp.Settings;
     clear stemp
 else
+    if length(varargin) == 3
+        handles.Fast = varargin{3};
+    end
     Settings = varargin{1};
 end
 handles.PrevSettings = Settings;
+
+%Fast GUI
+if handles.Fast
+    set(handles.EditRefPoints,'Enable','off')
+    set(handles.ToggleGrainMap,'Enable','off')
+end
 
 %HROIM Method
 if ~isfield(Settings,'DoStrain')
@@ -159,9 +169,9 @@ handles.GrainMap = -1;
 %Update Components
 GNDMethod_Callback(handles.GNDMethod, eventdata, handles)
 DoStrain_Callback(handles.DoStrain, eventdata, handles);
-HROIMMethod_Callback(handles.HROIMMethod, eventdata, handles)
-handles = guidata(hObject);
-DoDD_Callback(handles.DoDD, eventdata, handles);
+HROIMMethod_Callback(handles.HROIMMethod, eventdata, handles); handles = guidata(hObject);
+DoDD_Callback(handles.DoDD, eventdata, handles); handles = guidata(hObject);
+GrainMethod_Callback(handles.GrainMethod, eventdata, handles,true)
 handles = guidata(hObject);
 guidata(hObject, handles);
 
@@ -298,7 +308,7 @@ switch HROIMMethod
         set(handles.HROIMedit,'String',num2str(handles.Settings.RefImageInd));
         set(handles.HROIMedit,'Enable','off');
         set(handles.GrainRefType,'Enable','on');
-        set(handles.EditRefPoints,'Enable','on')
+        if ~handles.Fast, set(handles.EditRefPoints,'Enable','on'), end
         handles.Settings.HROIMMethod = 'Real';  
         GrainRefType_Callback(handles.GrainRefType, eventdata, handles);
         set(handles.GrainRefType,'Enable','on');
@@ -307,7 +317,9 @@ switch HROIMMethod
         set(handles.HROIMlabel,'String','Ref Image Index');
         if handles.Settings.RefImageInd == 0
             handles.Settings.RefImageInd = 1;
-            handles.Settings.RefInd(1:handles.Settings.ScanLength) = 1;
+            if ~handles.Fast
+                handles.Settings.RefInd(1:handles.Settings.ScanLength) = 1;
+            end
         end
         set(handles.HROIMedit,'String',num2str(handles.Settings.RefImageInd));
         set(handles.HROIMedit,'Enable','on');
@@ -449,34 +461,38 @@ function GrainRefType_Callback(hObject, eventdata, handles)
 %        contents{get(hObject,'Value')} returns selected item from GrainRefType
 contents = cellstr(get(hObject,'String'));
 GrainRefType = contents{get(hObject,'Value')};
-switch GrainRefType
-    case 'Min Kernel Avg Miso'
-        set(handles.SelectKAM,'Enable','on');
-        if ~isfield(handles.Settings,'KernelAvgMisoPath') || ~exist(handles.Settings.KernelAvgMisoPath,'file')
-            SelectKAM_Callback(handles.SelectKAM,eventdata,handles);
-            handles = guidata(hObject);
-            handles.Settings.RefInd = handles.AutoRefInds;
-        end
-    case 'IQ > Fit > CI'
-        set(handles.SelectKAM,'Enable','off');
-        handles.AutoRefInds = UpdateAutoInds(handles,handles.Settings.GrainRefImageType);
-        handles.Settings.RefInd = handles.AutoRefInds;
-        ToggleGrainMap_Callback(handles.ToggleGrainMap,eventdata,handles);
-    case 'Manual'
-        grainIDs = unique(handles.Settings.grainID);
-        if ~isfield(handles.Settings,'RefInd') || isempty(handles.Settings.RefInd)
+if strcmp(GrainRefType,'Min Kernel Avg Miso')
+    set(handles.SelectKAM,'Enable','on');
+else
+    set(handles.SelectKAM,'Enable','off');
+end
+if ~handles.Fast
+    switch GrainRefType
+        case 'Min Kernel Avg Miso'
+            if ~isfield(handles.Settings,'KernelAvgMisoPath') || ~exist(handles.Settings.KernelAvgMisoPath,'file')
+                SelectKAM_Callback(handles.SelectKAM,eventdata,handles);
+                handles = guidata(hObject);
+                handles.Settings.RefInd = handles.AutoRefInds;
+            end
+        case 'IQ > Fit > CI'
             handles.AutoRefInds = UpdateAutoInds(handles,handles.Settings.GrainRefImageType);
             handles.Settings.RefInd = handles.AutoRefInds;
-        end
-        RefGrainIDs = handles.Settings.grainID(unique(handles.Settings.RefInd));
-        if length(grainIDs) ~= length(RefGrainIDs) || ~all(sort(grainIDs)==sort(RefGrainIDs))
-            w = warndlg('Grains have changed. New reference indices must be selected.');
-            uiwait(w,3)
-            EditRefPoints_Callback(handles.EditRefPoints, eventdata, handles);
-            handles = guidata(hObject);
-        end
-        ToggleGrainMap_Callback(handles.ToggleGrainMap,eventdata,handles);    
-        
+            ToggleGrainMap_Callback(handles.ToggleGrainMap,eventdata,handles);
+        case 'Manual'
+            grainIDs = unique(handles.Settings.grainID);
+            if ~isfield(handles.Settings,'RefInd') || isempty(handles.Settings.RefInd)
+                handles.AutoRefInds = UpdateAutoInds(handles,handles.Settings.GrainRefImageType);
+                handles.Settings.RefInd = handles.AutoRefInds;
+            end
+            RefGrainIDs = handles.Settings.grainID(unique(handles.Settings.RefInd));
+            if length(grainIDs) ~= length(RefGrainIDs) || ~all(sort(grainIDs)==sort(RefGrainIDs))
+                w = warndlg('Grains have changed. New reference indices must be selected.');
+                uiwait(w,3)
+                EditRefPoints_Callback(handles.EditRefPoints, eventdata, handles);
+                handles = guidata(hObject);
+            end
+            ToggleGrainMap_Callback(handles.ToggleGrainMap,eventdata,handles);    
+    end
 end
 handles.Settings.GrainRefImageType = GrainRefType;
 guidata(hObject,handles);
@@ -602,22 +618,17 @@ function DoSplitDD_Callback(hObject, eventdata, handles)
 Settings = handles.Settings;
 valid = 0;
 j = 1;
-allMaterials = unique(Settings.Phase);
-for i = 1:length(allMaterials)
-    M = ReadMaterial(allMaterials{i});
-    if isfield(M,'SplitDD')
-        valid = 1;
-    else
-        valid = 0;
-        invalidInd(j) = i;
-        j = j + 1;
-    end
+if isfield(Settings,'Phase')
+    allMaterials = unique(Settings.Phase);
+else
+    allMaterials = {Settings.Material};
 end
+
 if get(hObject,'Value')
+    valid = CheckSplitDDMaterials(allMaterials);
     if valid
         enable = 'on';
-    else
-        warndlg(['Split Dislocation data not available for ' allMaterials{invalidInd(1)}],'OpenXY');
+        else
         set(hObject,'Value',0);
         enable = 'off';
     end
@@ -794,7 +805,7 @@ if get(hObject,'Value')
     set(handles.StandardDeviation,'Enable','on');
     set(handles.MisoTol,'Enable','on');
     set(handles.GrainRefType,'Enable','on');
-    set(handles.EditRefPoints,'Enable','on');
+    if ~handles.Fast, set(handles.EditRefPoints,'Enable','on'), end
 else
     set(handles.HROIMMethod,'Enable','off');
     set(handles.HROIMedit,'Enable','off');
@@ -809,26 +820,30 @@ guidata(hObject,handles);
 
 
 % --- Executes on selection change in GrainMethod.
-function GrainMethod_Callback(hObject, eventdata, handles)
+function GrainMethod_Callback(hObject, eventdata, handles, init)
 % hObject    handle to GrainMethod (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns GrainMethod contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from GrainMethod
+if nargin < 4
+    init = false;
+end
 contents = get(hObject,'String');
 Method = contents{get(hObject,'Value')};
-if ~strcmp(handles.Settings.GrainMethod,Method)
+if ~strcmp(handles.Settings.GrainMethod,Method) || init
     handles.Settings.GrainMethod = Method;
-    if strcmp(Method,'Find Grains')
-        set(handles.MinGrainSize,'Enable','on')
-        handles.Settings.grainID = UpdateGrainIDs(handles);
-    else
-        set(handles.MinGrainSize,'Enable','off')
-        handles.Settings.grainID = handles.Settings.GrainVals.grainID;
+    if ~handles.Fast
+        if strcmp(Method,'Find Grains')
+            set(handles.MinGrainSize,'Enable','on')
+            handles.Settings.grainID = UpdateGrainIDs(handles);
+        else
+            set(handles.MinGrainSize,'Enable','off')
+            handles.Settings.grainID = handles.Settings.GrainVals.grainID;
+        end
     end
 end
-
 guidata(hObject,handles);
 GrainRefType_Callback(handles.GrainRefType, eventdata, handles);
 
@@ -857,7 +872,9 @@ function MinGrainSize_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of MinGrainSize as text
 %        str2double(get(hObject,'String')) returns contents of MinGrainSize as a double
 handles.Settings.MinGrainSize = str2double(get(hObject,'String'));
-handles.Settings.grainID = UpdateGrainIDs(handles);
+if ~handles.Fast
+    handles.Settings.grainID = UpdateGrainIDs(handles);
+end
 guidata(hObject,handles);
 GrainRefType_Callback(handles.GrainRefType, eventdata, handles);
 
@@ -883,7 +900,7 @@ function ToggleGrainMap_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of ToggleGrainMap
-if get(hObject,'Value')
+if get(hObject,'Value') && ~handles.Fast
     handles.GrainMap = OpenGrainMap(handles);
     cla
     GrainMap = vec2map(handles.Settings.grainID,handles.Settings.Nx,handles.Settings.ScanType);
