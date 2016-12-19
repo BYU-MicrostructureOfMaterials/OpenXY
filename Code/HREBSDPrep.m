@@ -17,10 +17,14 @@ Settings.largefftmeth = fftw('wisdom');
 Settings.ROISize = round((Settings.ROISizePercent * .01)*Settings.PixelSize);
 
 %% Import Scan (for Fast GUI)
-if ~isfield(Settings,'Angles')
+if ~isfield(Settings,'ImageNamesList')
+    disp('Reading Scan File...')
     Settings = ImportScanInfo(Settings,Settings.ScanFilePath);
+    disp('Generate Image Names List...')
     Settings.ImageNamesList = ImportImageNamesList(Settings);
-    
+end
+if ~isfield(Settings,'grainID')
+    disp('Getting Grain Info...')
     if strcmp(Settings.GrainMethod,'Find Grains')
         Settings.grainID = GetGrainInfo(Settings.ScanFilePath,Settings.Phase{1},Settings.ScanParams,Settings.Angles,...
             Settings.MisoTol,Settings.GrainMethod,Settings.MinGrainSize);
@@ -120,6 +124,7 @@ end
 
 %% Get Grain ID's
 if ~isfield(Settings,'grainID') || ~isfield(Settings,'Phase')
+    disp('Getting Grain ID''s')
     [Settings.grainID, Settings.Phase] = GetGrainInfo(...
             Settings.ScanFilePath, Settings.Material, Settings.ScanParams, Settings.Angles, Settings.MisoTol, Settings.GrainMethod);
 end
@@ -143,17 +148,28 @@ end
 
 %% Pattern Center Calibration
 if ~isfield(Settings,'XStar')
-    if Settings.DisplayGUI; disp('No PC calibration at all'); end;
+    if isfield(Settings,'PCList') % For Fast GUI
+        index = find([Settings.PCList{:,8}]);
+        Settings.PlaneFit = Settings.PCList{index,6};
+        xstar = Settings.PCList{index,1};
+        ystar = Settings.PCList{index,2};
+        zstar = Settings.PCList{index,3};
+    else
+        if Settings.DisplayGUI; disp('No PC calibration at all'); end;
+        xstar = Settings.ScanParams.xstar;
+        ystar = Settings.ScanParams.ystar;
+        zstar = Settings.ScanParams.zstar;
+    end
     %Default Naive Plane Fit *****need to include Settings.SampleAzimuthal
     %and Settings.CameraAzimuthal ******
     FullLength = length(Settings.XData);
     if isfield(Settings,'PlaneFit') && strcmp(Settings.PlaneFit,'Naive')
-        Settings.XStar(1:FullLength) = Settings.ScanParams.xstar-Settings.XData/Settings.PhosphorSize;
-        Settings.YStar(1:FullLength) = Settings.ScanParams.ystar+Settings.YData/Settings.PhosphorSize*sin(Settings.SampleTilt-Settings.CameraElevation);
-        Settings.ZStar(1:FullLength) = Settings.ScanParams.zstar+Settings.YData/Settings.PhosphorSize*cos(Settings.SampleTilt-Settings.CameraElevation);
+        Settings.XStar(1:FullLength) = xstar-Settings.XData/Settings.PhosphorSize;
+        Settings.YStar(1:FullLength) = ystar+Settings.YData/Settings.PhosphorSize*sin(Settings.SampleTilt-Settings.CameraElevation);
+        Settings.ZStar(1:FullLength) = zstar+Settings.YData/Settings.PhosphorSize*cos(Settings.SampleTilt-Settings.CameraElevation);
     else
-        Settings.XStar(1:FullLength) = Settings.ScanParams.xstar;
-        Settings.YStar(1:FullLength) = Settings.ScanParams.ystar;
-        Settings.ZStar(1:FullLength) = Settings.ScanParams.zstar;
+        Settings.XStar(1:FullLength) = xstar;
+        Settings.YStar(1:FullLength) = ystar;
+        Settings.ZStar(1:FullLength) = zstar;
     end
 end
