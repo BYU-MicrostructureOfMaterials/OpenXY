@@ -77,7 +77,7 @@ if ~isempty(varargin{2})
 end
 
 %Read in image maps
-if length(varargin) > 2
+if length(varargin) > 2 && ~isempty(varargin{3})
     handles.IQ_map = varargin{3}.IQ_map;
     handles.IPF_map = varargin{3}.IPF_map;
     set(handles.IPFPlot,'Value',1);
@@ -90,10 +90,10 @@ pos = get(handles.PCEdit,'Position');
 Type = input{4};
 switch Type
     case 'Strain Minimization'
-        if ~isempty(handles.PCData) && isfield(handles.PCData,'CalibrationIndices')
+        if ~isempty(handles.PCData) && isfield(handles.PCData,'CalibrationIndices') % Editing PC
             set(handles.StrainMinPanel,'Visible','on','Position',[44 0.5 40 17]);
             set(handles.PCEdit,'Position',[pos(1) pos(2) 88 pos(4)]);
-        else
+        else % New PC
             set(handles.StrainMinPanel,'Visible','off');
             set(handles.PCEdit,'Position',[pos(1) pos(2) 44 pos(4)]);
         end

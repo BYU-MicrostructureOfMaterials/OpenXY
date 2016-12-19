@@ -53,12 +53,43 @@ function PCGUI_OpeningFcn(hObject, eventdata, handles, varargin)
 % varargin   command line arguments to PCGUI (see VARARGIN)
 
 %Accept Settings from MainGUI or Load Settings.mat
+handles.Fast = false;
 if isempty(varargin)
     stemp=load('Settings.mat');
     Settings = stemp.Settings;
     clear stemp
 else
+    if length(varargin) == 3
+        handles.Fast = varargin{3};
+    end
     Settings = varargin{1};
+end
+handles.PrevSettings = Settings;
+
+%Fast GUI
+if handles.Fast
+    if ~isfield(Settings,'PCList')
+        Settings.PCList = {};
+        if isfield(Settings,'ScanParams')
+            xstar = Settings.ScanParams.xstar;
+            ystar = Settings.ScanParams.ystar;
+            zstar = Settings.ScanParams.zstar;
+            Settings.PCList = {xstar,ystar,zstar,...
+                'Scan File','Naive','Default',{''}};
+        end
+        if isfield(Settings,'XStar')
+            xstar = Settings.XStar(1);
+            ystar = Settings.YStar(1);
+            zstar = Settings.ZStar(1);
+            Settings.PCList = [Settings.PCList; {xstar,ystar,zstar,...
+                'From Settings','Naive','Manual',{''}}];
+        end
+    end
+    
+    set(handles.PCPlot,'Enable','off')
+    set(handles.IPFPlot,'Enable','off')
+    set(handles.IQPlot,'Enable','off')
+    set(handles.PlotGB,'Enable','off')
 end
 
 %Populate PCMethod Box
@@ -73,22 +104,17 @@ if ~isfield(Settings,'PCList')
 end
 set(handles.PCList,'String',Settings.PCList(:,6));
 
-%Create IPF map and save it
-if ~isfield(handles,'IPF_map')
-    g = zeros(3,3,Settings.ScanLength);
-    for i = 1:Settings.ScanLength
-        g(:,:,i) = euler2gmat(Settings.Angles(i,:));
-    end
-    handles.IPF_map = PlotIPF(g,[Settings.Nx Settings.Ny],Settings.ScanType,0);
-end
-
-%Create IQ map and save it
-if ~isfield(handles,'IQ_map')
-    handles.IQ_map = vec2map(Settings.IQ,Settings.Nx,Settings.ScanType);
+%Load Plots
+if isfield(Settings,'IQ')
+    handles = GenPlots(handles,Settings);
+else
+    axes(handles.PCaxes)
+    text(0.5,0.5,{'No Plotting for Fast mode'},'HorizontalAlignment','center');
+    axis off
 end
 
 %Get VHRatio
-if isfield(Settings.ScanParams,'VHRatio')
+if isfield(Settings,'ScanParams') && isfield(Settings.ScanParams,'VHRatio')
     handles.V = Settings.ScanParams.VHRatio;
 else
     im = imread(Settings.FirstImagePath);
@@ -101,7 +127,7 @@ if size(Settings.PCList,2) == 8
     IndCol = [Settings.PCList{:,8}];
     Settings.PCList(:,8) = []; %Remove column
     ListInds = 1:length(IndCol);
-    index = ListInds(logical(IndCol)    );
+    index = ListInds(logical(IndCol));
 else
     index = 1;
 end
@@ -170,23 +196,26 @@ set(handles.YStarLabel,'String',ystar);
 set(handles.ZStarLabel,'String',zstar);
 type = handles.Settings.PCList{index,4};
 
-if strcmp(type,'Tiff')
-    handles.Settings.XStar = handles.Settings.PCList{index,7}.XStar;
-    handles.Settings.YStar = handles.Settings.PCList{index,7}.YStar;
-    handles.Settings.ZStar = handles.Settings.PCList{index,7}.ZStar;
-else
-    if strcmp(handles.Settings.PCList{index,5},'Naive')
-        handles.Settings.XStar = xstar - handles.Settings.XData/handles.Settings.PhosphorSize;
-        detector_angle = handles.Settings.SampleTilt-handles.Settings.CameraElevation;
-        handles.Settings.YStar = ystar + handles.Settings.YData/handles.Settings.PhosphorSize*sin(detector_angle);
-        handles.Settings.ZStar = zstar + handles.Settings.YData/handles.Settings.PhosphorSize*cos(detector_angle);
+if ~handles.Fast
+    if strcmp(type,'Tiff')
+        handles.Settings.XStar = handles.Settings.PCList{index,7}.XStar;
+        handles.Settings.YStar = handles.Settings.PCList{index,7}.YStar;
+        handles.Settings.ZStar = handles.Settings.PCList{index,7}.ZStar;
     else
-        handles.Settings.XStar(:) = xstar;
-        handles.Settings.YStar(:) = ystar;
-        handles.Settings.ZStar(:) = zstar;
+        if strcmp(handles.Settings.PCList{index,5},'Naive')
+            handles.Settings.XStar = xstar - handles.Settings.XData/handles.Settings.PhosphorSize;
+            detector_angle = handles.Settings.SampleTilt-handles.Settings.CameraElevation;
+            handles.Settings.YStar = ystar + handles.Settings.YData/handles.Settings.PhosphorSize*sin(detector_angle);
+            handles.Settings.ZStar = zstar + handles.Settings.YData/handles.Settings.PhosphorSize*cos(detector_angle);
+        else
+            handles.Settings.XStar(:) = xstar;
+            handles.Settings.YStar(:) = ystar;
+            handles.Settings.ZStar(:) = zstar;
+        end
     end
+    UpdatePlot(handles)
 end
-UpdatePlot(handles)
+
 
 %Edit on Double-click
 SelectionType = get(handles.PCGUI,'SelectionType');
@@ -229,6 +258,16 @@ if strcmp(type,'Strain Minimization')
     if count
         def_name = [def_name num2str(count)];
     end
+    
+    %Import Scan Info
+    if handles.Fast
+        disp('Reading Scan File...')
+        Settings = ImportScanInfo(Settings,Settings.ScanFilePath);
+        disp('Generate Image Names List...')
+        Settings.ImageNamesList = ImportImageNamesList(Settings);
+        handles = GenPlots(handles,Settings);
+    end
+    
     PCSettings = PCEdit([Sel(1:3) 'Strain Minimization' Sel(5) def_name {''}],handles.V);
     if ~isempty([PCSettings{1:3}])
         
@@ -267,6 +306,17 @@ elseif strcmp(type,'Grid')
     if count
         def_name = [def_name num2str(count)];
     end
+    
+    %Import Scan Info
+    if ~isfield(Settings,'ImageNamesList')
+        disp('Reading Scan File...')
+        Settings = ImportScanInfo(Settings,Settings.ScanFilePath);
+        disp('Generate Image Names List...')
+        Settings.ImageNamesList = ImportImageNamesList(Settings);
+        
+        handles = GenPlots(handles,Settings);
+    end
+    
     plots.IQ_map = handles.IQ_map; plots.IPF_map = handles.IPF_map;
     PCSettings = PCEdit([Sel(1:3) 'Grid' Sel(5) def_name {''}],handles.V,plots);
     
@@ -341,7 +391,11 @@ function EditPC_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 index = GetListIndex(handles);
-plots.IQ_map = handles.IQ_map; plots.IPF_map = handles.IPF_map;
+if all(isfield(handles,{'IQ_map','IPF_map'}))
+    plots.IQ_map = handles.IQ_map; plots.IPF_map = handles.IPF_map;
+else
+    plots = [];
+end
 EditedPC = PCEdit(handles.Settings.PCList(index,:),handles.V,plots);
 if ~isempty([EditedPC{1:3}])
     XStars = abs([handles.Settings.PCList{:,1}] - EditedPC{1}) < 1e-6;
@@ -531,4 +585,19 @@ function PlotGB_Callback(hObject, eventdata, handles)
 
 % Hint: get(hObject,'Value') returns toggle state of PlotGB
 UpdatePlot(handles)
+
+function handles = GenPlots(handles,Settings)
+%Create IPF map and save it
+if ~isfield(handles,'IPF_map')
+    g = zeros(3,3,Settings.ScanLength);
+    for i = 1:Settings.ScanLength
+        g(:,:,i) = euler2gmat(Settings.Angles(i,:));
+    end
+    handles.IPF_map = PlotIPF(g,[Settings.Nx Settings.Ny],Settings.ScanType,0);
+end
+
+%Create IQ map and save it
+if ~isfield(handles,'IQ_map')
+    handles.IQ_map = vec2map(Settings.IQ,Settings.Nx,Settings.ScanType);
+end
 
