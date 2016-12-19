@@ -80,6 +80,13 @@ if handles.Fast
 
 end
 
+%Check if H5 patterns
+handles.h5 = false;
+[~,~,ext] = fileparts(Settings.ScanFilePath);
+if strcmp(ext,'.h5')
+    handles.h5 = true;
+end
+
 %Set Position
 if length(varargin) > 1
     MainSize = varargin{2};
@@ -124,7 +131,7 @@ set(handles.ImageFilter4,'String',num2str(Settings.ImageFilter(4)));
 
 %Draw Original Image
 axes(handles.OriginalImage);
-if handles.Fast || size(Settings.ImageNamesList,1)>1
+if ~handles.h5
     handles.OrigImage = imread(Settings.FirstImagePath);
 else
     handles.OrigImage = ReadH5Pattern(Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter,1);
@@ -142,30 +149,40 @@ guidata(hObject, handles);
 handles = guidata(hObject);
 
 %Draw Simulated Pattern
-if handles.Fast || size(Settings.ImageNamesList,1)>1
-    Image = ReadEBSDImage(Settings.FirstImagePath, Settings.ImageFilter);
-else
-    Image = ReadH5Pattern(Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter,1);
-end
+axes(handles.SimPat);
+Image = handles.OrigImage;
 if isempty(Image)
     Image = ReadEBSDImage('demo.bmp', Settings.ImageFilter);
 end
 
-Material = ReadMaterial(Settings.Phase{1});
-paramspat={Settings.ScanParams.xstar;Settings.ScanParams.ystar;Settings.ScanParams.zstar;...
-    size(Image,1);Settings.AccelVoltage*1000;Settings.SampleTilt;Settings.CameraElevation;...
-    Material.Fhkl;Material.dhkl;Material.hkl};
-g=euler2gmat(Settings.Angles(1,1),Settings.Angles(1,2),Settings.Angles(1,3));
-handles.GenImage = genEBSDPatternHybrid(g,paramspat,eye(3),Material.lattice,Material.a1,Material.b1,Material.c1,Material.axs);
-handles.GenImage = custimfilt(handles.GenImage, Settings.ImageFilter(1), Settings.ImageFilter(2),Settings.ImageFilter(3),Settings.ImageFilter(4));
-axes(handles.SimPat);
-imagesc(handles.GenImage)
-drawnow
-set(gca,'xcolor',get(gcf,'color'));
-set(gca,'ycolor',get(gcf,'color'));
-set(gca,'ytick',[]);
-set(gca,'xtick',[]);
-axis equal
+if handles.Fast
+    Mat = Settings.Material;
+else
+    Mat = Settings.Phase{1};
+end
+if strcmp(Mat,'Scan File')
+    text(0.5,0.5,{'Select a valid Material','from Main GUI'},'HorizontalAlignment','center');
+    axis off
+elseif ~handles.Fast
+    Material = ReadMaterial(Mat);
+    paramspat={xstar;ystar;zstar;...
+        size(Image,1);Settings.AccelVoltage*1000;Settings.SampleTilt;Settings.CameraElevation;...
+        Material.Fhkl;Material.dhkl;Material.hkl};
+    g=euler2gmat(Settings.Angles(1,1),Settings.Angles(1,2),Settings.Angles(1,3));
+    handles.GenImage = genEBSDPatternHybrid(g,paramspat,eye(3),Material.lattice,Material.a1,Material.b1,Material.c1,Material.axs);
+    handles.GenImage = custimfilt(handles.GenImage, Settings.ImageFilter(1), Settings.ImageFilter(2),Settings.ImageFilter(3),Settings.ImageFilter(4));
+    imagesc(handles.GenImage)
+    drawnow
+    set(gca,'xcolor',get(gcf,'color'));
+    set(gca,'ycolor',get(gcf,'color'));
+    set(gca,'ytick',[]);
+    set(gca,'xtick',[]);
+    axis equal
+else
+    text(0.5,0.5,{'Cannot create','Simulated Pattern','in Fast mode'},'HorizontalAlignment','center')
+    axis off
+
+end
 
 % Update handles structure
 ROIStylePopup_Callback(handles.ROIStylePopup, eventdata, handles)
@@ -557,7 +574,7 @@ function UpdateImageDisplay(handles)
 % Apply updated filter to displayed image
 Settings=handles.Settings;
 
-if size(Settings.ImageNamesList,1)>1
+if ~handles.h5
     if strcmp(Settings.ImageFilterType,'standard')
         Image=ReadEBSDImage(Settings.FirstImagePath,Settings.ImageFilter);
     else
@@ -589,41 +606,45 @@ pixsize = size(FiltImage,1);
 ROInum = Settings.NumROIs;
 ROISize = Settings.ROISizePercent/100*pixsize;
 ROIStyle = Settings.ROIStyle;
-GenImage=handles.GenImage;
 
 if ~strcmp(ROIStyle,'Intensity')
     [roixc,roiyc]= GetROIs(FiltImage,ROInum,pixsize,ROISize,ROIStyle);
-else % use intensity method
-    [roixc,roiyc]= GetROIs(GenImage,ROInum,pixsize,ROISize,ROIStyle);
+elseif isfield(handles,'GenImage') % use intensity method
+    [roixc,roiyc]= GetROIs(handles.GenImage,ROInum,pixsize,ROISize,ROIStyle);
 end
 
-
-for ii = 1:length(roixc)
-    hold on  
-    DrawROI(roixc(ii),roiyc(ii),ROISize);
-%     rectangle('Curvature',[0 0],'Position',...
-%         [roixc(ii)-roisize/2 roiyc(ii)-roisize/2 roisize roisize],...
-%         'EdgeColor','g');   
-end
-axes(handles.SimPat)
-cla
-imagesc(GenImage);
-set(gca,'xcolor',get(gcf,'color'));
-set(gca,'ycolor',get(gcf,'color'));
-set(gca,'ytick',[]);
-set(gca,'xtick',[]);
-axis equal
-
-if strcmp(ROIStyle,'Intensity')
-    for jj = 1:length(roixc)
-        hold on
-        DrawROI(roixc(jj),roiyc(jj),ROISize);
+if ~strcmp(ROIStyle,'Intensity') || isfield(handles,'GenImage')
+    for ii = 1:length(roixc)
+        hold on  
+        DrawROI(roixc(ii),roiyc(ii),ROISize);
     %     rectangle('Curvature',[0 0],'Position',...
-    %         [roixc(jj)-roisize/2 roiyc(jj)-roisize/2 roisize roisize],...
-    %         'EdgeColor','g');
+    %         [roixc(ii)-roisize/2 roiyc(ii)-roisize/2 roisize roisize],...
+    %         'EdgeColor','g');   
     end
 end
 
+if isfield(handles,'GenImage')
+    axes(handles.SimPat)
+    cla
+    imagesc(GenImage);
+    set(gca,'xcolor',get(gcf,'color'));
+    set(gca,'ycolor',get(gcf,'color'));
+    set(gca,'ytick',[]);
+    set(gca,'xtick',[]);
+    axis equal
+
+    if strcmp(ROIStyle,'Intensity')
+        for jj = 1:length(roixc)
+            hold on
+            DrawROI(roixc(jj),roiyc(jj),ROISize);
+        %     rectangle('Curvature',[0 0],'Position',...
+        %         [roixc(jj)-roisize/2 roiyc(jj)-roisize/2 roisize roisize],...
+        %         'EdgeColor','g');
+        end
+    end
+end
+    
+    
 function DrawROI(roixc,roiyc,ROISize)
 %Draw a box around the passed in region of interest in the current figure
 hold on
