@@ -62,19 +62,23 @@ function ROISettingsGUI_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.output = hObject;
 
 %Accept Settings from MainGUI or Load Settings.mat
+handles.Fast = false;
 if isempty(varargin)
     stemp=load('Settings.mat');
     Settings = stemp.Settings;
-    if ~isfield(Settings,'Angles') || isempty(Settings.FirstImagePath)
-        warndlg('No data to load from Settings.mat');
-        delete(hObject);
-        return
-    end
     clear stemp
 else
+    if length(varargin) == 3
+        handles.Fast = varargin{3};
+    end
     Settings = varargin{1};
 end
 handles.PrevSettings = Settings;
+
+%Fast GUI
+if handles.Fast
+
+end
 
 %Set Position
 if length(varargin) > 1
@@ -120,7 +124,7 @@ set(handles.ImageFilter4,'String',num2str(Settings.ImageFilter(4)));
 
 %Draw Original Image
 axes(handles.OriginalImage);
-if size(Settings.ImageNamesList,1)>1
+if handles.Fast || size(Settings.ImageNamesList,1)>1
     handles.OrigImage = imread(Settings.FirstImagePath);
 else
     handles.OrigImage = ReadH5Pattern(Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter,1);
@@ -138,7 +142,7 @@ guidata(hObject, handles);
 handles = guidata(hObject);
 
 %Draw Simulated Pattern
-if size(Settings.ImageNamesList,1)>1
+if handles.Fast || size(Settings.ImageNamesList,1)>1
     Image = ReadEBSDImage(Settings.FirstImagePath, Settings.ImageFilter);
 else
     Image = ReadH5Pattern(Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter,1);
@@ -146,6 +150,7 @@ end
 if isempty(Image)
     Image = ReadEBSDImage('demo.bmp', Settings.ImageFilter);
 end
+
 Material = ReadMaterial(Settings.Phase{1});
 paramspat={Settings.ScanParams.xstar;Settings.ScanParams.ystar;Settings.ScanParams.zstar;...
     size(Image,1);Settings.AccelVoltage*1000;Settings.SampleTilt;Settings.CameraElevation;...

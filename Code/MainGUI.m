@@ -627,7 +627,7 @@ function ROISettings_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 if handles.ScanFileLoaded && handles.ImageLoaded
-    handles.Settings = ROISettingsGUI(handles.Settings,get(handles.MainGUI,'Position'));
+    handles.Settings = ROISettingsGUI(handles.Settings,get(handles.MainGUI,'Position'),handles.Fast);
 else
     warndlg({'Cannot open ROI Settings menu'; 'Must select scan file data and first image'},'OpenXY: Invalid Operation');
 end
