@@ -101,6 +101,9 @@ end
 if isfield(NewSettings,'RefInd')
     Settings.RefInd = NewSettings.RefInd;
 end
+if isfield(NewSettings,'ScanParams')
+    Settings.ScanParams = NewSettings.ScanParams;
+end
 
 %% Pull in Previous Data
 if isfield(NewSettings,'data')
