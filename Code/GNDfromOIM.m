@@ -504,9 +504,14 @@ GNDAvg = mean(alpha_total3(alpha_total3>0));
 GNDStd = std(alpha_total3(alpha_total3>0));
 fprintf('Alpha(1,3) Avg: %g\n',GNDAvg);
 fprintf('Alpha(1,3) Std: %g\n',GNDStd);
+
 figure
-imagesc(real(alpha_total3))
+imagesc(log10(real(alpha_total3)))
 title('GND density using Alpha3')
-caxis([1e10 1e13])
+caxis([11 15])
+colormap(gca,jet);
 colorbar
+c = colorbar; % Change colorbar title
+c.Label.String = 'GND (10^x^x^.^x m^-^2)';
+
 
