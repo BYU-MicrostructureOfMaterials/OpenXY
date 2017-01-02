@@ -535,6 +535,7 @@ else
     set(handles.DisplayShiftsBox,'Enable','on');
 end
 DisplayShiftsBox_Callback(handles.DisplayShiftsBox,eventdata,handles);
+handles = guidata(hObject);
 guidata(hObject, handles);
 
 
@@ -666,7 +667,6 @@ end
 guidata(hObject,handles);
 if isfield(handles.Settings,'AutoRun')
     if handles.Settings.AutoRun==1
-        disp('MainGUI line 677ish')
         RunButton_Callback(handles.RunButton, eventdata, handles)
     end
 end
