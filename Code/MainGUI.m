@@ -150,6 +150,7 @@ else
     set(handles.ProcessorsPopup,'Value',handles.Settings.DoParallel);
 end
 ProcessorsPopup_Callback(handles.ProcessorsPopup,eventdata,handles);
+handles = guidata(handles.ProcessorsPopup);
 
 %Orientation-based GND
 if strcmp(handles.Settings.GNDMethod,'Orientation') && ~handles.Settings.DoStrain
