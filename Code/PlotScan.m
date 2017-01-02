@@ -1,4 +1,4 @@
-function PlotScan(im,PlotType)
+function im = PlotScan(im,PlotType)
 %Copy data for Line Scans
 if size(im,1) == 1
     im = repmat(im,round(size(im,2)/6),1);
@@ -15,10 +15,10 @@ end
 
 switch PlotType
     case 'Image Quality'
-        imagesc(im,Limits);
-        colormap gray
+        im = imagesc(im,Limits);
+        colormap(gca,gray)
     case 'IPF'
-        image(im)
-        colormap jet
+        im = image(im);
+        colormap(gca,jet)
 end
 axis image

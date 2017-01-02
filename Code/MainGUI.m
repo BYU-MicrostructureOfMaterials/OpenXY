@@ -22,7 +22,7 @@ function varargout = MainGUI(varargin)
 
 % Edit the above text to modify the response to help MainGUI
 
-% Last Modified by GUIDE v2.5 14-Jun-2016 08:30:11
+% Last Modified by GUIDE v2.5 02-Jan-2017 12:46:52
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -669,6 +669,17 @@ if isfield(handles.Settings,'AutoRun')
     if handles.Settings.AutoRun==1
         RunButton_Callback(handles.RunButton, eventdata, handles)
     end
+end
+
+% --------------------------------------------------------------------
+function TestGeometry_Callback(hObject, eventdata, handles)
+% hObject    handle to TestGeometry (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if handles.ScanFileLoaded && handles.ImageLoaded
+    TestGeometry(handles.Settings,get(handles.MainGUI,'Position'));
+else
+    warndlg({'Cannot open Test Geometry menu';'Must select scan file data and first image'},'OpenXY: Invalid Operation')
 end
 
 function enableRunButton(handles)
