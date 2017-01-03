@@ -1,5 +1,5 @@
 
-function [AngFileVals ScanParams FileName FilePath ] = ReadAngFile(FilePath,FileName)
+function [AngFileVals, ScanParams, GrainVals, FileName, FilePath ] = ReadAngFile(FilePath,FileName)
 %READANGFILE
 %[AngFileVals ScanParams FileName FilePath ] = ReadAngFile(FilePath,FileName)
 %Fast reading .ang files of any size. 
@@ -12,16 +12,15 @@ function [AngFileVals ScanParams FileName FilePath ] = ReadAngFile(FilePath,File
 %if the file and pathname are known, pass those in.
 
 if nargin == 1
-    fid = fopen(FilePath);
-    data = GetFileData(FilePath,'#');
+    FullPath = FilePath;
 elseif nargin == 2
-    fid = fopen([FilePath FileName]);
-    data = GetFileData([FilePath FileName],'#');
+    FullPath = fullfile(FilePath,FileName);
 else
-    [FileName FilePath] = uigetfile('*.ang','OIM .ang file');
-    fid = fopen([FilePath FileName]);
-    data = GetFileData([FilePath FileName],'#');
+    [FileName, FilePath] = uigetfile('*.ang','OIM .ang file');
+    FullPath = fullfile(FilePath,FileName);
 end
+fid = fopen(FullPath);
+data = GetFileData(FullPath,'#');
 
 disp('Reading in the .ang file . . . ')
 
@@ -64,6 +63,32 @@ while ~feof(fid)
 end
 
 fclose(fid);
+
+% Get data from Grain File
+[path, name] = fileparts(FullPath);
+GrainFilePath = fullfile(path,[name '.txt']);
+if ~exist(GrainFilePath,'file')
+    button = questdlg('No matching grain file was found. Would you like to manually select a grain file?','Grain file not found');
+    if strcmp(button,'Yes')
+        w = pwd;
+        cd(path);
+        [name, path] = uigetfile({'*.txt', 'Grain Files (*.txt)'},'Select a Grain File');
+        GrainFilePath = fullfile(path,name);
+        cd(w);
+    else
+        error('No grain matching ground file was found');
+    end
+end
+
+% Read Grain File
+GrainFileVals = ReadGrainFile(GrainFilePath);
+% Extract out grain ID and Phase
+GrainVals.grainID = GrainFileVals{9};
+Phase=strtrim(lower(GrainFileVals{11}));
+
+% Populate Phase
+GrainVals.Phase = ValidatePhase(Phase);
+
 
 % keyboard
 % phi1 = AngFileVals{1,1};
