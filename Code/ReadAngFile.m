@@ -85,9 +85,14 @@ GrainFileVals = ReadGrainFile(GrainFilePath);
 % Extract out grain ID and Phase
 GrainVals.grainID = GrainFileVals{9};
 Phase=strtrim(lower(GrainFileVals{11}));
-
-% Populate Phase
+% Validate Phase
 GrainVals.Phase = ValidatePhase(Phase);
+% Get PhaseNum
+PhaseNum = AngFileVals{8};
+if min(PhaseNum) == 0 && max(PhaseNum) == 0
+    PhaseNum = PhaseNum + 1;
+end
+GrainVals.PhaseNum = PhaseNum;
 
 
 % keyboard

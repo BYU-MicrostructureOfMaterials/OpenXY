@@ -1,4 +1,4 @@
-function [CtfFileVals, ScanParams, Phase] = ReadCTFFile(FileName,FilePath)
+function [CtfFileVals, ScanParams, GrainVals] = ReadCTFFile(FileName,FilePath)
 %CtfFileVals: Cell array containing all data from .ctf file.
 %   Phase	X	Y	Bands	Error	Euler1	Euler2	Euler3	MAD	BC	BS
 %ScanParams: Struct containing information gathered from header
@@ -123,6 +123,8 @@ else
     if ~ok, ind = 1; end;
     Phase(:)={strtrim(lower(ScanParams.material{ind}))};
 end
+GrainVals.PhaseNum = PhaseNum;
+GrainVals.Phase = Phase;
 
 % Validate Phase
 Phase = ValidatePhase(Phase);
