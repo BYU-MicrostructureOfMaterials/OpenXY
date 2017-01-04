@@ -22,7 +22,7 @@ function varargout = AdvancedSettingsGUI(varargin)
 
 % Edit the above text to modify the response to help AdvancedSettingsGUI
 
-% Last Modified by GUIDE v2.5 23-Sep-2016 13:47:52
+% Last Modified by GUIDE v2.5 04-Jan-2017 14:23:04
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -62,10 +62,12 @@ if isempty(varargin)
     Settings = stemp.Settings;
     clear stemp
 else
-    if length(varargin) == 3
-        handles.Fast = varargin{3};
+    if length(varargin) == 2
+        handles.Fast = varargin{2};
     end
-    Settings = varargin{1};
+    handles.MainGUI = varargin{1};
+    MainHandle = guidata(handles.MainGUI);
+    Settings = MainHandle.Settings;
 end
 handles.PrevSettings = Settings;
 
@@ -159,18 +161,23 @@ end
 %Calculation Options
 set(handles.EnableProfiler,'Value',Settings.EnableProfiler);
 
-%Set Position
-if length(varargin) > 1
-    MainSize = varargin{2};
+%Set Position and Visuals
+if ~isempty(handles.MainGUI)
+    MainSize = get(handles.MainGUI,'Position');
     set(hObject,'Units','pixels');
     GUIsize = get(hObject,'Position');
     set(hObject,'Position',[MainSize(1)-GUIsize(3)-20 MainSize(2) GUIsize(3) GUIsize(4)]);
     movegui(hObject,'onscreen');
 end
+handles.ColorSave = get(handles.SaveButton,'BackgroundColor');
+handles.ColorEdit = [1 1 0]; % Yellow
+gui = findall(handles.AdvancedSettingsGUI,'KeyPressFcn','');
+set(gui,'KeyPressFcn',@AdvancedSettingsGUI_KeyPressFcn);
 
 % Update handles structure
 handles.Settings = Settings;
 handles.GrainMap = -1;
+handles.edited = false;
 
 %Update Components
 GNDMethod_Callback(handles.GNDMethod, eventdata, handles)
@@ -182,7 +189,7 @@ handles = guidata(hObject);
 guidata(hObject, handles);
 
 % UIWAIT makes AdvancedSettingsGUI wait for user response (see UIRESUME)
-uiwait(handles.AdvancedSettingsGUI);
+%uiwait(handles.AdvancedSettingsGUI);
 
 
 % --- Outputs from this function are returned to the command line.
@@ -193,8 +200,7 @@ function varargout = AdvancedSettingsGUI_OutputFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Get default command line output from handles structure
-varargout{1} = handles.Settings;
-delete(handles.AdvancedSettingsGUI);
+varargout{1} = handles.output;
 
 % --- Executes when user attempts to close AdvancedSettingsGUI.
 function AdvancedSettingsGUI_CloseRequestFcn(hObject, eventdata, handles)
@@ -206,18 +212,22 @@ function AdvancedSettingsGUI_CloseRequestFcn(hObject, eventdata, handles)
 if ishandle(handles.GrainMap)
     close(handles.GrainMap)
 end
-if strcmp(get(hObject,'waitstatus'),'waiting')
-    uiresume(hObject);
-else
-    delete(hObject);
-end
+delete(hObject);
 
 % --- Executes on button press in SaveButton.
 function SaveButton_Callback(hObject, eventdata, handles)
 % hObject    handle to SaveButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-AdvancedSettingsGUI_CloseRequestFcn(handles.AdvancedSettingsGUI, eventdata, handles);
+if ~isempty(handles.MainGUI) && isvalid(handles.MainGUI)
+    MainHandles = guidata(handles.MainGUI);
+    MainHandles.Settings = handles.Settings;
+    guidata(handles.MainGUI,MainHandles);
+end
+handles.PrevSettings = handles.Settings;
+handles.edited = false;
+guidata(hObject,handles);
+SaveColor(handles)
 
 % --- Executes on button press in CancelButton.
 function CancelButton_Callback(hObject, eventdata, handles)
@@ -324,8 +334,8 @@ switch HROIMMethod
         if handles.Settings.RefImageInd == 0
             handles.Settings.RefImageInd = 1;
             if ~handles.Fast
-            handles.Settings.RefInd(1:handles.Settings.ScanLength) = 1;
-        end
+                handles.Settings.RefInd(1:handles.Settings.ScanLength) = 1;
+            end
         end
         set(handles.HROIMedit,'String',num2str(handles.Settings.RefImageInd));
         set(handles.HROIMedit,'Enable','on');
@@ -338,6 +348,10 @@ switch HROIMMethod
         SetPopupValue(handles.GrainRefType,'Manual');
         set(handles.GrainRefType,'Enable','off');
 end
+if ValChanged(handles,'HROIMMethod')
+    handles.edited = true;
+end
+SaveColor(handles)
 guidata(hObject,handles);
 
 function warndlgpause(msg,title)
@@ -389,8 +403,11 @@ switch HROIMMethod
             set(hObject,'String',num2str(handles.Settings.RefImageInd));
         end
 end
+if ValChanged(handles,'IterationLimit') || ValChanged(handles,'RefImageInd')
+    handles.edited = true;
+end
+SaveColor(handles)
 guidata(hObject,handles);
-
 
 % --- Executes during object creation, after setting all properties.
 function HROIMedit_CreateFcn(hObject, eventdata, handles)
@@ -414,8 +431,11 @@ function StandardDeviation_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of StandardDeviation as text
 %        str2double(get(hObject,'String')) returns contents of StandardDeviation as a double
 handles.Settings.StandardDeviation = str2double(get(hObject,'String'));
+if ValChanged(handles,'StandardDeviation')
+    handles.edited = true;
+end
+SaveColor(handles)
 guidata(hObject,handles);
-
 
 % --- Executes during object creation, after setting all properties.
 function StandardDeviation_CreateFcn(hObject, eventdata, handles)
@@ -440,9 +460,13 @@ function MisoTol_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of MisoTol as a double
 handles.Settings.MisoTol = str2double(get(hObject,'String'));
 handles.Settings.grainID = CalcGrainID(handles.Settings);
-guidata(hObject,handles);
-GrainRefType_Callback(handles.GrainRefType, eventdata, handles);
 
+GrainRefType_Callback(handles.GrainRefType, eventdata, handles);
+if ValChanged(handles,'MisoTol')
+    handles.edited = true;
+end
+SaveColor(handles)
+guidata(hObject,handles);
 
 % --- Executes during object creation, after setting all properties.
 function MisoTol_CreateFcn(hObject, eventdata, handles)
@@ -473,34 +497,38 @@ else
     set(handles.SelectKAM,'Enable','off');
 end
 if ~handles.Fast
-switch GrainRefType
-    case 'Min Kernel Avg Miso'
-        if ~isfield(handles.Settings,'KernelAvgMisoPath') || ~exist(handles.Settings.KernelAvgMisoPath,'file')
-            SelectKAM_Callback(handles.SelectKAM,eventdata,handles);
-            handles = guidata(hObject);
-            handles.Settings.RefInd = handles.AutoRefInds;
-        end
-    case 'IQ > Fit > CI'
-        handles.AutoRefInds = UpdateAutoInds(handles,handles.Settings.GrainRefImageType);
-        handles.Settings.RefInd = handles.AutoRefInds;
-        ToggleGrainMap_Callback(handles.ToggleGrainMap,eventdata,handles);
-    case 'Manual'
-        grainIDs = unique(handles.Settings.grainID);
-        if ~isfield(handles.Settings,'RefInd') || isempty(handles.Settings.RefInd)
+    switch GrainRefType
+        case 'Min Kernel Avg Miso'
+            if ~isfield(handles.Settings,'KernelAvgMisoPath') || ~exist(handles.Settings.KernelAvgMisoPath,'file')
+                SelectKAM_Callback(handles.SelectKAM,eventdata,handles);
+                handles = guidata(hObject);
+                handles.Settings.RefInd = handles.AutoRefInds;
+            end
+        case 'IQ > Fit > CI'
             handles.AutoRefInds = UpdateAutoInds(handles,handles.Settings.GrainRefImageType);
             handles.Settings.RefInd = handles.AutoRefInds;
-        end
-        RefGrainIDs = handles.Settings.grainID(unique(handles.Settings.RefInd));
-        if length(grainIDs) ~= length(RefGrainIDs) || ~all(sort(grainIDs)==sort(RefGrainIDs))
-            w = warndlg('Grains have changed. New reference indices must be selected.');
-            uiwait(w,3)
-            EditRefPoints_Callback(handles.EditRefPoints, eventdata, handles);
-            handles = guidata(hObject);
-        end
-        ToggleGrainMap_Callback(handles.ToggleGrainMap,eventdata,handles);    
+            ToggleGrainMap_Callback(handles.ToggleGrainMap,eventdata,handles);
+        case 'Manual'
+            grainIDs = unique(handles.Settings.grainID);
+            if ~isfield(handles.Settings,'RefInd') || isempty(handles.Settings.RefInd)
+                handles.AutoRefInds = UpdateAutoInds(handles,handles.Settings.GrainRefImageType);
+                handles.Settings.RefInd = handles.AutoRefInds;
+            end
+            RefGrainIDs = handles.Settings.grainID(unique(handles.Settings.RefInd));
+            if length(grainIDs) ~= length(RefGrainIDs) || ~all(sort(grainIDs)==sort(RefGrainIDs))
+                w = warndlg('Grains have changed. New reference indices must be selected.');
+                uiwait(w,3)
+                EditRefPoints_Callback(handles.EditRefPoints, eventdata, handles);
+                handles = guidata(hObject);
+            end
+            ToggleGrainMap_Callback(handles.ToggleGrainMap,eventdata,handles);
     end
 end
 handles.Settings.GrainRefImageType = GrainRefType;
+if ValChanged(handles,'GrainRefImageType')
+    handles.edited = true;
+end
+SaveColor(handles)
 guidata(hObject,handles);
 
 
@@ -542,6 +570,10 @@ else
     DoSplitDD_Callback(handles.DoSplitDD, eventdata, handles);
     handles = guidata(hObject);
 end
+if ValChanged(handles,'CalcDerivatives')
+    handles.edited = true;
+end
+SaveColor(handles)
 guidata(hObject,handles);
 
 
@@ -568,13 +600,17 @@ else
     if strcmp(Settings.ScanType,'Hexagonal')
         set(hObject, 'String', round(str2double(UserInput)*2)/2);
     else
-    set(hObject, 'String', round(str2double(UserInput)));
-end
+        set(hObject, 'String', round(str2double(UserInput)));
+    end
 end
 handles.Settings.NumSkipPts = str2double(get(hObject,'String'));
 
 %Updates handles object
-guidata(hObject, handles);
+if ValChanged(handles,'NumSkipPts')
+    handles.edited = true;
+end
+SaveColor(handles)
+guidata(hObject,handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -599,6 +635,10 @@ function IQCutoff_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of IQCutoff as text
 %        str2double(get(hObject,'String')) returns contents of IQCutoff as a double
 handles.Settings.IQCutoff = str2double(get(hObject,'String'));
+if ValChanged(handles,'IQCutoff')
+    handles.edited = true;
+end
+SaveColor(handles)
 guidata(hObject,handles);
 
 
@@ -622,13 +662,11 @@ function DoSplitDD_Callback(hObject, eventdata, handles)
 
 % Hint: get(hObject,'Value') returns toggle state of DoSplitDD
 Settings = handles.Settings;
-valid = 0;
-j = 1;
 if isfield(Settings,'Phase')
-allMaterials = unique(Settings.Phase);
-    else
+    allMaterials = unique(Settings.Phase);
+else
     allMaterials = {Settings.Material};
-    end
+end
 
 if get(hObject,'Value')
     valid = CheckSplitDDMaterials(allMaterials);
@@ -647,6 +685,10 @@ if strcmp(get(hObject,'Enable'),'off')
 end
 set(handles.DDSMethod,'Enable',enable);
 handles.Settings.DoDDS = get(hObject,'Value');
+if ValChanged(handles,'DoDDS')
+    handles.edited = true;
+end
+SaveColor(handles)
 guidata(hObject,handles);
 
 % --- Executes on selection change in SplitDDMethod.
@@ -671,6 +713,7 @@ switch val
 end
 handles.Settings.rdoptions.minscheme = minscheme;
 guidata(hObject,handles);
+
 
 
 % --- Executes during object creation, after setting all properties.
@@ -734,7 +777,13 @@ contents = cellstr(get(hObject,'String'));
 val = contents{get(hObject,'Value')};
 handles.Settings.DDSMethod = val;
 handles.Settings.rdoptions.Pantleon = strcmp(val,'Pantleon');
+
+if ValChanged(handles,'DDSMethod')
+    handles.edited = true;
+end
+SaveColor(handles)
 guidata(hObject,handles);
+
 
 
 % --- Executes during object creation, after setting all properties.
@@ -775,6 +824,11 @@ if name ~= 0 %Nothing selected
     guidata(hObject,handles);
 end
 cd(w);
+if ValChanged(handles,'KernelAvgMisoPath')
+    handles.edited = true;
+end
+SaveColor(handles)
+guidata(hObject,handles);
 
 
 
@@ -796,6 +850,11 @@ function EnableProfiler_Callback(hObject, eventdata, handles)
 
 % Hint: get(hObject,'Value') returns toggle state of EnableProfiler
 handles.Settings.EnableProfiler = get(hObject,'Value');
+
+if ValChanged(handles,'EnableProfiler')
+    handles.edited = true;
+end
+SaveColor(handles)
 guidata(hObject,handles);
 
 % --- Executes on button press in DoStrain.
@@ -822,6 +881,11 @@ else
 end
 HROIMMethod_Callback(handles.HROIMMethod,eventdata,handles);
 handles.Settings.DoStrain = get(hObject,'Value');
+
+if ValChanged(handles,'DoStrain')
+    handles.edited = true;
+end
+SaveColor(handles)
 guidata(hObject,handles);
 
 
@@ -841,17 +905,21 @@ Method = contents{get(hObject,'Value')};
 if ~strcmp(handles.Settings.GrainMethod,Method) || init
     handles.Settings.GrainMethod = Method;
     if ~handles.Fast
-    if strcmp(Method,'Find Grains')
-        set(handles.MinGrainSize,'Enable','on')
-        handles.Settings.grainID = CalcGrainID(handles.Settings);
-    else
-        set(handles.MinGrainSize,'Enable','off')
-        handles.Settings.grainID = handles.Settings.GrainVals.grainID;
+        if strcmp(Method,'Find Grains')
+            set(handles.MinGrainSize,'Enable','on')
+            handles.Settings.grainID = CalcGrainID(handles.Settings);
+        else
+            set(handles.MinGrainSize,'Enable','off')
+            handles.Settings.grainID = handles.Settings.GrainVals.grainID;
+        end
     end
 end
-end
-guidata(hObject,handles);
 GrainRefType_Callback(handles.GrainRefType, eventdata, handles);
+if ValChanged(handles,'GrainMethod')
+    handles.edited = true;
+end
+SaveColor(handles)
+guidata(hObject,handles);
 
     
 
@@ -881,9 +949,12 @@ handles.Settings.MinGrainSize = str2double(get(hObject,'String'));
 if ~handles.Fast
     handles.Settings.grainID = CalcGrainID(handles.Settings);
 end
-
-guidata(hObject,handles);
 GrainRefType_Callback(handles.GrainRefType, eventdata, handles);
+if ValChanged(handles,'MinGrainSize')
+    handles.edited = true;
+end
+SaveColor(handles)
+guidata(hObject,handles);
 
 
 
@@ -1001,6 +1072,10 @@ if ~strcmp(GrainRefType,'Manual') && ~all(RefInd==handles.AutoRefInds)
     handles.Settings.GrainRefImageType = GrainRefType;
 end
 handles.Settings.RefInd = RefInd;
+if ValChanged(handles,'RefInd')
+    handles.edited = true;
+end
+SaveColor(handles)
 
 guidata(hObject,handles);
 
@@ -1053,7 +1128,12 @@ switch sel
         handles.Settings.GNDMethod = 'Orientation';
         
 end
+if ValChanged(handles,'GNDMethod')
+    handles.edited = true;
+end
+SaveColor(handles)
 guidata(hObject,handles);
+
 
 % --- Executes during object creation, after setting all properties.
 function GNDMethod_CreateFcn(hObject, eventdata, handles)
@@ -1065,5 +1145,38 @@ function GNDMethod_CreateFcn(hObject, eventdata, handles)
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
+end
+
+function SaveColor(handles)
+if handles.edited
+    set(handles.SaveButton,'BackgroundColor',handles.ColorEdit);
+else
+    set(handles.SaveButton,'BackgroundColor',handles.ColorSave);
+end
+
+function changed = ValChanged(handles,value)
+if ischar(handles.Settings.(value))
+    changed = ~strcmp(handles.Settings.(value),handles.PrevSettings.(value));
+else
+    changed =  any(handles.Settings.(value) ~= handles.PrevSettings.(value));
+end
+
+
+% --- Executes on key press with focus on AdvancedSettingsGUI and none of its controls.
+function AdvancedSettingsGUI_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to AdvancedSettingsGUI (see GCBO)
+% eventdata  structure with the following fields (see MATLAB.UI.FIGURE)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+handles = guidata(hObject);
+% Save Figure with CTRL-S
+if strcmp(eventdata.Key,'s') && ~isempty(eventdata.Modifier) && strcmp(eventdata.Modifier,'control')
+    SaveButton_Callback(handles.SaveButton, eventdata, handles);
+end
+% Close Figure with CTRL-L
+if strcmp(eventdata.Key,'l') && ~isempty(eventdata.Modifier) && strcmp(eventdata.Modifier,'control')
+    CancelButton_Callback(handles.SaveButton, eventdata, handles);
 end
 

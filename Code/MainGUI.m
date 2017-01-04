@@ -197,6 +197,11 @@ set(handles.RunButton,'String','Run');
 set(handles.RunButton,'BackgroundColor',[0 1 0]);
 enableRunButton(handles);
 
+% Instantiate holders for other GUIs
+handles.MicroscopeGUI = [];
+handles.AdvancedGUI = [];
+handles.ROIGUI = [];
+
 % Update handles structure
 guidata(hObject, handles);
 % UIWAIT makes MainGUI wait for user response (see UIRESUME)
@@ -608,6 +613,7 @@ function RestoreDefaultSettings_Callback(hObject, eventdata, handles)
 % hObject    handle to RestoreDefaultSettings (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+CloseGUIs(handles);
 MainGUI(handles.Fast);
 
 % --------------------------------------------------------------------
@@ -636,7 +642,7 @@ function ROISettings_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 if handles.ScanFileLoaded && handles.ImageLoaded
-    handles.Settings = ROISettingsGUI(handles.Settings,get(handles.MainGUI,'Position'),handles.Fast);
+    handles.ROIGUI = ROISettingsGUI(handles.MainGUI,handles.Fast);
 else
     warndlg({'Cannot open ROI Settings menu'; 'Must select scan file data and first image'},'OpenXY: Invalid Operation');
 end
@@ -648,7 +654,7 @@ function AdvancedSettings_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 if handles.ScanFileLoaded
-    handles.Settings = AdvancedSettingsGUI(handles.Settings,get(handles.MainGUI,'Position'),handles.Fast);
+    handles.AdvancedGUI = AdvancedSettingsGUI(handles.MainGUI,handles.Fast);
 else
     warndlg({'Cannot open Advanced Settings menu'; 'Must select scan file data.'},'OpenXY: Invalid Operation');
 end
@@ -764,4 +770,15 @@ if handles.ScanFileLoaded
     SizeStr =  [num2str(newsize(1)) 'x' num2str(newsize(2)) ' (Subscan)'];
     set(handles.ScanSizeText,'String',SizeStr);
     guidata(handles.MainGUI,handles);
+end
+
+function CloseGUIs(handles)
+if ~isempty(handles.MicroscopeGUI) && isvalid(handles.MicroscopeGUI)
+    close(handles.MicroscopeGUI)
+end
+if ~isempty(handles.AdvancedGUI) && isvalid(handles.AdvancedGUI)
+    close(handles.AdvancedGUI)
+end
+if ~isempty(handles.ROIGUI) && isvalid(handles.ROIGUI)
+    close(handles.ROIGUI)
 end
