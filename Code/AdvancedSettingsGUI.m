@@ -159,10 +159,8 @@ handles.GrainMap = -1;
 %Update Components
 GNDMethod_Callback(handles.GNDMethod, eventdata, handles)
 DoStrain_Callback(handles.DoStrain, eventdata, handles);
-HROIMMethod_Callback(handles.HROIMMethod, eventdata, handles)
-handles = guidata(hObject);
-DoDD_Callback(handles.DoDD, eventdata, handles);
-handles = guidata(hObject);
+DoDD_Callback(handles.DoDD, eventdata, handles); handles = guidata(hObject);
+GrainMethod_Callback(handles.GrainMethod, eventdata, handles, true); handles = guidata(hObject);
 guidata(hObject, handles);
 
 % UIWAIT makes AdvancedSettingsGUI wait for user response (see UIRESUME)
@@ -809,16 +807,19 @@ guidata(hObject,handles);
 
 
 % --- Executes on selection change in GrainMethod.
-function GrainMethod_Callback(hObject, eventdata, handles)
+function GrainMethod_Callback(hObject, eventdata, handles, init)
 % hObject    handle to GrainMethod (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns GrainMethod contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from GrainMethod
+if nargin < 4
+    init = false;
+end
 contents = get(hObject,'String');
 Method = contents{get(hObject,'Value')};
-if ~strcmp(handles.Settings.GrainMethod,Method)
+if ~strcmp(handles.Settings.GrainMethod,Method) || init
     handles.Settings.GrainMethod = Method;
     if strcmp(Method,'Find Grains')
         set(handles.MinGrainSize,'Enable','on')
