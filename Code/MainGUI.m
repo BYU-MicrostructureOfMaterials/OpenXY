@@ -114,6 +114,7 @@ set(gca,'xcolor',get(gcf,'color'));
 set(gca,'ycolor',get(gcf,'color'));
 set(gca,'ytick',[]);
 set(gca,'xtick',[]);
+set(handles.SelectImageButton,'Enable','on');
 BGColor = 0.94*[1 1 1];
 TextColor = 'black';
 
