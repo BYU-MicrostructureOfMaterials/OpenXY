@@ -156,12 +156,11 @@ function AccelVoltage_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of AccelVoltage as text
 %        str2double(get(hObject,'String')) returns contents of AccelVoltage as a double
 handles.Settings.AccelVoltage = str2double(get(hObject,'String'));
-guidata(hObject,handles);
 if ValChanged(handles,'AccelVoltage')
     handles.edited = true;
 end
 SaveColor(handles)
-
+guidata(hObject,handles);
 
 % --- Executes during object creation, after setting all properties.
 function AccelVoltage_CreateFcn(hObject, eventdata, handles)
@@ -185,11 +184,11 @@ function SampleTilt_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of SampleTilt as text
 %        str2double(get(hObject,'String')) returns contents of SampleTilt as a double
 handles.Settings.SampleTilt = str2double(get(hObject,'String'))*pi/180;
-guidata(hObject,handles);
 if ValChanged(handles,'SampleTilt')
     handles.edited = true;
 end
 SaveColor(handles)
+guidata(hObject,handles);
 
 % --- Executes during object creation, after setting all properties.
 function SampleTilt_CreateFcn(hObject, eventdata, handles)
@@ -213,11 +212,11 @@ function SampleAzimuthal_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of SampleAzimuthal as text
 %        str2double(get(hObject,'String')) returns contents of SampleAzimuthal as a double
 handles.Settings.SampleAzimuthal = str2double(get(hObject,'String'))*pi/180;
-guidata(hObject,handles);
 if ValChanged(handles,'SampleAzimuthal')
     handles.edited = true;
 end
 SaveColor(handles)
+guidata(hObject,handles);
 
 % --- Executes during object creation, after setting all properties.
 function SampleAzimuthal_CreateFcn(hObject, eventdata, handles)
@@ -241,11 +240,11 @@ function CameraElevation_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of CameraElevation as text
 %        str2double(get(hObject,'String')) returns contents of CameraElevation as a double
 handles.Settings.CameraElevation = str2double(get(hObject,'String'))*pi/180;
-guidata(hObject,handles);
 if ValChanged(handles,'CameraElevation')
     handles.edited = true;
 end
 SaveColor(handles)
+guidata(hObject,handles)
 
 % --- Executes during object creation, after setting all properties.
 function CameraElevation_CreateFcn(hObject, eventdata, handles)
@@ -268,11 +267,11 @@ function CameraAzimuthal_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of CameraAzimuthal as text
 %        str2double(get(hObject,'String')) returns contents of CameraAzimuthal as a double
 handles.Settings.CameraAzimuthal = str2double(get(hObject,'String'))*pi/180;
-guidata(hObject,handles);
 if ValChanged(handles,'CameraAzimuthal')
     handles.edited = true;
 end
 SaveColor(handles)
+guidata(hObject,handles);
 
 % --- Executes during object creation, after setting all properties.
 function CameraAzimuthal_CreateFcn(hObject, eventdata, handles)
@@ -298,11 +297,11 @@ handles.Settings.mperpix = str2double(get(hObject,'String'));
 if isfield(handles.Settings,'PixelSize')
     handles.Settings.PhosphorSize = handles.Settings.PixelSize*handles.Settings.mperpix;
 end
-guidata(hObject,handles);
 if ValChanged(handles,'mperpix')
     handles.edited = true;
 end
 SaveColor(handles)
+guidata(hObject,handles);
 
 % --- Executes during object creation, after setting all properties.
 function micronperpix_CreateFcn(hObject, eventdata, handles)

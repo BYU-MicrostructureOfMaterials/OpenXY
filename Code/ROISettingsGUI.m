@@ -264,13 +264,12 @@ function ImageFilter1_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of ImageFilter1 as text
 %        str2double(get(hObject,'String')) returns contents of ImageFilter1 as a double
 handles.Settings.ImageFilter(1) = str2double(get(hObject,'String'));
-guidata(hObject,handles);
 UpdateImage(handles)
 if ValChanged(handles,'ImageFilter')
     handles.edited = true;
 end
 SaveColor(handles)
-
+guidata(hObject,handles);
 
 % --- Executes during object creation, after setting all properties.
 function ImageFilter1_CreateFcn(hObject, eventdata, handles)
@@ -294,12 +293,12 @@ function ImageFilter2_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of ImageFilter2 as text
 %        str2double(get(hObject,'String')) returns contents of ImageFilter2 as a double
 handles.Settings.ImageFilter(2) = str2double(get(hObject,'String'));
-guidata(hObject,handles);
 UpdateImage(handles)
 if ValChanged(handles,'ImageFilter')
     handles.edited = true;
 end
 SaveColor(handles)
+guidata(hObject,handles);
 
 % --- Executes during object creation, after setting all properties.
 function ImageFilter2_CreateFcn(hObject, eventdata, handles)
@@ -323,13 +322,12 @@ function ImageFilter3_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of ImageFilter3 as text
 %        str2double(get(hObject,'String')) returns contents of ImageFilter3 as a double
 handles.Settings.ImageFilter(3) = str2double(get(hObject,'String'));
-guidata(hObject,handles);
 UpdateImage(handles)
 if ValChanged(handles,'ImageFilter')
     handles.edited = true;
 end
 SaveColor(handles)
-
+guidata(hObject,handles);
 
 % --- Executes during object creation, after setting all properties.
 function ImageFilter3_CreateFcn(hObject, eventdata, handles)
@@ -353,13 +351,12 @@ function ImageFilter4_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of ImageFilter4 as text
 %        str2double(get(hObject,'String')) returns contents of ImageFilter4 as a double
 handles.Settings.ImageFilter(4) = str2double(get(hObject,'String'));
-guidata(hObject,handles);
 UpdateImage(handles)
 if ValChanged(handles,'ImageFilter')
     handles.edited = true;
 end
 SaveColor(handles)
-
+guidata(hObject,handles);
 
 % --- Executes during object creation, after setting all properties.
 function ImageFilter4_CreateFcn(hObject, eventdata, handles)
@@ -384,13 +381,12 @@ function ImageFilterType_Callback(hObject, eventdata, handles)
 %        contents{get(hObject,'Value')} returns selected item from ImageFilterType
 contents = cellstr(get(hObject,'String'));
 handles.Settings.ImageFilterType = contents{get(hObject,'Value')};
-guidata(hObject,handles);
 UpdateImage(handles)
 if ValChanged(handles,'ImageFilterType')
     handles.edited = true;
 end
 SaveColor(handles)
-
+guidata(hObject,handles);
 
 % --- Executes during object creation, after setting all properties.
 function ImageFilterType_CreateFcn(hObject, eventdata, handles)
@@ -415,13 +411,12 @@ function ROISizeEdit_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of ROISizeEdit as a double
 handles.Settings.ROISizePercent = str2double(get(hObject,'String'));
 handles.Settings.ROISize = round((handles.Settings.ROISizePercent * .01)*handles.Settings.PixelSize);
-guidata(hObject,handles);
 UpdateImage(handles);
 if ValChanged(handles,'ROISizePercent')
     handles.edited = true;
 end
 SaveColor(handles)
-
+guidata(hObject,handles);
 
 % --- Executes during object creation, after setting all properties.
 function ROISizeEdit_CreateFcn(hObject, eventdata, handles)
@@ -446,13 +441,12 @@ function NumROIPopup_Callback(hObject, eventdata, handles)
 %        contents{get(hObject,'Value')} returns selected item from NumROIPopup
 contents = cellstr(get(hObject,'String'));
 handles.Settings.NumROIs = str2double(contents{get(hObject,'Value')});
-guidata(hObject,handles);
 UpdateImage(handles);
 if ValChanged(handles,'NumROIs')
     handles.edited = true;
 end
 SaveColor(handles)
-
+guidata(hObject,handles);
 
 % --- Executes during object creation, after setting all properties.
 function NumROIPopup_CreateFcn(hObject, eventdata, handles)
@@ -485,13 +479,12 @@ if strcmp(ROIStyle,'Grid')
 else
     set(handles.NumROIPopup,'Enable','on')
 end
-guidata(hObject,handles);
 UpdateImage(handles)
 if ValChanged(handles,'ROIStyle')
     handles.edited = true;
 end
 SaveColor(handles)
-
+guidata(hObject,handles);
 
 % --- Executes during object creation, after setting all properties.
 function ROIStylePopup_CreateFcn(hObject, eventdata, handles)
@@ -515,13 +508,12 @@ function ROIFilter1_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of ROIFilter1 as text
 %        str2double(get(hObject,'String')) returns contents of ROIFilter1 as a double
 handles.Settings.ROIFilter(1) = str2double(get(hObject,'String'));
-guidata(hObject,handles);
 UpdateImage(handles)
 if ValChanged(handles,'ROIFilter')
     handles.edited = true;
 end
 SaveColor(handles)
-
+guidata(hObject,handles);
 
 % --- Executes during object creation, after setting all properties.
 function ROIFilter1_CreateFcn(hObject, eventdata, handles)
@@ -545,13 +537,12 @@ function ROIFilter2_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of ROIFilter2 as text
 %        str2double(get(hObject,'String')) returns contents of ROIFilter2 as a double
 handles.Settings.ROIFilter(2) = str2double(get(hObject,'String'));
-guidata(hObject,handles);
 UpdateImage(handles)
 if ValChanged(handles,'ROIFilter')
     handles.edited = true;
 end
 SaveColor(handles)
-
+guidata(hObject,handles);
 
 % --- Executes during object creation, after setting all properties.
 function ROIFilter2_CreateFcn(hObject, eventdata, handles)
@@ -575,12 +566,12 @@ function ROIFilter3_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of ROIFilter3 as text
 %        str2double(get(hObject,'String')) returns contents of ROIFilter3 as a double
 handles.Settings.ROIFilter(3) = str2double(get(hObject,'String'));
-guidata(hObject,handles);
 UpdateImage(handles)
 if ValChanged(handles,'ROIFilter')
     handles.edited = true;
 end
 SaveColor(handles)
+guidata(hObject,handles);
 
 % --- Executes during object creation, after setting all properties.
 function ROIFilter3_CreateFcn(hObject, eventdata, handles)
@@ -603,12 +594,12 @@ function ROIFilter4_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of ROIFilter4 as text
 %        str2double(get(hObject,'String')) returns contents of ROIFilter4 as a double
 handles.Settings.ROIFilter(4) = str2double(get(hObject,'String'));
-guidata(hObject,handles);
 UpdateImage(handles)
 if ValChanged(handles,'ROIFilter')
     handles.edited = true;
 end
 SaveColor(handles)
+guidata(hObject,handles);
 
 % --- Executes during object creation, after setting all properties.
 function ROIFilter4_CreateFcn(hObject, eventdata, handles)
