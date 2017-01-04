@@ -22,7 +22,7 @@ function varargout = MainGUI(varargin)
 
 % Edit the above text to modify the response to help MainGUI
 
-% Last Modified by GUIDE v2.5 14-Jun-2016 08:30:11
+% Last Modified by GUIDE v2.5 02-Jan-2017 12:46:52
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -69,8 +69,8 @@ if ~isempty(varargin)
             end 
         case 2
             if isstruct(varargin{1})
-                handles.Settings = MergeSettings(handles.Settings,varargin{1});
-            end
+    handles.Settings = MergeSettings(handles.Settings,varargin{1});
+end
             if (ischar(varargin{2}) && strcmp(varargin{2},'Fast')) || (islogical(varargin{2}) && varargin{2})
                 handles.Fast = true;
             end
@@ -136,6 +136,7 @@ set(gca,'xcolor',get(gcf,'color'));
 set(gca,'ycolor',get(gcf,'color'));
 set(gca,'ytick',[]);
 set(gca,'xtick',[]);
+set(handles.SelectImageButton,'Enable','on');
 BGColor = 0.94*[1 1 1];
 TextColor = 'black';
 
@@ -172,7 +173,7 @@ else
     set(handles.ProcessorsPopup,'Value',handles.Settings.DoParallel);
 end
 ProcessorsPopup_Callback(handles.ProcessorsPopup,eventdata,handles);
-handles = guidata(hObject);
+handles = guidata(handles.ProcessorsPopup);
 
 %Orientation-based GND
 if strcmp(handles.Settings.GNDMethod,'Orientation') && ~handles.Settings.DoStrain
@@ -253,31 +254,31 @@ if name ~= 0
         else
             handles.Settings = ImportScanInfo(handles.Settings,name,path);
 
-            %Set ScanType
-            SetPopupValue(handles.ScanTypePopup,handles.Settings.ScanType);
-
-            %Validate Scan Size
-            SizeStr =  [num2str(handles.Settings.Nx) 'x' num2str(handles.Settings.Ny)];
-            set(handles.ScanSizeText,'String',SizeStr);
-
-            %Check if Material Read worked
-            handles.ScanFileLoaded = true;
-            MaterialPopup_Callback(handles.MaterialPopup, [], handles);
-            handles = guidata(handles.MainGUI);
-
-            if filterind == 1 %Not h5
-                %Get Image Names
-                if handles.ImageLoaded
-                    handles.Settings.ImageNamesList = ImportImageNamesList(handles.Settings);
-                end
-            else
-                set(handles.SelectImageButton,'Enable','off');
-                handles.ImageLoaded = 1;
-                set(handles.FirstImageNameText,'String','N/A');
-                set(handles.ImageFolderText,'String','N/A');
-                set(handles.ImageSizeText,'String','N/A');
+        %Set ScanType
+        SetPopupValue(handles.ScanTypePopup,handles.Settings.ScanType);
+        
+        %Validate Scan Size
+        SizeStr =  [num2str(handles.Settings.Nx) 'x' num2str(handles.Settings.Ny)];
+        set(handles.ScanSizeText,'String',SizeStr);
+        
+        %Check if Material Read worked
+        handles.ScanFileLoaded = true;
+        MaterialPopup_Callback(handles.MaterialPopup, [], handles);
+        handles = guidata(handles.MainGUI);
+        
+        if filterind == 1 %Not h5
+            %Get Image Names
+            if handles.ImageLoaded
+                handles.Settings.ImageNamesList = ImportImageNamesList(handles.Settings);
             end
+        else
+            set(handles.SelectImageButton,'Enable','off');
+            handles.ImageLoaded = 1;
+            set(handles.FirstImageNameText,'String','N/A');
+            set(handles.ImageFolderText,'String','N/A');
+            set(handles.ImageSizeText,'String','N/A');
         end
+    end 
     end
     
     %Remove Subscan
@@ -539,6 +540,7 @@ else
     set(handles.DisplayShiftsBox,'Enable','on');
 end
 DisplayShiftsBox_Callback(handles.DisplayShiftsBox,eventdata,handles);
+handles = guidata(hObject);
 guidata(hObject, handles);
 
 
@@ -670,9 +672,19 @@ end
 guidata(hObject,handles);
 if isfield(handles.Settings,'AutoRun')
     if handles.Settings.AutoRun==1
-        disp('MainGUI line 677ish')
         RunButton_Callback(handles.RunButton, eventdata, handles)
     end
+end
+
+% --------------------------------------------------------------------
+function TestGeometry_Callback(hObject, eventdata, handles)
+% hObject    handle to TestGeometry (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if handles.ScanFileLoaded && handles.ImageLoaded
+    TestGeometry(handles.Settings,get(handles.MainGUI,'Position'));
+else
+    warndlg({'Cannot open Test Geometry menu';'Must select scan file data and first image'},'OpenXY: Invalid Operation')
 end
 
 function enableRunButton(handles)
