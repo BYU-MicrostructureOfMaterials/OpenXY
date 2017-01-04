@@ -22,7 +22,7 @@ function varargout = ROISettingsGUI(varargin)
 
 % Edit the above text to modify the response to help ROISettingsGUI
 
-% Last Modified by GUIDE v2.5 02-Jul-2016 14:13:14
+% Last Modified by GUIDE v2.5 04-Jan-2017 13:22:35
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -68,10 +68,12 @@ if isempty(varargin)
     Settings = stemp.Settings;
     clear stemp
 else
-    if length(varargin) == 3
-        handles.Fast = varargin{3};
+    if length(varargin) == 2
+        handles.Fast = varargin{2};
     end
-    Settings = varargin{1};
+    handles.MainGUI = varargin{1};
+    MainHandle = guidata(handles.MainGUI);
+    Settings = MainHandle.Settings;
 end
 handles.PrevSettings = Settings;
 
@@ -87,9 +89,9 @@ if strcmp(ext,'.h5')
     handles.h5 = true;
 end
 
-%Set Position
-if length(varargin) > 1
-    MainSize = varargin{2};
+%Set Position and Visuals
+if ~isempty(handles.MainGUI)
+    MainSize = get(handles.MainGUI,'Position');
     set(hObject,'Units','pixels');
     GUIsize = get(hObject,'Position');
     ScreenSize = get(groot,'ScreenSize');
@@ -100,6 +102,10 @@ if length(varargin) > 1
     set(hObject,'Position',[MainSize(1) height GUIsize(3) GUIsize(4)]);
     movegui(hObject,'onscreen')
 end
+handles.ColorSave = get(handles.SaveButton,'BackgroundColor');
+handles.ColorEdit = [1 1 0]; % Yellow
+gui = findall(handles.ROISettingsGUI,'KeyPressFcn','');
+set(gui,'KeyPressFcn',@ROISettingsGUI_KeyPressFcn);
 
 %Set Images to Grayscale
 colormap gray;
@@ -136,7 +142,7 @@ if ~handles.h5
 else
     handles.OrigImage = ReadH5Pattern(Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter,1);
 end
-imagesc(CropSquare(handles.OrigImage));
+imagesc(CropSquare(handles.OrigImage)); colormap(gca,gray);
 set(gca,'xcolor',get(gcf,'color'));
 set(gca,'ycolor',get(gcf,'color'));
 set(gca,'ytick',[]);
@@ -165,13 +171,22 @@ if strcmp(Mat,'Scan File')
     axis off
 elseif ~handles.Fast
     Material = ReadMaterial(Mat);
+    if isfield(Settings,'XStar')
+        xstar = Settings.XStar(1);
+        ystar = Settings.YStar(1);
+        zstar = Settings.ZStar(1);
+    else
+        xstar = Settings.ScanParams.xstar;
+        ystar = Settings.ScanParams.ystar;
+        zstar = Settings.ScanParams.zstar;
+    end
     paramspat={xstar;ystar;zstar;...
         size(Image,1);Settings.AccelVoltage*1000;Settings.SampleTilt;Settings.CameraElevation;...
         Material.Fhkl;Material.dhkl;Material.hkl};
     g=euler2gmat(Settings.Angles(1,1),Settings.Angles(1,2),Settings.Angles(1,3));
     handles.GenImage = genEBSDPatternHybrid(g,paramspat,eye(3),Material.lattice,Material.a1,Material.b1,Material.c1,Material.axs);
     handles.GenImage = custimfilt(handles.GenImage, Settings.ImageFilter(1), Settings.ImageFilter(2),Settings.ImageFilter(3),Settings.ImageFilter(4));
-    imagesc(handles.GenImage)
+    imagesc(handles.GenImage); colormap(gca,gray);
     drawnow
     set(gca,'xcolor',get(gcf,'color'));
     set(gca,'ycolor',get(gcf,'color'));
@@ -185,13 +200,15 @@ else
 end
 
 % Update handles structure
+handles.edited = false;
 ROIStylePopup_Callback(handles.ROIStylePopup, eventdata, handles)
 handles.Settings = Settings;
 guidata(hObject, handles);
 UpdateImage(handles);
+SaveColor(handles)
 
 % UIWAIT makes ROISettingsGUI wait for user response (see UIRESUME)
-uiwait(handles.ROISettingsGUI);
+%uiwait(handles.ROISettingsGUI);
 
 
 % --- Outputs from this function are returned to the command line.
@@ -202,10 +219,7 @@ function varargout = ROISettingsGUI_OutputFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Get default command line output from handles structure
-if isfield(handles,'Settings')
-    varargout{1} = handles.Settings;
-end
-delete(hObject);
+varargout{1} = handles.output;
 
 % --- Executes when user attempts to close ROISettingsGUI.
 function ROISettingsGUI_CloseRequestFcn(hObject, eventdata, handles)
@@ -214,18 +228,23 @@ function ROISettingsGUI_CloseRequestFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: delete(hObject) closes the figure
-if strcmp(get(hObject,'waitstatus'),'waiting')
-    uiresume(hObject);
-else
-    delete(hObject);
-end
+delete(hObject);
 
-% --- Executes on button press in SaveCloseButton.
-function SaveCloseButton_Callback(hObject, eventdata, handles)
-% hObject    handle to SaveCloseButton (see GCBO)
+
+% --- Executes on button press in SaveButton.
+function SaveButton_Callback(hObject, eventdata, handles)
+% hObject    handle to SaveButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-ROISettingsGUI_CloseRequestFcn(handles.ROISettingsGUI, eventdata, handles);
+if ~isempty(handles.MainGUI) && isvalid(handles.MainGUI)
+    MainHandles = guidata(handles.MainGUI);
+    MainHandles.Settings = handles.Settings;
+    guidata(handles.MainGUI,MainHandles);
+end
+handles.PrevSettings = handles.Settings;
+handles.edited = false;
+guidata(hObject,handles);
+SaveColor(handles)
 
 % --- Executes on button press in CancelButton.
 function CancelButton_Callback(hObject, eventdata, handles)
@@ -247,6 +266,10 @@ function ImageFilter1_Callback(hObject, eventdata, handles)
 handles.Settings.ImageFilter(1) = str2double(get(hObject,'String'));
 guidata(hObject,handles);
 UpdateImage(handles)
+if ValChanged(handles,'ImageFilter')
+    handles.edited = true;
+end
+SaveColor(handles)
 
 
 % --- Executes during object creation, after setting all properties.
@@ -273,7 +296,10 @@ function ImageFilter2_Callback(hObject, eventdata, handles)
 handles.Settings.ImageFilter(2) = str2double(get(hObject,'String'));
 guidata(hObject,handles);
 UpdateImage(handles)
-
+if ValChanged(handles,'ImageFilter')
+    handles.edited = true;
+end
+SaveColor(handles)
 
 % --- Executes during object creation, after setting all properties.
 function ImageFilter2_CreateFcn(hObject, eventdata, handles)
@@ -299,6 +325,10 @@ function ImageFilter3_Callback(hObject, eventdata, handles)
 handles.Settings.ImageFilter(3) = str2double(get(hObject,'String'));
 guidata(hObject,handles);
 UpdateImage(handles)
+if ValChanged(handles,'ImageFilter')
+    handles.edited = true;
+end
+SaveColor(handles)
 
 
 % --- Executes during object creation, after setting all properties.
@@ -325,6 +355,10 @@ function ImageFilter4_Callback(hObject, eventdata, handles)
 handles.Settings.ImageFilter(4) = str2double(get(hObject,'String'));
 guidata(hObject,handles);
 UpdateImage(handles)
+if ValChanged(handles,'ImageFilter')
+    handles.edited = true;
+end
+SaveColor(handles)
 
 
 % --- Executes during object creation, after setting all properties.
@@ -352,6 +386,10 @@ contents = cellstr(get(hObject,'String'));
 handles.Settings.ImageFilterType = contents{get(hObject,'Value')};
 guidata(hObject,handles);
 UpdateImage(handles)
+if ValChanged(handles,'ImageFilterType')
+    handles.edited = true;
+end
+SaveColor(handles)
 
 
 % --- Executes during object creation, after setting all properties.
@@ -379,6 +417,10 @@ handles.Settings.ROISizePercent = str2double(get(hObject,'String'));
 handles.Settings.ROISize = round((handles.Settings.ROISizePercent * .01)*handles.Settings.PixelSize);
 guidata(hObject,handles);
 UpdateImage(handles);
+if ValChanged(handles,'ROISizePercent')
+    handles.edited = true;
+end
+SaveColor(handles)
 
 
 % --- Executes during object creation, after setting all properties.
@@ -406,6 +448,10 @@ contents = cellstr(get(hObject,'String'));
 handles.Settings.NumROIs = str2double(contents{get(hObject,'Value')});
 guidata(hObject,handles);
 UpdateImage(handles);
+if ValChanged(handles,'NumROIs')
+    handles.edited = true;
+end
+SaveColor(handles)
 
 
 % --- Executes during object creation, after setting all properties.
@@ -441,6 +487,11 @@ else
 end
 guidata(hObject,handles);
 UpdateImage(handles)
+if ValChanged(handles,'ROIStyle')
+    handles.edited = true;
+end
+SaveColor(handles)
+
 
 % --- Executes during object creation, after setting all properties.
 function ROIStylePopup_CreateFcn(hObject, eventdata, handles)
@@ -466,6 +517,10 @@ function ROIFilter1_Callback(hObject, eventdata, handles)
 handles.Settings.ROIFilter(1) = str2double(get(hObject,'String'));
 guidata(hObject,handles);
 UpdateImage(handles)
+if ValChanged(handles,'ROIFilter')
+    handles.edited = true;
+end
+SaveColor(handles)
 
 
 % --- Executes during object creation, after setting all properties.
@@ -492,6 +547,11 @@ function ROIFilter2_Callback(hObject, eventdata, handles)
 handles.Settings.ROIFilter(2) = str2double(get(hObject,'String'));
 guidata(hObject,handles);
 UpdateImage(handles)
+if ValChanged(handles,'ROIFilter')
+    handles.edited = true;
+end
+SaveColor(handles)
+
 
 % --- Executes during object creation, after setting all properties.
 function ROIFilter2_CreateFcn(hObject, eventdata, handles)
@@ -517,6 +577,10 @@ function ROIFilter3_Callback(hObject, eventdata, handles)
 handles.Settings.ROIFilter(3) = str2double(get(hObject,'String'));
 guidata(hObject,handles);
 UpdateImage(handles)
+if ValChanged(handles,'ROIFilter')
+    handles.edited = true;
+end
+SaveColor(handles)
 
 % --- Executes during object creation, after setting all properties.
 function ROIFilter3_CreateFcn(hObject, eventdata, handles)
@@ -541,6 +605,10 @@ function ROIFilter4_Callback(hObject, eventdata, handles)
 handles.Settings.ROIFilter(4) = str2double(get(hObject,'String'));
 guidata(hObject,handles);
 UpdateImage(handles)
+if ValChanged(handles,'ROIFilter')
+    handles.edited = true;
+end
+SaveColor(handles)
 
 % --- Executes during object creation, after setting all properties.
 function ROIFilter4_CreateFcn(hObject, eventdata, handles)
@@ -586,7 +654,7 @@ end
 
 axes(handles.FilteredImage);
 cla
-imagesc(Image);
+imagesc(Image); colormap(gca,'gray')
 set(gca,'xcolor',get(gcf,'color'));
 set(gca,'ycolor',get(gcf,'color'));
 set(gca,'ytick',[]);
@@ -626,7 +694,7 @@ end
 if isfield(handles,'GenImage')
     axes(handles.SimPat)
     cla
-    imagesc(GenImage);
+    imagesc(handles.GenImage); colormap(gca,gray);
     set(gca,'xcolor',get(gcf,'color'));
     set(gca,'ycolor',get(gcf,'color'));
     set(gca,'ytick',[]);
@@ -685,3 +753,31 @@ function string = GetPopupString(Popup)
 List = get(Popup,'String');
 Value = get(Popup,'Value');
 string = List{Value};    
+
+function SaveColor(handles)
+if handles.edited
+    set(handles.SaveButton,'BackgroundColor',handles.ColorEdit);
+else
+    set(handles.SaveButton,'BackgroundColor',handles.ColorSave);
+end
+
+function changed = ValChanged(handles,value)
+if ischar(handles.Settings.(value))
+    changed = ~strcmp(handles.Settings.(value),handles.PrevSettings.(value));
+else
+    changed =  any(handles.Settings.(value) ~= handles.PrevSettings.(value));
+end
+
+
+% --- Executes on key press with focus on ROISettingsGUI and none of its controls.
+function ROISettingsGUI_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to ROISettingsGUI (see GCBO)
+% eventdata  structure with the following fields (see MATLAB.UI.FIGURE)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+handles = guidata(hObject);
+if strcmp(eventdata.Key,'s') && ~isempty(eventdata.Modifier) && strcmp(eventdata.Modifier,'control')
+    SaveButton_Callback(handles.SaveButton, eventdata, handles);
+end
