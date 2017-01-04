@@ -778,6 +778,11 @@ function ROISettingsGUI_KeyPressFcn(hObject, eventdata, handles)
 %	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
 % handles    structure with handles and user data (see GUIDATA)
 handles = guidata(hObject);
+% Save Figure with CTRL-S
 if strcmp(eventdata.Key,'s') && ~isempty(eventdata.Modifier) && strcmp(eventdata.Modifier,'control')
     SaveButton_Callback(handles.SaveButton, eventdata, handles);
+end
+% Close Figure with CTRL-L
+if strcmp(eventdata.Key,'l') && ~isempty(eventdata.Modifier) && strcmp(eventdata.Modifier,'control')
+    CancelButton_Callback(handles.SaveButton, eventdata, handles);
 end
