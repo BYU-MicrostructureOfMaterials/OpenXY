@@ -52,6 +52,8 @@ function PCGUI_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to PCGUI (see VARARGIN)
 
+handles.output = hObject;
+
 %Accept Settings from MainGUI or Load Settings.mat
 handles.Fast = false;
 if isempty(varargin)
@@ -59,10 +61,12 @@ if isempty(varargin)
     Settings = stemp.Settings;
     clear stemp
 else
-    if length(varargin) == 3
-        handles.Fast = varargin{3};
+    if length(varargin) == 2
+        handles.Fast = varargin{2};
     end
-    Settings = varargin{1};
+    handles.MainGUI = varargin{1};
+    MainHandle = guidata(handles.MainGUI);
+    Settings = MainHandle.Settings;
 end
 handles.PrevSettings = Settings;
 
@@ -141,7 +145,7 @@ guidata(hObject, handles);
 PCList_Callback(hObject, eventdata, handles);
 
 % UIWAIT makes PCGUI wait for user response (see UIRESUME)
-uiwait(handles.PCGUI);
+%uiwait(handles.PCGUI);
 
 
 % --- Outputs from this function are returned to the command line.
@@ -152,12 +156,7 @@ function varargout = PCGUI_OutputFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Get default command line output from handles structure
-index = GetListIndex(handles);
-IndCol = zeros(size(handles.Settings.PCList,1),1);
-IndCol(index) = 1;
-handles.Settings.PCList(:,8) = num2cell(IndCol);
-varargout{1} = handles.Settings;
-delete(handles.PCGUI);
+varargout{1} = handles.output;
 
 % --- Executes when user attempts to close PCGUI.
 function PCGUI_CloseRequestFcn(hObject, eventdata, handles)
@@ -166,18 +165,28 @@ function PCGUI_CloseRequestFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: delete(hObject) closes the figure
-if strcmp(get(hObject,'waitstatus'),'waiting')
-    uiresume(hObject);
-else
-    delete(hObject);
-end
+delete(hObject);
 
 % --- Executes on button press in CloseButton.
 function CloseButton_Callback(hObject, eventdata, handles)
 % hObject    handle to CloseButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+index = GetListIndex(handles);
+IndCol = zeros(size(handles.Settings.PCList,1),1);
+IndCol(index) = 1;
+handles.Settings.PCList(:,8) = num2cell(IndCol);
+
+if ~isempty(handles.MainGUI) && isvalid(handles.MainGUI)
+    MainHandles = guidata(handles.MainGUI);
+    MainHandles.Settings = handles.Settings;
+    guidata(handles.MainGUI,MainHandles);
+end
+handles.PrevSettings = handles.Settings;
+guidata(hObject,handles);
+
 PCGUI_CloseRequestFcn(handles.PCGUI, eventdata, handles);
+
 
 % --- Executes on selection change in PCList.
 function PCList_Callback(hObject, eventdata, handles)
@@ -215,7 +224,7 @@ if ~handles.Fast
     end
     UpdatePlot(handles)
 end
-
+UpdateGUIs(handles)
 
 %Edit on Double-click
 SelectionType = get(handles.PCGUI,'SelectionType');
@@ -487,10 +496,11 @@ function RemovePC_Callback(hObject, eventdata, handles)
 index = GetListIndex(handles);
 handles.Settings.PCList(index,:) = [];
 len = size(handles.Settings.PCList(:,1),1);
+set(handles.PCList,'String',handles.Settings.PCList(:,6));
 if get(handles.PCList,'Value') > len
     set(handles.PCList,'Value',len)
 end
-set(handles.PCList,'String',handles.Settings.PCList(:,6));
+PCList_Callback(handles.PCList,eventdata,handles);
 guidata(handles.PCGUI,handles);
 
 
@@ -599,5 +609,24 @@ end
 %Create IQ map and save it
 if ~isfield(handles,'IQ_map')
     handles.IQ_map = vec2map(Settings.IQ,Settings.Nx,Settings.ScanType);
+end
+
+function UpdateGUIs(handles)
+if ~isempty(handles.MainGUI) && isvalid(handles.MainGUI)
+    % Update MainGUI handles
+    MainHandles = guidata(handles.MainGUI);
+    MainHandles.Settings = handles.Settings;
+    guidata(MainHandles.MainGUI,MainHandles);
+    
+    if ~isempty(MainHandles.ROIGUI) && isvalid(MainHandles.ROIGUI)
+        % Get handles for ROI Settings GUI
+        ROIHandles = guidata(MainHandles.ROIGUI);
+        % Update Settings
+        ROIHandles.Settings = handles.Settings;
+        guidata(ROIHandles.ROISettingsGUI,ROIHandles);
+        % Update Graphs
+        UpdateImageFcn = get(ROIHandles.SimPatFrame,'ButtonDownFcn');
+        UpdateImageFcn(ROIHandles.HideROIs,[]);
+    end
 end
 

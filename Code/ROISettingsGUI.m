@@ -22,7 +22,7 @@ function varargout = ROISettingsGUI(varargin)
 
 % Edit the above text to modify the response to help ROISettingsGUI
 
-% Last Modified by GUIDE v2.5 04-Jan-2017 13:22:35
+% Last Modified by GUIDE v2.5 04-Jan-2017 15:41:45
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -155,49 +155,8 @@ guidata(hObject, handles);
 handles = guidata(hObject);
 
 %Draw Simulated Pattern
-axes(handles.SimPat);
-Image = handles.OrigImage;
-if isempty(Image)
-    Image = ReadEBSDImage('demo.bmp', Settings.ImageFilter);
-end
-
-if handles.Fast
-    Mat = Settings.Material;
-else
-    Mat = Settings.Phase{1};
-end
-if strcmp(Mat,'Scan File')
-    text(0.5,0.5,{'Select a valid Material','from Main GUI'},'HorizontalAlignment','center');
-    axis off
-elseif ~handles.Fast
-    Material = ReadMaterial(Mat);
-    if isfield(Settings,'XStar')
-        xstar = Settings.XStar(1);
-        ystar = Settings.YStar(1);
-        zstar = Settings.ZStar(1);
-    else
-        xstar = Settings.ScanParams.xstar;
-        ystar = Settings.ScanParams.ystar;
-        zstar = Settings.ScanParams.zstar;
-    end
-    paramspat={xstar;ystar;zstar;...
-        size(Image,1);Settings.AccelVoltage*1000;Settings.SampleTilt;Settings.CameraElevation;...
-        Material.Fhkl;Material.dhkl;Material.hkl};
-    g=euler2gmat(Settings.Angles(1,1),Settings.Angles(1,2),Settings.Angles(1,3));
-    handles.GenImage = genEBSDPatternHybrid(g,paramspat,eye(3),Material.lattice,Material.a1,Material.b1,Material.c1,Material.axs);
-    handles.GenImage = custimfilt(handles.GenImage, Settings.ImageFilter(1), Settings.ImageFilter(2),Settings.ImageFilter(3),Settings.ImageFilter(4));
-    imagesc(handles.GenImage); colormap(gca,gray);
-    drawnow
-    set(gca,'xcolor',get(gcf,'color'));
-    set(gca,'ycolor',get(gcf,'color'));
-    set(gca,'ytick',[]);
-    set(gca,'xtick',[]);
-    axis equal
-else
-    text(0.5,0.5,{'Cannot create','Simulated Pattern','in Fast mode'},'HorizontalAlignment','center')
-    axis off
-
-end
+DrawSimPath(handles)
+guidata(hObject, handles);
 
 % Update handles structure
 handles.edited = false;
@@ -777,3 +736,57 @@ end
 if strcmp(eventdata.Key,'l') && ~isempty(eventdata.Modifier) && strcmp(eventdata.Modifier,'control')
     CancelButton_Callback(handles.SaveButton, eventdata, handles);
 end
+
+function DrawSimPath(handles)
+axes(handles.SimPat);
+Settings = handles.Settings;
+
+Image = handles.OrigImage;
+if isempty(Image)
+    Image = ReadEBSDImage('demo.bmp', Settings.ImageFilter);
+end
+
+if handles.Fast
+    Mat = Settings.Material;
+else
+    Mat = Settings.Phase{1};
+end
+if strcmp(Mat,'Scan File')
+    text(0.5,0.5,{'Select a valid Material','from Main GUI'},'HorizontalAlignment','center');
+    axis off
+elseif ~handles.Fast
+    Material = ReadMaterial(Mat);
+    if isfield(Settings,'XStar')
+        xstar = Settings.XStar(1);
+        ystar = Settings.YStar(1);
+        zstar = Settings.ZStar(1);
+    else
+        xstar = Settings.ScanParams.xstar;
+        ystar = Settings.ScanParams.ystar;
+        zstar = Settings.ScanParams.zstar;
+    end
+    paramspat={xstar;ystar;zstar;...
+        size(Image,1);Settings.AccelVoltage*1000;Settings.SampleTilt;Settings.CameraElevation;...
+        Material.Fhkl;Material.dhkl;Material.hkl};
+    g=euler2gmat(Settings.Angles(1,1),Settings.Angles(1,2),Settings.Angles(1,3));
+    handles.GenImage = genEBSDPatternHybrid(g,paramspat,eye(3),Material.lattice,Material.a1,Material.b1,Material.c1,Material.axs);
+    handles.GenImage = custimfilt(handles.GenImage, Settings.ImageFilter(1), Settings.ImageFilter(2),Settings.ImageFilter(3),Settings.ImageFilter(4));
+    imagesc(handles.GenImage); colormap(gca,gray); axis equal; axis off;
+    drawnow
+else
+    text(0.5,0.5,{'Cannot create','Simulated Pattern','in Fast mode'},'HorizontalAlignment','center')
+    axis off
+end
+
+
+% --------------------------------------------------------------------
+function SimPatFrame_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to SimPatFrame (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% This function updates the simulated pattern when you click on the frame
+% This is primarily used to give a callback function to re-generate the
+% simulated pattern from other GUIs
+DrawSimPath(handles)
+guidata(hObject, handles);

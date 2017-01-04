@@ -137,6 +137,7 @@ handles.PrevSettings = handles.Settings;
 handles.edited = false;
 guidata(hObject,handles);
 SaveColor(handles)
+UpdateGUIs(handles)
 
 % --- Executes on button press in CancelButton.
 function CancelButton_Callback(hObject, eventdata, handles)
@@ -344,3 +345,23 @@ if strcmp(eventdata.Key,'l') && ~isempty(eventdata.Modifier) && strcmp(eventdata
     CancelButton_Callback(handles.SaveButton, eventdata, handles);
 end
 
+function UpdateGUIs(handles)
+% Send Updates back to MainGUI and ROISettings GUI if open to update
+% simulated pattern plot
+if ~isempty(handles.MainGUI) && isvalid(handles.MainGUI)
+    % Update MainGUI handles
+    MainHandles = guidata(handles.MainGUI);
+    MainHandles.Settings = handles.Settings;
+    guidata(MainHandles.MainGUI,MainHandles);
+    
+    if ~isempty(MainHandles.ROIGUI) && isvalid(MainHandles.ROIGUI)
+        % Get handles for ROI Settings GUI
+        ROIHandles = guidata(MainHandles.ROIGUI);
+        % Update Settings
+        ROIHandles.Settings = handles.Settings;
+        guidata(ROIHandles.ROISettingsGUI,ROIHandles);
+        % Update Graphs
+        UpdateImageFcn = get(ROIHandles.SimPatFrame,'ButtonDownFcn');
+        UpdateImageFcn(ROIHandles.HideROIs,[]);
+    end
+end
