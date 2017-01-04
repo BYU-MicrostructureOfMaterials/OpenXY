@@ -106,13 +106,19 @@ SetPopupValue(handles.GrainRefType,Settings.GrainRefImageType);
 %Grain ID Method
 set(handles.GrainMethod,'String',{'Grain File','Find Grains'});
 [~,~,ext] = fileparts(Settings.ScanFilePath);
+
+    
 if strcmp(ext,'.ctf')
     SetPopupValue(handles.GrainMethod,'Find Grains');
+    set(handles.GrainMethod,'Enable','off')
+elseif strcmp(Settings.ScanType,'Hexagonal') % Find Grains not yet compatibile with hexagonal scan
+    SetPopupValue(handles.GrainMethod,'Grain File')
     set(handles.GrainMethod,'Enable','off')
 else
     SetPopupValue(handles.GrainMethod,Settings.GrainMethod);
     set(handles.GrainMethod,'Enable','on');
 end
+
 %Min Grain Size
 set(handles.MinGrainSize,'String',num2str(Settings.MinGrainSize))
 
@@ -318,8 +324,8 @@ switch HROIMMethod
         if handles.Settings.RefImageInd == 0
             handles.Settings.RefImageInd = 1;
             if ~handles.Fast
-                handles.Settings.RefInd(1:handles.Settings.ScanLength) = 1;
-            end
+            handles.Settings.RefInd(1:handles.Settings.ScanLength) = 1;
+        end
         end
         set(handles.HROIMedit,'String',num2str(handles.Settings.RefImageInd));
         set(handles.HROIMedit,'Enable','on');
@@ -433,7 +439,7 @@ function MisoTol_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of MisoTol as text
 %        str2double(get(hObject,'String')) returns contents of MisoTol as a double
 handles.Settings.MisoTol = str2double(get(hObject,'String'));
-handles.Settings.grainID = UpdateGrainIDs(handles);
+handles.Settings.grainID = CalcGrainID(handles.Settings);
 guidata(hObject,handles);
 GrainRefType_Callback(handles.GrainRefType, eventdata, handles);
 
@@ -467,31 +473,31 @@ else
     set(handles.SelectKAM,'Enable','off');
 end
 if ~handles.Fast
-    switch GrainRefType
-        case 'Min Kernel Avg Miso'
-            if ~isfield(handles.Settings,'KernelAvgMisoPath') || ~exist(handles.Settings.KernelAvgMisoPath,'file')
-                SelectKAM_Callback(handles.SelectKAM,eventdata,handles);
-                handles = guidata(hObject);
-                handles.Settings.RefInd = handles.AutoRefInds;
-            end
-        case 'IQ > Fit > CI'
+switch GrainRefType
+    case 'Min Kernel Avg Miso'
+        if ~isfield(handles.Settings,'KernelAvgMisoPath') || ~exist(handles.Settings.KernelAvgMisoPath,'file')
+            SelectKAM_Callback(handles.SelectKAM,eventdata,handles);
+            handles = guidata(hObject);
+            handles.Settings.RefInd = handles.AutoRefInds;
+        end
+    case 'IQ > Fit > CI'
+        handles.AutoRefInds = UpdateAutoInds(handles,handles.Settings.GrainRefImageType);
+        handles.Settings.RefInd = handles.AutoRefInds;
+        ToggleGrainMap_Callback(handles.ToggleGrainMap,eventdata,handles);
+    case 'Manual'
+        grainIDs = unique(handles.Settings.grainID);
+        if ~isfield(handles.Settings,'RefInd') || isempty(handles.Settings.RefInd)
             handles.AutoRefInds = UpdateAutoInds(handles,handles.Settings.GrainRefImageType);
             handles.Settings.RefInd = handles.AutoRefInds;
-            ToggleGrainMap_Callback(handles.ToggleGrainMap,eventdata,handles);
-        case 'Manual'
-            grainIDs = unique(handles.Settings.grainID);
-            if ~isfield(handles.Settings,'RefInd') || isempty(handles.Settings.RefInd)
-                handles.AutoRefInds = UpdateAutoInds(handles,handles.Settings.GrainRefImageType);
-                handles.Settings.RefInd = handles.AutoRefInds;
-            end
-            RefGrainIDs = handles.Settings.grainID(unique(handles.Settings.RefInd));
-            if length(grainIDs) ~= length(RefGrainIDs) || ~all(sort(grainIDs)==sort(RefGrainIDs))
-                w = warndlg('Grains have changed. New reference indices must be selected.');
-                uiwait(w,3)
-                EditRefPoints_Callback(handles.EditRefPoints, eventdata, handles);
-                handles = guidata(hObject);
-            end
-            ToggleGrainMap_Callback(handles.ToggleGrainMap,eventdata,handles);    
+        end
+        RefGrainIDs = handles.Settings.grainID(unique(handles.Settings.RefInd));
+        if length(grainIDs) ~= length(RefGrainIDs) || ~all(sort(grainIDs)==sort(RefGrainIDs))
+            w = warndlg('Grains have changed. New reference indices must be selected.');
+            uiwait(w,3)
+            EditRefPoints_Callback(handles.EditRefPoints, eventdata, handles);
+            handles = guidata(hObject);
+        end
+        ToggleGrainMap_Callback(handles.ToggleGrainMap,eventdata,handles);    
     end
 end
 handles.Settings.GrainRefImageType = GrainRefType;
@@ -619,16 +625,16 @@ Settings = handles.Settings;
 valid = 0;
 j = 1;
 if isfield(Settings,'Phase')
-    allMaterials = unique(Settings.Phase);
-else
+allMaterials = unique(Settings.Phase);
+    else
     allMaterials = {Settings.Material};
-end
+    end
 
 if get(hObject,'Value')
     valid = CheckSplitDDMaterials(allMaterials);
     if valid
         enable = 'on';
-        else
+    else
         set(hObject,'Value',0);
         enable = 'off';
     end
@@ -835,14 +841,14 @@ Method = contents{get(hObject,'Value')};
 if ~strcmp(handles.Settings.GrainMethod,Method) || init
     handles.Settings.GrainMethod = Method;
     if ~handles.Fast
-        if strcmp(Method,'Find Grains')
-            set(handles.MinGrainSize,'Enable','on')
-            handles.Settings.grainID = UpdateGrainIDs(handles);
-        else
-            set(handles.MinGrainSize,'Enable','off')
-            handles.Settings.grainID = handles.Settings.GrainVals.grainID;
-        end
+    if strcmp(Method,'Find Grains')
+        set(handles.MinGrainSize,'Enable','on')
+        handles.Settings.grainID = CalcGrainID(handles.Settings);
+    else
+        set(handles.MinGrainSize,'Enable','off')
+        handles.Settings.grainID = handles.Settings.GrainVals.grainID;
     end
+end
 end
 guidata(hObject,handles);
 GrainRefType_Callback(handles.GrainRefType, eventdata, handles);
@@ -873,8 +879,9 @@ function MinGrainSize_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of MinGrainSize as a double
 handles.Settings.MinGrainSize = str2double(get(hObject,'String'));
 if ~handles.Fast
-    handles.Settings.grainID = UpdateGrainIDs(handles);
+    handles.Settings.grainID = CalcGrainID(handles.Settings);
 end
+
 guidata(hObject,handles);
 GrainRefType_Callback(handles.GrainRefType, eventdata, handles);
 
@@ -1006,16 +1013,6 @@ else
     AutoRefInds = GetRefImageInds(...
         {handles.Settings.Angles;handles.Settings.IQ;handles.Settings.CI;handles.Settings.Fit}, handles.Settings.grainID);
 end
-
-function grainID = UpdateGrainIDs(handles)
-ScanParams = handles.Settings.ScanParams;
-ScanParams.Nx = handles.Settings.Nx;
-ScanParams.Ny = handles.Settings.Ny;
-ScanParams.ScanType = handles.Settings.ScanType;
-Input1 = handles.Settings.ScanFilePath;
-grainID = GetGrainInfo(Input1,handles.Settings.Phase{1},ScanParams,...
-    handles.Settings.Angles,handles.Settings.MisoTol,handles.Settings.GrainMethod,handles.Settings.MinGrainSize);
-
 
 function GrainMap = OpenGrainMap(handles)
 if ~ishandle(handles.GrainMap)

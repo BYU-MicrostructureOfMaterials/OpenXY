@@ -1,10 +1,10 @@
 
-function [ScanFileData, ScanParams] = ReadScanFile(ScanFilePath)
+function [ScanFileData, ScanParams, GrainVals] = ReadScanFile(ScanFilePath)
 [~, ~, ext] = fileparts(ScanFilePath);
 if strcmp(ext, '.ang')
-    [ScanFileData, ScanParams] = ReadAngFile(ScanFilePath); 
+    [ScanFileData, ScanParams, GrainVals] = ReadAngFile(ScanFilePath); 
 elseif strcmp(ext,'.ctf')
-    [ScanFileData, ScanParams] = ReadCTFFile(ScanFilePath);
+    [ScanFileData, ScanParams, GrainVals] = ReadCTFFile(ScanFilePath);
     %Reorder columns to the same format as .ang file
     ScanFileData(:,[1,2,3,4,5,6,7,8,9,10])=ScanFileData(:,[6,7,8,2,3,10,11,5,1,9]);
     ScanFileData = ScanFileData(:,1:end-1);

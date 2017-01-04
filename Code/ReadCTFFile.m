@@ -1,4 +1,4 @@
-function [CtfFileVals, ScanParams] = ReadCTFFile(FileName,FilePath)
+function [CtfFileVals, ScanParams, GrainVals] = ReadCTFFile(FileName,FilePath)
 %CtfFileVals: Cell array containing all data from .ctf file.
 %   Phase	X	Y	Bands	Error	Euler1	Euler2	Euler3	MAD	BC	BS
 %ScanParams: Struct containing information gathered from header
@@ -14,28 +14,30 @@ ctf = fopen(fullfile(FilePath, FileName));
 data = GetFileData(fullfile(FilePath, FileName));
 disp('Reading in the .ctf file . . . ')
 
-function ScanParamsData(FileStr, VarName)
-%Function to check for a string in file and read in the following data
-%   FileStr: String to look for in file
-%   VarName: Name of variable to store in ScanParams
-
-    loc = strfind(tline, FileStr);
-    if ~isempty(loc)
-        if strcmp(VarName,'material')
-            a = 1;
-        end
-        val = strtok(tline(loc(end)+length(FileStr):end));
-        ind = 1;
-        if isfield(ScanParams,VarName)
-            ind = length(ScanParams.(VarName))+1;
-        end
-        if ~isempty(str2num(val))
-            ScanParams.(VarName)(ind) = str2double(val);
-        else
-            ScanParams.(VarName){ind} = val;
+    function ScanParamsData(FileStr, VarName)
+        %Function to check for a string in file and read in the following data
+        %   FileStr: String to look for in file
+        %   VarName: Name of variable to store in ScanParams
+        
+        loc = strfind(tline, FileStr);
+        if ~isempty(loc)
+            [val,rem] = strtok(tline(loc(end)+length(FileStr):end));
+            
+            % Read the entire line for multi-word phase names
+            if strcmp(VarName,'material')
+                val = [val ' ' rem];
+            end
+            ind = 1;
+            if isfield(ScanParams,VarName)
+                ind = length(ScanParams.(VarName))+1;
+            end
+            if ~isempty(str2num(val))
+                ScanParams.(VarName)(ind) = str2double(val);
+            else
+                ScanParams.(VarName){ind} = val;
+            end
         end
     end
-end
 
 ScanParams = struct();
 while ~feof(ctf)
@@ -78,12 +80,12 @@ if ~exist(CprFilePath,'file')
 end
 cpr = fopen(CprFilePath);
 while ~feof(cpr)
-   tline = fgetl(cpr);
-   ScanParamsData('VHRatio=','VHRatio');
-   ScanParamsData('PCX=','PCX');
-   ScanParamsData('PCY=','PCY');
-   ScanParamsData('DD=','DD');
-   ScanParamsData('StructureName=','material');
+    tline = fgetl(cpr);
+    ScanParamsData('VHRatio=','VHRatio');
+    ScanParamsData('PCX=','PCX');
+    ScanParamsData('PCY=','PCY');
+    ScanParamsData('DD=','DD');
+    ScanParamsData('StructureName=','material');
 end
 fclose(cpr);
 
@@ -101,5 +103,30 @@ else
     ScanParams.ystar = ScanParams.PCY/ScanParams.VHRatio;
     ScanParams.zstar = ScanParams.DD/ScanParams.VHRatio;
 end
+
+%Generate Phase list
+PhaseNum = CtfFileVals{1};
+PhaseNums = unique(PhaseNum);
+Phase = cell(size(PhaseNum));
+if max(PhaseNums) <= length(ScanParams.material) || (any(PhaseNums==0) && length(PhaseNums)==2)
+    % Remove phases labeled zero, only if there is only one other phase
+    PhaseNums(PhaseNums==0)=[]; 
+    PhaseNum(PhaseNum==0) = 1;
+    
+    for i = 1:length(PhaseNums)
+        Phase(PhaseNum==PhaseNums(i)) = {strtrim(lower(ScanParams.material{i}))};
+    end
+else
+    [ind,ok] = listdlg('ListString',ScanParams.material,'PromptString',...
+                {'Can''t resolve phases in scan files.';'Select a single phase:';'Select one:'},...
+                'SelectionMode','single','Name','Select Phase','ListSize',[180 100]);
+    if ~ok, ind = 1; end;
+    Phase(:)={strtrim(lower(ScanParams.material{ind}))};
+end
+GrainVals.PhaseNum = PhaseNum;
+GrainVals.Phase = Phase;
+
+% Validate Phase
+Phase = ValidatePhase(Phase);
 
 end

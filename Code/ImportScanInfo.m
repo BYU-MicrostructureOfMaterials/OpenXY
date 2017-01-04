@@ -15,7 +15,7 @@ end
 if ~strcmp(ext,'.h5')
     if ~isfield(Settings,'Angles') || ~strcmp(Settings.ScanFilePath,ScanPath)
         
-        [ScanFileData,Settings.ScanParams] = ReadScanFile(ScanPath);
+        [ScanFileData,Settings.ScanParams,Settings.GrainVals] = ReadScanFile(ScanPath);
         
         %Initialize Variables
         Settings.ScanLength = size(ScanFileData{1},1);
@@ -45,8 +45,9 @@ if ~strcmp(ext,'.h5')
         Nx = length(X);
         Ny = length(Y);
         
-        %Check ScanType
+        %OIM Files
         if ~strcmp(ext,'.ctf')
+            %Check ScanType
             check = true;
             if ~isempty(strfind(Settings.ScanParams.GridType,'Hex'))
                 AutoType = 'Hexagonal';
@@ -65,8 +66,12 @@ if ~strcmp(ext,'.h5')
                 end
             end
             Settings.GrainMethod = 'Grain File'; %Default method
+        
+        %Oxford HKL Files
         else
             Settings.GrainMethod = 'Find Grains'; %Only method available
+            
+            Settings.GrainVals.grainID = CalcGrainID(Settings);
         end
         
         %Validate Scan Size
@@ -110,15 +115,9 @@ else
     [Settings, Settings.ScanParams, Material] = ReadHDF5(Settings,ScanPath);
 end
 
-%Get Grain and Phase Info
-ScanParams = Settings.ScanParams;
-ScanParams.ScanType = Settings.ScanType;
-ScanParams.Nx = Settings.Nx;
-ScanParams.Ny = Settings.Ny;
-[Settings.grainID,Settings.Phase] = GetGrainInfo(ScanPath,Settings.Material,ScanParams,...
-    Settings.Angles,Settings.MisoTol,Settings.GrainMethod,0); %Don't use cleanup
-Settings.GrainVals.grainID = Settings.grainID;
-Settings.GrainVals.Phase = Settings.Phase;
+%Save GrainVals
+Settings.grainID = Settings.GrainVals.grainID;
+Settings.Phase = Settings.GrainVals.Phase;
 
 %Merge Materials
 if exist('Material','var')
@@ -134,4 +133,4 @@ end
 
 end
 
-
+    

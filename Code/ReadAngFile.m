@@ -1,5 +1,5 @@
 
-function [AngFileVals ScanParams FileName FilePath ] = ReadAngFile(FilePath,FileName)
+function [AngFileVals, ScanParams, GrainVals, FileName, FilePath ] = ReadAngFile(FilePath,FileName)
 %READANGFILE
 %[AngFileVals ScanParams FileName FilePath ] = ReadAngFile(FilePath,FileName)
 %Fast reading .ang files of any size. 
@@ -12,16 +12,15 @@ function [AngFileVals ScanParams FileName FilePath ] = ReadAngFile(FilePath,File
 %if the file and pathname are known, pass those in.
 
 if nargin == 1
-    fid = fopen(FilePath);
-    data = GetFileData(FilePath,'#');
+    FullPath = FilePath;
 elseif nargin == 2
-    fid = fopen([FilePath FileName]);
-    data = GetFileData([FilePath FileName],'#');
+    FullPath = fullfile(FilePath,FileName);
 else
-    [FileName FilePath] = uigetfile('*.ang','OIM .ang file');
-    fid = fopen([FilePath FileName]);
-    data = GetFileData([FilePath FileName],'#');
+    [FileName, FilePath] = uigetfile('*.ang','OIM .ang file');
+    FullPath = fullfile(FilePath,FileName);
 end
+fid = fopen(FullPath);
+data = GetFileData(FullPath,'#');
 
 disp('Reading in the .ang file . . . ')
 
@@ -64,6 +63,10 @@ while ~feof(fid)
 end
 
 fclose(fid);
+
+% Get Grain Vals
+PhaseNum = AngFileVals{8};
+GrainVals = GetOIMGrainVals(FullPath,PhaseNum);
 
 % keyboard
 % phi1 = AngFileVals{1,1};
