@@ -65,6 +65,7 @@ Angles = Settings.Angles(Inds,:);
 
 %Set up for reading patters from H5 files
 H5Images = false;
+H5ImageParams = {};
 if size(Settings.ImageNamesList,1)==1
     H5Images = true;
     H5ImageParams = {Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter};
