@@ -22,7 +22,7 @@ function varargout = MicroscopeSettingsGUI(varargin)
 
 % Edit the above text to modify the response to help MicroscopeSettingsGUI
 
-% Last Modified by GUIDE v2.5 17-Aug-2015 07:12:20
+% Last Modified by GUIDE v2.5 04-Jan-2017 11:33:18
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -57,11 +57,14 @@ handles.output = hObject;
 
 %Accept Settings from MainGUI or Load Settings.mat
 if isempty(varargin)
+    handles.MainGUI = [];
     stemp=load('Settings.mat');
     Settings = stemp.Settings;
     clear stemp
 else
-    Settings = varargin{1};
+    handles.MainGUI = varargin{1};
+    MainHandle = guidata(handles.MainGUI);
+    Settings = MainHandle.Settings;
 end
 handles.PrevSettings = Settings;
 
@@ -78,21 +81,27 @@ set(handles.CameraAzimuthal,'String',num2str(Settings.CameraAzimuthal*180/pi)); 
 %Microns per Pixel
 set(handles.micronperpix,'String',num2str(Settings.mperpix));
 
-%Set Position
-if length(varargin) > 1
-    MainSize = varargin{2};
+%Set Position and Visuals
+if ~isempty(handles.MainGUI)
+    MainSize = get(handles.MainGUI,'Position');
     set(hObject,'Units','pixels');
     GUIsize = get(hObject,'Position');
     set(hObject,'Position',[MainSize(1)+MainSize(3)+20 MainSize(2)+MainSize(4)-GUIsize(4) GUIsize(3) GUIsize(4)]);
     movegui(hObject,'onscreen');
 end
+handles.ColorSave = get(handles.SaveButton,'BackgroundColor');
+handles.ColorEdit = [1 1 0]; % Yellow
+gui = findall(handles.MicroscopeSettingsGUI);
+set(gui,'KeyPressFcn',@MicroscopeSettingsGUI_KeyPressFcn);
 
 % Update handles structure
+handles.edited = false;
 handles.Settings = Settings;
 guidata(hObject, handles);
+SaveColor(handles)
 
 % UIWAIT makes MicroscopeSettingsGUI wait for user response (see UIRESUME)
-uiwait(handles.MicroscopeSettingsGUI);
+%uiwait(handles.MicroscopeSettingsGUI);
 
 
 % --- Outputs from this function are returned to the command line.
@@ -103,8 +112,7 @@ function varargout = MicroscopeSettingsGUI_OutputFcn(hObject, eventdata, handles
 % handles    structure with handles and user data (see GUIDATA)
 
 % Get default command line output from handles structure
-varargout{1} = handles.Settings;
-delete(hObject);
+varargout{1} = handles.output;
 
 % --- Executes when user attempts to close MicroscopeSettingsGUI.
 function MicroscopeSettingsGUI_CloseRequestFcn(hObject, eventdata, handles)
@@ -113,18 +121,22 @@ function MicroscopeSettingsGUI_CloseRequestFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: delete(hObject) closes the figure
-if strcmp(get(hObject,'waitstatus'),'waiting')
-    uiresume(hObject);
-else
-    delete(hObject);
-end
+delete(hObject);
 
 % --- Executes on button press in SaveButton.
 function SaveButton_Callback(hObject, eventdata, handles)
 % hObject    handle to SaveButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-MicroscopeSettingsGUI_CloseRequestFcn(handles.MicroscopeSettingsGUI, eventdata, handles);
+if ~isempty(handles.MainGUI) && isvalid(handles.MainGUI)
+    MainHandles = guidata(handles.MainGUI);
+    MainHandles.Settings = handles.Settings;
+    guidata(handles.MainGUI,MainHandles);
+end
+handles.PrevSettings = handles.Settings;
+handles.edited = false;
+guidata(hObject,handles);
+SaveColor(handles)
 
 % --- Executes on button press in CancelButton.
 function CancelButton_Callback(hObject, eventdata, handles)
@@ -145,6 +157,10 @@ function AccelVoltage_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of AccelVoltage as a double
 handles.Settings.AccelVoltage = str2double(get(hObject,'String'));
 guidata(hObject,handles);
+if ValChanged(handles,'AccelVoltage')
+    handles.edited = true;
+end
+SaveColor(handles)
 
 
 % --- Executes during object creation, after setting all properties.
@@ -170,6 +186,10 @@ function SampleTilt_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of SampleTilt as a double
 handles.Settings.SampleTilt = str2double(get(hObject,'String'))*pi/180;
 guidata(hObject,handles);
+if ValChanged(handles,'SampleTilt')
+    handles.edited = true;
+end
+SaveColor(handles)
 
 % --- Executes during object creation, after setting all properties.
 function SampleTilt_CreateFcn(hObject, eventdata, handles)
@@ -194,6 +214,10 @@ function SampleAzimuthal_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of SampleAzimuthal as a double
 handles.Settings.SampleAzimuthal = str2double(get(hObject,'String'))*pi/180;
 guidata(hObject,handles);
+if ValChanged(handles,'SampleAzimuthal')
+    handles.edited = true;
+end
+SaveColor(handles)
 
 % --- Executes during object creation, after setting all properties.
 function SampleAzimuthal_CreateFcn(hObject, eventdata, handles)
@@ -218,6 +242,10 @@ function CameraElevation_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of CameraElevation as a double
 handles.Settings.CameraElevation = str2double(get(hObject,'String'))*pi/180;
 guidata(hObject,handles);
+if ValChanged(handles,'CameraElevation')
+    handles.edited = true;
+end
+SaveColor(handles)
 
 % --- Executes during object creation, after setting all properties.
 function CameraElevation_CreateFcn(hObject, eventdata, handles)
@@ -241,6 +269,10 @@ function CameraAzimuthal_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of CameraAzimuthal as a double
 handles.Settings.CameraAzimuthal = str2double(get(hObject,'String'))*pi/180;
 guidata(hObject,handles);
+if ValChanged(handles,'CameraAzimuthal')
+    handles.edited = true;
+end
+SaveColor(handles)
 
 % --- Executes during object creation, after setting all properties.
 function CameraAzimuthal_CreateFcn(hObject, eventdata, handles)
@@ -267,6 +299,10 @@ if isfield(handles.Settings,'PixelSize')
     handles.Settings.PhosphorSize = handles.Settings.PixelSize*handles.Settings.mperpix;
 end
 guidata(hObject,handles);
+if ValChanged(handles,'mperpix')
+    handles.edited = true;
+end
+SaveColor(handles)
 
 % --- Executes during object creation, after setting all properties.
 function micronperpix_CreateFcn(hObject, eventdata, handles)
@@ -278,4 +314,28 @@ function micronperpix_CreateFcn(hObject, eventdata, handles)
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
+end
+
+function SaveColor(handles)
+if handles.edited
+    set(handles.SaveButton,'BackgroundColor',handles.ColorEdit);
+else
+    set(handles.SaveButton,'BackgroundColor',handles.ColorSave);
+end
+
+function changed = ValChanged(handles,value)
+changed =  handles.Settings.(value) ~= handles.PrevSettings.(value);
+
+
+% --- Executes on key press with focus on MicroscopeSettingsGUI and none of its controls.
+function MicroscopeSettingsGUI_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to MicroscopeSettingsGUI (see GCBO)
+% eventdata  structure with the following fields (see MATLAB.UI.FIGURE)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+handles = guidata(hObject);
+if strcmp(eventdata.Key,'s') && ~isempty(eventdata.Modifier) && strcmp(eventdata.Modifier,'control')
+    SaveButton_Callback(handles.SaveButton, eventdata, handles);
 end

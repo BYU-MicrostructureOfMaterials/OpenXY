@@ -22,7 +22,7 @@ function varargout = MainGUI(varargin)
 
 % Edit the above text to modify the response to help MainGUI
 
-% Last Modified by GUIDE v2.5 02-Jan-2017 12:46:52
+% Last Modified by GUIDE v2.5 04-Jan-2017 11:29:50
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -611,6 +611,13 @@ function RestoreDefaultSettings_Callback(hObject, eventdata, handles)
 MainGUI(handles.Fast);
 
 % --------------------------------------------------------------------
+function ExportSettings_Callback(hObject, eventdata, handles)
+% hObject    handle to ExportSettings (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+assignin('base','Settings',handles.Settings)
+
+% --------------------------------------------------------------------
 function Close_Callback(hObject, eventdata, handles)
 % hObject    handle to Close (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -656,7 +663,7 @@ function MicroscopeSettings_Callback(hObject, eventdata, handles)
 % hObject    handle to MicroscopeSettings (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.Settings = MicroscopeSettingsGUI(handles.Settings,get(handles.MainGUI,'Position'));
+handles.MicroscopeGUI = MicroscopeSettingsGUI(handles.MainGUI);
 guidata(hObject,handles);
 
 % --------------------------------------------------------------------
