@@ -29,6 +29,7 @@ Settings.Angles(:,2) = h5read(filepath, [DataName 'Phi']);
 Settings.Angles(:,3) = h5read(filepath, [DataName 'Phi2']);
 Settings.XData = h5read(filepath, [DataName 'X Position']);
 Settings.YData = h5read(filepath, [DataName 'Y Position']);
+PhaseNum = h5read(filepath,[DataName 'Phase']);
 
 %Import Scan Info
 ScanData.CameraAzimuthal = h5read(filepath, [HeaderName 'Camera Azimuthal Angle'])*pi/180;
@@ -70,4 +71,7 @@ for i = 1:NumPhase
     Mat(i).MaterialName = deblank(char(h5read(filepath, [Phases{i} '/' 'MaterialName'])));
     Mat(i).Symmetry = h5read(filepath, [Phases{i} '/' 'Symmetry']);
 end
+
+% Get Grain Vals
+Settings.GrainVals = GetOIMGrainVals(filepath,PhaseNum);
     

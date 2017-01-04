@@ -1,7 +1,7 @@
 %Fast reading of OIM Grain files of any size. 
 %Jay Basinger March 31,2011
  
-function [GrainFileVals FileName FilePath ] = ReadGrainFile(FilePath,FileName)
+function [GrainFileVals, FileName, FilePath ] = ReadGrainFile(FilePath,FileName)
 %Used for OIM .txt Grain files of the first type (based on OIM Analysis 6
 %and earlier)
 
