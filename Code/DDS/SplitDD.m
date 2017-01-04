@@ -10,20 +10,21 @@ for i = 1:length(allMaterials)
     end
 end
 
-if length(matList) > 1
-    [matchoose,vv] = listdlg('PromptString','Select the material type','SelectionMode','single','ListString',matList);
-    if vv==0
-        warndlg('Nothing selected: skipping split dislocation density calculation','Split Dislocation Density');
-        rhos = [];
-        return;
-    end
-elseif isempty(matList)
-    warndlg(['No SplitDD material data for ' allMaterials{1}, ' Exiting SplitDD calculation'],'Split Dislocation Density');
-    rhos = [];
-    return;
-else
-    matchoose = 1;
-end
+% if length(matList) > 1
+%     [matchoose,vv] = listdlg('PromptString','Select the material type','SelectionMode','single','ListString',matList);
+%     if vv==0
+%         warndlg('Nothing selected: skipping split dislocation density calculation','Split Dislocation Density');
+%         rhos = [];
+%         return;
+%     end
+% elseif isempty(matList)
+%     warndlg(['No SplitDD material data for ' allMaterials{1}, ' Exiting SplitDD calculation'],'Split Dislocation Density');
+%     rhos = [];
+%     return;
+% else
+%     matchoose = 1;
+% end
+matchoose = 1;
 matchoice = matList{matchoose};
 [bedge,ledge, bscrew,lscrew,v, normals, crssfactor, type] = choosemat(matchoice);
 
@@ -41,22 +42,25 @@ DDSettings.matchoice = matchoice;
 force = 0;
 stress = 0;
 minscheme_list = {'Min. density','Min. energy','CRSSfactor','Schmid+CRSS', 'CRSS + l'};
-[minscheme,vv] = listdlg('PromptString','Select minimization scheme','SelectionMode','single','ListString',minscheme_list);
+[minscheme,vv] = listdlg('PromptString','Select minimization scheme','SelectionMode','single','ListString',minscheme_list,'InitialValue',2);
 if vv==0
     warndlg('Nothing selected: skipping split dislocation density calculation','Split Dislocation Density')
     rhos = [];
     return;
 end
+
 DDSettings.Minimization_Scheme = minscheme_list{minscheme};
 DDSettings.minscheme = minscheme;
 
 op_list = {'Least squares','Origin'};
-[x0type,vv] = listdlg('PromptString','Select optimization startpoint','SelectionMode','single','ListString',op_list);
+
+[x0type,vv] = listdlg('PromptString','Select optimization startpoint','SelectionMode','single','ListString',op_list,'InitialValue',2);
 if vv==0
     warndlg('Nothing selected: skipping split dislocation density calculation','Split Dislocation Density')
     rhos = [];
     return;
 end
+
 DDSettings.Opt_Start = op_list{x0type};
 DDSettings.x0type = x0type;
 
@@ -87,15 +91,15 @@ if minscheme == 4
     
     stress = (rot')*stress*rot;
 end
-if vv==0; error('Exited by user'); end
+% if vv==0; error('Exited by user'); end
 
 
 
 
 %% Work out beta derivatives and/or alpha
 
-n = Settings.data.cols;
-m = Settings.data.rows;
+n = Settings.Nx;
+m = Settings.Ny;
 if isfield(alpha_data,'stepsize')
     stepsize = alpha_data.stepsize;
 elseif isfield(alpha_data,'stepsizea')
@@ -104,7 +108,11 @@ else
     stepsize = (Settings.XData(2)-Settings.XData(1))*(Settings.NumSkipPts+1);
 end
 
-if iscell(Settings.data.phi1rn)==1
+if isfield(Settings,'NewAngles')
+    phi1rn = real(Settings.NewAngles(:,1));
+    PHIrn = real(Settings.NewAngles(:,2));
+    phi2rn = real(Settings.NewAngles(:,3));
+elseif iscell(Settings.data.phi1rn)==1
     phi1rn = real(cell2mat(Settings.data.phi1rn));
     PHIrn =  real(cell2mat(Settings.data.PHIrn));
     phi2rn =  real(cell2mat(Settings.data.phi2rn));
@@ -132,7 +140,11 @@ end
 % reorient the reference orientation for each grain as close as possible to
 % origin, and then each point in the grain as close as possible to this to
 % make the reference frames for slip systems consistent
-bestgmat=zeros(3,3,n*m);
+if isfield(Settings,'Resize')
+    bestgmat=zeros(3,3,prod(Settings.Resize));
+else
+    bestgmat=zeros(3,3,n*m);
+end
 for i=1:m*n
     if bestgmat(:,:,Settings.RefInd(i))==0
         gmat = euler2gmat(phi1rn(Settings.RefInd(i)),PHIrn(Settings.RefInd(i)), phi2rn(Settings.RefInd(i)));
@@ -148,8 +160,8 @@ for i=1:m*n
     end
 end
 
-
-
+alphaorbeta
+alphaorbeta = 'Nye-Kroner (Pantleon)';
 if (alphaorbeta==11) | (strcmp(alphaorbeta, 'Distortion Matching'))
     Fatemp = alpha_data.Fa;
     Fctemp = alpha_data.Fc;
@@ -225,12 +237,12 @@ if NumberOfCores>1 %if parallel processing
             matlabpool('local',NumberOfCores);
         end
     end
-    if any(strcmp(javaclasspath,fullfile(pwd,'java')))
-        pctRunOnAll javaaddpath('java')
-    end
+%     if any(strcmp(javaclasspath,fullfile(pwd,'java')))
+%         pctRunOnAll javaaddpath('java')
+%     end
     
     disp(['Starting cross-correlation: ' num2str(m*n) ' points']);
-    ppm = ParforProgMon( 'Split Dislocation Density ', m*n,1,400,50 );
+%     ppm = ParforProgMon( 'Split Dislocation Density ', m*n,1,400,50 );
     
     parfor i = 1:m*n
         gmat = squeeze(bestgmat(:,:,i));
@@ -241,7 +253,11 @@ if NumberOfCores>1 %if parallel processing
                     rhos(:,i)=0;
                 else
                     merp = alphavecp(1:3,i);
-                    rhos(:,i)=resolvedislocB(merp,0,minscheme,matchoice,gmat,1, x0type);
+                    try
+                        rhos(:,i)=resolvedislocB(merp,0,minscheme,matchoice,gmat,1, x0type);
+                    catch
+                        rhos(:,i) = -1;
+                    end
                 end
             case 'Distortion Matching'
                 if beta(:,i)==0;
@@ -255,7 +271,11 @@ if NumberOfCores>1 %if parallel processing
                     rhos(:,i)=0;
                 else
                     merp = alphavecp(:,i);
-                    rhos(:,i)=resolvedislocB(merp,1,minscheme,matchoice,gmat,1, x0type);
+                    try
+                        rhos(:,i)=resolvedislocB(merp,1,minscheme,matchoice,gmat,1, x0type);
+                    catch
+                        rhos(:,i) = -1;
+                    end
                 end
             case 11
                 if beta(:,i)==0;
@@ -271,7 +291,7 @@ if NumberOfCores>1 %if parallel processing
                     rhos(:,i)=resolvedisloc(merp,11,minscheme,matchoice,gmat,stress, stepsize^2, x0type);
                 end
         end
-        ppm.increment();
+%         ppm.increment();
     end
 else
     h = waitbar(0.1,'splitting');

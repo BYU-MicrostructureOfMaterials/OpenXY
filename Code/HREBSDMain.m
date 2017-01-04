@@ -109,59 +109,60 @@ if ~isfield(Settings,'data') || Settings.DoStrain
     data.cols = Settings.Nx;
     data.rows = Settings.Ny;
     
-for jj = 1:Settings.ScanLength
-   
-    data.IQ{jj} = Settings.IQ(jj);
-    
-    if strcmp(Settings.ScanType,'L')
-        [phi1 PHI phi2] = gmat2euler(g{jj}.b);
-        Settings.g{jj} = g{jj}.b;
-        Settings.F{jj} = F{jj}.b;
-        Settings.Fa{jj} = F{jj}.a;
-        Settings.Fc{jj} = F{jj}.c;
-        Settings.U{jj} = U{jj}.b;
-        Settings.Ua{jj} = U{jj}.a;
-        Settings.Uc{jj} = U{jj}.c;
-        Settings.SSE{jj} = SSE{jj}.b;
-        Settings.SSEa{jj} = SSE{jj}.a;
-        Settings.SSEc{jj} = SSE{jj}.c;
-        data.SSE{jj} = SSE{jj}.b;
-        data.SSEa{jj} = SSE{jj}.a;
-        data.SSEc{jj} = SSE{jj}.c;
-        data.F{jj} = F{jj}.b;
-        data.Fa{jj} = F{jj}.a;
-        data.Fc{jj} = F{jj}.c;
-    else
+    Settings.NewAngles = Settings.Angles;
+    for jj = 1:Settings.ScanLength
         
+        data.IQ{jj} = Settings.IQ(jj);
+        
+        if strcmp(Settings.ScanType,'L')
+            [phi1 PHI phi2] = gmat2euler(g{jj}.b);
+            Settings.g{jj} = g{jj}.b;
+            Settings.F{jj} = F{jj}.b;
+            Settings.Fa{jj} = F{jj}.a;
+            Settings.Fc{jj} = F{jj}.c;
+            Settings.U{jj} = U{jj}.b;
+            Settings.Ua{jj} = U{jj}.a;
+            Settings.Uc{jj} = U{jj}.c;
+            Settings.SSE{jj} = SSE{jj}.b;
+            Settings.SSEa{jj} = SSE{jj}.a;
+            Settings.SSEc{jj} = SSE{jj}.c;
+            data.SSE{jj} = SSE{jj}.b;
+            data.SSEa{jj} = SSE{jj}.a;
+            data.SSEc{jj} = SSE{jj}.c;
+            data.F{jj} = F{jj}.b;
+            data.Fa{jj} = F{jj}.a;
+            data.Fc{jj} = F{jj}.c;
+        else
+            
             [phi1 PHI phi2] = gmat2euler(g(:,:,jj));
-        Settings.SSE{jj} = SSE{jj};
-        data.SSE{jj} = SSE{jj};
-        data.F{jj} = F{jj};
+            Settings.SSE{jj} = SSE{jj};
+            data.SSE{jj} = SSE{jj};
+            data.F{jj} = F{jj};
             data.phi1rn(jj) = phi1;
             data.PHIrn(jj) = PHI;
             data.phi2rn(jj) = phi2;
+            
+        end
+        
+        data.g{jj} = [phi1 PHI phi2];
+        Settings.NewAngles(jj,1:3) = [phi1 PHI phi2];
         
     end
+    Settings.XX = XX;
+    if strcmp(Settings.ScanType,'L')
+        
+        data.phi1rn = LFileVals{1};
+        data.PHIrn = LFileVals{2};
+        data.phi2rn = LFileVals{3};
+        data.xpos = LFileVals{4};
+        data.ypos = LFileVals{5};
+        
+    else
+        data.xpos = Settings.XData;
+        data.ypos = Settings.YData;
+    end
     
-    data.g{jj} = [phi1 PHI phi2];
-    Settings.NewAngles(jj,1:3) = [phi1 PHI phi2];
-    
-end
-Settings.XX = XX;
-if strcmp(Settings.ScanType,'L')
-    
-    data.phi1rn = LFileVals{1};
-    data.PHIrn = LFileVals{2};
-    data.phi2rn = LFileVals{3};
-    data.xpos = LFileVals{4};
-    data.ypos = LFileVals{5};
-    
-else
-    data.xpos = Settings.XData;
-    data.ypos = Settings.YData;
-end
-
-Settings.AverageSSE = mean([Settings.SSE{:}]);
+    Settings.AverageSSE = mean([Settings.SSE{:}]);
     Settings.data = data;
 else
     Settings.SSE = Settings.data.SSE;
@@ -210,11 +211,11 @@ end
 [~,~,ext] = fileparts(Settings.ScanFilePath);
 if strcmp(ext,'.ang')
     WriteHROIMAngFile(Settings.ScanFilePath,fullfile(OutputPath, ['Corr_' FileName '.ang']),...
-        Settings.NewAngles(:,1),Settings.NewAngles(:,2),Settings.NewAngles(:,3)...
+        Settings.NewAngles(Inds,1),Settings.NewAngles(Inds,2),Settings.NewAngles(Inds,3)...
         ,Settings.SSE);
 elseif strcmp(ext,'.ctf')
     WriteHROIMCtfFile(Settings.ScanFilePath,fullfile(OutputPath, ['Corr_' FileName '.ctf']),...
-        Settings.NewAngles(:,1),Settings.NewAngles(:,2),Settings.NewAngles(:,3)...
+        Settings.NewAngles(Inds,1),Settings.NewAngles(Inds,2),Settings.NewAngles(Inds,3)...
         ,Settings.SSE);
 end
 

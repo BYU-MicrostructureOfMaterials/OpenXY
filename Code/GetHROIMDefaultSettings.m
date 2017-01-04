@@ -48,7 +48,7 @@ Settings.NumSkipPts = 0;
 Settings.IQCutoff = 0;
 %Split Dislocation Density
 Settings.DoDDS = false;
-Settings.DDSMethod = 'Nye-Kroner'; %{'Nye-Kroner','Nye-Kroner (Pantleon))','Distortion Matching'}
+Settings.DDSMethod = 'Nye-Kroner'; %{'Nye-Kroner','Nye-Kroner (Pantleon)','Distortion Matching'}
 %Kernel Average Misorientation
 Settings.KernelAvgMisoPath = '';
 %Calculation Options

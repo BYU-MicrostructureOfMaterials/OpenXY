@@ -105,7 +105,7 @@ end
 %% Get Grain ID's
 if ~isfield(Settings,'grainID') || ~isfield(Settings,'Phase')
     [Settings.grainID, Settings.Phase] = GetGrainInfo(...
-            Settings.ScanFilePath, Settings.Material, Settings.ScanParams, Settings.Angles, Settings.MisoTol);
+            Settings.ScanFilePath, Settings.Material, Settings.ScanParams, Settings.Angles, Settings.MisoTol, Settings.GrainMethod);
 end
 
 %% Get Reference Image(s) when not Simulated Method

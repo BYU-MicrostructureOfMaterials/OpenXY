@@ -242,6 +242,7 @@ switch Settings.HROIMMethod
         
         clear global rs cs Gs
 %         disp(RefImagePath);
+        gr = euler2gmat(Settings.Angles(RefImageInd,:));
         [F1,SSE1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,RefImageInd);
         
     case 'Hybrid'
