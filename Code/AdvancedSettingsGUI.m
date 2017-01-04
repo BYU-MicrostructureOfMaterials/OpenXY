@@ -96,13 +96,19 @@ SetPopupValue(handles.GrainRefType,Settings.GrainRefImageType);
 %Grain ID Method
 set(handles.GrainMethod,'String',{'Grain File','Find Grains'});
 [~,~,ext] = fileparts(Settings.ScanFilePath);
+
+    
 if strcmp(ext,'.ctf')
     SetPopupValue(handles.GrainMethod,'Find Grains');
+    set(handles.GrainMethod,'Enable','off')
+elseif strcmp(Settings.ScanType,'Hexagonal') % Find Grains not yet compatibile with hexagonal scan
+    SetPopupValue(handles.GrainMethod,'Grain File')
     set(handles.GrainMethod,'Enable','off')
 else
     SetPopupValue(handles.GrainMethod,Settings.GrainMethod);
     set(handles.GrainMethod,'Enable','on');
 end
+
 %Min Grain Size
 set(handles.MinGrainSize,'String',num2str(Settings.MinGrainSize))
 
@@ -419,7 +425,7 @@ function MisoTol_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of MisoTol as text
 %        str2double(get(hObject,'String')) returns contents of MisoTol as a double
 handles.Settings.MisoTol = str2double(get(hObject,'String'));
-handles.Settings.grainID = UpdateGrainIDs(handles);
+handles.Settings.grainID = CalcGrainID(handles.Settings);
 guidata(hObject,handles);
 GrainRefType_Callback(handles.GrainRefType, eventdata, handles);
 
@@ -823,7 +829,7 @@ if ~strcmp(handles.Settings.GrainMethod,Method) || init
     handles.Settings.GrainMethod = Method;
     if strcmp(Method,'Find Grains')
         set(handles.MinGrainSize,'Enable','on')
-        handles.Settings.grainID = UpdateGrainIDs(handles);
+        handles.Settings.grainID = CalcGrainID(handles.Settings);
     else
         set(handles.MinGrainSize,'Enable','off')
         handles.Settings.grainID = handles.Settings.GrainVals.grainID;
@@ -858,7 +864,7 @@ function MinGrainSize_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of MinGrainSize as text
 %        str2double(get(hObject,'String')) returns contents of MinGrainSize as a double
 handles.Settings.MinGrainSize = str2double(get(hObject,'String'));
-handles.Settings.grainID = UpdateGrainIDs(handles);
+handles.Settings.grainID = CalcGrainID(handles.Settings);
 guidata(hObject,handles);
 GrainRefType_Callback(handles.GrainRefType, eventdata, handles);
 
@@ -990,16 +996,6 @@ else
     AutoRefInds = GetRefImageInds(...
         {handles.Settings.Angles;handles.Settings.IQ;handles.Settings.CI;handles.Settings.Fit}, handles.Settings.grainID);
 end
-
-function grainID = UpdateGrainIDs(handles)
-ScanParams = handles.Settings.ScanParams;
-ScanParams.Nx = handles.Settings.Nx;
-ScanParams.Ny = handles.Settings.Ny;
-ScanParams.ScanType = handles.Settings.ScanType;
-Input1 = handles.Settings.ScanFilePath;
-grainID = GetGrainInfo(Input1,handles.Settings.Phase{1},ScanParams,...
-    handles.Settings.Angles,handles.Settings.MisoTol,handles.Settings.GrainMethod,handles.Settings.MinGrainSize);
-
 
 function GrainMap = OpenGrainMap(handles)
 if ~ishandle(handles.GrainMap)
