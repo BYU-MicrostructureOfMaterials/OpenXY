@@ -628,5 +628,16 @@ if ~isempty(handles.MainGUI) && isvalid(handles.MainGUI)
         UpdateImageFcn = get(ROIHandles.SimPatFrame,'ButtonDownFcn');
         UpdateImageFcn(ROIHandles.HideROIs,[]);
     end
+    
+    if ~isempty(MainHandles.TestGeomGUI) && isvalid(MainHandles.TestGeomGUI)
+        % Get handles for Test Geometry GUI
+        TestGeomHandles = guidata(MainHandles.TestGeomGUI);
+        % Update Settings
+        TestGeomHandles.Settings = handles.Settings;
+        guidata(TestGeomHandles.TestGeometryGUI,TestGeomHandles);
+        % Update Graphs
+        PlotPatternFcn = get(TestGeomHandles.NumFam,'Callback');
+        PlotPatternFcn(TestGeomHandles.NumFam,[]);
+    end
 end
 
