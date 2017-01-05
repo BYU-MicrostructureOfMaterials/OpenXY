@@ -20,8 +20,10 @@ Settings.ROISize = round((Settings.ROISizePercent * .01)*Settings.PixelSize);
 if ~isfield(Settings,'ImageNamesList')
     disp('Reading Scan File...')
     Settings = ImportScanInfo(Settings,Settings.ScanFilePath);
-    disp('Generate Image Names List...')
-    Settings.ImageNamesList = ImportImageNamesList(Settings);
+    if ~isempty(Settings.FirstImagePath)
+        disp('Generate Image Names List...')
+        Settings.ImageNamesList = ImportImageNamesList(Settings);
+    end
 end
 if ~isfield(Settings,'grainID')
     disp('Getting Grain Info...')
@@ -133,6 +135,7 @@ end
 % Get reference images and assign the name to each scan image (or main
 % image - image b in the case of an L-grid scan)
 if ~strcmp(Settings.HROIMMethod,'Simulated')&& ~isfield(Settings,'RefInd')
+    disp('Getting Reference Image Indices...')
     if Settings.RefImageInd~=0
         Settings.RefInd(1:Settings.ScanLength,1)= Settings.RefImageInd;
     else

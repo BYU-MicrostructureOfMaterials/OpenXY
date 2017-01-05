@@ -222,6 +222,15 @@ function SaveButton_Callback(hObject, eventdata, handles)
 if ~isempty(handles.MainGUI) && isvalid(handles.MainGUI)
     MainHandles = guidata(handles.MainGUI);
     MainHandles.Settings = handles.Settings;
+    
+    % Orientation-based GND
+    if strcmp(handles.Settings.GNDMethod,'Orientation') && ~handles.Settings.DoStrain
+        MainHandles.SkipImageLoad = true;
+    end
+    
+    % Call enableRunButton
+    enableRunButton = getappdata(handles.MainGUI,'enableRunButton');
+    enableRunButton(MainHandles);
     guidata(handles.MainGUI,MainHandles);
 end
 handles.PrevSettings = handles.Settings;

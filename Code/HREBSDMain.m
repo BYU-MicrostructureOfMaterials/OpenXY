@@ -7,7 +7,7 @@
 function Settings = HREBSDMain(Settings)
 % tic
 if Settings.EnableProfiler; profile on; end;
-if Settings.DisplayGUI; disp('Dont forget to change PC if the image is cropped by ReadEBSDImage.m'); end;
+%if Settings.DisplayGUI; disp('Dont forget to change PC if the image is cropped by ReadEBSDImage.m'); end;
 
 %Sets default color scheme for all figures and axes
 set(0,'DefaultFigureColormap',jet);
@@ -30,6 +30,7 @@ XX = repmat({zeros(Settings.NumROIs,3)},1,Settings.ScanLength);
 if Settings.DoStrain
 tic
 if Settings.DoParallel > 1
+    disp('Setting up parallel processing...')
     NumberOfCores = Settings.DoParallel;
     try
         ppool = gcp('nocreate');
@@ -49,6 +50,8 @@ if Settings.DoParallel > 1
         disp('Starting cross-correlation');
         ppm = ParforProgMon('Cross Correlation Analysis ',N,1,400,50);
     end
+    
+    disp('Running strain cross-correlation...')
     parfor(ImageInd = 1:N,NumberOfCores)
 %         disp(ImageInd)
         %Returns F as either a cell array of deformation gradient tensors
@@ -74,6 +77,7 @@ if Settings.DoParallel > 1
 else
     if Settings.DisplayGUI; h = waitbar(0,'Single Processor Progress'); end;
     
+    disp('Running strain cross-correlation...')
     for ImageInd = 1:Settings.ScanLength
         %         tic
 %         disp(ImageInd)
@@ -192,6 +196,7 @@ if Settings.CalcDerivatives
     
     % Split Dislocation Density (Code by Tim Ruggles, added 3/5/2015)
     if Settings.DoDDS
+        disp('Starting split dislocation density...')
         temp = load(Settings.AnalysisParamsPath);
         alpha_data = temp.alpha_data;
         clear temp

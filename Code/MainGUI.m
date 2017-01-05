@@ -181,7 +181,9 @@ handles = guidata(handles.ProcessorsPopup);
 
 %Orientation-based GND
 if strcmp(handles.Settings.GNDMethod,'Orientation') && ~handles.Settings.DoStrain
-    handles.ImageLoaded = true;
+    handles.SkipImageLoad = true;
+else
+    handles.SkipImageLoad = false;
 end
 
 %Files
@@ -201,6 +203,9 @@ set(handles.RunButton,'String','Run');
 set(handles.RunButton,'BackgroundColor',[0 1 0]);
 enableRunButton(handles);
 
+% Store Key functions
+setappdata(hObject,'enableRunButton',@enableRunButton);
+
 % Instantiate holders for other GUIs
 handles.MicroscopeGUI = [];
 handles.AdvancedGUI = [];
@@ -210,6 +215,7 @@ handles.PCGUI = [];
 
 % Update handles structure
 guidata(hObject, handles);
+
 % UIWAIT makes MainGUI wait for user response (see UIRESUME)
 % uiwait(handles.MainGUI);
 
@@ -266,32 +272,32 @@ if name ~= 0
             handles.Settings.ScanFilePath = fullfile(path,name);
         else
             handles.Settings = ImportScanInfo(handles.Settings,name,path);
-
-        %Set ScanType
-        SetPopupValue(handles.ScanTypePopup,handles.Settings.ScanType);
-        
-        %Validate Scan Size
-        SizeStr =  [num2str(handles.Settings.Nx) 'x' num2str(handles.Settings.Ny)];
-        set(handles.ScanSizeText,'String',SizeStr);
-        
-        %Check if Material Read worked
-        handles.ScanFileLoaded = true;
-        MaterialPopup_Callback(handles.MaterialPopup, [], handles);
-        handles = guidata(handles.MainGUI);
-        
-        if filterind == 1 %Not h5
-            %Get Image Names
-            if handles.ImageLoaded
-                handles.Settings.ImageNamesList = ImportImageNamesList(handles.Settings);
+            
+            %Set ScanType
+            SetPopupValue(handles.ScanTypePopup,handles.Settings.ScanType);
+            
+            %Validate Scan Size
+            SizeStr =  [num2str(handles.Settings.Nx) 'x' num2str(handles.Settings.Ny)];
+            set(handles.ScanSizeText,'String',SizeStr);
+            
+            %Check if Material Read worked
+            handles.ScanFileLoaded = true;
+            MaterialPopup_Callback(handles.MaterialPopup, [], handles);
+            handles = guidata(handles.MainGUI);
+            
+            if filterind == 1 %Not h5
+                %Get Image Names
+                if handles.ImageLoaded
+                    handles.Settings.ImageNamesList = ImportImageNamesList(handles.Settings);
+                end
+            else
+                set(handles.SelectImageButton,'Enable','off');
+                handles.ImageLoaded = 1;
+                set(handles.FirstImageNameText,'String','N/A');
+                set(handles.ImageFolderText,'String','N/A');
+                set(handles.ImageSizeText,'String','N/A');
             end
-        else
-            set(handles.SelectImageButton,'Enable','off');
-            handles.ImageLoaded = 1;
-            set(handles.FirstImageNameText,'String','N/A');
-            set(handles.ImageFolderText,'String','N/A');
-            set(handles.ImageSizeText,'String','N/A');
         end
-    end 
     end
     
     %Remove Subscan
@@ -631,6 +637,7 @@ function ExportSettings_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 assignin('base','Settings',handles.Settings)
+SaveSettings(handles)
 
 % --------------------------------------------------------------------
 function Close_Callback(hObject, eventdata, handles)
@@ -671,9 +678,6 @@ if handles.ScanFileLoaded
     handles.AdvancedGUI = AdvancedSettingsGUI(handles.MainGUI,handles.Fast);
 else
     warndlg({'Cannot open Advanced Settings menu'; 'Must select scan file data.'},'OpenXY: Invalid Operation');
-end
-if strcmp(handles.Settings.GNDMethod,'Orientation') && ~handles.Settings.DoStrain
-    handles.ImageLoaded = true;
 end
 enableRunButton(handles)
 guidata(hObject,handles);
@@ -735,7 +739,7 @@ PCCalSettings_Callback(handles.PCCalSettings, eventdata, handles); handles = gui
 
 
 function enableRunButton(handles)
-if handles.ScanFileLoaded && handles.ImageLoaded && handles.OutputLoaded
+if handles.ScanFileLoaded && (handles.ImageLoaded || handles.SkipImageLoad) && handles.OutputLoaded
     set(handles.RunButton,'Enable','on');
 else
     set(handles.RunButton,'Enable','off');

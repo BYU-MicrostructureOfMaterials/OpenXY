@@ -80,13 +80,14 @@ if handles.Fast
             zstar = Settings.ScanParams.zstar;
             Settings.PCList = {xstar,ystar,zstar,...
                 'Scan File','Naive','Default',{''}};
-        end
-        if isfield(Settings,'XStar')
+        elseif isfield(Settings,'XStar')
             xstar = Settings.XStar(1);
             ystar = Settings.YStar(1);
             zstar = Settings.ZStar(1);
             Settings.PCList = [Settings.PCList; {xstar,ystar,zstar,...
                 'From Settings','Naive','Manual',{''}}];
+        else
+            
         end
     end
     
