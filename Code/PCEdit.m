@@ -418,9 +418,9 @@ axes(handles.StrainMinaxes)
 
 %Plot Selected graph
 if get(handles.IPFPlot,'Value')
-    PlotScan(handles.IPF_map,'IPF')
+    PlotScan(handles.IPF_map,'IPF');
 elseif get(handles.IQPlot,'Value')
-    PlotScan(handles.IQ_map,'Image Quality')
+    PlotScan(handles.IQ_map,'Image Quality');
 end
 
 %Plot Calibration Points

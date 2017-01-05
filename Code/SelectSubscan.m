@@ -1,7 +1,7 @@
 function [X,Y] = SelectSubscan(im,PlotType)
 
 selectfig = figure;
-PlotScan(im,PlotType)
+PlotScan(im,PlotType);
 axis image
 title('Press RETURN key to select area');
 
@@ -37,7 +37,7 @@ while redo
         end   
 
         hold off
-        PlotScan(im,PlotType)
+        PlotScan(im,PlotType);
         axis image
         hold on
         plot(Xind,Yind,'kd','MarkerFaceColor','k');

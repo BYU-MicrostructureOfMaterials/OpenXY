@@ -558,7 +558,7 @@ if get(handles.PCPlot,'Value')
     colormap jet
     shading flat
 elseif get(handles.IPFPlot,'Value')
-    PlotScan(handles.IPF_map,'IPF')
+    PlotScan(handles.IPF_map,'IPF');
     
     %Plot Calibration Points
     if ismember(handles.Settings.PCList{cur,4},{'Strain Minimization','Grid'})
@@ -568,7 +568,7 @@ elseif get(handles.IPFPlot,'Value')
     end
     guidata(handles.PCGUI,handles);
 elseif get(handles.IQPlot,'Value')
-    PlotScan(handles.IQ_map,'Image Quality')
+    PlotScan(handles.IQ_map,'Image Quality');
     
     %Plot Calibration Points
     if ismember(handles.Settings.PCList{cur,4},{'Strain Minimization','Grid'})
