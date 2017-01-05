@@ -72,8 +72,8 @@ else
         handles.Fast = varargin{2};
     end
     handles.MainGUI = varargin{1};
-    MainHandle = guidata(handles.MainGUI);
-    Settings = MainHandle.Settings;
+    MainHandles = guidata(handles.MainGUI);
+    Settings = MainHandles.Settings;
 end
 handles.PrevSettings = Settings;
 
@@ -90,7 +90,7 @@ if strcmp(ext,'.h5')
 end
 
 %Set Position and Visuals
-if ~isempty(handles.MainGUI)
+if ~isempty(handles.MainGUI) && isvalid(handles.MainGUI)
     MainSize = get(handles.MainGUI,'Position');
     set(hObject,'Units','pixels');
     GUIsize = get(hObject,'Position');
@@ -99,13 +99,14 @@ if ~isempty(handles.MainGUI)
     if ismac
         GUIsize(3) = GUIsize(3)*1.2;
     end
-    set(hObject,'Position',[MainSize(1) height GUIsize(3) GUIsize(4)]);
+    set(hObject,'Position',[MainSize(1)-230-20 height GUIsize(3) GUIsize(4)]);
     movegui(hObject,'onscreen')
 end
 handles.ColorSave = get(handles.SaveButton,'BackgroundColor');
 handles.ColorEdit = [1 1 0]; % Yellow
 gui = findall(handles.ROISettingsGUI,'KeyPressFcn','');
 set(gui,'KeyPressFcn',@ROISettingsGUI_KeyPressFcn);
+
 
 %Set Images to Grayscale
 colormap gray;

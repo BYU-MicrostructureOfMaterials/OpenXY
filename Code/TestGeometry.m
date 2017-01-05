@@ -22,7 +22,7 @@ function varargout = TestGeometry(varargin)
 
 % Edit the above text to modify the response to help TestGeometryGUI
 
-% Last Modified by GUIDE v2.5 04-Jan-2017 16:38:35
+% Last Modified by GUIDE v2.5 05-Jan-2017 11:15:52
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -151,6 +151,17 @@ handles.g = g;
     
 % Plot Map
 MapSelection_SelectionChangedFcn(handles.MapSelection, eventdata, handles)
+
+% Set Position
+if ~isempty(handles.MainGUI) && isvalid(handles.MainGUI)
+    MainSize = get(handles.MainGUI,'Position');
+    set(hObject,'Units','pixels');
+    GUIsize = get(hObject,'Position');
+    set(hObject,'Position',[MainSize(1)+MainSize(3)+20 MainSize(2)-(GUIsize(4)-MainSize(4))+26 GUIsize(3) GUIsize(4)]);
+    movegui(hObject,'onscreen');
+end
+gui = findall(handles.TestGeometryGUI,'KeyPressFcn','');
+set(gui,'KeyPressFcn',@TestGeometryGUI_KeyPressFcn);
 
 % Plot Pattern Prompt
 axes(handles.Pattern)
@@ -473,3 +484,18 @@ function BlinkText_ButtonDownFcn(hObject, eventdata, handles)
 % hObject    handle to BlinkText (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on key press with focus on TestGeometryGUI and none of its controls.
+function TestGeometryGUI_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to TestGeometryGUI (see GCBO)
+% eventdata  structure with the following fields (see MATLAB.UI.FIGURE)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+handles = guidata(hObject);
+% Close Figure with CTRL-L
+if strcmp(eventdata.Key,'l') && ~isempty(eventdata.Modifier) && strcmp(eventdata.Modifier,'control')
+    SaveClose_Callback(handles.SaveClose, eventdata, handles);
+end

@@ -22,7 +22,7 @@ function varargout = PCGUI(varargin)
 
 % Edit the above text to modify the response to help PCGUI
 
-% Last Modified by GUIDE v2.5 21-Jun-2016 07:28:58
+% Last Modified by GUIDE v2.5 05-Jan-2017 11:17:24
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -65,8 +65,8 @@ else
         handles.Fast = varargin{2};
     end
     handles.MainGUI = varargin{1};
-    MainHandle = guidata(handles.MainGUI);
-    Settings = MainHandle.Settings;
+    MainHandles = guidata(handles.MainGUI);
+    Settings = MainHandles.Settings;
 end
 handles.PrevSettings = Settings;
 
@@ -136,6 +136,26 @@ else
     index = 1;
 end
 set(handles.PCList,'Value',index);
+
+%Set Position
+if ~isempty(handles.MainGUI) && isvalid(handles.MainGUI)
+    MainSize = get(handles.MainGUI,'Position');
+    set(hObject,'Units','pixels');
+    GUIsize = get(hObject,'Position');
+    height = MainSize(2)+MainSize(4)+70;
+    if ~(~isempty(MainHandles.TestGeomGUI) && isvalid(MainHandles.TestGeomGUI))
+        pos = [MainSize(1)+MainSize(3)+20  MainSize(2)-(GUIsize(4)-MainSize(4))+26 GUIsize(3) GUIsize(4)];
+    elseif ~(~isempty(MainHandles.ROIGUI) && isvalid(MainHandles.ROIGUI))
+        pos = [MainSize(1) height GUIsize(3) GUIsize(4)];
+    else
+        ROIsize = get(MainHandles.ROIGUI,'Position');
+        pos = [ROIsize(1)+ROIsize(3)+20 height GUIsize(3) GUIsize(4)];
+    end
+    set(hObject,'Position',pos);
+    movegui(hObject,'onscreen');
+end
+gui = findall(handles.PCGUI,'KeyPressFcn','');
+set(gui,'KeyPressFcn',@PCGUI_KeyPressFcn);
 
 % Update handles structure
 handles.Settings = Settings;
@@ -641,3 +661,18 @@ if ~isempty(handles.MainGUI) && isvalid(handles.MainGUI)
     end
 end
 
+
+
+% --- Executes on key press with focus on PCGUI and none of its controls.
+function PCGUI_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to PCGUI (see GCBO)
+% eventdata  structure with the following fields (see MATLAB.UI.FIGURE)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+handles = guidata(hObject);
+% Close Figure with CTRL-L
+if strcmp(eventdata.Key,'l') && ~isempty(eventdata.Modifier) && strcmp(eventdata.Modifier,'control')
+    CloseButton_Callback(handles.CloseButton, eventdata, handles);
+end

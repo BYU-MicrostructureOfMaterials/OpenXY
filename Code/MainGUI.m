@@ -22,7 +22,7 @@ function varargout = MainGUI(varargin)
 
 % Edit the above text to modify the response to help MainGUI
 
-% Last Modified by GUIDE v2.5 04-Jan-2017 11:29:50
+% Last Modified by GUIDE v2.5 05-Jan-2017 11:28:22
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -64,18 +64,19 @@ if ~isempty(varargin)
         case 1
             if isstruct(varargin{1})
                 handles.Settings = MergeSettings(handles.Settings,varargin{1});
+                SaveSettings(handles);
             elseif (ischar(varargin{1}) && strcmp(varargin{1},'Fast')) || (islogical(varargin{1}) && varargin{1})
                 handles.Fast = true;
-            end 
+            end
         case 2
             if isstruct(varargin{1})
-    handles.Settings = MergeSettings(handles.Settings,varargin{1});
-end
+                handles.Settings = MergeSettings(handles.Settings,varargin{1});
+                SaveSettings(handles);
+            end
             if (ischar(varargin{2}) && strcmp(varargin{2},'Fast')) || (islogical(varargin{2}) && varargin{2})
                 handles.Fast = true;
             end
     end
-    
 end
 
 %Set up Fast GUI
@@ -92,6 +93,9 @@ end
 if ~exist(OpenXYPath,'dir')
     OpenXYPath = fileparts(which('MainGUI'));
     save('SystemSettings','OpenXYPath');
+end
+if exist('pos','var')
+    set(hObject,'Position',pos)
 end
 
 %Change working directory
@@ -202,6 +206,7 @@ handles.MicroscopeGUI = [];
 handles.AdvancedGUI = [];
 handles.ROIGUI = [];
 handles.TestGeomGUI = [];
+handles.PCGUI = [];
 
 % Update handles structure
 guidata(hObject, handles);
@@ -225,8 +230,10 @@ function MainGUI_CloseRequestFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: delete(hObject) closes the figure
-Settings = handles.Settings;
-save('Settings.mat','Settings');
+SaveSettings(handles);
+pos = get(handles.MainGUI,'Position');
+save('SystemSettings.mat','pos','-append')
+CloseGUIs(handles)
 delete(hObject);
 
 
@@ -433,6 +440,7 @@ set(handles.RunButton,'Enable','off');
 
 % Run HREBSD Main with error catching
 try
+    SaveSettings(handles);
     Settings = HREBSDMain(Settings);
 catch ME
     handles.ScanFileLoaded = false;
@@ -648,6 +656,11 @@ else
     warndlg({'Cannot open ROI Settings menu'; 'Must select scan file data and first image'},'OpenXY: Invalid Operation');
 end
 guidata(hObject,handles);
+% Relocate PCGUI
+if ~isempty(handles.PCGUI) && isvalid(handles.PCGUI)
+    PCCalSettings_Callback(handles.PCCalSettings, eventdata, handles); handles = guidata(hObject);
+end
+guidata(hObject,handles);
 
 % --------------------------------------------------------------------
 function AdvancedSettings_Callback(hObject, eventdata, handles)
@@ -701,6 +714,23 @@ else
     warndlg({'Cannot open Test Geometry menu';'Must select scan file data and first image'},'OpenXY: Invalid Operation')
 end
 guidata(hObject,handles);
+% Relocate PCGUI
+if ~isempty(handles.PCGUI) && isvalid(handles.PCGUI)
+    PCCalSettings_Callback(handles.PCCalSettings, eventdata, handles); handles = guidata(hObject);
+end
+guidata(hObject,handles);
+
+% --------------------------------------------------------------------
+function OpenAll_Callback(hObject, eventdata, handles)
+% hObject    handle to OpenAll (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ROISettings_Callback(handles.ROISettings, eventdata, handles); handles = guidata(hObject);
+TestGeometry_Callback(handles.TestGeometry, eventdata, handles); handles = guidata(hObject);
+AdvancedSettings_Callback(handles.AdvancedSettings, eventdata, handles); handles = guidata(hObject);
+MicroscopeSettings_Callback(handles.MicroscopeSettings, eventdata, handles); handles = guidata(hObject);
+PCCalSettings_Callback(handles.PCCalSettings, eventdata, handles); handles = guidata(hObject);
+
 
 function enableRunButton(handles)
 if handles.ScanFileLoaded && handles.ImageLoaded && handles.OutputLoaded
@@ -784,3 +814,22 @@ end
 if ~isempty(handles.ROIGUI) && isvalid(handles.ROIGUI)
     close(handles.ROIGUI)
 end
+if ~isempty(handles.PCGUI) && isvalid(handles.PCGUI)
+    close(handles.PCGUI)
+end
+if ~isempty(handles.TestGeomGUI) && isvalid(handles.TestGeomGUI)
+    close(handles.TestGeomGUI)
+end
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over text31.
+function text31_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to text31 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+CloseGUIs(handles)
+
+function SaveSettings(handles)
+Settings = handles.Settings;
+save('Settings.mat','Settings');

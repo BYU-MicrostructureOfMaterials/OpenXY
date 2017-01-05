@@ -166,7 +166,7 @@ if ~isempty(handles.MainGUI)
     MainSize = get(handles.MainGUI,'Position');
     set(hObject,'Units','pixels');
     GUIsize = get(hObject,'Position');
-    set(hObject,'Position',[MainSize(1)-GUIsize(3)-20 MainSize(2) GUIsize(3) GUIsize(4)]);
+    set(hObject,'Position',[MainSize(1)-GUIsize(3)-20 MainSize(2)-(GUIsize(4)-MainSize(4))+26 GUIsize(3) GUIsize(4)]);
     movegui(hObject,'onscreen');
 end
 handles.ColorSave = get(handles.SaveButton,'BackgroundColor');
