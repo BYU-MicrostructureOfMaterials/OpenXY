@@ -201,6 +201,7 @@ if ~isempty(handles.MainGUI) && isvalid(handles.MainGUI)
     MainHandles.Settings = handles.Settings;
     guidata(handles.MainGUI,MainHandles);
 end
+UpdateTestGeom(handles)
 handles.PrevSettings = handles.Settings;
 handles.edited = false;
 guidata(hObject,handles);
@@ -791,3 +792,19 @@ function SimPatFrame_ButtonDownFcn(hObject, eventdata, handles)
 % simulated pattern from other GUIs
 DrawSimPath(handles)
 guidata(hObject, handles);
+
+function UpdateTestGeom(handles)
+if ~isempty(handles.MainGUI) && isvalid(handles.MainGUI)
+    MainHandles = guidata(handles.MainGUI);
+    if ~isempty(MainHandles.TestGeomGUI) && isvalid(MainHandles.TestGeomGUI)
+        TestGeomHandles = guidata(MainHandles.TestGeomGUI);
+        % Update Settings
+        TestGeomHandles.Settings = handles.Settings;
+        guidata(TestGeomHandles.TestGeometryGUI,TestGeomHandles);
+        if get(TestGeomHandles.Filter,'Value')
+            % Update Graphs
+            PlotPatternFcn = get(TestGeomHandles.NumFam,'Callback');
+            PlotPatternFcn(TestGeomHandles.NumFam,[]);
+        end
+    end
+end

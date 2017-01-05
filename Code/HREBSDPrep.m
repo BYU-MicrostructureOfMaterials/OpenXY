@@ -32,7 +32,7 @@ if ~isfield(Settings,'grainID')
 end
 
 %% Validate SplitDD Materials
-if ~CheckSplitDDMaterials(unique(Settings.Phase))
+if Settings.DoDDS && ~CheckSplitDDMaterials(unique(Settings.Phase))
     Settings.DoDDS = false;
 end
 

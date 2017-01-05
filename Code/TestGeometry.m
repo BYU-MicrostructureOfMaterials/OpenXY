@@ -22,7 +22,7 @@ function varargout = TestGeometry(varargin)
 
 % Edit the above text to modify the response to help TestGeometryGUI
 
-% Last Modified by GUIDE v2.5 05-Jan-2017 11:15:52
+% Last Modified by GUIDE v2.5 05-Jan-2017 13:00:21
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -75,7 +75,7 @@ if ~isfield(Settings,'HREBSDPrep') || ~Settings.HREBSDPrep
     if ~isempty(handles.MainGUI) && isvalid(handles.MainGUI)
         MainHandles = guidata(handles.MainGUI);
         MainHandles.Settings = Settings;
-        guidata(handles.MainGUI,MainHandles);
+        guidata(MainHandles.MainGUI,MainHandles);
     end
 end
 handles.Settings = Settings;
@@ -165,7 +165,7 @@ set(gui,'KeyPressFcn',@TestGeometryGUI_KeyPressFcn);
 
 % Plot Pattern Prompt
 axes(handles.Pattern)
-text(0.5,0.5,{'Select a pattern by double-clicking'; 'a point on the map to the left'},'HorizontalAlignment','center')
+text(0.5,0.5,{'Select a pattern by clicking'; 'a point on the map to the left'},'HorizontalAlignment','center')
 axis off
 
 % Choose default command line output for TestGeometryGUI
@@ -249,7 +249,48 @@ function Map_ButtonDownFcn(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+
+% --- Executes on mouse motion over figure - except title and menu.
+function TestGeometryGUI_WindowButtonMotionFcn(hObject, eventdata, handles)
+% hObject    handle to TestGeometryGUI (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+pt = get(handles.Map,'currentpoint');
+rows = handles.Settings.Nx+0.5;
+cols = handles.Settings.Ny+0.5;
+handles.overicon =  (pt(1,1)>=0.5 && pt(1,1)<=rows) && (pt(1,2)>=0.5 && pt(1,2)<=cols); 
+if ~handles.overicon
+    set(handles.TestGeometryGUI,'pointer','arrow');
+else
+    set(handles.TestGeometryGUI,'pointer','crosshair');
+end
+guidata(hObject,handles);
+
+% --- Executes on mouse press over figure background, over a disabled or
+% --- inactive control, or over an axes background.
+function TestGeometryGUI_WindowButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to TestGeometryGUI (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if handles.overicon
+    if handles.ind == 0
+        set(handles.NumFam,'UserData',true);
+    end
+    Settings = handles.Settings;
+    n = Settings.Nx; m = Settings.Ny;
+    
+    % Get Selected Location
+    pt = get(handles.Map,'currentpoint');
+    x = round(pt(1,1));
+    y = round(pt(1,2));
+    handles.ind = handles.indi(y,x);
+    guidata(hObject,handles);
+    PlotPattern(handles);
+end
+    
+
 function SelectPoint(im,~)
+return
 handles = get(im,'UserData');
 Settings = handles.Settings;
 n = Settings.Nx; m = Settings.Ny;
@@ -326,11 +367,16 @@ width = WidthOptions(val);
 axes(handles.Pattern)
 if get(handles.Filter,'Value')
     ImageFilter = Settings.ImageFilter;
+    if strcmp(Settings.ImageFilterType,'standard')
+        I2=ReadEBSDImage(Settings.ImageNamesList{ind},ImageFilter);
+    else
+        I2=localthresh(Settings.ImageNamesList{ind});
+    end
 else
-    ImageFilter = [0 0 0 0];
+    I2=ReadEBSDImage(Settings.ImageNamesList{ind},[0 0 0 0]);
 end
-I2 = ReadEBSDImage(Settings.ImageNamesList{ind},ImageFilter);
-imagesc(I2); axis image; xlim([0 pixsize]); ylim([0 pixsize]); colormap('gray'); axis off;
+
+im = imagesc(I2); axis image; xlim([0 pixsize]); ylim([0 pixsize]); colormap('gray'); axis off;
 genEBSDPatternHybridLineOverlay(g,paramspat,eye(3),Material.lattice,Material.a1,Material.b1,Material.c1,Material.axs,...
     'BlinkSpeed',speed,'Color',color,'MaxSpeed',handles.MaxSpeed,...
     'LineWidth',width);
@@ -499,3 +545,5 @@ handles = guidata(hObject);
 if strcmp(eventdata.Key,'l') && ~isempty(eventdata.Modifier) && strcmp(eventdata.Modifier,'control')
     SaveClose_Callback(handles.SaveClose, eventdata, handles);
 end
+
+
