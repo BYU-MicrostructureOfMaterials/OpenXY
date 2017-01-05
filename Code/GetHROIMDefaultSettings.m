@@ -65,6 +65,9 @@ Settings.CameraElevation = 10*pi/180; %degrees
 Settings.CameraAzimuthal = 0*pi/180; %degrees
 Settings.mperpix = 25;
 
+%% Status Variables
+Settings.HREBSDPrep = false; % Flag if HREBSD Prep has been run
+
 %% Old Variables
 Settings.DoUsePCFile = 0;
 Settings.PCFilePath = [];

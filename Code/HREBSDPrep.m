@@ -173,3 +173,5 @@ if ~isfield(Settings,'XStar')
         Settings.ZStar(1:FullLength) = zstar;
     end
 end
+
+Settings.HREBSDPrep = true;
