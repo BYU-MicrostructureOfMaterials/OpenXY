@@ -204,18 +204,20 @@ end
 
 % Overlay parameters
 p = inputParser;
-addParameter(p,'BlinkSpeed',0.5,@(x) isnumeric(x) && x>=0 && x<=1);
+addParameter(p,'BlinkSpeed',0.5,@(x) isnumeric(x));
 addParameter(p,'Color','g');
 addParameter(p,'LineWidth',0.5);
 addParameter(p,'MaxSpeed',2)
 parse(p,varargin{:})
-speed = p.Results.BlinkSpeed;
+period = p.Results.BlinkSpeed;
 color = p.Results.Color;
 width = p.Results.LineWidth;
 maxspeed = p.Results.MaxSpeed;
-period = round(speed*maxspeed,3)
 
 hold on;
+if strcmp(color,'holiday')
+    color = 'g';
+end
 h = plot(masterx,mastery,color,'LineWidth',width);
 if period == maxspeed
     set(h,'Visible','off')

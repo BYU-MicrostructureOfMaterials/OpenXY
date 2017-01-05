@@ -201,6 +201,7 @@ enableRunButton(handles);
 handles.MicroscopeGUI = [];
 handles.AdvancedGUI = [];
 handles.ROIGUI = [];
+handles.TestGeomGUI = [];
 
 % Update handles structure
 guidata(hObject, handles);
@@ -695,10 +696,11 @@ function TestGeometry_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 if handles.ScanFileLoaded && handles.ImageLoaded
-    TestGeometry(handles.Settings,get(handles.MainGUI,'Position'));
+    handles.TestGeomGUI = TestGeometry(handles.MainGUI);
 else
     warndlg({'Cannot open Test Geometry menu';'Must select scan file data and first image'},'OpenXY: Invalid Operation')
 end
+guidata(hObject,handles);
 
 function enableRunButton(handles)
 if handles.ScanFileLoaded && handles.ImageLoaded && handles.OutputLoaded

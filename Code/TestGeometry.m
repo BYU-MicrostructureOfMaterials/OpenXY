@@ -22,7 +22,7 @@ function varargout = TestGeometry(varargin)
 
 % Edit the above text to modify the response to help TestGeometryGUI
 
-% Last Modified by GUIDE v2.5 02-Jan-2017 16:36:58
+% Last Modified by GUIDE v2.5 04-Jan-2017 16:38:35
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -52,38 +52,66 @@ function TestGeometry_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to TestGeometryGUI (see VARARGIN)
 
+handles.outout = hObject;
+
 % Accept Settings from MainGUI or Load Settings.mat
 if isempty(varargin)
     stemp=load('Settings.mat');
     Settings = stemp.Settings;
     clear stemp
+    handles.MainGUI = [];
 else
-    Settings = varargin{1};
+    if length(varargin) == 2
+        handles.Fast = varargin{2};
+    end
+    handles.MainGUI = varargin{1};
+    MainHandle = guidata(handles.MainGUI);
+    Settings = MainHandle.Settings;
 end
-Settings = HREBSDPrep(Settings);
+
+% Excecute HREBSDPrep
+if ~isfield(Settings,'HREBSDPrep') || ~Settings.HREBSDPrep
+    Settings = HREBSDPrep(Settings);
+    if ~isempty(handles.MainGUI) && isvalid(handles.MainGUI)
+        MainHandles = guidata(handles.MainGUI);
+        MainHandles.Settings = Settings;
+        guidata(handles.MainGUI,MainHandles);
+    end
+end
 handles.Settings = Settings;
 
 % Set Max Blink Speed
-handles.MaxSpeed = 2;
+handles.MaxSpeed = 4;
 
 % Load previous settings
 if exist('SystemSettings.mat','file')
     load SystemSettings.mat
 end
 if ~exist('TestGeometrySettings','var')
-   TestGeometrySettings.blinkspeed = 0.5;
+   TestGeometrySettings.blinkspeed = 'Medium';
    TestGeometrySettings.color = 'green';
    TestGeometrySettings.MapType = 'Image Quality';
    TestGeometrySettings.LineWidth = 0.5;
 end
 
 % Populate Color Dropdown
-ColorString = {'yellow','magenta','cyan','red','green','blue','white','black'};
+ColorString = {'yellow','magenta','cyan','red','green','blue','white','black','holiday'};
 set(handles.ColorScheme,'String',ColorString);
 SetPopupValue(handles.ColorScheme,TestGeometrySettings.color);
 
 % Set Blink Speed
-set(handles.BlinkSpeedSlider,'Value',TestGeometrySettings.blinkspeed);
+SpeedOptions = {'No Blink','Slow','Medium','Fast','Hide Bands'};
+set(handles.BlinkSpeed,'String',SpeedOptions);
+SetPopupValue(handles.BlinkSpeed,TestGeometrySettings.blinkspeed);
+
+% Set Line Width
+LineOptions = {'Thin','Medium','Thick'};
+set(handles.LineWidth,'String',LineOptions);
+SetPopupValue(handles.LineWidth,TestGeometrySettings.LineWidth);
+
+% Set Number of Families (off until a point is selected)
+set(handles.NumFam,'Enable','off');
+set(handles.NumFam,'String','4');
 
 % Set Map Type
 if strcmp(TestGeometrySettings.MapType,'Image Quality')
@@ -136,7 +164,7 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 % UIWAIT makes TestGeometryGUI wait for user response (see UIRESUME)
-uiwait(handles.TestGeometryGUI);
+%uiwait(handles.TestGeometryGUI);
 
 
 % --- Outputs from this function are returned to the command line.
@@ -147,20 +175,14 @@ function varargout = TestGeometry_OutputFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Get default command line output from handles structure
-delete(handles.TestGeometryGUI);
+varargout{1} = handles.output;
 
 % --- Executes when user attempts to close TestGeometryGUI.
 function TestGeometryGUI_CloseRequestFcn(hObject, eventdata, handles)
 % hObject    handle to TestGeometryGUI (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
-% Hint: delete(hObject) closes the figure
-if strcmp(get(hObject,'waitstatus'),'waiting')
-    uiresume(hObject);
-else
-    delete(hObject);
-end
+delete(hObject);
 
 % --- Executes on button press in close.
 function close_Callback(hObject, eventdata, handles)
@@ -174,9 +196,9 @@ function SaveClose_Callback(hObject, eventdata, handles)
 % hObject    handle to SaveClose (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-TestGeometrySettings.blinkspeed = get(handles.BlinkSpeedSlider,'Value');
+TestGeometrySettings.blinkspeed = GetPopupString(handles.BlinkSpeed);
 TestGeometrySettings.color = GetPopupString(handles.ColorScheme);
-TestGeometrySettings.LineWidth = get(handles.LineWidth,'Value');
+TestGeometrySettings.LineWidth = GetPopupString(handles.LineWidth);
 if get(handles.IPFMap,'Value')
     TestGeometrySettings.MapType = 'IPF';
 else
@@ -217,11 +239,12 @@ function Map_ButtonDownFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 function SelectPoint(im,~)
-disp('pressed map')
-
 handles = get(im,'UserData');
 Settings = handles.Settings;
 n = Settings.Nx; m = Settings.Ny;
+if handles.ind == 0
+    set(handles.NumFam,'UserData',true);
+end
 
 % Get selected location
 [x,y, button] = ginput(1);
@@ -239,6 +262,26 @@ function PlotPattern(handles)
 ind = handles.ind;
 Settings = handles.Settings;
 
+% Update NumFam Popup
+Material = ReadMaterial(Settings.Phase{ind});
+Options = strsplit(num2str(1:length(Material.Fhkl)));
+set(handles.NumFam,'String',Options);
+if strcmp(Material.lattice,'cubic') %Decide how many bands to overlay
+    numfamdef = 4;
+else
+    numfamdef = 5;
+end
+% Initialization
+if get(handles.NumFam,'UserData')
+    set(handles.NumFam,'Value',numfamdef);
+    set(handles.NumFam,'UserData',false);
+    set(handles.NumFam,'Enable','on');
+end
+% For difference phases
+if get(handles.NumFam,'Value') > length(Options)
+    set(handles.NumFam,'Value',numfam);
+end
+
 % Get variables for the point
 xstar = Settings.XStar(ind);
 ystar = Settings.YStar(ind);
@@ -247,19 +290,26 @@ Av = Settings.AccelVoltage*1000; %put it in eV from KeV
 sampletilt = Settings.SampleTilt;
 elevang = Settings.CameraElevation;
 pixsize = Settings.PixelSize;
-Material = ReadMaterial(Settings.Phase{ind});
-if strcmp(Material.lattice,'cubic') %Decide how many bands to overlay
-    numfam = 4;
-else
-    numfam = 5;
-end
+numfam = get(handles.NumFam,'Value');
 paramspat={xstar;ystar;zstar;pixsize;Av;sampletilt;elevang;Material.Fhkl(1:numfam);Material.dhkl(1:numfam);Material.hkl(1:numfam,:)};
 g = handles.g(:,:,ind);
+phase = Settings.Phase{ind};
+
+% Update GUI Info Box
+set(handles.PhaseText,'String',phase)
+set(handles.IndexText,'String',num2str(ind))
+set(handles.LatticeText,'String',Material.lattice)
+set(handles.CIText,'String',Settings.CI(ind))
+set(handles.FitText,'String',Settings.Fit(ind))
 
 % Get params from GUI
 color = GetPopupString(handles.ColorScheme);
-speed = get(handles.BlinkSpeedSlider,'Value');
-width = get(handles.LineWidth,'Value');
+val = get(handles.BlinkSpeed,'Value');
+SpeedOptions = [0 1.5 .75 .25 handles.MaxSpeed];
+speed = SpeedOptions(val);
+val = get(handles.LineWidth,'Value');
+WidthOptions = [0.01 1 3];
+width = WidthOptions(val);
 
 % Read Pattern and plot with overlay
 axes(handles.Pattern)
@@ -271,31 +321,64 @@ end
 I2 = ReadEBSDImage(Settings.ImageNamesList{ind},ImageFilter);
 imagesc(I2); axis image; xlim([0 pixsize]); ylim([0 pixsize]); colormap('gray'); axis off;
 genEBSDPatternHybridLineOverlay(g,paramspat,eye(3),Material.lattice,Material.a1,Material.b1,Material.c1,Material.axs,...
-    'BlinkSpeed',speed,'Color',GetPopupString(handles.ColorScheme),'MaxSpeed',handles.MaxSpeed,...
+    'BlinkSpeed',speed,'Color',color,'MaxSpeed',handles.MaxSpeed,...
     'LineWidth',width);
+if strcmp(color,'holiday')
+    colormap hot
+    gui = findall(handles.TestGeometryGUI,'BackgroundColor',[0.94 0.94 0.94]);
+    set(gui,'BackgroundColor','red')
+    set(gui,'ForegroundColor','white','FontWeight','bold')
+    set(handles.TestGeometryGUI,'Color','green')
+end
 
-
-% --- Executes on slider movement.
-function BlinkSpeedSlider_Callback(hObject, eventdata, handles)
-% hObject    handle to BlinkSpeedSlider (see GCBO)
+% --- Executes on selection change in BlinkSpeed.
+function BlinkSpeed_Callback(hObject, eventdata, handles)
+% hObject    handle to BlinkSpeed (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'Value') returns position of slider
-%        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
+% Hints: contents = cellstr(get(hObject,'String')) returns BlinkSpeed contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from BlinkSpeed
+if handles.ind
+    PlotPattern(handles)
+end
+
+
+% --- Executes during object creation, after setting all properties.
+function BlinkSpeed_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to BlinkSpeed (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in NumFam.
+function NumFam_Callback(hObject, eventdata, handles)
+% hObject    handle to NumFam (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns NumFam contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from NumFam
 if handles.ind
     PlotPattern(handles)
 end
 
 % --- Executes during object creation, after setting all properties.
-function BlinkSpeedSlider_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to BlinkSpeedSlider (see GCBO)
+function NumFam_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to NumFam (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
 end
 
 
@@ -382,3 +465,11 @@ IndList = 1:length(List);
 Value = IndList(strcmp(List,String));
 if isempty(Value); Value =1; end;
 set(Popup, 'Value', Value);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over BlinkText.
+function BlinkText_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to BlinkText (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
