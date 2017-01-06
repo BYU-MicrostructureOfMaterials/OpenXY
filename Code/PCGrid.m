@@ -71,7 +71,14 @@ if size(Settings.ImageNamesList,1)==1
     H5ImageParams = {Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter};
 end
 
+
 for dir = 1:3
+    ppool = gcp('nocreate');
+    if isempty(ppool)
+        parpool(Settings.DoParallel)
+    end
+    pctRunOnAll javaaddpath('java')
+    ppm = ParforProgMon('Cross Correlation Analysis ',numpats,1,400,50);
     parfor qq = 1:numpats
         PC0 = zeros(1,3);
         Ind=Inds(qq);
@@ -125,7 +132,9 @@ for dir = 1:3
     PCnew(dir) = PCopt;
     PCData.PCPoints(:,:,dir) = PCvals;
     PCData.StrainPoints(:,:,dir) = pctest;
+    ppm.increment();
 end
+ppm.delete();
 
 PCData.CalibrationIndices = Inds;
 PCData.xstar = PCnew(1);
