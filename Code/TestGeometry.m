@@ -22,7 +22,7 @@ function varargout = TestGeometry(varargin)
 
 % Edit the above text to modify the response to help TestGeometryGUI
 
-% Last Modified by GUIDE v2.5 05-Jan-2017 13:00:21
+% Last Modified by GUIDE v2.5 06-Jan-2017 10:10:07
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -255,16 +255,18 @@ function TestGeometryGUI_WindowButtonMotionFcn(hObject, eventdata, handles)
 % hObject    handle to TestGeometryGUI (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-pt = get(handles.Map,'currentpoint');
-rows = handles.Settings.Nx+0.5;
-cols = handles.Settings.Ny+0.5;
-handles.overicon =  (pt(1,1)>=0.5 && pt(1,1)<=rows) && (pt(1,2)>=0.5 && pt(1,2)<=cols); 
-if ~handles.overicon
-    set(handles.TestGeometryGUI,'pointer','arrow');
-else
-    set(handles.TestGeometryGUI,'pointer','crosshair');
+if isfield(handles,'Settings')
+    pt = get(handles.Map,'currentpoint');
+    rows = handles.Settings.Nx+0.5;
+    cols = handles.Settings.Ny+0.5;
+    handles.overicon =  (pt(1,1)>=0.5 && pt(1,1)<=rows) && (pt(1,2)>=0.5 && pt(1,2)<=cols); 
+    if ~handles.overicon
+        set(handles.TestGeometryGUI,'pointer','arrow');
+    else
+        set(handles.TestGeometryGUI,'pointer','crosshair');
+    end
+    guidata(hObject,handles);
 end
-guidata(hObject,handles);
 
 % --- Executes on mouse press over figure background, over a disabled or
 % --- inactive control, or over an axes background.
@@ -545,5 +547,3 @@ handles = guidata(hObject);
 if strcmp(eventdata.Key,'l') && ~isempty(eventdata.Modifier) && strcmp(eventdata.Modifier,'control')
     SaveClose_Callback(handles.SaveClose, eventdata, handles);
 end
-
-

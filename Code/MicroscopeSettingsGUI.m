@@ -132,6 +132,8 @@ if ~isempty(handles.MainGUI) && isvalid(handles.MainGUI)
     MainHandles = guidata(handles.MainGUI);
     MainHandles.Settings = handles.Settings;
     guidata(handles.MainGUI,MainHandles);
+    UpdateMainGUIs = getappdata(handles.MainGUI,'UpdateGUIs');
+    UpdateMainGUIs(MainHandles);
 end
 handles.PrevSettings = handles.Settings;
 handles.edited = false;

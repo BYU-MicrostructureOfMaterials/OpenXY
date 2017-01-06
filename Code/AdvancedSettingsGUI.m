@@ -232,6 +232,9 @@ if ~isempty(handles.MainGUI) && isvalid(handles.MainGUI)
     enableRunButton = getappdata(handles.MainGUI,'enableRunButton');
     enableRunButton(MainHandles);
     guidata(handles.MainGUI,MainHandles);
+    
+    UpdateMainGUIs = getappdata(handles.MainGUI,'UpdateGUIs');
+    UpdateGUIs(MainHandles);
 end
 handles.PrevSettings = handles.Settings;
 handles.edited = false;

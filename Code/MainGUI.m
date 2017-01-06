@@ -205,6 +205,7 @@ enableRunButton(handles);
 
 % Store Key functions
 setappdata(hObject,'enableRunButton',@enableRunButton);
+setappdata(hObject,'UpdateGUIs',@UpdateGUIs);
 
 % Instantiate holders for other GUIs
 handles.MicroscopeGUI = [];
@@ -453,6 +454,7 @@ catch ME
     Reset_RunButton(handles);
     enableRunButton(handles);
     save('temp/ErrorSettings.mat');
+    clear java
     msg = 'OpenXY encountered an error. Re-select the scan file to reset.';
     cause = MException('MATLAB:OpenXY',msg);
     ME = addCause(ME,cause);
@@ -839,3 +841,30 @@ CloseGUIs(handles)
 function SaveSettings(handles)
 Settings = handles.Settings;
 save('Settings.mat','Settings');
+
+function UpdateGUIs(handles)
+if ~isempty(handles.ROIGUI) && isvalid(handles.ROIGUI)
+    h = guidata(handles.ROIGUI);
+    h.Settings = handles.Settings;
+    guidata(handles.ROIGUI,h);
+end
+if ~isempty(handles.PCGUI) && isvalid(handles.PCGUI)
+    h = guidata(handles.PCGUI);
+    h.Settings = handles.Settings;
+    guidata(handles.PCGUI,h);
+end
+if ~isempty(handles.TestGeomGUI) && isvalid(handles.TestGeomGUI)
+    h = guidata(handles.TestGeomGUI);
+    h.Settings = handles.Settings;
+    guidata(handles.TestGeomGUI,h);
+end
+if ~isempty(handles.MicroscopeGUI) && isvalid(handles.MicroscopeGUI)
+    h = guidata(handles.MicroscopeGUI);
+    h.Settings = handles.Settings;
+    guidata(handles.MicroscopeGUI,h);
+end
+if ~isempty(handles.AdvancedGUI) && isvalid(handles.AdvancedGUI)
+    h = guidata(handles.AdvancedGUI);
+    h.Settings = handles.Settings;
+    guidata(handles.AdvancedGUI,h);
+end
