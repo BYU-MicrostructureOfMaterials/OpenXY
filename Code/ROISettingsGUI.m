@@ -201,7 +201,7 @@ if ~isempty(handles.MainGUI) && isvalid(handles.MainGUI)
     MainHandles.Settings = handles.Settings;
     guidata(handles.MainGUI,MainHandles);
     UpdateMainGUIs = getappdata(handles.MainGUI,'UpdateGUIs');
-    UpdateGUIs(MainHandles);
+    UpdateMainGUIs(MainHandles);
 end
 UpdateTestGeom(handles)
 handles.PrevSettings = handles.Settings;
