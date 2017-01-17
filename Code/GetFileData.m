@@ -41,7 +41,7 @@ filedata.datarows = datacnt - 1;
 filedata.rows = datacnt + cnt;
 format = '';
 for i = 1:filedata.cols
-    if isnan(str2double(d_line{i}));
+    if isnan(str2double(d_line{i}))
         fmt = '%s';
     else
         fmt = '%f';
@@ -49,7 +49,7 @@ for i = 1:filedata.cols
     format = [format ' ' fmt];
 end
 
-if strcmp(format(end),'s');
+if strcmp(format(end),'s')
     
     %If any '%s' at end of format string, find out how many
     typeLocations = ismember(format,'fs');
@@ -62,9 +62,9 @@ if strcmp(format(end),'s');
         loc = loc-1;
     end
     
+    % Concatenate any strings at the end
     inds = find(ismember(format,'s')); %inds -> list of locations in format that are 's'
     keyInd = inds(length(inds)-sNum+1);%keyInd -> location of first 's' that is part of group of '%s' at the end of format
-    
     format = [format(1:keyInd-1) '[^\n]'];
     
 end

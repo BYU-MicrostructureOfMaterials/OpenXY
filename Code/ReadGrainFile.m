@@ -38,7 +38,7 @@ while ~feof(fid)
         
         size(GrainFileVals{1},1);
         
-        if data.cols == 13
+        if data.cols == 13 && length(GrainFileVals) == 13
             for i=1:size(GrainFileVals{1},1) % commented out 5/15 for 11 column version
                 GrainFileVals{11}(i)= strcat(GrainFileVals{11}(i),GrainFileVals{12}(i),GrainFileVals{13}(i));
                 GrainFileVals{12}=[];
