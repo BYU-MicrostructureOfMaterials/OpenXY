@@ -123,10 +123,13 @@ else
     if ~ok, ind = 1; end;
     Phase(:)={strtrim(lower(ScanParams.material{ind}))};
 end
-GrainVals.PhaseNum = PhaseNum;
-GrainVals.Phase = Phase;
 
 % Validate Phase
 Phase = ValidatePhase(Phase);
+
+GrainVals.PhaseNum = PhaseNum;
+GrainVals.Phase = Phase;
+
+
 
 end

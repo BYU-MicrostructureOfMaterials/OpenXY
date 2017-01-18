@@ -45,35 +45,6 @@ if ~strcmp(ext,'.h5')
         Nx = length(X);
         Ny = length(Y);
         
-        %OIM Files
-        if ~strcmp(ext,'.ctf')
-            %Check ScanType
-            check = true;
-            if ~isempty(strfind(Settings.ScanParams.GridType,'Hex'))
-                AutoType = 'Hexagonal';
-            elseif ~isempty(strfind(Settings.ScanParams.GridType,'Sqr'))
-                AutoType = 'Square';
-            else
-                check = false;
-            end
-            if check && ~strcmp(Settings.ScanType,AutoType)
-                button = questdlg({'Scan type might be incorrect.';['Would you like to change it to ' AutoType '?']},'OpenXY');
-                switch button
-                    case 'Yes'
-                        Settings.ScanType = AutoType;
-                    case 'Cancel'
-                        return;
-                end
-            end
-            Settings.GrainMethod = 'Grain File'; %Default method
-        
-        %Oxford HKL Files
-        else
-            Settings.GrainMethod = 'Find Grains'; %Only method available
-            
-            Settings.GrainVals.grainID = CalcGrainID(Settings);
-        end
-        
         %Validate Scan Size
         if ~strcmp(Settings.ScanType,'Hexagonal')
             if isfield(Settings.ScanParams,'NumColsOdd') && isfield(Settings.ScanParams,'NumRows')
@@ -101,6 +72,37 @@ if ~strcmp(ext,'.h5')
                 end
             end
             Settings.Nx = Nx; Settings.Ny = Ny;
+            
+            %OIM Files
+            if ~strcmp(ext,'.ctf')
+                %Check ScanType
+                check = true;
+                if ~isempty(strfind(Settings.ScanParams.GridType,'Hex'))
+                    AutoType = 'Hexagonal';
+                elseif ~isempty(strfind(Settings.ScanParams.GridType,'Sqr'))
+                    AutoType = 'Square';
+                else
+                    check = false;
+                end
+                if check && ~strcmp(Settings.ScanType,AutoType)
+                    button = questdlg({'Scan type might be incorrect.';['Would you like to change it to ' AutoType '?']},'OpenXY');
+                    switch button
+                        case 'Yes'
+                            Settings.ScanType = AutoType;
+                        case 'Cancel'
+                            return;
+                    end
+                end
+                Settings.GrainMethod = 'Grain File'; %Default method
+                
+            %Oxford HKL Files
+            else
+                Settings.GrainMethod = 'Find Grains'; %Only method available
+                
+                Settings.GrainVals.grainID = CalcGrainID(Settings);
+            end
+        
+        % Hexagonal Scans
         else
             if isfield(Settings.ScanParams,'NumColsOdd') && isfield(Settings.ScanParams,'NumRows')
                 Settings.Nx = Settings.ScanParams.NumColsOdd;
@@ -133,4 +135,4 @@ end
 
 end
 
-    
+
