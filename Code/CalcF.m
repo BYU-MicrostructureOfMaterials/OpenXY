@@ -1,4 +1,4 @@
-function [F, SSE, XX] = CalcF(RefImage,ScanImage,g,Fo,Ind,Settings,curMaterial,RefInd,PC)
+function [F, SSE, XX, sigma] = CalcF(RefImage,ScanImage,g,Fo,Ind,Settings,curMaterial,RefInd,PC)
 %Desc: This function can be used to calculate the deformation tensor F (in the crystal frame) that
 %describes the deformation to move the pattern RefImage onto the pattern ScanImage.
 % modified 10/28/14 by DTF to correctly change Pattern Center when using
@@ -381,6 +381,7 @@ else
 end
 g=g';
 Z= zeros(length(tempind),1);
+sigma = zeros(3,3);
 
 
 switch Settings.FCalcMethod
@@ -703,7 +704,20 @@ switch Settings.FCalcMethod
         %         BCerrs(6)=BCerr; %end of method 6
         %         F={};
         
-        
+        %Calculate Stress - BEJ Jan 2017
+        [~,Ustrain] = poldec(F);
+        Ustrain = Ustrain-eye(3);
+        for m = 1:3
+            for n = 1:3
+                for o = 1:3
+                    for p = 1:3
+                        sigma(m,n) = sigma(m,n)+Cc(m,n,o,p)*Ustrain(o,p);
+                    end
+                end
+            end
+        end
+        assignin('base','Cc_CalcF',Cc)
+        assignin('base','Ustrain',Ustrain)
         
 end
 
