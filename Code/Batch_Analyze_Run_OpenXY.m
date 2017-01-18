@@ -66,10 +66,6 @@ for sc = 1:numfiles % Loops through all your scans that you selected
     Settings = rmfield(Settings,'Angles');
     Settings = ImportScanInfo(Settings,[name ext],path);
     
-    %Read Grain File
-    Settings.grainID = []; Settings.Phase = [];
-    [Settings.grainID, Settings.Phase] = GetGrainInfo(Settings.ScanFilePath, Settings.Material, Settings.ScanParams, Settings.Angles, Settings.MisoTol);
-    
     %Get ImagesNamesList
     X = unique(Settings.XData);
     Y = unique(Settings.YData);

@@ -25,13 +25,6 @@ if ~isfield(Settings,'ImageNamesList')
         Settings.ImageNamesList = ImportImageNamesList(Settings);
     end
 end
-if ~isfield(Settings,'grainID')
-    disp('Getting Grain Info...')
-    if strcmp(Settings.GrainMethod,'Find Grains')
-        Settings.grainID = GetGrainInfo(Settings.ScanFilePath,Settings.Phase{1},Settings.ScanParams,Settings.Angles,...
-            Settings.MisoTol,Settings.GrainMethod,Settings.MinGrainSize);
-    end
-end
 
 %% Validate SplitDD Materials
 if Settings.DoDDS && ~CheckSplitDDMaterials(unique(Settings.Phase))
@@ -123,13 +116,6 @@ else
     Settings.Inds = Inds;
 end
 
-
-%% Get Grain ID's
-if ~isfield(Settings,'grainID') || ~isfield(Settings,'Phase')
-    disp('Getting Grain ID''s')
-    [Settings.grainID, Settings.Phase] = GetGrainInfo(...
-            Settings.ScanFilePath, Settings.Material, Settings.ScanParams, Settings.Angles, Settings.MisoTol, Settings.GrainMethod);
-end
 
 %% Get Reference Image(s) when not Simulated Method
 % Get reference images and assign the name to each scan image (or main
