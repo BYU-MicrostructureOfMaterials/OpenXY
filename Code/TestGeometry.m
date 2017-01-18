@@ -140,7 +140,7 @@ handles.indi = indi;
 handles.ind = 0;
 
 % Load plots into handles
-g = euler2rmat(Settings.Angles);
+g = euler2gmat(Settings.Angles);
 handles.IPF = PlotIPF(g,[n m],Settings.ScanType,0);
 if strcmp(Settings.ScanType,'Square')
     handles.IQ = reshape(Settings.IQ,n,m)';

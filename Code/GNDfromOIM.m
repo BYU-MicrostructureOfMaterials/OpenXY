@@ -257,10 +257,10 @@ if withquat
     end
     
     %Calculate Beta derivatives
-    avgmisoc_R = quat2rmat(avgmisoc);
+    avgmisoc_R = quat2gmat(avgmisoc);
     %avgmisoc_R(:,:,~misangc) = -Inf;
     bd1 = (avgmisoc_R - repmat(eye(3),1,1,ScanLength)) / (stepsize*(skip+1));
-    avgmisoa_R = quat2rmat(avgmisoa);
+    avgmisoa_R = quat2gmat(avgmisoa);
     %avgmisoa_R(:,:,~misanga) = -Inf;
     bd2 = (avgmisoa_R - repmat(eye(3),1,1,ScanLength)) / (-stepsize*(skip+1));
     
@@ -393,7 +393,7 @@ else
                 end
                 avg = sum(quat,1)/numpts;
                 avg = avg/norm(avg);
-                R=quat2rmat(avg)'; % transpose because for some reason sending to quaternion space and pack transposes it
+                R=quat2gmat(avg)'; % transpose because for some reason sending to quaternion space and pack transposes it
                 R2(:,:,i,j) = R;
                 
                 betaderiv2(:,:,i,j) = (R - eye(3))/(-stepsize*(1+skip));% this is the elastic distortion derivative in the 2-direction
@@ -459,7 +459,7 @@ else
                 end
                 avg = sum(quat,1)/numpts;
                 avg = avg/norm(avg);
-                R=quat2rmat(avg)';
+                R=quat2gmat(avg)';
                 
                 betaderiv1(:,:,i,j) = (R - eye(3))/(stepsize*(1+skip)); % this is the elastic distortion derivative in the 1-direction
             else
