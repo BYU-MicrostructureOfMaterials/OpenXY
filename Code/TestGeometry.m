@@ -149,7 +149,7 @@ handles.indi = indi;
 handles.ind = 0;
 
 % Load plots into handles
-g = euler2rmat(Settings.Angles);
+g = euler2gmat(Settings.Angles);
 handles.IPF = PlotIPF(g,[n m],Settings.ScanType,0);
 if strcmp(Settings.ScanType,'Square')
     handles.IQ = reshape(Settings.IQ,n,m)';
@@ -268,6 +268,9 @@ if isfield(handles,'Settings')
     pt = get(handles.Map,'currentpoint');
     rows = handles.Settings.Nx+0.5;
     cols = handles.Settings.Ny+0.5;
+    if handles.Settings.Ny == 1
+        cols = round(rows/6);
+    end
     handles.overicon =  (pt(1,1)>=0.5 && pt(1,1)<=rows) && (pt(1,2)>=0.5 && pt(1,2)<=cols); 
     if ~handles.overicon
         set(handles.TestGeometryGUI,'pointer','arrow');
@@ -293,7 +296,11 @@ if handles.overicon
     % Get Selected Location
     pt = get(handles.Map,'currentpoint');
     x = round(pt(1,1));
-    y = round(pt(1,2));
+    if m == 1
+        y = 1;
+    else
+        y = round(pt(1,2));
+    end
     handles.ind = handles.indi(y,x);
     guidata(hObject,handles);
     PlotPattern(handles);

@@ -27,6 +27,7 @@ g = zeros(3,3,Settings.ScanLength);
 U = repmat({zeros(3)},1,Settings.ScanLength);
 SSE = repmat({0},1,Settings.ScanLength);
 XX = repmat({zeros(Settings.NumROIs,3)},1,Settings.ScanLength);
+sigma = zeros(3,3,Settings.ScanLength);
 if Settings.DoStrain
 tic
 if Settings.DoParallel > 1
@@ -58,7 +59,7 @@ if Settings.DoParallel > 1
         %or a structure F.a F.b F.c of deformation gradient tensors for
         %each point in the L grid
         
-        [F{ImageInd}, g(:,:,ImageInd), U{ImageInd}, SSE{ImageInd}, XX{ImageInd}] = ...
+        [F{ImageInd}, g(:,:,ImageInd), U{ImageInd}, SSE{ImageInd}, XX{ImageInd}, sigma(:,:,ImageInd)] = ...
             GetDefGradientTensor(Inds(ImageInd),Settings,Settings.Phase{ImageInd});
         
         %{
@@ -82,7 +83,7 @@ else
         %         tic
 %         disp(ImageInd)
         
-        [F{ImageInd}, g(:,:,ImageInd), U{ImageInd}, SSE{ImageInd}, XX{ImageInd}] = ...
+        [F{ImageInd}, g(:,:,ImageInd), U{ImageInd}, SSE{ImageInd}, XX{ImageInd}, sigma(:,:,ImageInd)] = ...
             GetDefGradientTensor(Inds(ImageInd),Settings,Settings.Phase{ImageInd});
         
         % commented out this (outputs strain matrix - I think - DTF 5/15/14)
@@ -146,7 +147,9 @@ if ~isfield(Settings,'data') || Settings.DoStrain
             data.PHIrn(jj) = PHI;
             data.phi2rn(jj) = phi2;
             
+            
         end
+        
         
         data.g{jj} = [phi1 PHI phi2];
         Settings.NewAngles(jj,1:3) = [phi1 PHI phi2];
@@ -166,6 +169,8 @@ if ~isfield(Settings,'data') || Settings.DoStrain
         data.ypos = Settings.YData;
     end
     
+    data.sigma = sigma;
+    data.U = U;
     Settings.AverageSSE = mean([Settings.SSE{:}]);
     Settings.data = data;
 else
