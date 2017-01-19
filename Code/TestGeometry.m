@@ -22,7 +22,7 @@ function varargout = TestGeometry(varargin)
 
 % Edit the above text to modify the response to help TestGeometryGUI
 
-% Last Modified by GUIDE v2.5 06-Jan-2017 10:10:07
+% Last Modified by GUIDE v2.5 12-Jan-2017 15:34:34
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -119,6 +119,15 @@ if strcmp(TestGeometrySettings.MapType,'Image Quality')
 else
     set(handles.IPFMap,'Value',1)
 end
+
+% Simulated Pattern Type
+set(handles.SimType,'String',{'Simulated','Dynamic'})
+if strcmp(Settings.HROIMMethod,'Dynamic Simulated')
+    SimType = 'Dynamic';
+else
+    SimType = 'Kinematic';
+end
+SetPopupValue(handles.SimType,SimType);
 
 % Turn off GB's by default
 set(handles.PlotGB,'Value',0)
@@ -345,6 +354,7 @@ sampletilt = Settings.SampleTilt;
 elevang = Settings.CameraElevation;
 pixsize = Settings.PixelSize;
 numfam = get(handles.NumFam,'Value');
+mperpix = Settings.mperpix;
 paramspat={xstar;ystar;zstar;pixsize;Av;sampletilt;elevang;Material.Fhkl(1:numfam);Material.dhkl(1:numfam);Material.hkl(1:numfam,:)};
 g = handles.g(:,:,ind);
 phase = Settings.Phase{ind};
@@ -377,17 +387,33 @@ if get(handles.Filter,'Value')
 else
     I2=ReadEBSDImage(Settings.ImageNamesList{ind},[0 0 0 0]);
 end
-
 im = imagesc(I2); axis image; xlim([0 pixsize]); ylim([0 pixsize]); colormap('gray'); axis off;
-genEBSDPatternHybridLineOverlay(g,paramspat,eye(3),Material.lattice,Material.a1,Material.b1,Material.c1,Material.axs,...
-    'BlinkSpeed',speed,'Color',color,'MaxSpeed',handles.MaxSpeed,...
-    'LineWidth',width);
-if strcmp(color,'holiday')
-    colormap hot
-    gui = findall(handles.TestGeometryGUI,'BackgroundColor',[0.94 0.94 0.94]);
-    set(gui,'BackgroundColor','red')
-    set(gui,'ForegroundColor','white','FontWeight','bold')
-    set(handles.TestGeometryGUI,'Color','green')
+
+if strcmp(GetPopupString(handles.SimType),'Dynamic')
+    GenPat = genEBSDPatternHybrid_fromEMSoft(g,xstar,ystar,zstar,pixsize,mperpix,elevang,phase,Av,ind);
+    cla(handles.DynamicPattern)
+    h = imagesc(handles.DynamicPattern,GenPat); colormap(handles.DynamicPattern,gray);
+    uistack(handles.DynamicPattern,'top')
+    axis(handles.DynamicPattern,'image','off')
+    if speed == handles.MaxSpeed
+        set(h,'Visible','off')
+    elseif speed > 0
+        blinkline(h,speed)
+    else
+        blinkline(h);blinkline(h);
+    end
+else
+    
+    genEBSDPatternHybridLineOverlay(g,paramspat,eye(3),Material.lattice,Material.a1,Material.b1,Material.c1,Material.axs,...
+        'BlinkSpeed',speed,'Color',color,'MaxSpeed',handles.MaxSpeed,...
+        'LineWidth',width);
+    if strcmp(color,'holiday')
+        colormap hot
+        gui = findall(handles.TestGeometryGUI,'BackgroundColor',[0.94 0.94 0.94]);
+        set(gui,'BackgroundColor','red')
+        set(gui,'ForegroundColor','white','FontWeight','bold')
+        set(handles.TestGeometryGUI,'Color','green')
+    end
 end
 
 % --- Executes on selection change in BlinkSpeed.
@@ -546,4 +572,29 @@ handles = guidata(hObject);
 % Close Figure with CTRL-L
 if strcmp(eventdata.Key,'l') && ~isempty(eventdata.Modifier) && strcmp(eventdata.Modifier,'control')
     SaveClose_Callback(handles.SaveClose, eventdata, handles);
+end
+
+
+% --- Executes on selection change in SimType.
+function SimType_Callback(hObject, eventdata, handles)
+% hObject    handle to SimType (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns SimType contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from SimType
+if handles.ind
+    PlotPattern(handles)
+end
+
+% --- Executes during object creation, after setting all properties.
+function SimType_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to SimType (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
 end
