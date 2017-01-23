@@ -101,9 +101,10 @@ if ~strcmp(ext,'.h5')
                 
                 Settings.GrainVals.grainID = CalcGrainID(Settings);
             end
+        end
         
         % Hexagonal Scans
-        else
+        if strcmp(Settings.ScanType, 'Hexagonal')
             if isfield(Settings.ScanParams,'NumColsOdd') && isfield(Settings.ScanParams,'NumRows')
                 Settings.Nx = Settings.ScanParams.NumColsOdd;
                 Settings.Ny = Settings.ScanParams.NumRows;
