@@ -454,11 +454,11 @@ catch ME
     Reset_RunButton(handles);
     enableRunButton(handles);
     save('temp/ErrorSettings.mat');
-    clear java
     msg = 'OpenXY encountered an error. Re-select the scan file to reset.';
     cause = MException('MATLAB:OpenXY',msg);
     ME = addCause(ME,cause);
     rethrow(ME)
+    clear java
 end
 
 %Check if terminated
