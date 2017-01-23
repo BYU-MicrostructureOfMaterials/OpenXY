@@ -51,7 +51,7 @@ if ~strcmp(ext,'.ctf')
             end
             GrainFileVals = ReadGrainFile(GrainFilePath);
             grainID = GrainFileVals{9};
-            Phase=lower(GrainFileVals{11});
+            Phase=strtrim(lower(GrainFileVals{11}));
         else
             grainID = ScanFilePath{1};
             Phase = ScanFilePath{2};
@@ -67,7 +67,7 @@ if ~strcmp(ext,'.ctf')
     end
 end
 if strcmp(GrainMethod,'Find Grains')
-    Phase = cell(length(Angles),1); 
+    Phase = cell(length(Angles),1);
     auto = 0;
     if strcmp(Material,'Scan File')
         ind = 1;
@@ -80,7 +80,7 @@ if strcmp(GrainMethod,'Find Grains')
                 'SelectionMode','single','Name','Select Phase','ListSize',[180 100]);
             if ~ok, ind = 1; end;
         end
-        Phase(:)={lower(ScanParams.material{ind})};
+        Phase(:)={strtrim(lower(ScanParams.material{ind}))};
         Material = ScanParams.material{ind};
         disp(['Auto Detected Material: ' Material])
     else
@@ -117,42 +117,42 @@ if strcmp(GrainMethod,'Find Grains')
         grainID = {};
     end
 end
-function Phase = ValidatePhase(Phase)
-    %Validate Material Detection
-    MaterialsList = GetMaterialsList(2);
-    if ~all(ismember(Phase,MaterialsList))
-        invalidMats = unique(Phase(~ismember(Phase,MaterialsList)));
-        er = errordlg(['Auto material detection failed. "' strjoin(invalidMats,', ') '" not found in list of known materials'],'Material Detection');
-        uiwait(er)
-        op = questdlg('Select an option:','Material Detection Failed','Select Existing Material','Create a New Material','Cancel','Select Existing Material');
-        while true
-            switch op
-                case 'Select Existing Material'
-                    Materials = GetMaterialsList(3);
-                    [index, ok] = listdlg('PromptString','Select a Material','ListString',Materials,'SelectionMode','single','Name','Material Selection');
-                    if ok
-                        Phase(:) = {Materials{index}};
+    function Phase = ValidatePhase(Phase)
+        %Validate Material Detection
+        MaterialsList = GetMaterialsList(2);
+        if ~all(ismember(Phase,MaterialsList))
+            invalidMats = unique(Phase(~ismember(Phase,MaterialsList)));
+            er = errordlg(['Auto material detection failed. "' strjoin(invalidMats,', ') '" not found in list of known materials'],'Material Detection');
+            uiwait(er)
+            op = questdlg('Select an option:','Material Detection Failed','Select Existing Material','Create a New Material','Cancel','Select Existing Material');
+            while true
+                switch op
+                    case 'Select Existing Material'
+                        Materials = GetMaterialsList(3);
+                        [index, ok] = listdlg('PromptString','Select a Material','ListString',Materials,'SelectionMode','single','Name','Material Selection');
+                        if ok
+                            Phase(:) = {Materials{index}};
+                            break;
+                        else
+                            op = 'Cancel';
+                        end
+                    case 'Create a New Material'
+                        material = NewMaterialGUI;
+                        if material ~= 0
+                            Phase(:) = {material};
+                            break;
+                        else
+                            op = 'Cancel';
+                        end
+                    case 'Cancel'
+                        er = warndlg('Material selection failed. Select a new Scan File.','Material Selection');
+                        uiwait(er)
+                        Phase = {};
                         break;
-                    else
-                        op = 'Cancel';
-                    end
-                case 'Create a New Material'
-                    material = NewMaterialGUI;
-                    if material ~= 0
-                        Phase(:) = {material};
-                        break;
-                    else
-                        op = 'Cancel';
-                    end
-                case 'Cancel'
-                    er = warndlg('Material selection failed. Select a new Scan File.','Material Selection');
-                    uiwait(er)
-                    Phase = {};
-                    break;
+                end
             end
         end
     end
-end
 
 end
 

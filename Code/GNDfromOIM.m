@@ -39,6 +39,10 @@ withquat = true; %Use quaternion method
 maxmisofilter = true; %Filter using misorientation
 
 %Handle inputs
+if nargin < 2
+    smooth = 1;
+    skip = 0;
+end
 if nargin > 1
     ismat = isstruct(datain);
     if ismat

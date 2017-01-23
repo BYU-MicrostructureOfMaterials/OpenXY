@@ -7,7 +7,7 @@ function alpha_data = DislocationDensityCalculate(Settings,MaxMisorientation,IQc
 format compact
 tic
 
-StrainOnly = false;
+NoStrain = false;
 
 %Calculate Dislocation Density
 data = Settings.data;
@@ -177,9 +177,7 @@ if ~strcmp(Settings.ScanType,'L')
         if isempty(pool)
             pool = parpool(Settings.DoParallel);
         end
-        if any(strcmp(javaclasspath,fullfile(pwd,'java')))
-            pctRunOnAll javaaddpath('java')
-        end
+        pctRunOnAll javaaddpath('java')
         ppm = ParforProgMon( 'Dislocation Density Progress ', N , 1, 400, 50);
         
         NumberOfCores = Settings.DoParallel;
@@ -224,17 +222,20 @@ if ~strcmp(Settings.ScanType,'L')
         end
         close(h);
     end
+    
+    if NoStrain
+        for i = 1:Settings.ScanLength
+            AllFa{i} = poldec(AllFa{i});
+            AllFc{i} = poldec(AllFc{i});
+        end
+    end
             
     data.Fa=AllFa;
     data.SSEa=AllSSEa;
     data.Fc=AllFc;
     data.SSEc=AllSSEc;
 
-    if StrainOnly
-        for i = 1:Settings.ScanLength
-            AllFa{i} = poldec(AllFa{i});
-end
-    end
+    
     
     misang = max(misanglea,misanglec);
 
