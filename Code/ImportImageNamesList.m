@@ -17,6 +17,7 @@ end
 
 %Get Image Names
 if ~isempty(Settings.FirstImagePath)
+    disp('Generating Image Names List...')
     ImageNamesList = GetImageNamesList(Settings.ScanType, ...
         Settings.ScanLength,[Settings.Nx Settings.Ny], Settings.FirstImagePath, ...
         [Settings.XData(1),Settings.YData(1)], [XStep, YStep]);
