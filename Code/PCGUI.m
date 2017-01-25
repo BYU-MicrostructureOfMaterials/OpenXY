@@ -22,7 +22,7 @@ function varargout = PCGUI(varargin)
 
 % Edit the above text to modify the response to help PCGUI
 
-% Last Modified by GUIDE v2.5 05-Jan-2017 11:17:24
+% Last Modified by GUIDE v2.5 24-Jan-2017 13:24:22
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -303,7 +303,7 @@ else
 end
 
 % Reset Listbox index if empty
-if isempty(index) || index == 0
+if isempty(find(index,1))
     set(handles.PCList,'Value',1);
 end
 
@@ -462,37 +462,21 @@ if ~isempty(handles.Settings.PCList)
         XStars = abs([handles.Settings.PCList{:,1}] - EditedPC{1}) < 1e-6;
         YStars = abs([handles.Settings.PCList{:,2}] - EditedPC{2}) < 1e-6;
         ZStars = abs([handles.Settings.PCList{:,3}] - EditedPC{3}) < 1e-6;
-        planefit = handles.Settings.PCList{index,5};
-        name = handles.Settings.PCList{index,6};
-
-        %Check for rename
-        rename = [name '_Edit'];
-        if ~strcmp(name,EditedPC{6})
-            rename = EditedPC{6};
-        end
-        count = sum(cell2mat(strfind(handles.Settings.PCList(:,6),rename))>0);
-        if count > 0
-            rename = [rename num2str(count)];
+        
+        %Check for unique names
+        match = strcmp(EditedPC{6},handles.Settings.PCList(~index,6));
+        if any(match)
+            warndlg({'Name already exists. Names must be unique.';'Aborting edits'})
+            return
         end
 
         %Edit or Add
         GridEdit = false;
         SREdit = false;
         if ~any(XStars&YStars&ZStars) %Manually Edited PC
-            EditedPC{4} = 'Manual';
-            handles.Settings.PCList(end+1,:) = [EditedPC(1:5) rename {''}];
-            set(handles.PCList,'String',handles.Settings.PCList(:,6));
-        elseif ~strcmp(name,EditedPC{6}) %Rename only
-            if any(strcmp(handles.Settings.PCList(:,6),EditedPC{6}))
-                handles.Settings.PCList{index,6} = rename;
-            else
-                handles.Settings.PCList{index,6} = EditedPC{6};
-            end
-            set(handles.PCList,'String',handles.Settings.PCList(:,6));
+            %EditedPC{4} = 'Manual';
         end
-        if ~strcmp(planefit,EditedPC{5}) %PlaneFit changed
-            handles.Settings.PCList{index,5} = EditedPC{5};
-        end
+        
 
         %Check for changes requiring recalibration
         if strcmp(EditedPC{4},'Strain Minimization')
@@ -520,7 +504,7 @@ if ~isempty(handles.Settings.PCList)
             sel = questdlg('Edits require a new calibration. Continue?','PC Edit','Yes','No','Yes');
             if strcmp(sel,'Yes')
                 PCData = PCStrainMinimization(handles.Settings,EditedPC{5},EditedPC{7}.CalibrationIndices);
-                handles.Settings.PCList(end+1,:) = {PCData.MeanXStar PCData.MeanYStar PCData.MeanZStar  EditedPC{4:5} rename PCData};
+                EditedPC = {PCData.MeanXStar PCData.MeanYStar PCData.MeanZStar  EditedPC{4:6} PCData};
                 set(handles.PCList,'String',handles.Settings.PCList(:,6));
             end
         end
@@ -528,11 +512,14 @@ if ~isempty(handles.Settings.PCList)
             sel = questdlg('Edits require a new calibration. Continue?','Yes','No','Yes');
             if strcmp(sel,'Yes')
                 PCData = PCGrid(handles.Settings,EditedPC{7});
-                handles.Settings.PCList(end+1,:) = {PCData.xstar PCData.ystar PCData.zstar...
-                    'Grid' 'Naive' rename PCData};
-                set(handles.PCList,'String',handles.Settings.PCList(:,6));
+                EditedPC = {PCData.xstar PCData.ystar PCData.zstar...
+                    'Grid' 'Naive' EditedPC{6} PCData};
             end
         end
+        
+        handles.Settings.PCList(index,:) = EditedPC;
+        set(handles.PCList,'String',handles.Settings.PCList(:,6));
+        
         guidata(handles.PCGUI,handles);
         PCList_Callback(handles.PCList, eventdata, handles);
         handles = guidata(handles.PCGUI);
@@ -715,3 +702,33 @@ handles = guidata(hObject);
 if strcmp(eventdata.Key,'l') && ~isempty(eventdata.Modifier) && strcmp(eventdata.Modifier,'control')
     CloseButton_Callback(handles.CloseButton, eventdata, handles);
 end
+
+
+% --------------------------------------------------------------------
+function Edit_Callback(hObject, eventdata, handles)
+% hObject    handle to Edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+EditPC_Callback(hObject, eventdata, handles)
+
+% --------------------------------------------------------------------
+function Copy_Callback(hObject, eventdata, handles)
+% hObject    handle to Copy (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if ~isempty(handles.Settings.PCList)
+    index = GetListIndex(handles);
+    indexind = find(index);
+    CopyPC = handles.Settings.PCList(index,:);
+    CopyPC{6} = [CopyPC{6} '_Copy'];
+    handles.Settings.PCList = [handles.Settings.PCList(1:indexind,:);...
+        CopyPC; handles.Settings.PCList(indexind+1:end,:)];
+    set(handles.PCList,'String',handles.Settings.PCList(:,6));
+    guidata(hObject,handles);
+end
+
+% --------------------------------------------------------------------
+function List_Callback(hObject, eventdata, handles)
+% hObject    handle to List (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
