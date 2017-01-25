@@ -51,7 +51,7 @@ function Inds = SelectCalibrationPoints(mapsize,IQ,Angles)
         MinPoints = 1;
     end
     
-    f = figure(1);
+    f = figure;
     PlotScan(im,PlotType);
     title(Title{:})
    
