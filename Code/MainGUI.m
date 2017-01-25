@@ -442,8 +442,9 @@ Settings.DisplayGUI = true;
 
 % Disable Run Button
 set(handles.RunButton,'String','Running...');
-set(handles.RunButton,'BackgroundColor',[1 0 0]);
 set(handles.RunButton,'Enable','off');
+set(handles.RunButton,'BackgroundColor',[1 0 0]);
+drawnow
 
 % Run HREBSD Main with error catching
 try
