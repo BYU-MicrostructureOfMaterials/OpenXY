@@ -71,14 +71,15 @@ if size(Settings.ImageNamesList,1)==1
     H5ImageParams = {Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter};
 end
 
-
+label = {'XStar','YStar','ZStar'};
+pctRunOnAll javaaddpath('java')
+ppm = ParforProgMon('PCGrid Calibration ',numpats*numpc*3,1,400,50);
 for dir = 1:3
     ppool = gcp('nocreate');
     if isempty(ppool)
         parpool(Settings.DoParallel)
     end
-    pctRunOnAll javaaddpath('java')
-    ppm = ParforProgMon('Cross Correlation Analysis ',numpats,1,400,50);
+    
     parfor qq = 1:numpats
         PC0 = zeros(1,3);
         Ind=Inds(qq);
@@ -113,6 +114,7 @@ for dir = 1:3
             [pctest(qq,xx)]=CalcNormFMod(PC0,ScanImage,paramspat,lattice,a1,b1,c1,axs,g,ImageFilter,Ind,Settings);
             %R = poldec(F);
             %g = R'*g; %Use Corrected Orientation
+            ppm.increment();
         end
         
         %Show Progress
@@ -124,6 +126,7 @@ for dir = 1:3
             case 3
                 disp(['ZStar Point ' num2str(qq)])
         end
+        
     end
     toc
     
@@ -132,9 +135,10 @@ for dir = 1:3
     PCnew(dir) = PCopt;
     PCData.PCPoints(:,:,dir) = PCvals;
     PCData.StrainPoints(:,:,dir) = pctest;
-    ppm.increment();
+    
 end
 ppm.delete();
+
 
 PCData.CalibrationIndices = Inds;
 PCData.xstar = PCnew(1);
