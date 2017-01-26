@@ -186,7 +186,7 @@ for i=1:length(roixc)
     
     %Calculate Mutual Information (Requires Image Processing Toolbox)
     if isfield(Settings,'CalcMI') && Settings.CalcMI
-    XX(i,3) = CalcMutualInformation(RefROI,ScanROI);
+        XX(i,3) = CalcMutualInformation(RefROI,ScanROI);
     else
         XX(i,3) = 0;
     end
