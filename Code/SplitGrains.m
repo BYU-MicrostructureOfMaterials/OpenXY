@@ -1,4 +1,4 @@
-function [grainID,RefInds,numGrains] = SplitGrains(Settings,misotol,doplot)
+function [grainID,RefInds,subgrains,numGrains] = SplitGrains(Settings,misotol,doplot)
 %SPLITGRAINS Splits grains into smaller grains based on a misorientation
 %tolerance
 %
@@ -17,7 +17,7 @@ function [grainID,RefInds,numGrains] = SplitGrains(Settings,misotol,doplot)
 %
 %       'numGrains' is the new number of total grains
 %       
-%       'misotol' is the maximum allowable misorientation (in radians)
+%       'misotol' is the maximum allowable misorientation (in degrees)
 %
 %       [optional] 'doplot' plots the progress of the recursive algorithm
 %       and the final result
@@ -28,8 +28,12 @@ if nargin == 2
     doplot = false;
 end
 
+% Convert misotol to radians
+misotol = misotol*pi/180;
+
 % Extract variables out of Settings
 grainID = Settings.grainID;
+grainID0 = grainID;
 RefInds = Settings.RefInd;
 IQ = Settings.IQ;
 Fit = Settings.Fit;
@@ -47,10 +51,13 @@ numGrains = length(grainIDList);
 
 % Iterate over each of the original grains
 numGrains0 = numGrains;
+subgrains = cell(numGrains0,1);
+progressbar;
 for i = 1:numGrains0
     gID = grainIDList(i);
     [grainID,numGrains] = SplitGrain(grainID,numGrains,gID);
-    
+    subgrains(i) = {unique(grainID(grainID0 == i))};
+    progressbar(i/numGrains0)
 end
 
 % Plot the new map
@@ -113,7 +120,30 @@ end
             % Recursively split grain
             [grainID,numGrains] = SplitGrain(grainID,numGrains,numGrains);
         end
+        
+        % Check if leftover grain has more than 1 piece
+        oldGrain = GrainMap == gID & misomap <= misotol;
+        CC = bwconncomp(oldGrain',4);
+        if CC.NumObjects > 1
+            % Find new reference point
+            RefInds(CC.PixelIdxList{1}) = GetRefInd(CC.PixelIdxList{1},IQ,Fit,CI);
+            
+            for j = 2:CC.NumObjects
+                % Increment grain number count
+                numGrains = numGrains + 1;
 
+                % Assign new grain number
+                grainID(CC.PixelIdxList{j}) = numGrains;
+
+                % Find new reference point
+                RefInds(CC.PixelIdxList{j}) = GetRefInd(CC.PixelIdxList{j},IQ,Fit,CI);
+
+                % Plot new sub-grain
+                [Xinds,Yinds] = ind2sub2(fliplr(mapsize),CC.PixelIdxList{j},ScanType);
+                if doplot;plot(Xinds,Yinds,'kd','MarkerFaceColor','k');end
+            end
+            
+        end
     end
 
 
