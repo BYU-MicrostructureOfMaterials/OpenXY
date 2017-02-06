@@ -60,7 +60,7 @@ else
     if Settings.ROIFilter(4)==1
         custfilt(dist>upperrad & dist<upperrad+13)=erf((dist(dist>upperrad & dist<upperrad+13)-upperrad)/13*pi);
     end
-    if Settings.ROIFilter(3)==1;
+    if Settings.ROIFilter(3)==1
         custfilt(dist<lowerrad & dist>lowerrad-13)=erf(-(dist(dist<lowerrad & dist>lowerrad-13)-lowerrad)/13*pi);
     end
     custfilt=1-custfilt;
