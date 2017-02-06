@@ -13,3 +13,6 @@ switch type
         X(X==NColsOdd) = NColsEven;
         X = mod(X,NColsOdd);
 end
+if nargout == 1
+    X = [X,Y];
+end
