@@ -2,15 +2,17 @@ function miso = GrainMiso(Settings,doplot)
 if nargin == 1
     doplot = false;
 end
-grainIDList = unique(Settings.grainID);
+Inds = Settings.Inds;
+grainIDList = unique(Settings.grainID(Inds));
 numGrains = length(grainIDList);
-q = euler2quat(Settings.Angles);
+q = euler2quat(Settings.Angles(Inds,:));
 q_symops = rmat2quat(permute(gensymops,[3 2 1]));
 miso = zeros(Settings.ScanLength,1);
+RefInds = Settings.RefInd(Inds);
 for i = 1:numGrains
     gID = grainIDList(i);
-    gInds = find(Settings.grainID == gID);
-    RefInd = Settings.RefInd(gInds);
+    gInds = find(Settings.grainID(Inds) == gID);
+    RefInd = RefInds(gInds);
     if std(RefInd) > 0
         disp('Something went wrong')
     end
