@@ -141,7 +141,7 @@ if withquat
         misanga(real(anglea)>maxmiso*pi/180) = false;
         misangc(real(anglec)>maxmiso*pi/180) = false;
     end
-    filt = false;
+    filt = true;
     if filt
         misoa_filt = misoa.*repmat(misanga,1,4);
         misoc_filt = misoc.*repmat(misangc,1,4);
@@ -174,11 +174,10 @@ if withquat
                 m16(~botrow & ~rightside,:) = misoa_filt(Ind(~botrow & ~rightside)+(1+skip)+n*(1+skip),:);
                 %Matrix with number of points to average
                 numpts = ones(Settings.ScanLength,1)*6;
-                numpts((toprow | botrow) & ~corners) = 3;
-                numpts((leftside | rightside) & ~corners) = 4;
-                numpts(corners) = 2;
+                numpts_filt = (sum(m11,2)==0) + (sum(m12,2)==0) + (sum(m13,2)==0) + (sum(m14,2)==0) + (sum(m15,2)==0) + (sum(m16,2)==0);
+                numpts = numpts-numpts_filt;
                 %Calculate average misorietation
-                avgmisoa = (m11+m12+m13+m14+m15+m16)./repmat(numpts,1,4);
+                avgmisoa = (m11+m12+m13+m14+m15+m16)./repmat(numpts,1,4).*repmat(misanga,1,4);
                 avgmisoa = quatnorm(avgmisoa);
                 
                 %Y-Direction
@@ -192,11 +191,10 @@ if withquat
                 m26(~botrow & ~rightside,:) = misoc_filt(Ind(~botrow & ~rightside)+n*(1+skip),:);
                 %Matrix with number of points to average
                 numpts = ones(Settings.ScanLength,1)*6;
-                numpts((toprow | botrow) & ~corners) = 4;
-                numpts((leftside | rightside) & ~corners) = 3;
-                numpts(corners) = 2;
+                numpts_filt = (sum(m21,2)==0) + (sum(m22,2)==0) + (sum(m23,2)==0) + (sum(m24,2)==0) + (sum(m25,2)==0) + (sum(m26,2)==0);
+                numpts = numpts-numpts_filt;
                 %Calculate average misorietation
-                avgmisoc = (m21+m22+m23+m24+m25+m26)./repmat(numpts,1,4);
+                avgmisoc = (m21+m22+m23+m24+m25+m26)./repmat(numpts,1,4).*repmat(misanga,1,4);
                 avgmisoc = quatnorm(avgmisoc);
                 
             case 'Hexagonal'
