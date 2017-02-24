@@ -15,6 +15,7 @@ sides(:,1,4) = true; % left
 
 plot = false;
 
+progressbar('Finding Neighbor Grains')
 neighbors = cell(length(gIDs),1);
 for i = 1:length(gIDs)
     botn = bot==i & grainmap~=i & ~sides(:,:,2);
@@ -31,4 +32,5 @@ for i = 1:length(gIDs)
         cla
         imagesc(grainmap)
     end
+    progressbar(i/gIDs)
 end
