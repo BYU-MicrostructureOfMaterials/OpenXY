@@ -30,6 +30,9 @@ if Settings.DoDDS && ~CheckSplitDDMaterials(unique(Settings.Phase))
     Settings.DoDDS = false;
 end
 
+%% Split Grains
+[Settings.subgrainPaths,Settings.subgrainID,Settings.subRefInd] = SubGrainPaths(Settings);
+
 %% EMSoft Setup
 if strcmp(Settings.HROIMMethod,'Dynamic Simulated')
     %Check Path
