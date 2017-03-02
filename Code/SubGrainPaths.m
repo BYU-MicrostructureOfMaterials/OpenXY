@@ -1,4 +1,4 @@
-function path = SubGrainPaths(Settings,doplot)
+function [path, subgrainID, subRefInds] = SubGrainPaths(Settings,doplot)
 if nargin == 1
     doplot = 0;
 end
