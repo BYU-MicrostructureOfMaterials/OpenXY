@@ -43,7 +43,7 @@ if nargin < 2
     smooth = 1;
     skip = 0;
 end
-if nargin > 1
+if nargin > 0
     ismat = isstruct(datain);
     if ismat
         Settings = datain;
@@ -491,10 +491,10 @@ alpha_total3(:,:)=30/10.*(abs(alpha(1,3,:,:))+abs(alpha(2,3,:,:))+abs(alpha(3,3,
 alpha_total5(:,:)=30/14.*(abs(alpha(1,3,:,:))+abs(alpha(2,3,:,:))+abs(alpha(3,3,:,:))+abs(alpha(2,1,:,:))+abs(alpha(1,2,:,:)));
 alpha_total9(:,:)=30/20.*abs(alpha(1,3,:,:))+abs(alpha(2,3,:,:))+abs(alpha(3,3,:,:))+abs(alpha(1,1,:,:))+abs(alpha(2,1,:,:))+abs(alpha(3,1,:,:))+abs(alpha(1,2,:,:))+abs(alpha(2,2,:,:))+abs(alpha(3,2,:,:));
 
-alpha_data.alpha = alpha;
-alpha_data.alpha_total3 = alpha_total3;
-alpha_data.alpha_total5 = alpha_total5;
-alpha_data.alpha_total9 = alpha_total9;
+alpha_data.alpha = reshape(permute(alpha,[1 2 4 3]),3,3,Settings.ScanLength);
+alpha_data.alpha_total3 = map2vec(alpha_total3);
+alpha_data.alpha_total5 = map2vec(alpha_total5);
+alpha_data.alpha_total9 = map2vec(alpha_total9);
 
 % alphalist = reshape(alpha,3,3,ScanLength);
 % GNDAvg = mean(alphalist(1,3,alphalist(1,3,:)>0));
