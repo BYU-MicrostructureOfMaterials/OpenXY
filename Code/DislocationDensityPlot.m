@@ -39,7 +39,7 @@ if strcmp(Settings.ScanType,'Square') ||  strcmp(Settings.ScanType,'LtoSquare')
     if isfield(alpha_data,'misang')        
         ind = alpha_data.misang < 8.5;
     else
-        ind = 1:Settings.ScanLength';
+        ind = true(Settings.ScanLength,1);
     end
     ind = reshape(ind,[c r])';
     
