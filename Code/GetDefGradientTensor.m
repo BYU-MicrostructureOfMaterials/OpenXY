@@ -186,7 +186,7 @@ switch Settings.HROIMMethod
                 Settings.PixelSize,Settings.ImageFilter(3),Settings.ImageFilter(4));
             
             clear global rs cs Gs
-            [F1,SSE1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
+            [F1,SSE1,XX,sigma] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
         end
         %%%%%
         
