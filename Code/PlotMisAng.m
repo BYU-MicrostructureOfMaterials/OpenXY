@@ -1,7 +1,7 @@
 function [MaxMisAng,MisAng] = PlotMisAng(g,dims,layout)
 %PLOTMISANG
 % [MaxMisAng,MisAng] = PlotMisang(g,dims,layout)
-% 
+%
 % INPUTS
 %   g: 3x3xN matrix of orientation matrices
 %   dims: Dimensions of the scan [Nx Ny]
@@ -24,33 +24,44 @@ left = 1:dims(1):prod(dims);
 right = dims(1):dims(1):prod(dims);
 MaxMisAng = zeros(prod(dims),1);
 MisAng = zeros(prod(dims),4);
-for i = 1:prod(dims)
-    if ismember(i,top)
-        t = i;
-    else
-        t = i-dims(1);
+
+usequat = 1;
+if ~usequat
+    for i = 1:prod(dims)
+        if ismember(i,top)
+            t = i;
+        else
+            t = i-dims(1);
+        end
+        if ismember(i,bottom)
+            b = i;
+        else
+            b = i+dims(1);
+        end
+        if ismember(i,left)
+            l = i;
+        else
+            l = i-1;
+        end
+        if ismember(i,right)
+            r = i;
+        else
+            r = i+1;
+        end
+        MisAng(i,1) = GeneralMisoCalc(g(:,:,i),g(:,:,r),'tetragonal');
+        MisAng(i,2) = GeneralMisoCalc(g(:,:,i),g(:,:,b),'tetragonal');
+        MisAng(i,3) = GeneralMisoCalc(g(:,:,i),g(:,:,l),'tetragonal');
+        MisAng(i,4) = GeneralMisoCalc(g(:,:,i),g(:,:,t),'tetragonal');
+        MaxMisAng(i) = max(MisAng(i,:));
     end
-    if ismember(i,bottom)
-        b = i;
-    else
-        b = i+dims(1);
-    end
-    if ismember(i,left)
-        l = i;
-    else
-        l = i-1;
-    end
-    if ismember(i,right)
-        r = i;
-    else
-        r = i+1;
-    end
-    MisAng(i,1) = GeneralMisoCalc(g(:,:,i),g(:,:,r),'tetragonal');
-    MisAng(i,2) = GeneralMisoCalc(g(:,:,i),g(:,:,b),'tetragonal');
-    MisAng(i,3) = GeneralMisoCalc(g(:,:,i),g(:,:,l),'tetragonal');
-    MisAng(i,4) = GeneralMisoCalc(g(:,:,i),g(:,:,t),'tetragonal');
-    MaxMisAng(i) = max(MisAng(i,:));
+else
+    q_symops = rmat2quat(permute(gensymopsTet(3),[3 2 1]));
+    q = rmat2quat(g);
+    [RefIndA,RefIndC] = GetAdjacentInds(dims,1:prod(dims),0,'Square');
+    MisAng(:,4) = quatMisoSym(q,q(RefIndA,:),q_symops,'element')*180/pi;
+    MisAng(:,1) = quatMisoSym(q,q(RefIndC,:),q_symops,'element')*180/pi;
 end
+
 map = reshape(MaxMisAng,dims(1),dims(2))';
 mapr = reshape(MisAng(:,1),dims(1),dims(2))';
 mapb = reshape(MisAng(:,2),dims(1),dims(2))';
