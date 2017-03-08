@@ -20,3 +20,6 @@ mistol = Settings.MisoTol*pi/180;
 MinGrainSize = 0;
 clean = false;
 grainID = findgrains(angles, lattice, clean, MinGrainSize, mistol)';
+grainID = reshape(grainID,Settings.Ny,Settings.Nx);
+grainID = reshape(grainID',Settings.Nx*Settings.Ny,1);
+
