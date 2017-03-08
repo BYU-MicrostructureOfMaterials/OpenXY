@@ -151,13 +151,15 @@ else
     i = Yinds + 1;
     while isstrprop(PositionPart(i),'digit') || strcmp(PositionPart(i),'.')
         i = i + 1;
-        if i > length(PositionPart), 
+        if i > length(PositionPart)
             i = i - 1;
             break; 
         end
     end
     Yval = str2num(PositionPart(Yinds+1:i));
     endStr = PositionPart(i+1:end);
+    
+    %%% Determine Naming Scheme
     
     %Determine multiplication factor between position in .ang file and position in image name
     TimesFactor = 0;
@@ -169,15 +171,57 @@ else
             break;
         end
     end
+    
     %Or assume sequential numbering
     if rcNaming
         IsIncremental = true;
         TimesFactor = 1;
     end
+    
+    %Uneven OIM Naming
+    uneven = false;
+    if TimesFactor == 0
+        for i = 0:7
+            testname = fullfile(path,[preStr num2str(XStepData*(10^i)-1) midStr num2str(YStepData*(10^i)-1) endStr ext]);
+            testname2 = fullfile(path,[preStr num2str(2*XStepData*(10^i)-1) midStr num2str(2*YStepData*(10^i)-1) endStr ext]);
+            if exist(testname,'file') && exist(testname2,'file')
+                TimesFactor = 10^i;
+                uneven = true;
+                break;
+            end
+        end
+    end
+    
+    %Hexagonal Scans
+    RoundFactor = 0;
+    if strcmp(ScanFormat,'Hexagonal')
+        if TimesFactor == 0
+            for i = 0:7
+                testname = fullfile(path,[preStr num2str(XStepData*(10^i)) midStr num2str(0) endStr ext]);
+                if exist(testname,'file')
+                    TimesFactor = 10^i;
+                    break;
+                end
+            end
+            for i = 0:7
+                testname = fullfile(path,[preStr num2str(XStepData*TimesFactor) midStr num2str(floor(YStepData*TimesFactor*10^i)/10^i) endStr ext]);
+                testname2 = fullfile(path,[preStr num2str(XStepData*TimesFactor/2) midStr num2str(floor(YStepData*TimesFactor/2*10^i)/10^i) endStr ext]);
+                if exist(testname,'file') && exist(testname2,'file')
+                    RoundFactor = 10^i;
+                    break;
+                end
+            end
+        end
+    end
+    
     X0 = X0 * TimesFactor;
     Y0 = Y0 * TimesFactor;
     XStepData = XStepData * TimesFactor;
     YStepData = YStepData * TimesFactor;
+    
+    if TimesFactor == 0
+        error('Couldn''t parse Image Names')
+    end
 
 %     %Find the next image file
 %     for i = 1:NumColumns
@@ -229,8 +273,10 @@ else
     switch ScanFormat
         case 'Square'
             for i = 1:ScanLength
-                X = mod(i-1,NumColumns)*NameXStep;
-                Y = floor((i-1)/NumColumns)*NameYStep;
+                X = mod(i-1,NumColumns)*NameXStep-uneven;
+                Y = floor((i-1)/NumColumns)*NameYStep-uneven;
+                if X < 0; X = 0; end
+                if Y < 0; Y = 0; end
                 if rcNaming
                     ImageNamesList{i} = fullfile(path,[preStr num2str(NameY+Y) midStr num2str(NameX+X) endStr ext]);
                 else
@@ -238,8 +284,8 @@ else
                 end
             end
         case 'Hexagonal'
-            NumColsOdd = Dimensions(1);
-            NumColsEven = Dimensions(1)-1;
+            NumColsOdd = ceil(Dimensions(1)/2);
+            NumColsEven = NumColsOdd-1;
             i = 1;
             for Y = 0:NumRows-1
                 if mod(Y,2) %Even
@@ -247,7 +293,7 @@ else
                         if rcNaming
                             ImageNamesList{i} = fullfile(path,[preStr num2str(NameY+Y*NameYStep) midStr num2str(NameX+X*NameXStep) endStr ext]);
                         else
-                            ImageNamesList{i} = fullfile(path,[preStr num2str(NameX+X*NameXStep) midStr num2str(NameY+Y*NameYStep) endStr ext]);
+                            ImageNamesList{i} = fullfile(path,[preStr num2str(NameX+X*NameXStep+NameXStep/2) midStr num2str(floor((NameY+Y*NameYStep/2)*RoundFactor)/RoundFactor) endStr ext]);
                         end 
                         i = i + 1;
                     end
@@ -256,7 +302,7 @@ else
                         if rcNaming
                             ImageNamesList{i} = fullfile(path,[preStr num2str(NameY+Y*NameYStep) midStr num2str(NameX+X*NameXStep) endStr ext]);
                         else
-                            ImageNamesList{i} = fullfile(path,[preStr num2str(NameX+X*NameXStep) midStr num2str(NameY+Y*NameYStep) endStr ext]);
+                            ImageNamesList{i} = fullfile(path,[preStr num2str(NameX+X*NameXStep) midStr num2str(floor((NameY+Y*NameYStep/2)*RoundFactor)/RoundFactor) endStr ext]);
                         end 
                         i = i + 1;
                     end
