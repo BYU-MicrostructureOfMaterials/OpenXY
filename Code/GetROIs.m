@@ -156,6 +156,19 @@ switch ROImethod
             roixc(i+1+row1num)=roixc(1)+dx;
             roiyc(i+1+row1num)=roiyc(1)+dy;
         end
+    case 'Annular'
+        roixc=zeros(1,ROInum);
+        roiyc=zeros(1,ROInum);
+        roixc(1) = round(pixsize/2);
+        roiyc(1) = round(pixsize/2);
+        angSpacing = 2*pi / (ROInum - 1);
+        radius = floor(pixsize/2.5);%tweak this number to fit the ROIs better
+        for i = 1:ROInum-1
+            dx = radius*cos((i-1)*angSpacing);
+            dy = radius*sin((i-1)*angSpacing);
+            roixc(i+1)= roixc(1)+dx;
+            roiyc(i+1)= roixc(1)+dy;
+        end        
 end
 
 

@@ -118,7 +118,7 @@ MaxROINum = 50;
 set(handles.NumROIPopup,'String',num2cell(1:MaxROINum));
 SetPopupValue(handles.NumROIPopup,Settings.NumROIs);
 %ROI Style Popup
-ROIStyleList = {'Grid','Radial','Intensity'};
+ROIStyleList = {'Grid','Radial','Intensity','Annular'};
 set(handles.ROIStylePopup, 'String', ROIStyleList);
 SetPopupValue(handles.ROIStylePopup,Settings.ROIStyle);
 %ROIFilter
