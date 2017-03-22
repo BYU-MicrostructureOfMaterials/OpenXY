@@ -193,13 +193,6 @@ function CloseButton_Callback(hObject, eventdata, handles)
 % hObject    handle to CloseButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-if ~isempty(handles.Settings.PCList)
-    index = GetListIndex(handles);
-    IndCol = zeros(size(handles.Settings.PCList,1),1);
-    IndCol(index) = 1;
-    handles.Settings.PCList(:,8) = num2cell(IndCol);
-end
-
 if ~isempty(handles.MainGUI) && isvalid(handles.MainGUI)
     MainHandles = guidata(handles.MainGUI);
     MainHandles.Settings = handles.Settings;
@@ -248,6 +241,12 @@ if ~isempty(handles.Settings.PCList)
         end
         UpdatePlot(handles)
     end
+    
+    % Set Boolean
+    index = GetListIndex(handles);
+    IndCol = zeros(size(handles.Settings.PCList,1),1);
+    IndCol(index) = 1;
+    handles.Settings.PCList(:,8) = num2cell(IndCol);
     UpdateGUIs(handles)
 
     %Edit on Double-click
