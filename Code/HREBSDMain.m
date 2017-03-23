@@ -22,7 +22,8 @@ if ~isfield(Settings,'DoStrain')
 end
 
 %Initialize Variables
-F = repmat({zeros(3)},1,Settings.ScanLength);
+% F = repmat({zeros(3)},1,Settings.ScanLength);
+F = zeros(3,3,Settings.ScanLength);
 g = zeros(3,3,Settings.ScanLength);
 U = repmat({zeros(3)},1,Settings.ScanLength);
 SSE = repmat({0},1,Settings.ScanLength);
@@ -59,7 +60,7 @@ if Settings.DoParallel > 1
         %or a structure F.a F.b F.c of deformation gradient tensors for
         %each point in the L grid
         
-        [F{ImageInd}, g(:,:,ImageInd), U{ImageInd}, SSE{ImageInd}, XX{ImageInd}, sigma(:,:,ImageInd)] = ...
+        [F(:,:,ImageInd), g(:,:,ImageInd), U{ImageInd}, SSE{ImageInd}, XX{ImageInd}, sigma(:,:,ImageInd)] = ...
             GetDefGradientTensor(Inds(ImageInd),Settings,Settings.Phase{ImageInd});
         
         %{
@@ -83,7 +84,7 @@ else
         %         tic
 %         disp(ImageInd)
         
-        [F{ImageInd}, g(:,:,ImageInd), U{ImageInd}, SSE{ImageInd}, XX{ImageInd}, sigma(:,:,ImageInd)] = ...
+        [F(:,:,ImageInd), g(:,:,ImageInd), U{ImageInd}, SSE{ImageInd}, XX{ImageInd}, sigma(:,:,ImageInd)] = ...
             GetDefGradientTensor(Inds(ImageInd),Settings,Settings.Phase{ImageInd});
         
         % commented out this (outputs strain matrix - I think - DTF 5/15/14)
@@ -142,7 +143,7 @@ if ~isfield(Settings,'data') || Settings.DoStrain
             [phi1 PHI phi2] = gmat2euler(g(:,:,jj));
             Settings.SSE{jj} = SSE{jj};
             data.SSE{jj} = SSE{jj};
-            data.F{jj} = F{jj};
+            data.F(:,:,jj) = F(:,:,jj);
             data.phi1rn(jj) = phi1;
             data.PHIrn(jj) = PHI;
             data.phi2rn(jj) = phi2;

@@ -8,7 +8,7 @@ else
 end
 tempF=zeros(3,3);
 for i=1:NN
-    tempF(:,:)=Settings.data.F{i};
+    tempF(:,:)=Settings.data.F(:,:,i);
     [tempR, tempU]=poldec(tempF);
     tempU=tempU-eye(3);
     u33(i)=tempU(3,3); 
@@ -26,7 +26,7 @@ legend('\epsilon_1_1','\epsilon_2_2','\epsilon_3_3')
 
 tempF=zeros(3,3);
 for i=1:NN 
-    tempF(:,:)=Settings.data.F{i};
+    tempF(:,:)=Settings.data.F(:,:,i);
     [tempR tempU]=poldec(tempF);
     temptet(i)=tempU(3,3)-(tempU(1,1)+tempU(2,2))/2;
 end

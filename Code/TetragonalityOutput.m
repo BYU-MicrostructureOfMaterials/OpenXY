@@ -9,7 +9,8 @@ function TetragonalityOutput(Settings)
 n = Settings.data.cols;
 m = Settings.data.rows;
 
-F = reshape((Settings.data.F),n,m)';
+% F = reshape((Settings.data.F),n,m)';
+F = Settings.data.F;
 
 %these will contain the results
 beta = zeros(3,3,m,n);
@@ -19,7 +20,8 @@ axisdirection=zeros(m,n);
 %iterate through all points in dataset
 for i=1:m
     for j=1:n
-        beta(:,:,i,j) = (cell2mat(F(i,j)) - eye(3));
+%         beta(:,:,i,j) = (cell2mat(F(i,j)) - eye(3));
+        beta(:,:,i,j) = (F(:,:,j) - eye(3));
         %take the symmetric part--so "beta" is now strain
         beta(:,:,i,j) = .5*(beta(:,:,i,j) + beta(:,:,i,j)');        
         %this will contain the diagonal

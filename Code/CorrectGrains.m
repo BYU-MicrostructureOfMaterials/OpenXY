@@ -1,7 +1,8 @@
 
 g = euler2gmat(Settings.NewAngles);
 Grains = find(~cellfun(@isempty,subGrainPaths));
-F = reshape(cell2mat(Settings.data.F),3,3,Settings.ScanLength);
+% F = reshape(cell2mat(Settings.data.F),3,3,Settings.ScanLength);
+F = Settings.data.F;
 for j = 1:length(Grains)
     gID = Grains(j);
     grainRefInd = mean(subgrainRefs(subgrainID==gID));

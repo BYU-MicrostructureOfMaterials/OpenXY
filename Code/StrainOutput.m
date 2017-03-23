@@ -45,12 +45,17 @@ Bob = Settings.SSE;
 Bill = cell2mat(Bob);
 Gob = 1:length(Bill);
 stuff = Gob(Bill > (mean(Bill) + std(Bill)));
-for j = 1:length(stuff) data.F{stuff(j)} = eye(3); end
+%for j = 1:length(stuff) data.F{stuff(j)} = eye(3); end
+for j = 1:length(stuff)
+    data.F(:,:,stuff(j)) = eye(3); 
+end
 
-FList = [data.F{:}];
-FArray=reshape(FList,[3,3,length(FList(1,:))/3]);
+% FList = [data.F{:}];
+% FArray=reshape(FList,[3,3,length(FList(1,:))/3]);
 
-thisF=zeros(3,3);
+FArray = data.F;
+
+thisF=zeros(3);
 FSample=FArray;
 U = zeros(size(FArray));
 for i=1:length(FArray(1,1,:))

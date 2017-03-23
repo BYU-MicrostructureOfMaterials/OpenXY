@@ -633,18 +633,18 @@ function [AllFa,AllFc,misanglea,misanglec] = DDCalcEasy(RefInd, RefG, lattice, S
                 
     misanglea=GeneralMisoCalc(g_b,Amat,lattice); %need to check the second A-point if hexagonal scan grid***
     misanglec=GeneralMisoCalc(g_b,Cmat,lattice);
-                
-    Fbinv = inv(g_b'*Settings.data.F{cnt}*g_b); % in sample frame
-%      Fbinv = inv(Settings.data.F{cnt}); % in crystal frame
+    
+    Fbinv = inv(g_b'*Settings.data.F(:,:,cnt)*g_b); % in sample frame
+%     Fbinv = inv(Settings.data.F{cnt}); % in crystal frame
     % first, evaluate point a
     if r > 1 %Not Line Scan
         if ~strcmp(Settings.ScanType,'Hexagonal') || (strcmp(Settings.ScanType,'Hexagonal') && skippts>0)
-            AllFa = g_b*Amat'*Settings.data.F{RefIndA}*Amat*Fbinv*g_b'; %put Fa in sample frame, then put the whole thing back in crystal
+            AllFa = g_b*Amat'*Settings.data.F(:,:,RefIndA)*Amat*Fbinv*g_b'; %put Fa in sample frame, then put the whole thing back in crystal
 %             AllFa = Settings.data.F{RefIndA}*Fbinv; %leave in crystal
                 else
             Amat2=euler2gmat(Settings.data.NewAngles(RefIndA2,1),Settings.data.NewAngles(RefIndA2,2),Settings.data.NewAngles(RefIndA2,3));
-            AllFa1 = g_b*Amat'*Settings.data.F{RefIndA1}*Amat*Fbinv*g_b';
-            AllFa2 = g_b*Amat2'*Settings.data.F{RefIndA2}*Amat2*Fbinv*g_b';
+            AllFa1 = g_b*Amat'*Settings.data.F(:,:,RefIndA1)*Amat*Fbinv*g_b';
+            AllFa2 = g_b*Amat2'*Settings.data.(:,:,RefIndA2)*Amat2*Fbinv*g_b';
             AllFa=0.5*(AllFa1+AllFa2);
                 end
                 
@@ -658,7 +658,7 @@ function [AllFa,AllFc,misanglea,misanglec] = DDCalcEasy(RefInd, RefG, lattice, S
         AllFa= -eye(3);
             end
     % then, evaluate point c
-    AllFc = g_b*Cmat'*Settings.data.F{RefIndC}*Cmat*Fbinv*g_b'; %sample then back to crystal
+    AllFc = g_b*Cmat'*Settings.data.F(:,:,RefIndC)*Cmat*Fbinv*g_b'; %sample then back to crystal
 %     AllFc = Settings.data.F{RefIndC}*Fbinv; %crystal
 
             
