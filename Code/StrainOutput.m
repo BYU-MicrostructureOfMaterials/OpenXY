@@ -41,13 +41,11 @@ end
 % Strain plots ************************
 
 %Ignore obviously bad points
-Bob = Settings.SSE;
-Bill = cell2mat(Bob);
-Gob = 1:length(Bill);
-stuff = Gob(Bill > (mean(Bill) + std(Bill)));
-%for j = 1:length(stuff) data.F{stuff(j)} = eye(3); end
-for j = 1:length(stuff)
-    data.F(:,:,stuff(j)) = eye(3); 
+SSE = Settings.SSE;
+BadIndex = 1:length(SSE);
+BadIndex = BadIndex(SSE > (mean(SSE) + std(SSE)));
+for j = 1:length(BadIndex)
+    data.F(:,:,BadIndex(j)) = eye(3); 
 end
 
 % FList = [data.F{:}];
