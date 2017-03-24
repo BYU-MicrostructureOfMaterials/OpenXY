@@ -21,7 +21,7 @@ axisdirection=zeros(m,n);
 for i=1:m
     for j=1:n
 %         beta(:,:,i,j) = (cell2mat(F(i,j)) - eye(3));
-        beta(:,:,i,j) = (F(:,:,j) - eye(3));
+        beta(:,:,i,j) = (F(:,:,j+n*(i-1)) - eye(3));
         %take the symmetric part--so "beta" is now strain
         beta(:,:,i,j) = .5*(beta(:,:,i,j) + beta(:,:,i,j)');        
         %this will contain the diagonal
