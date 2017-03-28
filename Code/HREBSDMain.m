@@ -144,8 +144,8 @@ if ~isfield(Settings,'data') || Settings.DoStrain
         else
             
             [phi1 PHI phi2] = gmat2euler(g(:,:,jj));
-            Settings.SSE(:,ImageInd) = SSE(:,ImageInd);
-            data.SSE(:,ImageInd) = SSE(:,ImageInd);
+            Settings.SSE(jj) = SSE(jj);
+            data.SSE(jj) = SSE(jj);
             data.F(:,:,jj) = F(:,:,jj);
             data.phi1rn(jj) = phi1;
             data.PHIrn(jj) = PHI;

@@ -23,7 +23,7 @@ Settings.DisplayGUI = true;
 %% ROI/Filter Settings
 %ROI Settings
 Settings.ROISizePercent = 25;
-Settings.NumROIs = 23;
+Settings.NumROIs = 48;
 Settings.ROIStyle = 'Grid'; %{'Grid','Radial','Intensity'}
 Settings.ROIFilter = [2 50 1 1];
 %Filter Settings
