@@ -163,7 +163,7 @@ handles.Settings = Settings;
 guidata(hObject, handles);
 
 %Update PC 
-PCList_Callback(hObject, eventdata, handles);
+PCList_Callback(handles.PCList, eventdata, handles);
 
 % UIWAIT makes PCGUI wait for user response (see UIRESUME)
 %uiwait(handles.PCGUI);
@@ -331,7 +331,7 @@ if strcmp(type,'Strain Minimization')
         PCData = PCStrainMinimization(Settings,PCSettings{5});
 
         %Add New PC to List
-        Settings.PCList(end+1,:) = {PCData.MeanXStar PCData.MeanYStar PCData.MeanZStar  PCSettings{4:6} PCData};
+        Settings.PCList(end+1,:) = {PCData.MeanXStar PCData.MeanYStar PCData.MeanZStar  PCSettings{4:6} PCData 0};
         set(handles.PCList,'String',Settings.PCList(:,6));
         handles.Settings = Settings;
         guidata(handles.PCGUI,handles);
@@ -351,7 +351,7 @@ elseif strcmp(type,'Manual')
         end
 
         %Add to PC List
-        Settings.PCList(end+1,:) = PCSettings;
+        Settings.PCList(end+1,:) = [PCSettings {0}];
         index = get(handles.PCList,'Value');
         set(handles.PCList,'String',Settings.PCList(:,6));
         handles.Settings = Settings;
@@ -390,7 +390,7 @@ elseif strcmp(type,'Grid')
         
             %Add to PC List
             Settings.PCList(end+1,:) = {PCData.xstar PCData.ystar PCData.zstar...
-                'Grid' 'Naive' def_name PCData};
+                'Grid' 'Naive' def_name PCData 0};
             set(handles.PCList,'String',Settings.PCList(:,6));
             handles.Settings = Settings;
             guidata(handles.PCGUI,handles);
@@ -412,7 +412,7 @@ elseif strcmp(type,'Tiff')
         
         %Add to PC List
         Settings.PCList(end+1,:) = {PCData.XStar(1) PCData.YStar(1) PCData.ZStar(1)...
-            'Tiff' 'None' def_name PCData};
+            'Tiff' 'None' def_name PCData 0};
         set(handles.PCList,'String',Settings.PCList(:,6));
         handles.Settings = Settings;
         guidata(handles.PCGUI,handles);
@@ -516,7 +516,7 @@ if ~isempty(handles.Settings.PCList)
             end
         end
         
-        handles.Settings.PCList(index,:) = EditedPC;
+        handles.Settings.PCList(index,1:end-1) = EditedPC;
         set(handles.PCList,'String',handles.Settings.PCList(:,6));
         
         guidata(handles.PCGUI,handles);
