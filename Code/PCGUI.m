@@ -292,6 +292,7 @@ function NewPC_Callback(hObject, eventdata, handles)
 type = GetPopupString(handles.NewPCType);
 index = GetListIndex(handles);
 Settings = handles.Settings;
+canceled = false;
 if index > 0
     Sel = Settings.PCList(index,:);
     PCinit = Sel(1:3);
@@ -335,6 +336,8 @@ if strcmp(type,'Strain Minimization')
         set(handles.PCList,'String',Settings.PCList(:,6));
         handles.Settings = Settings;
         guidata(handles.PCGUI,handles);
+    else
+        canceled = true;
     end
 elseif strcmp(type,'Manual')
      %Setup Initial Params
@@ -356,6 +359,8 @@ elseif strcmp(type,'Manual')
         set(handles.PCList,'String',Settings.PCList(:,6));
         handles.Settings = Settings;
         guidata(handles.PCGUI,handles);
+    else
+        canceled = true;
     end
 elseif strcmp(type,'Grid')
     def_name = 'Grid';
@@ -395,6 +400,8 @@ elseif strcmp(type,'Grid')
             handles.Settings = Settings;
             guidata(handles.PCGUI,handles);
         end
+    else
+        canceled = true;
     end
 elseif strcmp(type,'Tiff')
     def_name = 'TIFF';
@@ -422,7 +429,7 @@ end
 
 %autoRuns OpenXY after completing PC Calculations
 autoRun = get(handles.AutoRun,'value');
-if autoRun
+if autoRun && ~canceled
     PCListString = cellstr(get(handles.PCList,'string'));
     listSize = size(PCListString);
     set(handles.PCList,'value',listSize(1));
