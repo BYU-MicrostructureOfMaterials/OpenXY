@@ -704,11 +704,6 @@ else
     warndlg({'Cannot open PC Calibration menu'; 'Must select scan file data and first image'},'OpenXY: Invalid Operation');
 end
 guidata(hObject,handles);
-if isfield(handles.Settings,'AutoRun')
-    if handles.Settings.AutoRun==1
-        RunButton_Callback(handles.RunButton, eventdata, handles)
-    end
-end
 
 % --------------------------------------------------------------------
 function TestGeometry_Callback(hObject, eventdata, handles)

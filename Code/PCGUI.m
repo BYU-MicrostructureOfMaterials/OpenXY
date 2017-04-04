@@ -22,7 +22,7 @@ function varargout = PCGUI(varargin)
 
 % Edit the above text to modify the response to help PCGUI
 
-% Last Modified by GUIDE v2.5 24-Jan-2017 13:24:22
+% Last Modified by GUIDE v2.5 31-Mar-2017 15:13:37
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -420,6 +420,21 @@ elseif strcmp(type,'Tiff')
     
 end
 
+%autoRuns OpenXY after completing PC Calculations
+autoRun = get(handles.AutoRun,'value');
+if autoRun
+    PCListString = cellstr(get(handles.PCList,'string'));
+    listSize = size(PCListString);
+    set(handles.PCList,'value',listSize(1));
+    PCList_Callback(handles.PCList, eventdata, handles);
+    handles = guidata(hObject);
+    UpdateGUIs(handles);
+    UpdatePlot(handles);
+    mainHandles = guidata(handles.MainGUI);
+    RunButton_callback = mainHandles.RunButton.Callback;
+    runButton = mainHandles.RunButton;
+    RunButton_callback(runButton,eventdata);
+end
 
 % --- Executes on selection change in NewPCType.
 function NewPCType_Callback(hObject, eventdata, handles)
@@ -731,3 +746,19 @@ function List_Callback(hObject, eventdata, handles)
 % hObject    handle to List (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on mouse press over figure background.
+function PCGUI_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to PCGUI (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in AutoRun.
+function AutoRun_Callback(hObject, eventdata, handles)
+% hObject    handle to AutoRun (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of AutoRun
