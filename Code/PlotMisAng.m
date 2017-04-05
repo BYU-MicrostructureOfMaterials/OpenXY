@@ -60,6 +60,7 @@ else
     [RefIndA,RefIndC] = GetAdjacentInds(dims,1:prod(dims),0,'Square');
     MisAng(:,4) = quatMisoSym(q,q(RefIndA,:),q_symops,'element')*180/pi;
     MisAng(:,1) = quatMisoSym(q,q(RefIndC,:),q_symops,'element')*180/pi;
+    MaxMisAng = max(MisAng(:,4),MisAng(:,1));
 end
 
 map = reshape(MaxMisAng,dims(1),dims(2))';
@@ -108,3 +109,5 @@ switch layout
         imagesc(map)
         
 end
+colormap jet
+axis image
