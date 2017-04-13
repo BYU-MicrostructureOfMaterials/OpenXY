@@ -739,7 +739,7 @@ if Settings.DoShowPlot
     hold on
     if DoPlotROIs
         set(0,'currentfigure',100);
-        PlotROIs(Settings,RefImage);
+        PlotROIs(Settings.NumROIs, Settings.ROISize, Settings.ROIStyle, RefImage);
     end
     for i=1:length(Cshift)
         if ~isempty(find(tempind==i))
@@ -785,7 +785,7 @@ if Settings.DoShowPlot
     hold on
     if DoPlotROIs
         set(0,'currentfigure',101);
-        PlotROIs(Settings,RefImage);
+        PlotROIs(Settings.NumROIs, Settings.ROISize, Settings.ROIStyle, RefImage);
     end
     for i=1:length(Cshift)
         if ~isempty(find(tempind==i))
