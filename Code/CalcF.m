@@ -1,5 +1,5 @@
 function [F, SSE, XX, sigma] = CalcF(RefImage,ScanImage,g,Fo,Ind,...
-    Settings,curMaterial,RefInd,PC,roixc,roiyc)
+    Settings,curMaterial,RefInd,PC,roixc,roiyc,ROIFilter)
 %Desc: This function can be used to calculate the deformation tensor F (in the crystal frame) that
 %describes the deformation to move the pattern RefImage onto the pattern ScanImage.
 % modified 10/28/14 by DTF to correctly change Pattern Center when using
@@ -21,26 +21,23 @@ function [F, SSE, XX, sigma] = CalcF(RefImage,ScanImage,g,Fo,Ind,...
 %        pattern method
 %
 %% handle inputs
-keyboard
 Material = ReadMaterial(curMaterial);
 g0 = g;
 RefImage=double(RefImage);
 ScanImage=double(ScanImage);
 
-% roixc = Settings.roixc;
-% roiyc = Settings.roiyc;
 xstar=PC(1);
 ystar=PC(2);
 zstar=PC(3);
 standev = Settings.StandardDeviation;
 
 %% set up filter for ROI filtering
-if ~any(Settings.ROIFilter)
+if ~any(ROIFilter)
     custfilt = [];
     windowfunc = custfilt;
 else
-    lowerrad = Settings.ROIFilter(1);
-    upperrad = Settings.ROIFilter(2);
+    lowerrad = ROIFilter(1);
+    upperrad = ROIFilter(2);
     L = Settings.ROISize + 1;
     xc = round(L/2);
     yc = round(L/2);
@@ -52,10 +49,10 @@ else
     IJ = meshgrid(i,j);
     dist = sqrt((IJ-ones(size(IJ)).*xc).^2+(IJ'-ones(size(IJ)).*yc).^2);
     custfilt(dist<lowerrad | dist>upperrad) = 1;
-    if Settings.ROIFilter(4)==1
+    if ROIFilter(4)==1
         custfilt(dist>upperrad & dist<upperrad+13)=erf((dist(dist>upperrad & dist<upperrad+13)-upperrad)/13*pi);
     end
-    if Settings.ROIFilter(3)==1
+    if ROIFilter(3)==1
         custfilt(dist<lowerrad & dist>lowerrad-13)=erf(-(dist(dist<lowerrad & dist>lowerrad-13)-lowerrad)/13*pi);
     end
     custfilt=1-custfilt;

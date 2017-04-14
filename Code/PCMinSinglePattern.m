@@ -84,7 +84,8 @@ switch Algorithm
                     clear global rs cs Gs
                     %     [F SSE] = CalcF(I1,I0,g,F,ImageInd,Settings,Settings.Material); % old version
                     [F SSE] = CalcF(I1,ScanImage,g,eye(3),Ind,Settings,...
-                        Settings.Phase{Ind},0,PC0,roixc,roiyc); % new DTF
+                        Settings.Phase{Ind},0,PC0,...
+                        roixc,roiyc,Settings.ROIFilter); % new DTF
                     [R U] = poldec(F);
                     g=R'*g;
                 end
@@ -97,7 +98,8 @@ switch Algorithm
                     clear global rs cs Gs
                     %     [F SSE] = CalcF(I1,I0,g,F,ImageInd,Settings,Settings.Material); % old version
                     [F SSE] = CalcF(I1,ScanImage,g,eye(3),Ind,Settings,...
-                        Settings.Phase{Ind},0,PC0,roixc,roiyc); % new DTF
+                        Settings.Phase{Ind},0,PC0,...
+                        roixc,roiyc,Settings.ROIFilter); % new DTF
                     [R U] = poldec(F);
                     g=R'*g;
                 end
@@ -114,7 +116,8 @@ switch Algorithm
                     %     [F SSE] = calcFnew(I1,I0,g,F,paramsF,standev,6);
                     %     [F SSE] = CalcF(I1,I0,g,F,ImageInd,Settings,Settings.Material);% ** same change as above DTF 7/21/14
                     [F SSE] = CalcF(I1,ScanImage,g,F,Ind,Settings,...
-                        Settings.Phase{Ind},0,PC0,roixc,roiyc);
+                        Settings.Phase{Ind},0,PC0,...
+                        roixc,roiyc,Settings.ROIFilter);
                 end
             end
             

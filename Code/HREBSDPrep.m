@@ -95,7 +95,7 @@ if strcmp(Settings.HROIMMethod,'Dynamic Simulated')
         clear global rs cs Gs
         [F1,~,~] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,...
             curMaterial,Settings.RefImageInd,PC,...
-            Setting.roixc,Settings.roiyc);
+            Setting.roixc,Settings.roiyc,Settings.ROIFilter);
         for iq=1:3
             [rr,~]=poldec(F1); % extract the rotation part of the deformation, rr
             gr=rr'*gr; % correct the rotation component of the deformation so that it doesn't affect strain calc
@@ -104,7 +104,7 @@ if strcmp(Settings.HROIMMethod,'Dynamic Simulated')
             clear global rs cs Gs
             [F1,~,~] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,...
                 Settings,curMaterial,Settings.RefImageInd,PC,...
-            Setting.roixc,Settings.roiyc);
+            Setting.roixc,Settings.roiyc,Settings.ROIFilter);
         end
         Settings.RefImage = RefImage;
     end
