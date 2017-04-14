@@ -1,4 +1,6 @@
-
+%The Parameters of Calc F have changed, but I did not updaate this file
+%script accordingly. It will need to be adjusted to work properly ZRC -
+%4/14/2017
 g = euler2gmat(Settings.NewAngles);
 Grains = find(~cellfun(@isempty,subGrainPaths));
 % F = reshape(cell2mat(Settings.data.F),3,3,Settings.ScanLength);

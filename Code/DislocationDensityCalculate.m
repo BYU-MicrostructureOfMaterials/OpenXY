@@ -126,8 +126,8 @@ if ~strcmp(Settings.ScanType,'L')
     
     [roixc,roiyc]= GetROIs(ScanImage,Settings.NumROIs,Settings.PixelSize,...
         Settings.ROISize, Settings.ROIStyle);
-    Settings.roixc = roixc;
-    Settings.roiyc = roiyc;
+%     Settings.roixc = roixc;
+%     Settings.roiyc = roiyc;
 
   %Not sure if everything before matlabpool close force is necessary...Travis?  ImageNamesList=Settings.ImageNamesList;
   %  ImageFilter=Settings.ImageFilter;
@@ -574,10 +574,16 @@ function [AllFa,AllSSEa,AllFc,AllSSEc, misanglea, misanglec] = DDCalc(RefInd,Ref
 
             clear global rs cs Gs
             if RefIndA2 == 0
-                    [AllFa,AllSSEa] = CalcF(image_b,image_a,g_b,eye(3),cnt,Settings,Settings.Phase{cnt}, RefIndA,PC);
+                    [AllFa,AllSSEa] = CalcF(image_b,image_a,g_b,eye(3),...
+                        cnt,Settings,Settings.Phase{cnt}, RefIndA,PC,...
+                        roixc,roiyc);
             else
-                [AllFa1,AllSSEa1] = CalcF(image_b,image_a ,g_b,eye(3),cnt,Settings,Settings.Phase{cnt},RefIndA,PC);
-                [AllFa2,AllSSEa2] = CalcF(image_b,image_a2,g_b,eye(3),cnt,Settings,Settings.Phase{cnt},RefIndA2,PC);
+                [AllFa1,AllSSEa1] = CalcF(image_b,image_a ,g_b,eye(3),...
+                    cnt,Settings,Settings.Phase{cnt},RefIndA,PC,...
+                    roixc,roiyc);
+                [AllFa2,AllSSEa2] = CalcF(image_b,image_a2,g_b,eye(3),...
+                    cnt,Settings,Settings.Phase{cnt},RefIndA2,PC,...
+                    roixc,roiyc);
                 AllFa=0.5*(AllFa1+AllFa2);
                 AllSSEa=0.5*(AllSSEa1+AllSSEa2);
             end
@@ -589,10 +595,16 @@ function [AllFa,AllSSEa,AllFc,AllSSEc, misanglea, misanglec] = DDCalc(RefInd,Ref
         % then, evaluate point c
         clear global rs cs Gs
         if RefIndC2 == 0
-            [AllFc,AllSSEc] = CalcF(image_b,image_c ,g_b,eye(3),cnt,Settings,Settings.Phase{cnt},RefIndC,PC);
+            [AllFc,AllSSEc] = CalcF(image_b,image_c ,g_b,eye(3),cnt,...
+                Settings,Settings.Phase{cnt},RefIndC,PC,...
+                roixc,roiyc);
         else
-            [AllFc1,AllSSEc1] = CalcF(image_b,image_c ,g_b,eye(3),cnt,Settings,Settings.Phase{cnt},RefIndC,PC);
-            [AllFc2,AllSSEc2] = CalcF(image_b,image_c2,g_b,eye(3),cnt,Settings,Settings.Phase{cnt},RefIndC2,PC);
+            [AllFc1,AllSSEc1] = CalcF(image_b,image_c ,g_b,eye(3),cnt,...
+                Settings,Settings.Phase{cnt},RefIndC,PC,...
+                roixc,roiyc);
+            [AllFc2,AllSSEc2] = CalcF(image_b,image_c2,g_b,eye(3),cnt,...
+                Settings,Settings.Phase{cnt},RefIndC2,PC,...
+                roixc,roiyc);
             AllFc=0.5*(AllFc1+AllFc2);
             AllSSEc=0.5*(AllSSEc1+AllSSEc2);
         end

@@ -1,4 +1,5 @@
-function [F, SSE, XX, sigma] = CalcF(RefImage,ScanImage,g,Fo,Ind,Settings,curMaterial,RefInd,PC)
+function [F, SSE, XX, sigma] = CalcF(RefImage,ScanImage,g,Fo,Ind,...
+    Settings,curMaterial,RefInd,PC,roixc,roiyc)
 %Desc: This function can be used to calculate the deformation tensor F (in the crystal frame) that
 %describes the deformation to move the pattern RefImage onto the pattern ScanImage.
 % modified 10/28/14 by DTF to correctly change Pattern Center when using
@@ -20,14 +21,14 @@ function [F, SSE, XX, sigma] = CalcF(RefImage,ScanImage,g,Fo,Ind,Settings,curMat
 %        pattern method
 %
 %% handle inputs
-
+keyboard
 Material = ReadMaterial(curMaterial);
 g0 = g;
 RefImage=double(RefImage);
 ScanImage=double(ScanImage);
 
-roixc = Settings.roixc;
-roiyc = Settings.roiyc;
+% roixc = Settings.roixc;
+% roiyc = Settings.roiyc;
 xstar=PC(1);
 ystar=PC(2);
 zstar=PC(3);
