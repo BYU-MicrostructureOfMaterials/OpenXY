@@ -89,17 +89,18 @@ if strcmp(Settings.HROIMMethod,'Dynamic Simulated')
         mperpix = Settings.mperpix;
         elevang = Settings.CameraElevation;
         Av = Settings.AccelVoltage*1000; %put it in eV from KeV
+        PC = [xstar ystar zstar];%this could be wrong, I'm to too familiar with EMsoft integration, so it may need to be changed. ZRC 4/14/27
         
         RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av);
         clear global rs cs Gs
-        [F1,~,~] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,Settings.RefImageInd);
+        [F1,~,~] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,Settings.RefImageInd,PC);
         for iq=1:3
             [rr,~]=poldec(F1); % extract the rotation part of the deformation, rr
             gr=rr'*gr; % correct the rotation component of the deformation so that it doesn't affect strain calc
             RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av);
             
             clear global rs cs Gs
-            [F1,~,~] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,Settings.RefImageInd);
+            [F1,~,~] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,Settings.RefImageInd,PC);
         end
         Settings.RefImage = RefImage;
     end

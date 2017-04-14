@@ -558,6 +558,10 @@ function [AllFa,AllSSEa,AllFc,AllSSEc, misanglea, misanglec] = DDCalc(RefInd,Ref
     %         imgray=rgb2gray(imread(ImagePath)); % this can add significant time for large scans
     %         intensityr(cnt)=mean(imgray(:));
 
+    PC(1) = Settings.Xstar(cnt);
+    PC(2) = Settings.Ystar(cnt);
+    PC(3) = Settings.Zstar(cnt);
+    
     if (isempty(image_a)) || (isempty(image_b)) ||  (isempty(image_c)) || ...
             (RefIndA2>0 && isempty(image_a2)) || (RefIndC2>0 && isempty(image_c2))
         AllFa= -eye(3);
@@ -570,10 +574,10 @@ function [AllFa,AllSSEa,AllFc,AllSSEc, misanglea, misanglec] = DDCalc(RefInd,Ref
 
             clear global rs cs Gs
             if RefIndA2 == 0
-                    [AllFa,AllSSEa] = CalcF(image_b,image_a,g_b,eye(3),cnt,Settings,Settings.Phase{cnt}, RefIndA);
+                    [AllFa,AllSSEa] = CalcF(image_b,image_a,g_b,eye(3),cnt,Settings,Settings.Phase{cnt}, RefIndA,PC);
             else
-                [AllFa1,AllSSEa1] = CalcF(image_b,image_a ,g_b,eye(3),cnt,Settings,Settings.Phase{cnt},RefIndA );
-                [AllFa2,AllSSEa2] = CalcF(image_b,image_a2,g_b,eye(3),cnt,Settings,Settings.Phase{cnt},RefIndA2);
+                [AllFa1,AllSSEa1] = CalcF(image_b,image_a ,g_b,eye(3),cnt,Settings,Settings.Phase{cnt},RefIndA,PC);
+                [AllFa2,AllSSEa2] = CalcF(image_b,image_a2,g_b,eye(3),cnt,Settings,Settings.Phase{cnt},RefIndA2,PC);
                 AllFa=0.5*(AllFa1+AllFa2);
                 AllSSEa=0.5*(AllSSEa1+AllSSEa2);
             end
@@ -585,10 +589,10 @@ function [AllFa,AllSSEa,AllFc,AllSSEc, misanglea, misanglec] = DDCalc(RefInd,Ref
         % then, evaluate point c
         clear global rs cs Gs
         if RefIndC2 == 0
-            [AllFc,AllSSEc] = CalcF(image_b,image_c ,g_b,eye(3),cnt,Settings,Settings.Phase{cnt},RefIndC);
+            [AllFc,AllSSEc] = CalcF(image_b,image_c ,g_b,eye(3),cnt,Settings,Settings.Phase{cnt},RefIndC,PC);
         else
-            [AllFc1,AllSSEc1] = CalcF(image_b,image_c ,g_b,eye(3),cnt,Settings,Settings.Phase{cnt},RefIndC );
-            [AllFc2,AllSSEc2] = CalcF(image_b,image_c2,g_b,eye(3),cnt,Settings,Settings.Phase{cnt},RefIndC2);
+            [AllFc1,AllSSEc1] = CalcF(image_b,image_c ,g_b,eye(3),cnt,Settings,Settings.Phase{cnt},RefIndC,PC);
+            [AllFc2,AllSSEc2] = CalcF(image_b,image_c2,g_b,eye(3),cnt,Settings,Settings.Phase{cnt},RefIndC2,PC);
             AllFc=0.5*(AllFc1+AllFc2);
             AllSSEc=0.5*(AllSSEc1+AllSSEc2);
         end

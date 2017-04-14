@@ -28,15 +28,9 @@ ScanImage=double(ScanImage);
 
 roixc = Settings.roixc;
 roiyc = Settings.roiyc;
-if nargin < 9
-	xstar = Settings.XStar(Ind);
-	ystar = Settings.YStar(Ind);
-	zstar = Settings.ZStar(Ind);
-else
-    xstar=PC(1);
-    ystar=PC(2);
-    zstar=PC(3);
-end
+xstar=PC(1);
+ystar=PC(2);
+zstar=PC(3);
 standev = Settings.StandardDeviation;
 
 %% set up filter for ROI filtering
