@@ -5,6 +5,7 @@ params2{2} = PC(2);
 params2{3} = PC(3);
 F = eye(3);
 standev = Settings.StandardDeviation;
+ROISize = Settings.ROISize;
 
 clear global rs cs Gs
 
@@ -27,7 +28,7 @@ switch Settings.HROIMMethod
             %     [F SSE] = CalcF(I1,I0,g,F,ImageInd,Settings,Settings.Material); % old version
             [F,SSE] = CalcF(I1,I0,g,eye(3),ImageInd,Settings,...
                 Settings.Phase{ImageInd},0,PC,Settings.roixc,...
-                Settings.roiyc,Settings.ROIFilter,standev); % new DTF
+                Settings.roiyc,Settings.ROIFilter,ROISize,standev); % new DTF
             [R,U] = poldec(F);
             g=R'*g;
         end
@@ -41,7 +42,7 @@ switch Settings.HROIMMethod
             %     [F SSE] = CalcF(I1,I0,g,F,ImageInd,Settings,Settings.Material); % old version
             [F,SSE] = CalcF(I1,I0,g,eye(3),ImageInd,Settings,...
                 Settings.Phase{ImageInd},0,PC,Settings.roixc,...
-                Settings.roiyc,Settings.ROIFilter,standev); % new DTF
+                Settings.roiyc,Settings.ROIFilter,ROISize,standev); % new DTF
             [R,U] = poldec(F);
             g=R'*g;
         end
@@ -59,7 +60,7 @@ switch Settings.HROIMMethod
             %     [F SSE] = CalcF(I1,I0,g,F,ImageInd,Settings,Settings.Material);% ** same change as above DTF 7/21/14
             [F SSE] = CalcF(I1,I0,g,F,ImageInd,Settings,...
                 Settings.Phase{ImageInd},0,PC,Settings.roixc,...
-                Settings.roiyc,Settings.ROIFilter,standev);
+                Settings.roiyc,Settings.ROIFilter,ROISize,standev);
         end
         
         [R U] = poldec(F);

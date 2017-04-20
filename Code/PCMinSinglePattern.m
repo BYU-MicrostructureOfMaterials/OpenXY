@@ -47,6 +47,7 @@ end
 Settings.roixc = roixc;
 Settings.roiyc = roiyc;
 standev = Settings.StandardDeviation;
+ROISize = Settings.ROISize;
 
 paramspat={xstar;ystar;zstar;pixsize;Av;sampletilt;elevang;Material.Fhkl;Material.dhkl;Material.hkl};
 
@@ -86,7 +87,7 @@ switch Algorithm
                     %     [F SSE] = CalcF(I1,I0,g,F,ImageInd,Settings,Settings.Material); % old version
                     [F SSE] = CalcF(I1,ScanImage,g,eye(3),Ind,Settings,...
                         Settings.Phase{Ind},0,PC0,roixc,roiyc,...
-                        Settings.ROIFilter,standev); % new DTF
+                        Settings.ROIFilter,ROISize,standev); % new DTF
                     [R U] = poldec(F);
                     g=R'*g;
                 end
@@ -100,7 +101,7 @@ switch Algorithm
                     %     [F SSE] = CalcF(I1,I0,g,F,ImageInd,Settings,Settings.Material); % old version
                     [F SSE] = CalcF(I1,ScanImage,g,eye(3),Ind,Settings,...
                         Settings.Phase{Ind},0,PC0,roixc,roiyc,...
-                        Settings.ROIFilter,standev); % new DTF
+                        Settings.ROIFilter,ROISize,standev); % new DTF
                     [R U] = poldec(F);
                     g=R'*g;
                 end
@@ -118,7 +119,7 @@ switch Algorithm
                     %     [F SSE] = CalcF(I1,I0,g,F,ImageInd,Settings,Settings.Material);% ** same change as above DTF 7/21/14
                     [F SSE] = CalcF(I1,ScanImage,g,F,Ind,Settings,...
                         Settings.Phase{Ind},0,PC0,roixc,roiyc,...
-                        Settings.ROIFilter,standev);
+                        Settings.ROIFilter,ROISize,standev);
                 end
             end
             

@@ -1,5 +1,5 @@
 function [F, SSE, XX, sigma] = CalcF(RefImage,ScanImage,g,Fo,Ind,...
-    Settings,curMaterial,RefInd,PC,roixc,roiyc,ROIFilter,standev)
+    Settings,curMaterial,RefInd,PC,roixc,roiyc,ROIFilter,ROISize,standev)
 %Desc: This function can be used to calculate the deformation tensor F (in the crystal frame) that
 %describes the deformation to move the pattern RefImage onto the pattern ScanImage.
 % modified 10/28/14 by DTF to correctly change Pattern Center when using
@@ -37,14 +37,14 @@ if ~any(ROIFilter)
 else
     lowerrad = ROIFilter(1);
     upperrad = ROIFilter(2);
-    L = Settings.ROISize + 1;
+    L = ROISize + 1;
     xc = round(L/2);
     yc = round(L/2);
     
     custfilt = zeros(L-1,L-1);
     
-    i = 1:Settings.ROISize;
-    j = 1:Settings.ROISize;
+    i = 1:ROISize;
+    j = 1:ROISize;
     IJ = meshgrid(i,j);
     dist = sqrt((IJ-ones(size(IJ)).*xc).^2+(IJ'-ones(size(IJ)).*yc).^2);
     custfilt(dist<lowerrad | dist>upperrad) = 1;
@@ -59,8 +59,8 @@ else
     
     xc=L/2;
     yc=L/2;
-    windowfunc = cos((IJ-ones(size(IJ)).*xc)*pi/Settings.ROISize)...
-        .* cos((IJ'-ones(size(IJ)).*yc)*pi/Settings.ROISize);
+    windowfunc = cos((IJ-ones(size(IJ)).*xc)*pi/ROISize)...
+        .* cos((IJ'-ones(size(IJ)).*yc)*pi/ROISize);
 end
 
 %% geometry / coordinate frame transformation
@@ -150,8 +150,8 @@ for i=1:length(roixc)
     %shift from sample origin to phospher origin described in sample frame
     c = Qps*[0;0;-zstar]*Settings.PixelSize;
     
-    rrange=round(rc-Settings.ROISize/2):round(rc-Settings.ROISize/2)+Settings.ROISize-1;
-    crange=round(cc-Settings.ROISize/2):round(cc-Settings.ROISize/2)+Settings.ROISize-1;
+    rrange=round(rc-ROISize/2):round(rc-ROISize/2)+ROISize-1;
+    crange=round(cc-ROISize/2):round(cc-ROISize/2)+ROISize-1;
     %
     %     if method == 1% method = 0 was just for testing and as not used here.
     
@@ -730,7 +730,7 @@ if Settings.DoShowPlot
     hold on
     if DoPlotROIs
         set(0,'currentfigure',100);
-        PlotROIs(Settings.NumROIs, Settings.ROISize, Settings.ROIStyle, RefImage);
+        PlotROIs(Settings.NumROIs, ROISize, Settings.ROIStyle, RefImage);
     end
     for i=1:length(Cshift)
         if ~isempty(find(tempind==i))
@@ -776,7 +776,7 @@ if Settings.DoShowPlot
     hold on
     if DoPlotROIs
         set(0,'currentfigure',101);
-        PlotROIs(Settings.NumROIs, Settings.ROISize, Settings.ROIStyle, RefImage);
+        PlotROIs(Settings.NumROIs, ROISize, Settings.ROIStyle, RefImage);
     end
     for i=1:length(Cshift)
         if ~isempty(find(tempind==i))
