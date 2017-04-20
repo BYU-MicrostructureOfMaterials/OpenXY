@@ -48,6 +48,7 @@ Settings.roixc = roixc;
 Settings.roiyc = roiyc;
 standev = Settings.StandardDeviation;
 ROISize = Settings.ROISize;
+calcMI = Settings.CalcMI;
 
 paramspat={xstar;ystar;zstar;pixsize;Av;sampletilt;elevang;Material.Fhkl;Material.dhkl;Material.hkl};
 
@@ -84,11 +85,10 @@ switch Algorithm
                     I1 = genEBSDPatternHybrid_fromEMSoft(g,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av,Ind);
                     
                     clear global rs cs Gs
-                    %     [F SSE] = CalcF(I1,I0,g,F,ImageInd,Settings,Settings.Material); % old version
                     [F SSE] = CalcF(I1,ScanImage,g,eye(3),Ind,Settings,...
                         Settings.Phase{Ind},0,PC0,roixc,roiyc,...
                         Settings.ROIFilter,ROISize,standev,sampletilt,...
-                        pixsize,elevang); % new DTF
+                        pixsize,elevang,calcMI); % new DTF
                     [R U] = poldec(F);
                     g=R'*g;
                 end
@@ -99,11 +99,10 @@ switch Algorithm
                     I1 = genEBSDPatternHybrid(g,paramspat,eye(3),Material.lattice,Material.a1,Material.b1,Material.c1,Material.axs);
                     I1 = custimfilt(I1,X(1),Settings.PixelSize,X(3),X(4));
                     clear global rs cs Gs
-                    %     [F SSE] = CalcF(I1,I0,g,F,ImageInd,Settings,Settings.Material); % old version
                     [F SSE] = CalcF(I1,ScanImage,g,eye(3),Ind,Settings,...
                         Settings.Phase{Ind},0,PC0,roixc,roiyc,...
                         Settings.ROIFilter,ROISize,standev,sampletilt,...
-                        pixsize,elevang); % new DTF
+                        pixsize,elevang,calcMI); % new DTF
                     [R U] = poldec(F);
                     g=R'*g;
                 end
@@ -117,12 +116,10 @@ switch Algorithm
                     %  crpl=206; crpu=824;
                     %  I1 = I1(crpl:crpu,crpl:crpu);
                     clear global rs cs Gs
-                    %     [F SSE] = calcFnew(I1,I0,g,F,paramsF,standev,6);
-                    %     [F SSE] = CalcF(I1,I0,g,F,ImageInd,Settings,Settings.Material);% ** same change as above DTF 7/21/14
                     [F SSE] = CalcF(I1,ScanImage,g,F,Ind,Settings,...
                         Settings.Phase{Ind},0,PC0,roixc,roiyc,...
                         Settings.ROIFilter,ROISize,standev,sampletilt,...
-                        pixsize,elevang);
+                        pixsize,elevang,calcMI);
                 end
             end
             

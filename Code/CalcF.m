@@ -1,6 +1,6 @@
 function [F, SSE, XX, sigma] = CalcF(RefImage,ScanImage,g,Fo,Ind,...
     Settings,curMaterial,RefInd,PC,roixc,roiyc,ROIFilter,ROISize,standev,...
-    sampleTilt,pixelSize,cameraElevation)
+    sampleTilt,pixelSize,cameraElevation,CalcMI)
 %Desc: This function can be used to calculate the deformation tensor F (in the crystal frame) that
 %describes the deformation to move the pattern RefImage onto the pattern ScanImage.
 % modified 10/28/14 by DTF to correctly change Pattern Center when using
@@ -178,7 +178,7 @@ for i=1:length(roixc)
     XX(i,2) = (max(rimage(:))-mean(rimage(:)))/std(rimage(:));
     
     %Calculate Mutual Information (Requires Image Processing Toolbox)
-    if isfield(Settings,'CalcMI') && Settings.CalcMI
+    if CalcMI
         XX(i,3) = CalcMutualInformation(RefROI,ScanROI);
     else
         XX(i,3) = 0;
