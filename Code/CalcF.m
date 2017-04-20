@@ -1,6 +1,6 @@
 function [F, SSE, XX, sigma] = CalcF(RefImage,ScanImage,g,Fo,Ind,...
     Settings,curMaterial,RefInd,PC,roixc,roiyc,ROIFilter,ROISize,standev,...
-    sampleTilt)
+    sampleTilt,pixelSize)
 %Desc: This function can be used to calculate the deformation tensor F (in the crystal frame) that
 %describes the deformation to move the pattern RefImage onto the pattern ScanImage.
 % modified 10/28/14 by DTF to correctly change Pattern Center when using
@@ -16,11 +16,12 @@ function [F, SSE, XX, sigma] = CalcF(RefImage,ScanImage,g,Fo,Ind,...
 %        Settings - structure with all microscope, geometry, material, and ROI settings.
 %        it needs the following fields:
 %        {XStar;YStar;ZStar;PixelSize;ROISize;roixc;roiyc;Av;SampleTilt;CameraElevation;roifilt;Material};, elastic constants different for hcp
-%Applies the BC so that Fo*F satisfies BC
+%        Applies the BC so that Fo*F satisfies BC
 %        RefInd is the index of the reference image for Wilkinson type
 %        analysis; if it is not input then we must be using simulated
 %        pattern method
 %
+
 %% handle inputs
 Material = ReadMaterial(curMaterial);
 g0 = g;
@@ -87,7 +88,7 @@ end
 Qvp=[-1 0 0; 0 -1 0; 0 0 1];
 % Qpv=Qvp';
 
-Dvp=[(xstar)*Settings.PixelSize;(1-ystar)*Settings.PixelSize;0];
+Dvp=[(xstar)*pixelSize;(1-ystar)*pixelSize;0];
 % Dpv=-Qpv*Dvp;
 
 % Phospher to sample
@@ -99,9 +100,9 @@ Qsp=Qps';
 % Qcp=Qsp*Qcs;
 % Qpc=Qcp';
 % Translation between frames
-Dps=Qps*[0;0;-zstar*Settings.PixelSize];%in pixels in sample frame
-% Dsp=[0;0;zstar*Settings.PixelSize];
-% Dpc=Qpc*[0;0;-zstar*Settings.PixelSize];
+Dps=Qps*[0;0;-zstar*pixelSize];%in pixels in sample frame
+% Dsp=[0;0;zstar*pixelSize];
+% Dpc=Qpc*[0;0;-zstar*pixelSize];
 % 1) Find the pattern center direction in crystal frame
 % rpc=Qpc*[0;0;-1];
 
@@ -149,7 +150,7 @@ for i=1:length(roixc)
     %     Xs=Qsc'*Xc;
     n = Qps*[0,0,-1]';
     %shift from sample origin to phospher origin described in sample frame
-    c = Qps*[0;0;-zstar]*Settings.PixelSize;
+    c = Qps*[0;0;-zstar]*pixelSize;
     
     rrange=round(rc-ROISize/2):round(rc-ROISize/2)+ROISize-1;
     crange=round(cc-ROISize/2):round(cc-ROISize/2)+ROISize-1;
@@ -184,20 +185,20 @@ for i=1:length(roixc)
     end
     
     if RefInd~=0 % new if statement for when there is a single ref image DTF 7/16/14 this is to adjust PC in Wilkinson method for that single ref case ***need to do it for all wilkinson cases***
-         tx=(xstar-Settings.XStar(RefInd))*Settings.PixelSize; % vector on phosphor between PC of ref and PC of measured; uses notation from PCsensitivity paper
-         ty=(ystar-Settings.YStar(RefInd))*Settings.PixelSize;
+         tx=(xstar-Settings.XStar(RefInd))*pixelSize; % vector on phosphor between PC of ref and PC of measured; uses notation from PCsensitivity paper
+         ty=(ystar-Settings.YStar(RefInd))*pixelSize;
 %          tantheta=atan2(sqrt((cc-Settings.YStar(Settings.RefImageInd))^2+(rc-Settings.XStar(Settings.RefImageInd))^2),Settings.ZStar(Settings.RefImageInd));
-         spminussx=(zstar-Settings.ZStar(RefInd))*(rc-Settings.XStar(RefInd)*Settings.PixelSize)/Settings.ZStar(RefInd); % difference of vectors from PC to ROI center for ref and scan pattern
-         spminussy=(zstar-Settings.ZStar(RefInd))*(cc-Settings.YStar(RefInd)*Settings.PixelSize)/Settings.ZStar(RefInd);
+         spminussx=(zstar-Settings.ZStar(RefInd))*(rc-Settings.XStar(RefInd)*pixelSize)/Settings.ZStar(RefInd); % difference of vectors from PC to ROI center for ref and scan pattern
+         spminussy=(zstar-Settings.ZStar(RefInd))*(cc-Settings.YStar(RefInd)*pixelSize)/Settings.ZStar(RefInd);
          dxshift=dxshift-tx-spminussx; % corrected ROI shift taking into account PC shift
          dyshift=dyshift-ty-spminussy; %****NOT SURE ABOUT SIGN ON THIS
     end
-    [xshift0,yshift0] = Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,cc,rc,Fo,Settings.PixelSize,alpha);%this is the screen shift in the g (hough) frame *****not used***
+    [xshift0,yshift0] = Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,cc,rc,Fo,pixelSize,alpha);%this is the screen shift in the g (hough) frame *****not used***
     
     %     else
     %         [ro uo]=poldec(Fo);
-    %         [dxshift,dyshift] = Theoretical_Pixel_Shift(ro'*Qsc,xstar,ystar,zstar,cc,rc,F,Settings.PixelSize,alpha);%this is the screen shift in the F(i-1) frame
-    %         [xshift0,yshift0] = Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,cc,rc,Fo,Settings.PixelSize,alpha); %this is the screen shift in the g (hough) frame
+    %         [dxshift,dyshift] = Theoretical_Pixel_Shift(ro'*Qsc,xstar,ystar,zstar,cc,rc,F,pixelSize,alpha);%this is the screen shift in the F(i-1) frame
+    %         [xshift0,yshift0] = Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,cc,rc,Fo,pixelSize,alpha); %this is the screen shift in the g (hough) frame
     %     end
     
     % inaddition to r we want to record the deformed r
@@ -438,7 +439,7 @@ switch Settings.FCalcMethod
         F=U+eye(3);
         F=g*F*g'; %Put in crystal frame
         %calculate the sum of the squared errors
-        [cx cy]=Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,roixc,roiyc,F,Settings.PixelSize,alpha);
+        [cx cy]=Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,roixc,roiyc,F,pixelSize,alpha);
         SSE=sqrt(sum((cx(tempind)-Cshift(tempind)).^2+(cy(tempind)-Rshift(tempind)).^2)/length(tempind)) ;
         %         Fs{1}=F;
         %         SSEs(1)=SSE;
@@ -516,7 +517,7 @@ switch Settings.FCalcMethod
             U31 U32 U33];
         F=U+eye(3);
         %calculate the sum of the squared errors
-        [cx cy]=Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,roixc,roiyc,F,Settings.PixelSize,alpha);
+        [cx cy]=Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,roixc,roiyc,F,pixelSize,alpha);
         SSE=sqrt(sum((cx(tempind)-Cshift(tempind)).^2+(cy(tempind)-Rshift(tempind)).^2)/length(tempind)) ;
         %         Fs{2}=F;
         %         SSEs(2)=SSE;
@@ -601,7 +602,7 @@ switch Settings.FCalcMethod
         A=U+eye(3);
         F=g*A*g';
         
-        [cx cy]=Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,roixc,roiyc,F,Settings.PixelSize,alpha);
+        [cx cy]=Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,roixc,roiyc,F,pixelSize,alpha);
         SSE=sqrt(sum((cx(tempind)-Cshift(tempind)).^2+(cy(tempind)-Rshift(tempind)).^2)/length(tempind)) ;
         %         Fs{5}=F;
         %         SSEs(5)=SSE;
@@ -681,7 +682,7 @@ switch Settings.FCalcMethod
             U31 U32 U33];
         F=U+eye(3);
         
-        [cx cy]=Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,roixc,roiyc,F,Settings.PixelSize,alpha);
+        [cx cy]=Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,roixc,roiyc,F,pixelSize,alpha);
         SSE=sqrt(sum((cx(tempind)-Cshift(tempind)).^2+(cy(tempind)-Rshift(tempind)).^2)/length(tempind)) ;
         %         Fs{6}=F;
         %         SSEs(6)=SSE;
@@ -723,7 +724,7 @@ if Settings.DoShowPlot
     catch
         figure(100);
     end
-    [cx cy]=Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,roixc,roiyc,F,Settings.PixelSize,alpha);
+    [cx cy]=Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,roixc,roiyc,F,pixelSize,alpha);
     cla
     imagesc(RefImage);
     axis image
@@ -769,7 +770,7 @@ if Settings.DoShowPlot
     end
     
     set(0,'currentfigure',101);
-    [cx cy]=Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,roixc,roiyc,F,Settings.PixelSize,alpha);
+    [cx cy]=Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,roixc,roiyc,F,pixelSize,alpha);
     cla
     imagesc(ScanImage);
     axis image
