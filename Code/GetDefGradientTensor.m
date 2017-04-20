@@ -150,14 +150,14 @@ switch Settings.HROIMMethod
             clear global rs cs Gs
             [F1,SSE1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,...
                 Settings,curMaterial,Settings.RefImageInd,PC,...
-                roixc,roiyc,Settings.ROIFilter,ROISize,standev);
+                roixc,roiyc,Settings.ROIFilter,ROISize,standev,sampletilt);
         else
         RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av,ImageInd);
         
         clear global rs cs Gs
         [F1,SSE1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,...
             Settings,curMaterial,0,PC,roixc,roiyc,Settings.ROIFilter,...
-            ROISize,standev);
+            ROISize,standev,sampletilt);
         % some catch on SSE as for simulated pattern approach below?
         for iq=1:5
             [rr,uu]=poldec(F1); % extract the rotation part of the deformation, rr
@@ -167,7 +167,7 @@ switch Settings.HROIMMethod
             clear global rs cs Gs
             [F1,SSE1,XX,sigma] = CalcF(RefImage,ScanImage,gr,eye(3),...
                 ImageInd,Settings,curMaterial,0,PC,roixc,roiyc,...
-                Settings.ROIFilter,ROISize,standev);
+                Settings.ROIFilter,ROISize,standev,sampletilt);
         end
         %%%%%
         end
@@ -189,7 +189,7 @@ switch Settings.HROIMMethod
         clear global rs cs Gs
         [F1,SSE1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,...
             Settings,curMaterial,0,PC,roixc,roiyc,Settings.ROIFilter,...
-            ROISize,standev);
+            ROISize,standev,sampletilt);
         
         %%%%New stuff to remove rotation error from strain measurement DTF  7/14/14
         for iq=1:4
@@ -202,7 +202,7 @@ switch Settings.HROIMMethod
             clear global rs cs Gs
             [F1,SSE1,XX,sigma] = CalcF(RefImage,ScanImage,gr,eye(3),...
                 ImageInd,Settings,curMaterial,0,PC,roixc,roiyc,...
-                Settings.ROIFilter,ROISize,standev);
+                Settings.ROIFilter,ROISize,standev,sampletilt);
         end
         %%%%%
         
@@ -237,7 +237,7 @@ switch Settings.HROIMMethod
             clear global rs cs Gs
             [F1,SSE1,XX,sigma] = CalcF(NewRefImage,ScanImage,gr,FTemp,...
                 ImageInd,Settings,curMaterial,0,PC,roixc,roiyc,...
-                Settings.ROIFilter,ROISize,standev);
+                Settings.ROIFilter,ROISize,standev,sampletilt);
             
         end
         
@@ -263,7 +263,7 @@ switch Settings.HROIMMethod
         gr = euler2gmat(Settings.Angles(RefImageInd,:));
         [F1,SSE1,XX,sigma] = CalcF(RefImage,ScanImage,gr,eye(3),...
             ImageInd,Settings,curMaterial,RefImageInd,PC,...
-            roixc,roiyc,Settings.ROIFilter,ROISize,standev);
+            roixc,roiyc,Settings.ROIFilter,ROISize,standev,sampletilt);
         
     case 'Hybrid'
         %Use simulated pattern method on one reference image then use
@@ -287,13 +287,13 @@ if DoLGrid
     clear global rs cs Gs
     [F.a SSE.a] = CalcF(ScanImage,LegAImage,gr,eye(3),ImageInd,Settings,...
         curMaterial,ImageInd,PC,roixc,roiyc,Settings.ROIFilter,ROISize,...
-        standev); %note - sending in index of scan point for now - no PC correction!!!
+        standev,sampletilt); %note - sending in index of scan point for now - no PC correction!!!
     
     % evaluate point c using b as the refrerence
     clear global rs cs Gs
     [F.c SSE.c] = CalcF(ScanImage,LegCImage,gr,eye(3),ImageInd,Settings,...
         curMaterial,ImageInd,PC,roixc,roiyc,Settings.ROIFilter,ROISize,...
-        standev);%note - sending in index of scan point for now - no PC correction!!!
+        standev,sampletilt);%note - sending in index of scan point for now - no PC correction!!!
     
     Settings.FCalcMethod = KeepFCalcMethod;
     

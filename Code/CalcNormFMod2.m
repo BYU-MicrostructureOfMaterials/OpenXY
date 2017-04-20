@@ -7,6 +7,7 @@ mperpix=PC(4);
 PhosphorSize=mperpix*Settings.PixelSize;
 standev = Settings.StandardDeviation;
 ROISize = Settings.ROISize;
+sampleTilt = Settings.SampleTilt;
 
 normF=0;
 for kk=1:length(ImageInd)
@@ -38,7 +39,7 @@ switch Settings.HROIMMethod
             %     [F SSE] = CalcF(I1,I0,g,F,ImageInd,Settings,Settings.Material); % old version
             [F SSE] = CalcF(I1,I0,g,eye(3),Ind,Settings,...
                 Settings.Phase{Ind},0,PC,Settings.roixc,Settings.roiyc,...
-                Settings.ROIFilter,ROISize,standev); % new DTF
+                Settings.ROIFilter,ROISize,standev,sampleTilt); % new DTF
             [R U] = poldec(F);
             g=R'*g;
         end
@@ -52,7 +53,7 @@ switch Settings.HROIMMethod
             %     [F SSE] = CalcF(I1,I0,g,F,ImageInd,Settings,Settings.Material); % old version
             [F SSE] = CalcF(I1,I0,g,eye(3),Ind,Settings,...
                 Settings.Phase{Ind},0,PC,Settings.roixc,Settings.roiyc,...
-                Settings.ROIFilter,ROISize,standev); % new DTF
+                Settings.ROIFilter,ROISize,standev,sampleTilt); % new DTF
             [R U] = poldec(F);
             g=R'*g;
         end
@@ -70,7 +71,7 @@ switch Settings.HROIMMethod
             %     [F SSE] = CalcF(I1,I0,g,F,ImageInd,Settings,Settings.Material);% ** same change as above DTF 7/21/14
             [F SSE] = CalcF(I1,I0,g,F,Ind,Settings,...
                 Settings.Phase{Ind},0,PC,Settings.roixc,Settings.roiyc,...
-                Settings.ROIFilter,ROISize,standev);
+                Settings.ROIFilter,ROISize,standev,sampleTilt);
         end
         
         [R U] = poldec(F);

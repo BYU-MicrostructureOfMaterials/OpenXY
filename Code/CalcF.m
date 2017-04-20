@@ -1,5 +1,6 @@
 function [F, SSE, XX, sigma] = CalcF(RefImage,ScanImage,g,Fo,Ind,...
-    Settings,curMaterial,RefInd,PC,roixc,roiyc,ROIFilter,ROISize,standev)
+    Settings,curMaterial,RefInd,PC,roixc,roiyc,ROIFilter,ROISize,standev,...
+    sampleTilt)
 %Desc: This function can be used to calculate the deformation tensor F (in the crystal frame) that
 %describes the deformation to move the pattern RefImage onto the pattern ScanImage.
 % modified 10/28/14 by DTF to correctly change Pattern Center when using
@@ -64,7 +65,7 @@ else
 end
 
 %% geometry / coordinate frame transformation
-alpha=pi/2-Settings.SampleTilt+Settings.CameraElevation;
+alpha=pi/2-sampleTilt+Settings.CameraElevation;
 % Sample to Crystal
 if length(g(:))<9
     phi1=g(1);
