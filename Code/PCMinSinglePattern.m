@@ -46,10 +46,6 @@ end
     Settings.ROIStyle);
 Settings.roixc = roixc;
 Settings.roiyc = roiyc;
-standev = Settings.StandardDeviation;
-ROISize = Settings.ROISize;
-calcMI = Settings.CalcMI;
-
 paramspat={xstar;ystar;zstar;pixsize;Av;sampletilt;elevang;Material.Fhkl;Material.dhkl;Material.hkl};
 
 % Settings.XStar(1:Settings.ScanLength) = ScanParams.xstar; % commented out by DTF 3/10/16 - we should not be resetting all XStars here?!?!?!?
@@ -71,6 +67,10 @@ switch Algorithm
     case 'crosscor'
         disp('starting cross correlation minimization')
         PCprime=PC0;
+        standev = Settings.StandardDeviation;
+        ROISize = Settings.ROISize;
+        calcMI = Settings.CalcMI;
+        method = Settings.FCalcMethod;
         for ii=1:1 % number of iterations to find best
             if strcmp(Settings.HROIMMethod,'Dynamic Simulated')
                 xstar=PCprime(1);
@@ -88,7 +88,7 @@ switch Algorithm
                     [F SSE] = CalcF(I1,ScanImage,g,eye(3),Ind,Settings,...
                         Settings.Phase{Ind},0,PC0,roixc,roiyc,...
                         Settings.ROIFilter,ROISize,standev,sampletilt,...
-                        pixsize,elevang,calcMI,0); % new DTF
+                        pixsize,elevang,calcMI,0,method); % new DTF
                     [R U] = poldec(F);
                     g=R'*g;
                 end
@@ -102,7 +102,7 @@ switch Algorithm
                     [F SSE] = CalcF(I1,ScanImage,g,eye(3),Ind,Settings,...
                         Settings.Phase{Ind},0,PC0,roixc,roiyc,...
                         Settings.ROIFilter,ROISize,standev,sampletilt,...
-                        pixsize,elevang,calcMI,0); % new DTF
+                        pixsize,elevang,calcMI,0,method); % new DTF
                     [R U] = poldec(F);
                     g=R'*g;
                 end
@@ -119,7 +119,7 @@ switch Algorithm
                     [F SSE] = CalcF(I1,ScanImage,g,F,Ind,Settings,...
                         Settings.Phase{Ind},0,PC0,roixc,roiyc,...
                         Settings.ROIFilter,ROISize,standev,sampletilt,...
-                        pixsize,elevang,calcMI,0);
+                        pixsize,elevang,calcMI,0,method);
                 end
             end
             

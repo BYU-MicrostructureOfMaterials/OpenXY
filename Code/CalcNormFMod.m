@@ -10,6 +10,7 @@ sampleTilt = params2{6};
 pixelSize = params2{4};
 cameraElevation = params2{7};
 calcMI = Settings.CalcMI;
+method = Settings.FCalcMethod;
 
 clear global rs cs Gs
 
@@ -24,6 +25,7 @@ switch Settings.HROIMMethod
         Av=cell2mat(params2(5));
         elevang=cell2mat(params2(7));
         mperpix = Settings.mperpix;
+        
         curMaterial=cell2mat(Settings.Phase(ImageInd)); %****may need updating for material of this point - where is that info?
         for i = 1:3
             I1 = genEBSDPatternHybrid_fromEMSoft(g,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av,ImageInd);
@@ -32,7 +34,7 @@ switch Settings.HROIMMethod
             [F,SSE] = CalcF(I1,I0,g,eye(3),ImageInd,Settings,...
                 Settings.Phase{ImageInd},0,PC,Settings.roixc,...
                 Settings.roiyc,Settings.ROIFilter,ROISize,standev,...
-                sampleTilt,pixelSize,cameraElevation,calcMI,0); % new DTF
+                sampleTilt,pixelSize,cameraElevation,calcMI,0,method); % new DTF
             [R,U] = poldec(F);
             g=R'*g;
         end
@@ -46,7 +48,7 @@ switch Settings.HROIMMethod
             [F,SSE] = CalcF(I1,I0,g,eye(3),ImageInd,Settings,...
                 Settings.Phase{ImageInd},0,PC,Settings.roixc,...
                 Settings.roiyc,Settings.ROIFilter,ROISize,standev,...
-                sampleTilt,pixelSize,cameraElevation,calcMI,0); % new DTF
+                sampleTilt,pixelSize,cameraElevation,calcMI,0,method); % new DTF
             [R,U] = poldec(F);
             g=R'*g;
         end
@@ -63,7 +65,7 @@ switch Settings.HROIMMethod
             [F SSE] = CalcF(I1,I0,g,F,ImageInd,Settings,...
                 Settings.Phase{ImageInd},0,PC,Settings.roixc,...
                 Settings.roiyc,Settings.ROIFilter,ROISize,standev,...
-                sampleTilt,pixelSize,cameraElevation,calcMI,0);
+                sampleTilt,pixelSize,cameraElevation,calcMI,0,method);
         end
         
         [R U] = poldec(F);

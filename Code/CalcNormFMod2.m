@@ -11,6 +11,7 @@ sampleTilt = params2{6};
 pixelSize = params2{4};
 cameraElevation = params2{7};
 calcMI = Settings.CalcMI;
+method = Settings.FCalcMethod;
 
 normF=0;
 for kk=1:length(ImageInd)
@@ -42,7 +43,7 @@ switch Settings.HROIMMethod
             [F SSE] = CalcF(I1,I0,g,eye(3),Ind,Settings,...
                 Settings.Phase{Ind},0,PC,Settings.roixc,Settings.roiyc,...
                 Settings.ROIFilter,ROISize,standev,sampleTilt,pixelSize,...
-                cameraElevation,calcMI,0); % new DTF
+                cameraElevation,calcMI,0,method); % new DTF
             [R U] = poldec(F);
             g=R'*g;
         end
@@ -56,7 +57,7 @@ switch Settings.HROIMMethod
             [F SSE] = CalcF(I1,I0,g,eye(3),Ind,Settings,...
                 Settings.Phase{Ind},0,PC,Settings.roixc,Settings.roiyc,...
                 Settings.ROIFilter,ROISize,standev,sampleTilt,pixelSize,...
-                cameraElevation,calcMI,0); % new DTF
+                cameraElevation,calcMI,0,method); % new DTF
             [R U] = poldec(F);
             g=R'*g;
         end
@@ -73,7 +74,7 @@ switch Settings.HROIMMethod
             [F SSE] = CalcF(I1,I0,g,F,Ind,Settings,...
                 Settings.Phase{Ind},0,PC,Settings.roixc,Settings.roiyc,...
                 Settings.ROIFilter,ROISize,standev,sampleTilt,pixelSize,...
-                cameraElevation,calcMI,0);
+                cameraElevation,calcMI,0,method);
         end
         
         [R U] = poldec(F);
