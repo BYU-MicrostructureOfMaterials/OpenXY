@@ -1,6 +1,6 @@
 function [F, SSE, XX, sigma] = CalcF(RefImage,ScanImage,g,Fo,Ind,...
     Settings,curMaterial,RefInd,PC,roixc,roiyc,ROIFilter,ROISize,standev,...
-    sampleTilt,pixelSize,cameraElevation,CalcMI)
+    sampleTilt,pixelSize,cameraElevation,CalcMI,DoShowPlot)
 %Desc: This function can be used to calculate the deformation tensor F (in the crystal frame) that
 %describes the deformation to move the pattern RefImage onto the pattern ScanImage.
 % modified 10/28/14 by DTF to correctly change Pattern Center when using
@@ -717,7 +717,7 @@ end
 
 
 %% for visualizing process
-if Settings.DoShowPlot
+if DoShowPlot
     DoPlotROIs = 0;
     try
         set(0,'currentfigure',100);
@@ -732,7 +732,7 @@ if Settings.DoShowPlot
     hold on
     if DoPlotROIs
         set(0,'currentfigure',100);
-        PlotROIs(Settings.NumROIs, ROISize, Settings.ROIStyle, RefImage);
+        PlotROIs(ROISize, roixc, roiyc);
     end
     for i=1:length(Cshift)
         if ~isempty(find(tempind==i))
@@ -778,7 +778,7 @@ if Settings.DoShowPlot
     hold on
     if DoPlotROIs
         set(0,'currentfigure',101);
-        PlotROIs(Settings.NumROIs, ROISize, Settings.ROIStyle, RefImage);
+        PlotROIs(ROISize, roixc, roiyc);
     end
     for i=1:length(Cshift)
         if ~isempty(find(tempind==i))

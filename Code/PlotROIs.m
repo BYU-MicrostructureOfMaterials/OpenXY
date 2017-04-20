@@ -1,13 +1,13 @@
-function PlotROIs(ROInum, ROISize, ROIStyle, Image,fig)
-if nargin == 4
+function PlotROIs(ROISize, roixc, roiyc, fig)
+if nargin == 3
     fig = gca;
 end
-pixsize = size(Image,1);
+% pixsize = size(Image,1);
 % ROInum = Settings.NumROIs;
 % ROISize = Settings.ROISizePercent/100*pixsize;
 % ROIStyle = Settings.ROIStyle;
 
-[roixc,roiyc]= GetROIs(Image,ROInum,pixsize,ROISize,ROIStyle);
+% [roixc,roiyc]= GetROIs(Image,ROInum,pixsize,ROISize,ROIStyle);
 
 for ii = 1:length(roixc)
     hold on  

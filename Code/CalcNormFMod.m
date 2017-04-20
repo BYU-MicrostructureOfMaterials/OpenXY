@@ -29,11 +29,10 @@ switch Settings.HROIMMethod
             I1 = genEBSDPatternHybrid_fromEMSoft(g,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av,ImageInd);
             
             clear global rs cs Gs
-            %     [F SSE] = CalcF(I1,I0,g,F,ImageInd,Settings,Settings.Material); % old version
             [F,SSE] = CalcF(I1,I0,g,eye(3),ImageInd,Settings,...
                 Settings.Phase{ImageInd},0,PC,Settings.roixc,...
                 Settings.roiyc,Settings.ROIFilter,ROISize,standev,...
-                sampleTilt,pixelSize,cameraElevation,calcMI); % new DTF
+                sampleTilt,pixelSize,cameraElevation,calcMI,0); % new DTF
             [R,U] = poldec(F);
             g=R'*g;
         end
@@ -44,11 +43,10 @@ switch Settings.HROIMMethod
             I1 = genEBSDPatternHybrid(g,params2,eye(3),lattice,a1,b1,c1,axs);
             I1 = custimfilt(I1,X(1),Settings.PixelSize,X(3),X(4));
             clear global rs cs Gs
-            %     [F SSE] = CalcF(I1,I0,g,F,ImageInd,Settings,Settings.Material); % old version
             [F,SSE] = CalcF(I1,I0,g,eye(3),ImageInd,Settings,...
                 Settings.Phase{ImageInd},0,PC,Settings.roixc,...
                 Settings.roiyc,Settings.ROIFilter,ROISize,standev,...
-                sampleTilt,pixelSize,cameraElevation,calcMI); % new DTF
+                sampleTilt,pixelSize,cameraElevation,calcMI,0); % new DTF
             [R,U] = poldec(F);
             g=R'*g;
         end
@@ -62,12 +60,10 @@ switch Settings.HROIMMethod
             %  crpl=206; crpu=824;
             %  I1 = I1(crpl:crpu,crpl:crpu);
             clear global rs cs Gs
-            %     [F SSE] = calcFnew(I1,I0,g,F,paramsF,standev,6);
-            %     [F SSE] = CalcF(I1,I0,g,F,ImageInd,Settings,Settings.Material);% ** same change as above DTF 7/21/14
             [F SSE] = CalcF(I1,I0,g,F,ImageInd,Settings,...
                 Settings.Phase{ImageInd},0,PC,Settings.roixc,...
                 Settings.roiyc,Settings.ROIFilter,ROISize,standev,...
-                sampleTilt,pixelSize,cameraElevation,calcMI);
+                sampleTilt,pixelSize,cameraElevation,calcMI,0);
         end
         
         [R U] = poldec(F);
