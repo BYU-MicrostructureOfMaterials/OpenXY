@@ -1,5 +1,5 @@
 function [F, SSE, XX, sigma] = CalcF(RefImage,ScanImage,g,Fo,Ind,...
-    Settings,curMaterial,RefInd,PC,roixc,roiyc,ROIFilter,ROISize,standev,...
+    curMaterial,RefInd,PC,roixc,roiyc,ROIFilter,ROISize,standev,...
     sampleTilt,pixelSize,cameraElevation,CalcMI,DoShowPlot,FCalcMethod)
 %Desc: This function can be used to calculate the deformation tensor F (in the crystal frame) that
 %describes the deformation to move the pattern RefImage onto the pattern ScanImage.
@@ -27,11 +27,19 @@ Material = ReadMaterial(curMaterial);
 g0 = g;
 RefImage=double(RefImage);
 ScanImage=double(ScanImage);
-
-xstar=PC(1);
-ystar=PC(2);
-zstar=PC(3);
-
+[rows,cols] = size(PC);
+if min(rows,cols) ~= 1
+    xstar = PC(1,Ind);
+    ystar = PC(2,Ind);
+    zstar = PC(3,Ind);
+    XStar = PC(1,:);
+    Xstar = PC(2,:);
+    XStar = PC(3,:);
+else
+    xstar = PC(1);
+    ystar = PC(2);
+    zstar = PC(3);
+end
 %% set up filter for ROI filtering
 if ~any(ROIFilter)
     custfilt = [];
@@ -185,11 +193,11 @@ for i=1:length(roixc)
     end
     
     if RefInd~=0 % new if statement for when there is a single ref image DTF 7/16/14 this is to adjust PC in Wilkinson method for that single ref case ***need to do it for all wilkinson cases***
-         tx=(xstar-Settings.XStar(RefInd))*pixelSize; % vector on phosphor between PC of ref and PC of measured; uses notation from PCsensitivity paper
-         ty=(ystar-Settings.YStar(RefInd))*pixelSize;
-%          tantheta=atan2(sqrt((cc-Settings.YStar(Settings.RefImageInd))^2+(rc-Settings.XStar(Settings.RefImageInd))^2),Settings.ZStar(Settings.RefImageInd));
-         spminussx=(zstar-Settings.ZStar(RefInd))*(rc-Settings.XStar(RefInd)*pixelSize)/Settings.ZStar(RefInd); % difference of vectors from PC to ROI center for ref and scan pattern
-         spminussy=(zstar-Settings.ZStar(RefInd))*(cc-Settings.YStar(RefInd)*pixelSize)/Settings.ZStar(RefInd);
+         tx=(xstar-XStar(RefInd))*pixelSize; % vector on phosphor between PC of ref and PC of measured; uses notation from PCsensitivity paper
+         ty=(ystar-YStar(RefInd))*pixelSize;
+%          tantheta=atan2(sqrt((cc-YStar(Settings.RefImageInd))^2+(rc-XStar(Settings.RefImageInd))^2),ZStar(Settings.RefImageInd));
+         spminussx=(zstar-ZStar(RefInd))*(rc-XStar(RefInd)*pixelSize)/ZStar(RefInd); % difference of vectors from PC to ROI center for ref and scan pattern
+         spminussy=(zstar-ZStar(RefInd))*(cc-YStar(RefInd)*pixelSize)/ZStar(RefInd);
          dxshift=dxshift-tx-spminussx; % corrected ROI shift taking into account PC shift
          dyshift=dyshift-ty-spminussy; %****NOT SURE ABOUT SIGN ON THIS
     end
