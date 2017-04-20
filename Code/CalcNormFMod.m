@@ -8,7 +8,7 @@ standev = Settings.StandardDeviation;
 ROISize = Settings.ROISize;
 sampleTilt = params2{6};
 pixelSize = params2{4};
-
+cameraElevation = params2{7};
 
 clear global rs cs Gs
 
@@ -32,7 +32,7 @@ switch Settings.HROIMMethod
             [F,SSE] = CalcF(I1,I0,g,eye(3),ImageInd,Settings,...
                 Settings.Phase{ImageInd},0,PC,Settings.roixc,...
                 Settings.roiyc,Settings.ROIFilter,ROISize,standev,...
-                sampleTilt,pixelSize); % new DTF
+                sampleTilt,pixelSize,cameraElevation); % new DTF
             [R,U] = poldec(F);
             g=R'*g;
         end
@@ -47,7 +47,7 @@ switch Settings.HROIMMethod
             [F,SSE] = CalcF(I1,I0,g,eye(3),ImageInd,Settings,...
                 Settings.Phase{ImageInd},0,PC,Settings.roixc,...
                 Settings.roiyc,Settings.ROIFilter,ROISize,standev,...
-                sampleTilt,pixelSize); % new DTF
+                sampleTilt,pixelSize,cameraElevation); % new DTF
             [R,U] = poldec(F);
             g=R'*g;
         end
@@ -66,7 +66,7 @@ switch Settings.HROIMMethod
             [F SSE] = CalcF(I1,I0,g,F,ImageInd,Settings,...
                 Settings.Phase{ImageInd},0,PC,Settings.roixc,...
                 Settings.roiyc,Settings.ROIFilter,ROISize,standev,...
-                sampleTilt,pixelSize);
+                sampleTilt,pixelSize,cameraElevation);
         end
         
         [R U] = poldec(F);
