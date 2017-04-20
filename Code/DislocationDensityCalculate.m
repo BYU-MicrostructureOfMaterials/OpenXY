@@ -561,7 +561,8 @@ function [AllFa,AllSSEa,AllFc,AllSSEc, misanglea, misanglec] = DDCalc(RefInd,Ref
     PC(1) = Settings.Xstar(cnt);
     PC(2) = Settings.Ystar(cnt);
     PC(3) = Settings.Zstar(cnt);
-    
+    standev = Settings.StandardDeviation;
+
     if (isempty(image_a)) || (isempty(image_b)) ||  (isempty(image_c)) || ...
             (RefIndA2>0 && isempty(image_a2)) || (RefIndC2>0 && isempty(image_c2))
         AllFa= -eye(3);
@@ -576,14 +577,14 @@ function [AllFa,AllSSEa,AllFc,AllSSEc, misanglea, misanglec] = DDCalc(RefInd,Ref
             if RefIndA2 == 0
                     [AllFa,AllSSEa] = CalcF(image_b,image_a,g_b,eye(3),...
                         cnt,Settings,Settings.Phase{cnt}, RefIndA,PC,...
-                        roixc,roiyc,Settings.ROIFilter);
+                        roixc,roiyc,Settings.ROIFilter,standev);
             else
                 [AllFa1,AllSSEa1] = CalcF(image_b,image_a ,g_b,eye(3),...
                     cnt,Settings,Settings.Phase{cnt},RefIndA,PC,...
-                    roixc,roiyc,Settings.ROIFilter);
+                    roixc,roiyc,Settings.ROIFilter,standev);
                 [AllFa2,AllSSEa2] = CalcF(image_b,image_a2,g_b,eye(3),...
                     cnt,Settings,Settings.Phase{cnt},RefIndA2,PC,...
-                    roixc,roiyc,Settings.ROIFilter);
+                    roixc,roiyc,Settings.ROIFilter,standev);
                 AllFa=0.5*(AllFa1+AllFa2);
                 AllSSEa=0.5*(AllSSEa1+AllSSEa2);
             end
@@ -597,14 +598,14 @@ function [AllFa,AllSSEa,AllFc,AllSSEc, misanglea, misanglec] = DDCalc(RefInd,Ref
         if RefIndC2 == 0
             [AllFc,AllSSEc] = CalcF(image_b,image_c ,g_b,eye(3),cnt,...
                 Settings,Settings.Phase{cnt},RefIndC,PC,...
-                roixc,roiyc,Settings.ROIFilter);
+                roixc,roiyc,Settings.ROIFilter,standev);
         else
             [AllFc1,AllSSEc1] = CalcF(image_b,image_c ,g_b,eye(3),cnt,...
                 Settings,Settings.Phase{cnt},RefIndC,PC,...
-                roixc,roiyc,Settings.ROIFilter);
+                roixc,roiyc,Settings.ROIFilter,standev);
             [AllFc2,AllSSEc2] = CalcF(image_b,image_c2,g_b,eye(3),cnt,...
                 Settings,Settings.Phase{cnt},RefIndC2,PC,...
-                roixc,roiyc,Settings.ROIFilter);
+                roixc,roiyc,Settings.ROIFilter,standev);
             AllFc=0.5*(AllFc1+AllFc2);
             AllSSEc=0.5*(AllSSEc1+AllSSEc2);
         end
