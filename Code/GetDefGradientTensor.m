@@ -76,7 +76,7 @@ end
 xstar = Settings.XStar;
 ystar = Settings.YStar;
 zstar = Settings.ZStar;
-PC = [xstar ystar zstar];
+PC = [xstar; ystar; zstar];
 showPlot = Settings.DoShowPlot;
 method = Settings.FCalcMethod;
 

@@ -558,9 +558,7 @@ function [AllFa,AllSSEa,AllFc,AllSSEc, misanglea, misanglec] = DDCalc(RefInd,Ref
     %         imgray=rgb2gray(imread(ImagePath)); % this can add significant time for large scans
     %         intensityr(cnt)=mean(imgray(:));
 
-    PC(1) = Settings.Xstar;
-    PC(2) = Settings.Ystar;
-    PC(3) = Settings.Zstar;
+    PC = [Settings.Xstar; Settings.Ystar; Settings.Zstar];
     standev = Settings.StandardDeviation;
     ROISize = Settings.ROISize;
     sampleTilt = Settings.SampleTilt;
