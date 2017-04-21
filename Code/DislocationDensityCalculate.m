@@ -671,7 +671,7 @@ function [AllFa,AllFc,misanglea,misanglec] = DDCalcEasy(RefInd, RefG, lattice, S
                 else
             Amat2=euler2gmat(Settings.data.NewAngles(RefIndA2,1),Settings.data.NewAngles(RefIndA2,2),Settings.data.NewAngles(RefIndA2,3));
             AllFa1 = g_b*Amat'*Settings.data.F(:,:,RefIndA1)*Amat*Fbinv*g_b';
-            AllFa2 = g_b*Amat2'*Settings.data.(:,:,RefIndA2)*Amat2*Fbinv*g_b';
+            AllFa2 = g_b*Amat2'*Settings.data.F(:,:,RefIndA2)*Amat2*Fbinv*g_b';
             AllFa=0.5*(AllFa1+AllFa2);
                 end
                 
