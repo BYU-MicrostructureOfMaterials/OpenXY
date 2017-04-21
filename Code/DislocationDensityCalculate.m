@@ -196,7 +196,7 @@ if ~strcmp(Settings.ScanType,'L')
         parfor (cnt = 1:N)% Change for parallel computing
             if ~EasyDD
                 [AllFa{cnt},AllSSEa(cnt),AllFc{cnt},AllSSEc(cnt), misanglea(cnt),misanglec(cnt)] = ...
-                    DDCalc(RefInds(cnt,:),Refg(:,:,:,cnt),lattice{cnt},ImageFilter,Settings);
+                    DDCalc(RefInds(cnt,:),Refg(:,:,:,cnt),lattice{cnt},ImageFilter,Settings,roixc,roiyx);
             else
                 [AllFa{cnt},AllFc{cnt}, misanglea(cnt),misanglec(cnt)] = ...
                     DDCalcEasy(RefInds(cnt,:),Refg(:,:,:,cnt),lattice{cnt},Settings);
@@ -211,13 +211,13 @@ if ~strcmp(Settings.ScanType,'L')
         for cnt = 1:N
             if ~EasyDD
                 [AllFa{cnt},AllSSEa(cnt),AllFc{cnt},AllSSEc(cnt), misanglea(cnt),misanglec(cnt)] = ...
-                    DDCalc(RefInds(cnt,:),Refg(:,:,:,cnt),lattice{cnt},ImageFilter,Settings);
+                    DDCalc(RefInds(cnt,:),Refg(:,:,:,cnt),lattice{cnt},ImageFilter,Settings,roixc,roiyc);
             else
                 [AllFa{cnt},AllFc{cnt},misanglea(cnt),misanglec(cnt)] = ...
                     DDCalcEasy(RefInds(cnt,:),Refg(:,:,:,cnt),lattice{cnt},Settings);
                 AllSSEa(cnt) = 0;
                 AllSSEc(cnt) = 0;
-        end
+            end
             waitbar(cnt/N,h)
         end
         close(h);
@@ -489,7 +489,8 @@ save(AnalysisParamsPath ,'alpha_data','-append');
 
 end
 
-function [AllFa,AllSSEa,AllFc,AllSSEc, misanglea, misanglec] = DDCalc(RefInd,RefG,lattice,ImageFilter,Settings)
+function [AllFa,AllSSEa,AllFc,AllSSEc, misanglea, misanglec]...
+    = DDCalc(RefInd,RefG,lattice,ImageFilter,Settings,roixc,roiyc)
 
     image_a2= 0;
     RefIndA2 = 0;
@@ -558,7 +559,7 @@ function [AllFa,AllSSEa,AllFc,AllSSEc, misanglea, misanglec] = DDCalc(RefInd,Ref
     %         imgray=rgb2gray(imread(ImagePath)); % this can add significant time for large scans
     %         intensityr(cnt)=mean(imgray(:));
 
-    PC = [Settings.Xstar; Settings.Ystar; Settings.Zstar];
+    PC = [Settings.XStar; Settings.YStar; Settings.ZStar];
     standev = Settings.StandardDeviation;
     ROISize = Settings.ROISize;
     sampleTilt = Settings.SampleTilt;
@@ -604,18 +605,18 @@ function [AllFa,AllSSEa,AllFc,AllSSEc, misanglea, misanglec] = DDCalc(RefInd,Ref
         clear global rs cs Gs
         if RefIndC2 == 0
             [AllFc,AllSSEc] = CalcF(image_b,image_c ,g_b,eye(3),cnt,...
-                Settings,Settings.Phase{cnt},RefIndC,PC,...
-                roixc,roiyc,Settings.ROIFilter,ROISize,standev,...
-                sampleTilt,pixelSize,cameraElevation,calcMI,0,method);
+                Settings.Phase{cnt},RefIndC,PC,roixc,roiyc,...
+                Settings.ROIFilter,ROISize,standev,sampleTilt,...
+                pixelSize,cameraElevation,calcMI,0,method);
         else
             [AllFc1,AllSSEc1] = CalcF(image_b,image_c ,g_b,eye(3),cnt,...
-                Settings,Settings.Phase{cnt},RefIndC,PC,...
+                Settings.Phase{cnt},RefIndC,PC,...
                 roixc,roiyc,Settings.ROIFilter,ROISize,standev,...
                 sampleTilt,pixelSize,cameraElevation,calcMI,0,method);
             [AllFc2,AllSSEc2] = CalcF(image_b,image_c2,g_b,eye(3),cnt,...
-                Settings,Settings.Phase{cnt},RefIndC2,PC,...
-                roixc,roiyc,Settings.ROIFilter,ROISize,standev,...
-                sampleTilt,pixelSize,cameraElevation,calcMI,0,method);
+                Settings.Phase{cnt},RefIndC2,PC,roixc,roiyc,...
+                Settings.ROIFilter,ROISize,standev,sampleTilt,pixelSize,...
+                cameraElevation,calcMI,0,method);
             AllFc=0.5*(AllFc1+AllFc2);
             AllSSEc=0.5*(AllSSEc1+AllSSEc2);
         end
@@ -632,7 +633,7 @@ function [AllFa,AllFc,misanglea,misanglec] = DDCalcEasy(RefInd, RefG, lattice, S
     if size(Settings.ImageNamesList,1)==1
         H5Images = true;
         H5ImageParams = {Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter};
-        end
+    end
 
     %Extract Dim variables
     r = Settings.Ny;%
