@@ -263,10 +263,21 @@ if name ~= 0
     prevName = get(handles.ScanNameText,'String');
     prevFolder = get(handles.ScanFolderText,'String');
     if ~strcmp(prevName,name) || ~strcmp(prevFolder,path) || ~isfield(handles.Settings,'ScanParams')
+        %Truncate long strings
+        if size(name,2) > 50
+            nameT = [name(1:47),'...'];
+        else
+            nameT = name;
+        end
+        if size(name,2) > 50
+            pathT = [path(1:47),'...'];
+        else
+            pathT = path;
+        end
         %Update GUI labels
-        set(handles.ScanNameText,'String',name);
+        set(handles.ScanNameText,'String',nameT);
         set(handles.ScanNameText,'TooltipString',name);
-        set(handles.ScanFolderText,'String',path);
+        set(handles.ScanFolderText,'String',pathT);
         set(handles.ScanFolderText,'TooltipString',path);
         
         if handles.Fast
@@ -339,9 +350,22 @@ if name ~= 0
     prevName = get(handles.FirstImageNameText,'String');
     prevFolder = get(handles.ImageFolderText,'String');
     if ~strcmp(prevName,name) || ~strcmp(prevFolder,path)
-        set(handles.FirstImageNameText,'String',name);
+        %Truncate long strings
+        if size(name,2) > 37
+            nameT = [name(1:34),'...'];
+        else
+            nameT = name;
+        end
+        if size(name,2) > 37
+            pathT = [path(1:34),'...'];
+        else
+            pathT = path;
+        end
+
+        %Update GUI labels
+        set(handles.FirstImageNameText,'String',nameT);
         set(handles.FirstImageNameText,'TooltipString',name);
-        set(handles.ImageFolderText,'String',path);
+        set(handles.ImageFolderText,'String',pathT);
         set(handles.ImageFolderText,'TooltipString',path);
         
         [x,y,~] = size(imread(fullfile(path,name)));
@@ -411,12 +435,28 @@ if name ~= 0
                     return;
             end
         end
-        
-        set(handles.OutputResultsText,'String',ResultsName);
+        %Truncate long strings
+        if size(ResultsName,2) > 45
+            ResultsNameT = [ResultsName(1:42),'...'];
+        else
+            ResultsNameT = name;
+        end
+        if size(ScanName,2) > 45
+            ScanNameT = [ScanName(1:42),'...'];
+        else
+            ScanNameT = ScanName;
+        end
+        if size(path,2) > 42
+            pathT = [path(1:39),'...'];
+        else
+            pathT = path;
+        end
+        %Update GUI labels
+        set(handles.OutputResultsText,'String',ResultsNameT);
         set(handles.OutputResultsText,'TooltipString',ResultsName);
-        set(handles.OutputScanText,'String',ScanName);
+        set(handles.OutputScanText,'String',ScanNameT);
         set(handles.OutputScanText,'TooltipString',ScanName);
-        set(handles.OutputFolderText,'String',path);
+        set(handles.OutputFolderText,'String',pathT);
         set(handles.OutputFolderText,'TooltipString',path);
         handles.Settings.OutputPath = fullfile(path,name);
     end     
