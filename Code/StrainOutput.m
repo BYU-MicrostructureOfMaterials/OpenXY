@@ -27,16 +27,18 @@ if DoShowGB && ~strcmp(Settings.ScanType,'Hexagonal')
     % frame  *****can probably vectorize this using Tony Fast's stuff *****
     % HROIM angles for grain boundary calc
     
-    anglestemp = reshape(angles,[r,c,3]);
-    Material = ReadMaterial(Settings.Material);
-    [grains grainsize sizes BOUND]=findgrains(anglestemp, Material.lattice, clean, small, mistol);
-    % BOUND=flipud(fliplr(BOUND));
-    
-    x=[1:r];
-    y=[1:c];
-    [X Y]=meshgrid(x,y);
-    X=X';
-    Y=Y';
+    if ~strcmp(Settings.Material,'Scan File')
+        anglestemp = reshape(angles,[r,c,3]);
+        Material = ReadMaterial(Settings.Material);
+        [~,~,~,BOUND]=findgrains(anglestemp, Material.lattice, clean, small, mistol);
+        % BOUND=flipud(fliplr(BOUND));
+        
+        x=1:r;
+        y=1:c;
+        [X,Y]=meshgrid(x,y);
+        X=X';
+        Y=Y';
+    end
 end
 % Strain plots ************************
 
@@ -111,6 +113,7 @@ for i=1:3
             epsij=reshape(epsij, [c r])';
             
         end
+        
         if r == 1
             epsij = repmat(epsij,Settings.ScanLength,1);
         end
@@ -132,12 +135,16 @@ for i=1:3
             end
             
             if DoShowGB && ~strcmp(Settings.ScanType,'Hexagonal')
-                h=gcf;set(h,'Position',[50 50 750 750])
-                hold on
-                plot(Y(BOUND==1),X(BOUND==1),'k.','MarkerSize',5); % subtract 1/2 from Y and X if you want the middle of the band
-                axis equal
-                axis off
-                shading interp
+                if ~strcmp(Settings.Material,'Scan File')
+                    h=gcf;set(h,'Position',[50 50 750 750])
+                    hold on
+                    plot(Y(BOUND==1),X(BOUND==1),'k.','MarkerSize',5); % subtract 1/2 from Y and X if you want the middle of the band
+                    axis equal
+                    axis off
+                    shading interp
+                else
+                    PlotGBs(Settings.grainID,[Settings.Nx Settings.Ny],Settings.ScanType)
+                end
             end
         end
         
