@@ -162,7 +162,7 @@ switch ROImethod
         roixc(1) = round(pixsize/2);
         roiyc(1) = round(pixsize/2);
         angSpacing = 2*pi / (ROInum - 1);
-        radius = floor((pixsize-2-roisize)/2.5);
+        radius = floor((pixsize-0-roisize)/3);
         for i = 1:ROInum-1
             dx = radius*cos((i-1)*angSpacing);
             dy = radius*sin((i-1)*angSpacing);
