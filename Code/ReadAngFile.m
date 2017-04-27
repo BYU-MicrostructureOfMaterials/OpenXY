@@ -66,8 +66,11 @@ fclose(fid);
 
 % Get Grain Vals
 PhaseNum = AngFileVals{8};
+try
 GrainVals = GetOIMGrainVals(FullPath,PhaseNum);
-
+catch ME
+    rethrow(ME);
+end
 % keyboard
 % phi1 = AngFileVals{1,1};
 % Phi = AngFileVals{1,2};

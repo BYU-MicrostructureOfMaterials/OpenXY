@@ -15,8 +15,11 @@ end
 if ~strcmp(ext,'.h5')
     if ~isfield(Settings,'Angles') || ~strcmp(Settings.ScanFilePath,ScanPath)
         
-        [ScanFileData,Settings.ScanParams,Settings.GrainVals] = ReadScanFile(ScanPath);
-        
+        try
+            [ScanFileData,Settings.ScanParams,Settings.GrainVals] = ReadScanFile(ScanPath);
+        catch ME
+            rethrow(ME);
+        end
         %Initialize Variables
         Settings.ScanLength = size(ScanFileData{1},1);
         Settings.Angles = zeros(Settings.ScanLength,3);

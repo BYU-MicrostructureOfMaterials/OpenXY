@@ -283,8 +283,18 @@ if name ~= 0
         if handles.Fast
             handles.Settings.ScanFilePath = fullfile(path,name);
         else
-            handles.Settings = ImportScanInfo(handles.Settings,name,path);
-            
+            try
+                handles.Settings = ImportScanInfo(handles.Settings,name,path);
+            catch ME
+                set(handles.ScanNameText,'String','Select a Scan');
+                set(handles.ScanFolderText,'String','Select a Scan');
+                set(handles.ScanFolderText,'TooltipString','');
+                set(handles.ScanSizeText,'String','Select a Scan');
+                if (strcmp(ME.message,'No'))
+                    errordlg('You cannot use a .ang file without a grain file!','Grain file required!')
+                end
+                return
+            end
             %Set ScanType
             SetPopupValue(handles.ScanTypePopup,handles.Settings.ScanType);
             
