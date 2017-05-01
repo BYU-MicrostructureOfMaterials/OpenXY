@@ -966,7 +966,7 @@ if ValChanged(handles,'MinGrainSize')
     handles.edited = true;
 end
 SaveColor(handles)
-guidata(hObject,handles);
+% guidata(hObject,handles);
 
 
 
@@ -1167,10 +1167,14 @@ else
 end
 
 function changed = ValChanged(handles,value)
-if ischar(handles.Settings.(value))
-    changed = ~strcmp(handles.Settings.(value),handles.PrevSettings.(value));
+if isfield(handles.PrevSettings,value)
+    if ischar(handles.Settings.(value))
+        changed = ~strcmp(handles.Settings.(value),handles.PrevSettings.(value));
+    else
+        changed =  any(handles.Settings.(value) ~= handles.PrevSettings.(value));
+    end
 else
-    changed =  any(handles.Settings.(value) ~= handles.PrevSettings.(value));
+    changed = true;
 end
 
 

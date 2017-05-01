@@ -17,8 +17,8 @@ else
 end
 angles = vec2map(Settings.Angles,Settings.Nx,Settings.ScanType);
 mistol = Settings.MisoTol*pi/180;
-MinGrainSize = 0;
-clean = false;
+MinGrainSize = Settings.MinGrainSize;
+clean = MinGrainSize ~= 0;
 grainID = findgrains(angles, lattice, clean, MinGrainSize, mistol)';
 grainID = reshape(grainID,Settings.Ny,Settings.Nx);
 grainID = reshape(grainID',Settings.Nx*Settings.Ny,1);
