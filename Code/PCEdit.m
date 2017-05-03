@@ -460,7 +460,13 @@ function SelectPoints_Callback(hObject, eventdata, handles)
 % hObject    handle to SelectPoints (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.PCData.CalibrationIndices = SelectCalibrationPoints(handles.IQ_map,handles.IPF_map,handles.PCData.CalibrationIndices);
+try
+    handles.PCData.CalibrationIndices...
+        = SelectCalibrationPoints(handles.IQ_map,handles.IPF_map,...
+        handles.PCData.CalibrationIndices);
+catch
+    return
+end
 numpats = length(handles.PCData.CalibrationIndices);
 set(handles.numpats,'String',numpats);
 handles.PCData.numpats = numpats;

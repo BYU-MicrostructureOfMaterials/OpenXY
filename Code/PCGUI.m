@@ -329,8 +329,11 @@ if strcmp(type,'Strain Minimization')
         
         %Perform Strain Minimization
         disp('Starting Strain Minimization Pattern Center Calibration...')
-        PCData = PCStrainMinimization(Settings,PCSettings{5});
-
+        try
+            PCData = PCStrainMinimization(Settings,PCSettings{5});
+        catch
+            return;
+        end
         %Add New PC to List
         Settings.PCList(end+1,:) = {PCData.MeanXStar PCData.MeanYStar PCData.MeanZStar  PCSettings{4:6} PCData 0};
         set(handles.PCList,'String',Settings.PCList(:,6));
