@@ -420,7 +420,7 @@ axes(handles.StrainMinaxes)
 if get(handles.IPFPlot,'Value')
     PlotScan(handles.IPF_map,'IPF');
 elseif get(handles.IQPlot,'Value')
-    PlotScan(handles.IQ_map,'Image Quality');
+    PlotScan(handles.IQ_map,'IQ');
 end
 
 %Plot Calibration Points
@@ -460,18 +460,20 @@ function SelectPoints_Callback(hObject, eventdata, handles)
 % hObject    handle to SelectPoints (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-try
-    handles.PCData.CalibrationIndices...
-        = SelectCalibrationPoints(handles.IQ_map,handles.IPF_map,...
-        handles.PCData.CalibrationIndices);
-catch
-    return
-end
-numpats = length(handles.PCData.CalibrationIndices);
-set(handles.numpats,'String',numpats);
-handles.PCData.numpats = numpats;
-UpdatePlot(handles);
-guidata(handles.PCEdit,handles);
+uiwait(SelectPointsGUI(handles.PCEdit,'PC'));
+
+% try
+%     handles.PCData.CalibrationIndices...
+%         = SelectCalibrationPoints(handles.IQ_map,handles.IPF_map,...
+%         handles.PCData.CalibrationIndices);
+% catch
+%     return
+% end
+% numpats = length(handles.PCData.CalibrationIndices);
+% set(handles.numpats,'String',numpats);
+% handles.PCData.numpats = numpats;
+% UpdatePlot(handles);
+% guidata(handles.PCEdit,handles);
 
 
 

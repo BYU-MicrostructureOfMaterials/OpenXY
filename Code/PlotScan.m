@@ -14,7 +14,7 @@ if Limits(2)<=Limits(1)
 end
 
 switch PlotType
-    case 'Image Quality'
+    case 'IQ'
         im = imagesc(im,Limits);
         colormap(gca,gray)
     case 'IPF'

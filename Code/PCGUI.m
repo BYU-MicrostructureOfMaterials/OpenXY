@@ -641,7 +641,7 @@ elseif get(handles.IPFPlot,'Value')
     end
     guidata(handles.PCGUI,handles);
 elseif get(handles.IQPlot,'Value')
-    PlotScan(handles.IQ_map,'Image Quality');
+    PlotScan(handles.IQ_map,'IQ');
     
     %Plot Calibration Points
     if ~emptylist && ismember(handles.Settings.PCList{cur,4},{'Strain Minimization','Grid'})

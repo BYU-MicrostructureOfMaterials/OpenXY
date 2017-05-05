@@ -239,7 +239,7 @@ axes(handles.Map)
 if get(handles.IPFMap,'Value')
     im = PlotScan(handles.IPF,'IPF');
 else
-    im = PlotScan(handles.IQ,'Image Quality');
+    im = PlotScan(handles.IQ,'IQ');
 end
 
 % Set Callback for button-press
