@@ -16,6 +16,7 @@ elseif strcmp(ext,'.ctf')
     ScanFileData{1} = (ScanFileData{1}+90)*(pi/180);
     ScanFileData{2} = ScanFileData{2}*(pi/180);
     ScanFileData{3} = ScanFileData{3}*(pi/180);
+    ScanFileData{10}(ScanFileData{10}==0) = 180;
 else
     ScanFileData = {}; ScanParams = struct([]);
 end
