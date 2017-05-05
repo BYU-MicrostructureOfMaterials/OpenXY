@@ -56,10 +56,12 @@ function OutputPlotting_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for OutputPlotting
 handles.output = hObject;
 
-OutputTypesList = {'Strain','Dislocation Density','Split Dislocation Density','Tetragonality'};
-
+handles.matfileloaded = 0;
 
 if length(varargin) >= 1
+    %This option allows the function to accept the settings and alpha_data
+    %structs directly, but my changes broke it. If we want to keep this
+    %functionality, this will need to be tweaked. ZRC 4/28/2017
     if isstruct(varargin{1})
         handles.Settings = varargin{1};
         set(handles.SettingsFileEdit,'String', [handles.Settings.AnalysisParamsPath '.mat']);
@@ -69,16 +71,26 @@ if length(varargin) >= 1
         if length(varargin) > 2
             handles.DDSettings = varargin{3};
         end
+        OutputTypesList = {'Strain','Dislocation Density','Split Dislocation Density','Tetragonality'};
         if handles.Settings.Ny == 1
             OutputTypesList = [OutputTypesList 'Line Scan Plot'];
         end
+        set(handles.OptionsPopup,'String',OutputTypesList);
+    %This option reads in a .mat file that OpenXY creates after finishing
+    %cross corelatoin
     else
         input = varargin{1};
-        set(handles.SettingsFileEdit,'String',input{1});
-        loadSettings(input{1},handles);
+        try
+            handles = loadSettings(input{1},handles,hObject);
+        catch ME
+            uiwait(errordlg([ME.message '. Please select a new file.'],...
+                'File Error'))
+            set(handles.SettingsFileEdit,'String','Analysis Params');
+            set(handles.PlotSelectedButton,'Enabled','Off');
+        end
     end
 end
-set(handles.OptionsPopup,'String',OutputTypesList);
+% handles = guidata(hObject);
 
 smin = -0.05; % range for colormap of strain
 smax = 0.05;
@@ -88,8 +100,6 @@ cmin = 12.5; % range for colormap of strain
 cmax = 15;
 set(handles.DisloMinEdit,'String',num2str(cmin));
 set(handles.DisloMaxEdit,'String',num2str(cmax));
-
-handles.matfileloaded = 0;
 
 % Update handles structure
 guidata(hObject, handles);
@@ -138,31 +148,96 @@ function SettingsFileBrowseButton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 PrevFileName = get(handles.SettingsFileEdit,'String');
-[picname picpath] = uigetfile('*.mat','Analysis parameters');
+[picname,picpath] = uigetfile('*.mat','Analysis parameters');
 if picname == 0
-    picpath = 'No file selected';
-    picname = '';
+    return
 end
+handles.CalculatedListBox.String = {};
+handles.ComponentsListBox.String = {};
 NewFileName = [picpath picname];
 set(handles.SettingsFileEdit,'String', NewFileName);
 if ~strcmp(PrevFileName,NewFileName)
     handles.matfileloaded = 0;
 end
-loadSettings(NewFileName,handles);
-
-function loadSettings(SettingsPath,handles)
-tempmat = load(SettingsPath);
-if isfield(tempmat,'Settings')
-    handles.Settings = tempmat.Settings;
-    if handles.Settings.Ny == 1
-        OutputTypesList = get(handles.OptionsPopup,'String');
-        OutputTypesList = vertcat(OutputTypesList,'Line Scan Plots');
-        set(handles.OptionsPopup,'String',OutputTypesList);
-    end
-else
-    warndlg('No Settings variable found in file')
+try
+    handles = loadSettings(NewFileName,handles,hObject);
+catch ME
+    uiwait(errordlg([ME.message '. Please select a new file.'],...
+        'File Error'))
+    set(handles.SettingsFileEdit,'String','Analysis Params');
+    set(handles.PlotSelectedButton,'Enabled','Off');
 end
-guidata(handles.SettingsFileBrowseButton, handles);
+
+function handles = loadSettings(SettingsPath,handles,hObject)
+% tempmat = load(SettingsPath);
+% if isfield(tempmat,'Settings')
+%     handles.Settings = tempmat.Settings;
+%     if handles.Settings.Ny == 1
+%         OutputTypesList = get(handles.OptionsPopup,'String');
+%         OutputTypesList = vertcat(OutputTypesList,'Line Scan Plots');
+%         set(handles.OptionsPopup,'String',OutputTypesList);
+%     end
+% else
+%     warndlg('No Settings variable found in file')
+% end
+handles.DisloMinEdit.Enable = 'Off';
+handles.DisloMaxEdit.Enable = 'Off';
+handles.SetDislocationDefaultsButton.Enable = 'Off';
+
+if ~exist(SettingsPath,'file')
+   ME = MException('OutputPlotting:FileNotFound',...
+       'Warning, the file: %s , was not found', SettingsPath);
+   throw(ME);
+%Loads .mat file and imports Settings and alpha_data
+end
+
+disp('Loading .mat file...');
+matfile = load(SettingsPath);
+
+if isfield(matfile,'alpha_data')
+    handles.alpha_data = matfile.alpha_data;
+end
+if isfield(matfile,'DDSettings')
+    handles.DDSettings = matfile.DDSettings;
+end
+if isfield(matfile,'rhos')
+    handles.rhos = matfile.rhos;
+end
+if isfield(matfile,'Settings')
+    handles.Settings = matfile.Settings;
+    Settings = handles.Settings;
+else
+    ME = MException('OutputPlotting:NoSetttings',...
+        'Warning, the file: %s, does not contain a Settings file',...
+        SettingsPath);
+    throw(ME);
+end
+handles.matfileloaded = 1;
+
+%Updates the GUI with the appropriate options depending on the file loaded
+handles.PlotSelectedButton.Enable = 'On';
+plotOptions = {};
+if Settings.DoStrain
+    plotOptions = [plotOptions,'Strain','Tetragonality'];
+end
+if Settings.CalcDerivatives
+    plotOptions = [plotOptions,'Dislocation Density'];
+    handles.DisloMinEdit.Enable = 'On';
+    handles.DisloMaxEdit.Enable = 'On';
+    handles.SetDislocationDefaultsButton.Enable = 'On';
+end
+if Settings.DoDDS
+    plotOptions = [plotOptions,'Split Dislocation Density'];
+    handles.DisloMinEdit.Enable = 'On';
+    handles.DisloMaxEdit.Enable = 'On';
+    handles.SetDislocationDefaultsButton.Enable = 'On';
+end
+if Settings.Ny == 1
+    plotOptions = [plotOptions,'Line Scan Plots'];
+end
+handles.SettingsFileEdit.String = SettingsPath;
+handles.OptionsPopup.String = plotOptions;
+guidata(hObject, handles);
 
 
 
@@ -287,49 +362,20 @@ function PlotSelectedButton_Callback(hObject, eventdata, handles)
 
 %%Imports Settings and alpha_data, if available
 FilePath = get(handles.SettingsFileEdit,'String');
-%Checks if .mat file has already been imported (by clicking Dislocation Defaults)
-if handles.matfileloaded
-    Settings = handles.Settings;
-    if isfield(handles,'alpha_data')
-        alpha_data = handles.alpha_data;
-    end
-    if isfield(handles,'rhos')
-        rhos = handles.rhos;
-    end
-    if isfield(handles,'DDSettings')
-        DDSettings = handles.DDSettings;
-    end
-%Exits if file no file is selected
-elseif ~exist(FilePath,'file')
-   warndlg(['Warning, the file: ' FilePath ', was not found'],'Warning');
-   return;
-%Loads .mat file and imports Settings and alpha_data
-else
-    disp('Loading .mat file...');
-    matfile = load(FilePath);
-    
-    if isfield(matfile,'alpha_data')
-        handles.alpha_data = matfile.alpha_data;
-        alpha_data = handles.alpha_data;
-    end
-    if isfield(matfile,'DDSettings')
-        handles.DDSettings = matfile.DDSettings;
-        DDSettings = matfile.DDSettings;
-    end
-    if isfield(matfile,'rhos')
-        handles.rhos = matfile.rhos;
-        rhos = handles.rhos;
-    end
-    if isfield(matfile,'Settings')
-        handles.Settings = matfile.Settings;
-        Settings = handles.Settings;
-    else
-        warndlg(['Warning, the file: ' FilePath ', does not contain a Settings file'],'Warning');
-        return;
-    end
-    
-    clear matfile;
-    handles.matfileloaded = 1;
+%Checks if .mat file has already been imported
+if ~handles.matfileloaded
+    handles = loadSettings(FilePath,handles,hObject);
+end
+
+Settings = handles.Settings;
+if isfield(handles,'alpha_data')
+    alpha_data = handles.alpha_data;
+end
+if isfield(handles,'rhos')
+    rhos = handles.rhos;
+end
+if isfield(handles,'DDSettings')
+    DDSettings = handles.DDSettings;
 end
 
 %%Update File locations
@@ -371,7 +417,6 @@ Calculations = get(handles.CalculatedListBox,'String');
 
 %Check for strain components
 StrainComponentsList = {'e11';'e12';'e13';'e22';'e23';'e33'};
-Matches = [];
 Matches = intersect(StrainComponentsList,Components);
 if ~isempty(Matches)
     smin = str2double(get(handles.StrainMinEdit,'String'));
@@ -412,7 +457,6 @@ if ~isempty(Matches)
 end
 
 %Check for Split Dislocation Density
-Matches = [];
 Matches = intersect('Split Dislocation Density',Calculations);
 if ~isempty(Matches)
     if exist('alpha_data','var') && exist('rhos','var')
@@ -615,11 +659,6 @@ function DisloMaxEdit_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
-
-
-
-
 
 % --- Executes on button press in SkipHelp.
 function SkipHelp_Callback(hObject, eventdata, handles)

@@ -40,6 +40,9 @@ for i=1:m
 end
 
 figure; 
-imagesc(epstet); caxis([0 .03]); axis off
+imagesc(epstet);
+caxis([0 .03]);
+axis equal tight
+axis off
 title('Tetragonality map')
 colorbar
