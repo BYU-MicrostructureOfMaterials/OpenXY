@@ -90,6 +90,12 @@ OpenXYPath = '';
 if exist('SystemSettings.mat','file')
     load SystemSettings
 end
+if ~exist('understand','var')
+    understand = LicenseGUI;
+    if ~understand
+        error('Must acknowlege understanding of terms to use OpenXY')
+    end
+end
 if ~exist(OpenXYPath,'dir')
     OpenXYPath = fileparts(which('MainGUI'));
     save('SystemSettings','OpenXYPath');
@@ -97,7 +103,7 @@ end
 if exist('pos','var')
     set(hObject,'Position',pos)
 end
-
+save('SystemSettings.mat','understand','-append')
 %Change working directory
 XYpath = fileparts(mfilename('fullpath'));
 if ~strcmp(pwd,XYpath)

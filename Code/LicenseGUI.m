@@ -87,7 +87,8 @@ if get(handles.acceptbox,'Value')
     guidata(hObject,handles);
     LicenseGUI_CloseRequestFcn(handles.LicenseGUI, eventdata, handles);
 else
-    warndlg('Must check box to accept before continuing','OpenXY License');
+    warndlg('Must check box to state you understand before continuing',...
+        'OpenXY License');
 end
 
 
