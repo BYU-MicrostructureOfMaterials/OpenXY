@@ -22,7 +22,7 @@ function varargout = SelectPointsGUI(varargin)
 
 % Edit the above text to modify the response to help SelectPointsGUI
 
-% Last Modified by GUIDE v2.5 05-May-2017 16:09:52
+% Last Modified by GUIDE v2.5 08-May-2017 13:36:43
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -56,15 +56,25 @@ function SelectPointsGUI_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.output = hObject;
 
 % Get the Handles structure for the parent GUI
-handles.PCEdit = guidata(varargin{1});
+handles.ParentObj = varargin{1};
+handles.Parent = guidata(handles.ParentObj);
 handles.type = varargin{2};
 switch handles.type
     case 'PC'
         mapPlots.plotList = {'IQ','IPF'};
-        mapPlots.IQ = handles.PCEdit.IQ_map;
-        mapPlots.IPF = handles.PCEdit.IPF_map;
+        mapPlots.IQ = handles.Parent.IQ_map;
+        mapPlots.IPF = handles.Parent.IPF_map;
         handles.doPatternPlot = false;
+        handles.pointPlotFcn = @PCPointPlot;
+        handles.leftClickFcn = @PCPointEdit;
+        handles.LeftText.String = 'Edit or delete Calibration Point';
+        handles.middleClickFcn = @noFcn;
+        handles.MiddleText.String = 'N/A';
 end
+
+% Save the map size in the handles sructure
+handles.mapSize = size(mapPlots.IQ);
+
 handles.mapInd = 0;
 handles.mapPlots = mapPlots;
 % Plot the first map
@@ -77,27 +87,34 @@ if handles.doPatternPlot
         'HorizontalAlignment','center')
     axis off
 else
-    
+    hObject.Position(3) = hObject.Position(3)/2;
+    axes(handles.PatternAxes)
+    axis off
 end
 
-% Save the map size in the handles sructure
-handles.mapSize = size(handles.PCEdit.IQ_map);
 
 % Update handles structure
 guidata(hObject, handles);
 
 % UIWAIT makes SelectPointsGUI wait for user response (see UIRESUME)
-% uiwait(handles.figure1);
+% uiwait(handles.SelectPointsGUI);
 
-function handles = mapPlotUpdate(handles)
-handles.mapInd = handles.mapInd + 1;
-if handles.mapInd > size(handles.mapPlots.plotList,2)
-    handles.mapInd = 1;
+function handles = mapPlotUpdate(handles,~)
+if nargin < 2
+    handles.mapInd = handles.mapInd + 1;
+    if handles.mapInd > size(handles.mapPlots.plotList,2)
+        handles.mapInd = 1;
+    end
 end
 axes(handles.MapAxes)
 currentMap = handles.mapPlots.plotList{handles.mapInd};
-PlotScan(handles.mapPlots.(currentMap),currentMap)
+handles.MapText.String = [currentMap ' Map'];
+cla;
+hold on
+PlotScan(handles.mapPlots.(currentMap),currentMap);
 axis off
+hold off
+handles = handles.pointPlotFcn(handles);
 
 % --- Outputs from this function are returned to the command line.
 function varargout = SelectPointsGUI_OutputFcn(hObject, eventdata, handles) 
@@ -109,43 +126,85 @@ function varargout = SelectPointsGUI_OutputFcn(hObject, eventdata, handles)
 % Get default command line output from handles structure
 varargout{1} = handles.output;
 
-
 % --- Executes on mouse press over figure background, over a disabled or
 % --- inactive control, or over an axes background.
-function figure1_WindowButtonDownFcn(hObject, eventdata, handles)
-% hObject    handle to figure1 (see GCBO)
+function SelectPointsGUI_WindowButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to SelectPointsGUI (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
 % Checks what type of click it being made
 type = get(gcbf, 'SelectionType');
-switch type
-    case 'normal'
-        keyboard
-    case 'alt'
-
-    case 'extend'
-
-    case 'open'
-        %Double-Click option, does nothing
+if handles.overMap
+    switch type
+        case 'normal'
+            handles = handles.leftClickFcn(handles);
+            handles = mapPlotUpdate(handles,1);
+        case 'alt'
+            handles = mapPlotUpdate(handles);
+        case 'extend'
+            handles = handles.middleClickFcn(handles);
+            handles = mapPlotUpdate(handles,1);
+        case 'open'
+            %Double-Click option, does nothing
+    end
 end
+guidata(hObject,handles);
+
+function handles = PCPointPlot(handles)
+PCData = handles.Parent.PCData;
+Nx = handles.mapSize(1);
+Ny = handles.mapSize(2);
+scanType = FindScanType([Nx Ny],numel(handles.mapPlots.IQ));
+if strcmp(scanType,'Hexagonal')
+   Nx = Nx - 1; 
+end
+[Xind,Yind] = ind2sub2([Ny Nx],PCData.CalibrationIndices,scanType);
+
+axes(handles.MapAxes)
+hold on
+plot(Xind,Yind,'kd','MarkerFaceColor','k')
+hold off
+
+handles.Parent.PCData = PCData;
+
+function handles = PCPointEdit(handles)
+Inds = handles.Parent.PCData.CalibrationIndices;
+Nx = handles.mapSize(1);
+Ny = handles.mapSize(2);
+scanType = FindScanType([Nx Ny],numel(handles.mapPlots.IQ));
+
+pt = handles.MapAxes.CurrentPoint;
+x = ceil(pt(1,1) - 0.5);
+y = ceil(pt(1,2) - 0.5);
+
+ind = sub2ind2([Ny Nx],x,y,scanType);
+
+[isIn,loc]=ismember(ind,Inds);
+if isIn
+   Inds(loc) = []; 
+else
+    Inds = [Inds;ind];
+end
+handles.Parent.PCData.CalibrationIndices = Inds;
+
+
 
 % --- Executes on mouse motion over figure - except title and menu.
-function figure1_WindowButtonMotionFcn(hObject, eventdata, handles)
-% hObject    handle to figure1 (see GCBO)
+function SelectPointsGUI_WindowButtonMotionFcn(hObject, eventdata, handles)
+% hObject    handle to SelectPointsGUI (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-clc
 pt = handles.MapAxes.CurrentPoint;
 x = pt(1,1) - 0.5;
 y = pt(1,2) - 0.5;
-disp(['x:' num2str(x)])
-disp(['y:' num2str(y)])
+handles.xtext.String = num2str(x);
+handles.ytext.String = num2str(y);
 
 handles.overMap = (x >= 0 && x <= handles.mapSize(2))...
     && (y >= 0 && y <= handles.mapSize(1));
-disp(handles.overMap)
+
 if ~handles.overMap
     set(hObject,'pointer','arrow');
 else
@@ -159,3 +218,14 @@ function MapAxes_DeleteFcn(hObject, eventdata, handles)
 % hObject    handle to MapAxes (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+function handles = noFcn(handles)
+
+% --- Executes on button press in SaveButton.
+function SaveButton_Callback(hObject, eventdata, handles)
+% hObject    handle to SaveButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+guidata(handles.ParentObj,handles.Parent)
+delete(handles.SelectPointsGUI);

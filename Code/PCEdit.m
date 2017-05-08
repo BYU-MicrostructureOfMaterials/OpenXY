@@ -157,12 +157,19 @@ delete(handles.PCEdit);
 
 
 % --- Executes when user attempts to close PCEdit.
-function PCEdit_CloseRequestFcn(hObject, eventdata, handles)
+function PCEdit_CloseRequestFcn(hObject, eventdata, handles,~)
 % hObject    handle to PCEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: delete(hObject) closes the figure
+if nargin ~= 4
+    handles.xstar = [];
+    handles.ystar = [];
+    handles.zstar = [];
+    guidata(handles.PCEdit,handles);
+end
+
 if ishandle(handles.fig)
     close(handles.fig)
 end
@@ -177,7 +184,7 @@ function DoneButton_Callback(hObject, eventdata, handles)
 % hObject    handle to DoneButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-PCEdit_CloseRequestFcn(handles.PCEdit, eventdata, handles);
+PCEdit_CloseRequestFcn(handles.PCEdit, eventdata, handles,1);
 
 
 function XStarEdit_Callback(hObject, eventdata, handles)
@@ -462,18 +469,12 @@ function SelectPoints_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 uiwait(SelectPointsGUI(handles.PCEdit,'PC'));
 
-% try
-%     handles.PCData.CalibrationIndices...
-%         = SelectCalibrationPoints(handles.IQ_map,handles.IPF_map,...
-%         handles.PCData.CalibrationIndices);
-% catch
-%     return
-% end
-% numpats = length(handles.PCData.CalibrationIndices);
-% set(handles.numpats,'String',numpats);
-% handles.PCData.numpats = numpats;
-% UpdatePlot(handles);
-% guidata(handles.PCEdit,handles);
+handles = guidata(hObject);
+numpats = length(handles.PCData.CalibrationIndices);
+set(handles.numpats,'String',numpats);
+handles.PCData.numpats = numpats;
+UpdatePlot(handles);
+guidata(handles.PCEdit,handles);
 
 
 
@@ -592,10 +593,6 @@ function CancelButton_Callback(hObject, eventdata, handles)
 % hObject    handle to CancelButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.xstar = [];
-handles.ystar = [];
-handles.zstar = [];
-guidata(handles.PCEdit,handles);
 PCEdit_CloseRequestFcn(handles.PCEdit, eventdata, handles);
 
 
