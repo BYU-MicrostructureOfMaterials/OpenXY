@@ -25,6 +25,11 @@ if ~isfield(Settings,'ImageNamesList')
     end
 end
 
+%% Validate Variables
+if strcmp(Settings.ROIStyle,'Grid')
+    Settings.NumROIs = 48;
+end
+
 %% Validate SplitDD Materials
 if Settings.DoDDS && ~CheckSplitDDMaterials(unique(Settings.Phase))
     Settings.DoDDS = false;
