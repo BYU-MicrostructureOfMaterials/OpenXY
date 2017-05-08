@@ -123,6 +123,7 @@ while morepoints
             end
             imagesc(pattern); colormap gray;
             title(['CI: ' num2str(ScanData(ind,1)) ' Fit: ' num2str(ScanData(ind,2))]);
+            pause(.25)
         elseif button == 3
             bg = bg + 1;
             if bg == 5; bg = 1; end;
