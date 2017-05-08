@@ -70,6 +70,19 @@ switch handles.type
         handles.LeftText.String = 'Edit or delete Calibration Point';
         handles.middleClickFcn = @noFcn;
         handles.MiddleText.String = 'N/A';
+    case 'Strain Minimization'
+        sz = [handles.Parent.Settings.Nx handles.Parent.Settings.Ny];
+        mapPlots.plotList = {'IQ','IPF','CI'};
+        mapPlots.IQ = handles.Parent.IQ_map;
+        mapPlots.IPF = handles.Parent.IPF_map;
+        mapPlots.CI = reshape(handles.Parent.Settings.CI,sz)';
+        handles.doPatternPlot = true;
+        handles.pointPlotFcn = @PCPointPlot;
+        handles.leftClickFcn = @PCPointEdit;
+        handles.LeftText.String = 'Edit or delete Calibration Point';
+        handles.middleClickFcn = @noFcn;
+        handles.MiddleText.String = 'N/A';
+        handles.Parent.PCData.CalibrationIndices = [];
 end
 
 % Save the map size in the handles sructure
@@ -152,13 +165,13 @@ end
 guidata(hObject,handles);
 
 function handles = PCPointPlot(handles)
-PCData = handles.Parent.PCData;
 Nx = handles.mapSize(1);
 Ny = handles.mapSize(2);
 scanType = FindScanType([Nx Ny],numel(handles.mapPlots.IQ));
 if strcmp(scanType,'Hexagonal')
    Nx = Nx - 1; 
 end
+PCData = handles.Parent.PCData;
 [Xind,Yind] = ind2sub2([Ny Nx],PCData.CalibrationIndices,scanType);
 
 axes(handles.MapAxes)

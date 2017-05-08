@@ -20,5 +20,8 @@ switch PlotType
     case 'IPF'
         im = image(im);
         colormap(gca,jet)
+    case 'CI'
+        im = imagesc(im,Limits);
+        colormap(gca,gray)
 end
 axis image
