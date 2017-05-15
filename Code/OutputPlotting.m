@@ -399,9 +399,6 @@ if UpdateFileLocations
     Settings.ImageNamesList=UpdatePath(Settings.ImageNamesList,NewDir,MainPathLength);
     Settings.FirstImagePath=UpdatePath(Settings.FirstImagePath,NewDir,MainPathLength);
     Settings.ScanFilePath=UpdatePath(Settings.ScanFilePath,NewDir,MainPathLength);
-    if ~strcmp(Settings.HROIMMethod,'Simulated')
-        Settings.RefImageNames=UpdatePath(Settings.RefImageNames,NewDir,MainPathLength);
-    end
     
     if exist('alpha_data','var')
         save(Settings.OutputPath ,'Settings','alpha_data'); 
