@@ -63,11 +63,11 @@ else
     MaxMisAng = max(MisAng(:,4),MisAng(:,1));
 end
 
-map = reshape(MaxMisAng,dims(1),dims(2))';
-mapr = reshape(MisAng(:,1),dims(1),dims(2))';
-mapb = reshape(MisAng(:,2),dims(1),dims(2))';
-mapl = reshape(MisAng(:,3),dims(1),dims(2))';
-mapt = reshape(MisAng(:,4),dims(1),dims(2))';
+map = real(reshape(MaxMisAng,dims(1),dims(2))');
+mapr = real(reshape(MisAng(:,1),dims(1),dims(2))');
+mapb = real(reshape(MisAng(:,2),dims(1),dims(2))');
+mapl = real(reshape(MisAng(:,3),dims(1),dims(2))');
+mapt = real(reshape(MisAng(:,4),dims(1),dims(2))');
 switch layout
     case 'cross'
         figure
