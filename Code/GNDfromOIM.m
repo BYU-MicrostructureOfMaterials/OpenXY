@@ -131,8 +131,8 @@ if withquat
     %Calculate Misorientations
     [anglea,~,~,deltaa] = quatMisoSym(q,q(RefIndA,:),q_symops,'element');
     [anglec,~,~,deltac] = quatMisoSym(q,q(RefIndC,:),q_symops,'element');
-    misoa = quatconj(quatmult(quatconj(q),quatmult(deltaa,q,'element'),'element'));
-    misoc = quatconj(quatmult(quatconj(q),quatmult(deltac,q,'element'),'element'));
+    misoa = quatmult(quatconj(q),quatmult(deltaa,q,'element'),'element');
+    misoc = quatmult(quatconj(q),quatmult(deltac,q,'element'),'element');
     
     %Filter out misorientations greater than the tolerance
     misanga = true(ScanLength,1);
@@ -268,19 +268,19 @@ if withquat
     bd2 = (avgmisoa_R - repmat(eye(3),1,1,ScanLength)) / (-stepsize*(skip+1));
     
     if strcmp(Settings.ScanType,'Square')
-        bd1 = permute(reshape(permute(bd1,[3 1 2]),Settings.Nx,Settings.Ny,3,3),[4 3 2 1]);
-        bd2 = permute(reshape(permute(bd2,[3 1 2]),Settings.Nx,Settings.Ny,3,3),[4 3 2 1]);
+        bd1 = permute(reshape(permute(bd1,[3 1 2]),Settings.Nx,Settings.Ny,3,3),[3 4 2 1]);
+        bd2 = permute(reshape(permute(bd2,[3 1 2]),Settings.Nx,Settings.Ny,3,3),[3 4 2 1]);
     else
         bd1 = permute(bd1,[3 1 2]);
         bd1 = cat(4,Hex2Array(bd1(:,:,1),NColsOdd),...
             Hex2Array(bd1(:,:,2),NColsOdd),...
             Hex2Array(bd1(:,:,3),NColsOdd));
-        bd1 = permute(bd1,[4 3 1 2]);
+        bd1 = permute(bd1,[3 4 1 2]);
         bd2 = permute(bd2,[3 1 2]);
         bd2 = cat(4,Hex2Array(bd2(:,:,1),NColsOdd),...
             Hex2Array(bd2(:,:,2),NColsOdd),...
             Hex2Array(bd2(:,:,3),NColsOdd));
-        bd2 = permute(bd2,[4 3 1 2]);
+        bd2 = permute(bd2,[3 4 1 2]);
     end
     betaderiv2 = bd2;
     betaderiv1 = bd1;
@@ -491,10 +491,14 @@ alpha_total3(:,:)=30/10.*(abs(alpha(1,3,:,:))+abs(alpha(2,3,:,:))+abs(alpha(3,3,
 alpha_total5(:,:)=30/14.*(abs(alpha(1,3,:,:))+abs(alpha(2,3,:,:))+abs(alpha(3,3,:,:))+abs(alpha(2,1,:,:))+abs(alpha(1,2,:,:)));
 alpha_total9(:,:)=30/20.*abs(alpha(1,3,:,:))+abs(alpha(2,3,:,:))+abs(alpha(3,3,:,:))+abs(alpha(1,1,:,:))+abs(alpha(2,1,:,:))+abs(alpha(3,1,:,:))+abs(alpha(1,2,:,:))+abs(alpha(2,2,:,:))+abs(alpha(3,2,:,:));
 
-alpha_data.alpha = reshape(permute(alpha,[1 2 4 3]),3,3,Settings.ScanLength);
-alpha_data.alpha_total3 = map2vec(alpha_total3);
-alpha_data.alpha_total5 = map2vec(alpha_total5);
-alpha_data.alpha_total9 = map2vec(alpha_total9);
+if strcmp(Settings.ScanType,'Square')
+    alpha_data.alpha = reshape(permute(alpha,[1 2 4 3]),3,3,Settings.ScanLength);
+else
+    alpha_data.alpha = permute(Array2Hex(permute(alpha,[3 4 1 2])),[2 3 1]);
+end
+alpha_data.alpha_total3 = map2vec(alpha_total3,Settings.ScanType);
+alpha_data.alpha_total5 = map2vec(alpha_total5,Settings.ScanType);
+alpha_data.alpha_total9 = map2vec(alpha_total9,Settings.ScanType);
 
 % alphalist = reshape(alpha,3,3,ScanLength);
 % GNDAvg = mean(alphalist(1,3,alphalist(1,3,:)>0));
