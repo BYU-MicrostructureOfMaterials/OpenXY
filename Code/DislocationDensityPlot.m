@@ -1,4 +1,4 @@
-function DislocationDensityPlot(Settings, alpha_data, cmin, cmax)
+function DislocationDensityPlot(Settings, alpha_data, cmin, cmax, doShowGB)
 %DISLOCATIONDENSITYOUTPUT
 %DislocationDensityOutput(Settings,Components, cmin, cmax, MaxMisorientation)
 %code bits for this function taken from Step2_DisloDens_Lgrid_useF_2.m
@@ -56,6 +56,9 @@ if strcmp(Settings.ScanType,'Square') ||  strcmp(Settings.ScanType,'LtoSquare')
     % view(2)
     colorbar
     caxis([cmin cmax])
+    if doShowGB
+        PlotGBs(Settings.grainID,[Settings.Nx Settings.Ny],Settings.ScanType)
+    end
 
     qq=reshape(alpha(2,3,:),[c r])';
     if r == 1; qq=repmat(qq,floor(Settings.ScanLength/4),1); end;
@@ -66,6 +69,9 @@ if strcmp(Settings.ScanType,'Square') ||  strcmp(Settings.ScanType,'LtoSquare')
     % view(2)
     colorbar
     caxis([cmin cmax])
+    if doShowGB
+        PlotGBs(Settings.grainID,[Settings.Nx Settings.Ny],Settings.ScanType)
+    end
 
     qq=reshape(alpha(3,3,:),[c r])';
     if r == 1; qq=repmat(qq,floor(Settings.ScanLength/4),1); end;
@@ -76,6 +82,9 @@ if strcmp(Settings.ScanType,'Square') ||  strcmp(Settings.ScanType,'LtoSquare')
     % view(2)
     colorbar
     caxis([cmin cmax])
+    if doShowGB
+        PlotGBs(Settings.grainID,[Settings.Nx Settings.Ny],Settings.ScanType)
+    end
 
     % colormapeditor % change scaling of colorbar
     qq = alpha_total3;
@@ -87,6 +96,9 @@ if strcmp(Settings.ScanType,'Square') ||  strcmp(Settings.ScanType,'LtoSquare')
     view(2)
     colorbar
     caxis([cmin cmax+1])
+    if doShowGB
+        PlotGBs(Settings.grainID,[Settings.Nx Settings.Ny],Settings.ScanType)
+    end
     drawnow
     
     toc
