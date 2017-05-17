@@ -292,6 +292,9 @@ if name ~= 0
             try
                 handles.Settings = ImportScanInfo(handles.Settings,name,path);
             catch ME
+                if ~strcmp(ME.identifier,'OpenXY:GrainFile')
+                    rethrow(ME)
+                end
                 set(handles.ScanNameText,'String','Select a Scan');
                 set(handles.ScanFolderText,'String','Select a Scan');
                 set(handles.ScanFolderText,'TooltipString','');

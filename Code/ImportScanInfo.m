@@ -131,6 +131,16 @@ if exist('Material','var')
     Settings.Material = Material.Material;
 end
 
+%Set up material structure
+phases = unique(Settings.Phase);
+Settings.PhaseIndex = zeros(size(Settings.Phase));
+for ind = 1:length(phases)
+    Settings.PhaseIndex(strcmp(Settings.Phase,phases{ind})) = ind;
+end
+for ind = 1:length(phases)
+    temp = ReadMaterial(phases{ind});
+    Settings.MaterialInfo(ind) = temp;
+end
 %Crop Scan
 Settings = CropScan(Settings);
 if length(Settings.grainID) ~= length(Settings.XData)

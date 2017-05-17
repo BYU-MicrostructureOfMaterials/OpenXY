@@ -12,9 +12,11 @@ if ~exist(GrainFilePath,'file')
             GrainFilePath = fullfile(path,name);
             cd(w);
         case 'No'
-            error('No');
+            ME = MException('OpenXY:GrainFile','No');
+            throw(ME)
         case 'Cancel'
-            error('Cancel');
+            ME = MException('OpenXY:GrainFile','Cancel');
+            throw(ME)
     end
 end
 
