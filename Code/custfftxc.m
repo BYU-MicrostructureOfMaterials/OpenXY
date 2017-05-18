@@ -28,7 +28,7 @@ if isempty(ind)
             r1=fftshift(ifftn((fftn(f).*G)));
             
         end
-        [qx1 qy1]=subpixshift(real(r1));
+        [qx1,qy1]=subpixshift(real(r1));
         l=length(rs);
         rs(l+1)=rc(1);
         cs(l+1)=cc(1);
@@ -37,7 +37,7 @@ if isempty(ind)
 %         r1=normxcorr2_mex((double(g)),(double(bigF)));
 %         r1=r1(rc+127-128:rc+127+127,cc+127-128:cc+127+127);
 %         [qx1 qy1]=subpixshift(real(r1));
-        [output Greg] = dftregistration(fft2(f),fft2(g),100);
+        [output,~] = dftregistration(fft2(f),fft2(g),100);
         %            [error,diffphase,net_row_shift,net_col_shift]
         qx1 = output.net_row_shift;
         qy1 = output.net_col_shift;

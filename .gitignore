@@ -9,3 +9,5 @@ Code/PSO_Settings.mat
 Code/SystemSettings.mat
 *.asv
 Code/itWorks.mat
+
+*.m~

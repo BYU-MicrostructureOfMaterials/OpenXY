@@ -22,7 +22,7 @@ function [F, SSE, XX, sigma] = CalcF(RefImage,ScanImage,g,Fo,Ind,Settings,curMat
 %% handle inputs
 
 Material = ReadMaterial(curMaterial);
-g0 = g;
+% g0 = g;
 RefImage=double(RefImage);
 ScanImage=double(ScanImage);
 
@@ -83,7 +83,7 @@ if length(g(:))<9
 else
     Qsc=g;
 end
-[g U]=poldec(Qsc);
+[~,U]=poldec(Qsc);
 if sum(sum(U-eye(3)))>1e-6
     error('g must be a pure rotation');
 end
@@ -138,7 +138,7 @@ Rshift = zeros(1,length(roixc));
 Cshift = zeros(1,length(roixc));
 dRshift = zeros(1,length(roixc));
 dCshift = zeros(1,length(roixc));
-
+XX = zeros(length(roixc),3);
 
 %% Go over each ROI
 for i=1:length(roixc)
@@ -200,7 +200,7 @@ for i=1:length(roixc)
          dxshift=dxshift-tx-spminussx; % corrected ROI shift taking into account PC shift
          dyshift=dyshift-ty-spminussy; %****NOT SURE ABOUT SIGN ON THIS
     end
-    [xshift0,yshift0] = Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,cc,rc,Fo,Settings.PixelSize,alpha);%this is the screen shift in the g (hough) frame *****not used***
+%     [xshift0,yshift0] = Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,cc,rc,Fo,Settings.PixelSize,alpha);%this is the screen shift in the g (hough) frame *****not used***
     
     %     else
     %         [ro uo]=poldec(Fo);
@@ -446,7 +446,7 @@ switch Settings.FCalcMethod
         F=U+eye(3);
         F=g*F*g'; %Put in crystal frame
         %calculate the sum of the squared errors
-        [cx cy]=Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,roixc,roiyc,F,Settings.PixelSize,alpha);
+        [cx,cy]=Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,roixc,roiyc,F,Settings.PixelSize,alpha);
         SSE=sqrt(sum((cx(tempind)-Cshift(tempind)).^2+(cy(tempind)-Rshift(tempind)).^2)/length(tempind)) ;
         %         Fs{1}=F;
         %         SSEs(1)=SSE;
@@ -524,7 +524,7 @@ switch Settings.FCalcMethod
             U31 U32 U33];
         F=U+eye(3);
         %calculate the sum of the squared errors
-        [cx cy]=Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,roixc,roiyc,F,Settings.PixelSize,alpha);
+        [cx,cy]=Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,roixc,roiyc,F,Settings.PixelSize,alpha);
         SSE=sqrt(sum((cx(tempind)-Cshift(tempind)).^2+(cy(tempind)-Rshift(tempind)).^2)/length(tempind)) ;
         %         Fs{2}=F;
         %         SSEs(2)=SSE;
@@ -609,7 +609,7 @@ switch Settings.FCalcMethod
         A=U+eye(3);
         F=g*A*g';
         
-        [cx cy]=Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,roixc,roiyc,F,Settings.PixelSize,alpha);
+        [cx,cy]=Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,roixc,roiyc,F,Settings.PixelSize,alpha);
         SSE=sqrt(sum((cx(tempind)-Cshift(tempind)).^2+(cy(tempind)-Rshift(tempind)).^2)/length(tempind)) ;
         %         Fs{5}=F;
         %         SSEs(5)=SSE;
@@ -689,7 +689,7 @@ switch Settings.FCalcMethod
             U31 U32 U33];
         F=U+eye(3);
         
-        [cx cy]=Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,roixc,roiyc,F,Settings.PixelSize,alpha);
+        [cx,cy]=Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,roixc,roiyc,F,Settings.PixelSize,alpha);
         SSE=sqrt(sum((cx(tempind)-Cshift(tempind)).^2+(cy(tempind)-Rshift(tempind)).^2)/length(tempind)) ;
         %         Fs{6}=F;
         %         SSEs(6)=SSE;
@@ -731,7 +731,7 @@ if Settings.DoShowPlot
     catch
         figure(100);
     end
-    [cx cy]=Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,roixc,roiyc,F,Settings.PixelSize,alpha);
+    [cx,cy]=Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,roixc,roiyc,F,Settings.PixelSize,alpha);
     cla
     imagesc(RefImage);
     axis image
@@ -742,7 +742,7 @@ if Settings.DoShowPlot
         PlotROIs(Settings,RefImage);
     end
     for i=1:length(Cshift)
-        if ~isempty(find(tempind==i))
+        if ~isempty(find(tempind==i, 1))
             %Should probably make this factor "*10" a variable...
             plot([roixc(i) roixc(i)+Cshift(i)],[roiyc(i) roiyc(i)+Rshift(i)],'g.-')
         else
@@ -777,7 +777,7 @@ if Settings.DoShowPlot
     end
     
     set(0,'currentfigure',101);
-    [cx cy]=Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,roixc,roiyc,F,Settings.PixelSize,alpha);
+    [cx,cy]=Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,roixc,roiyc,F,Settings.PixelSize,alpha);
     cla
     imagesc(ScanImage);
     axis image
@@ -788,7 +788,7 @@ if Settings.DoShowPlot
         PlotROIs(Settings,RefImage);
     end
     for i=1:length(Cshift)
-        if ~isempty(find(tempind==i))
+        if ~isempty(find(tempind==i, 1))
             %Should probably make this factor "*10" a variable...
             plot([roixc(i) roixc(i)+Cshift(i)],[roiyc(i) roiyc(i)+Rshift(i)],'g.-')
         else
