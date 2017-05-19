@@ -19,20 +19,23 @@ public:
     int y;
 	int WIDTH;
 	int HEIGHT;
-
     double* map_; // Pointer to the map
+
+	double wall = 1; //Value above which is impassible
     
+	// Constructors
     MapSearchNode() { x = y = WIDTH = HEIGHT = 0; }
 	MapSearchNode(int px, int py, double* map, int W, int H) { x = px; y = py; map_ = map; WIDTH = W; HEIGHT = H; }
 
-
-
+	
+	// Required by Astar Algorithm
     float GoalDistanceEstimate( MapSearchNode &nodeGoal );
     bool IsGoal( MapSearchNode &nodeGoal );
     bool GetSuccessors( AStarSearch<MapSearchNode> *astarsearch, MapSearchNode *parent_node );
     float GetCost( MapSearchNode &successor );
     bool IsSameState( MapSearchNode &rhs );
 
+	// Useful functions
     void PrintNodeInfo(); 
     int GetMap(int xind, int yind);
 

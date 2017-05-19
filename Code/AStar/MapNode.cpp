@@ -67,48 +67,36 @@ bool MapSearchNode::GetSuccessors( AStarSearch<MapSearchNode> *astarsearch, MapS
     
     MapSearchNode NewNode;
 
-    //cout << "x=" << x << " y=" << y << endl;
-    //cout << "px=" << parent_x << " py=" << parent_y << endl;
-    // push each possible move except allowing the search to go backwards
-
-    //cout << (GetMap( x-1, y ) < 9) << " " << !((parent_x == x-1) && (parent_y == y)) << endl;
-    if( (GetMap( x-1, y ) < 9) 
+    if( (GetMap( x-1, y ) < wall) 
         && !((parent_x == x-1) && (parent_y == y))
       ) 
     {
         NewNode = MapSearchNode( x-1, y, map_, WIDTH, HEIGHT );
         astarsearch->AddSuccessor( NewNode );
-        //cout << "Top" << endl;
     }   
 
-    //cout << (GetMap( x, y-1 ) < 9)<< " " << !((parent_x == x) && (parent_y == y-1)) << endl;
-    if( (GetMap( x, y-1 ) < 9) 
+	if ((GetMap(x, y - 1) < wall)
         && !((parent_x == x) && (parent_y == y-1))
       ) 
     {
 		NewNode = MapSearchNode(x, y - 1, map_, WIDTH, HEIGHT);
         astarsearch->AddSuccessor( NewNode );
-        //cout << "Left" << endl;
     }   
 
-    //cout << (GetMap( x+1, y ) < 9)<< " " << !((parent_x == x+1) && (parent_y == y)) << endl;
-    if( (GetMap( x+1, y ) < 9)
+	if ((GetMap(x + 1, y) < wall)
         && !((parent_x == x+1) && (parent_y == y))
       ) 
     {
 		NewNode = MapSearchNode(x + 1, y, map_, WIDTH, HEIGHT);
         astarsearch->AddSuccessor( NewNode );
-        //cout << "Bottom" << endl;
     }   
-
-    //cout << (GetMap( x, y+1 ) < 9)<< " " << !((parent_x == x) && (parent_y == y+1)) << endl;    
-    if( (GetMap( x, y+1 ) < 9) 
+  
+	if ((GetMap(x, y + 1) < wall)
         && !((parent_x == x) && (parent_y == y+1))
         )
     {
 		NewNode = MapSearchNode(x, y + 1, map_, WIDTH, HEIGHT);
         astarsearch->AddSuccessor( NewNode );
-        //cout << "Right" << endl;
     }   
     
     return true;
@@ -141,7 +129,7 @@ int MapSearchNode::GetMap(int xind, int yind){
 		yind >= HEIGHT
 		)
 	{
-		return 9;
+		return wall;
 	}
 
 	return map_[(yind*WIDTH) + xind];
