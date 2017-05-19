@@ -21,7 +21,7 @@ public:
 	int HEIGHT;
     double* map_; // Pointer to the map
 
-	double wall = 1; //Value above which is impassible
+	double wall = 9; // Value above which is impassible
     
 	// Constructors
     MapSearchNode() { x = y = WIDTH = HEIGHT = 0; }
@@ -37,7 +37,7 @@ public:
 
 	// Useful functions
     void PrintNodeInfo(); 
-    int GetMap(int xind, int yind);
+    float GetMap(int xind, int yind);
 
 };
 

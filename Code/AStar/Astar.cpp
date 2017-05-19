@@ -10,6 +10,22 @@ mxArray* getMexArray(const vector<int>& v){
 	return mx;
 }
 
+double* FixMatrix(double* A, int mrows, int ncols) {
+	vector<double> B;
+	double* C;
+	C = new double [mrows*ncols];
+	for (int x = 0; x < mrows; x++){
+		for (int y = 0; y < ncols; y++) {
+			//B.push_back(A[y*mrows + x]);
+			C[y + x*ncols] = A[y*mrows + x];
+			//cout << y + x*ncols << " " << y*mrows + x << endl;
+		}
+	}
+	//for (int i = 0; i < mrows*ncols; i++)
+		//A[i] = B[i];
+	return C;
+}
+
 void mexFunction(int nlhs, mxArray *plhs[],
                           int nrhs, const mxArray *prhs[])
 {
@@ -24,15 +40,18 @@ void mexFunction(int nlhs, mxArray *plhs[],
     // Get Input (start,end,map)
     double* start;
     double* goal;
-    double* MAP;
+    double* MAP_in;
+	double* MAP;
     int ncols;
     int mrows;
     
-    start = mxGetPr(prhs[0]);
-    goal  = mxGetPr(prhs[1]);
-    MAP   = mxGetPr(prhs[2]);
-    ncols = mxGetN(prhs[2]);
-    mrows = mxGetM(prhs[2]);
+    start  = mxGetPr(prhs[0]);
+    goal   = mxGetPr(prhs[1]);
+    MAP_in = mxGetPr(prhs[2]);
+    ncols  = mxGetN(prhs[2]);
+    mrows  = mxGetM(prhs[2]);
+
+	MAP = FixMatrix(MAP_in,mrows,ncols);
     
     // Get Path
     AstarPlanner astar(MAP,ncols,mrows);
@@ -54,6 +73,8 @@ void mexFunction(int nlhs, mxArray *plhs[],
     }
 
 	//astar.PrintPath();
-	//astar.PrintMap();
+	cout << mrows << 'x' << ncols << endl;
+	astar.PrintMap();
+	delete[] MAP;
     
 }

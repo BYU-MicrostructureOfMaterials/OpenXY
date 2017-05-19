@@ -19,6 +19,23 @@ AstarPlanner::AstarPlanner(double *map, int W, int H) {
     SearchCount = 0;
     NumSearches = 1;
     pathfound = false;
+
+	Cost_max = 1;
+	Cost_min = 0;
+
+	ScaleMap();
+}
+
+AstarPlanner::AstarPlanner(double *map, int W, int H, double Cmax, double Cmin){
+	AstarPlanner(map, W, H);
+	Cost_max = Cmax;
+	Cost_min = Cmin;
+}
+
+void AstarPlanner::ScaleMap() {
+	for (int i = 0; i < WIDTH*HEIGHT; i++){
+		map_[i] = 1.0+8.0*(map_[i]-Cost_min)/(Cost_max-Cost_min);
+	}
 }
 
 void AstarPlanner::SetGoal(int x, int y) {

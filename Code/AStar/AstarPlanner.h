@@ -9,6 +9,9 @@ public:
     double* map_;
 	int WIDTH;
 	int HEIGHT;
+	double Cost_max;
+	double Cost_min;
+	
 	vector<vector<double>> path_;
     AStarSearch<MapSearchNode> astarsearch;
     MapSearchNode start;
@@ -16,6 +19,7 @@ public:
 	bool pathfound;
 
     AstarPlanner(double *map, int W, int H);
+	AstarPlanner(double *map, int W, int H, double Cmax, double Cmin);
     void SetGoal(int x, int y);
 	void SetStart(int x, int y);
 	vector<vector<double>> GetPath();
@@ -27,6 +31,8 @@ public:
 private:
     unsigned int SearchCount;
     unsigned int NumSearches;
+
+	void ScaleMap();
 
 };
 

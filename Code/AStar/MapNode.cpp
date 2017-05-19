@@ -122,7 +122,7 @@ float MapSearchNode::GetCost( MapSearchNode &successor )
 //    }
 //}
 
-int MapSearchNode::GetMap(int xind, int yind){
+float MapSearchNode::GetMap(int xind, int yind){
 	if (xind < 0 ||
 		xind >= WIDTH ||
 		yind < 0 ||
