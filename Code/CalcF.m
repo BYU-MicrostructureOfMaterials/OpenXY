@@ -169,28 +169,29 @@ for i=1:length(roixc)
         disp('No Ref Image')
     end
     
-    %Calculate Cross-Correlation Coefficient
-    RefROI = RefImage(rrange,crange);
-    ScanROI = ScanImage(rrange,crange);
-    
-    RefROI = RefROI - mean(RefROI(:));
-    ScanROI = ScanROI - mean(ScanROI(:));
-    XX(i,1) = CalcCrossCorrelationCoef(RefROI,ScanROI);
-    
-    %Perform Cross-Correlation
-    [rimage, dxshift, dyshift] = custfftxc((RefImage(rrange,crange)),...
-        (ScanImage(rrange,crange)),0,RefImage,rc,cc,custfilt,windowfunc);%this is the screen shift in the F(i-1) frame
-     
-    %Calculate Confidence of Shift
-    XX(i,2) = (max(rimage(:))-mean(rimage(:)))/std(rimage(:));
-    
-    %Calculate Mutual Information (Requires Image Processing Toolbox)
-    if isfield(Settings,'CalcMI') && Settings.CalcMI
-        XX(i,3) = CalcMutualInformation(RefROI,ScanROI);
-    else
-        XX(i,3) = 0;
+    if nargout >= 3
+        %Calculate Cross-Correlation Coefficient
+        RefROI = RefImage(rrange,crange);
+        ScanROI = ScanImage(rrange,crange);
+        
+        RefROI = RefROI - mean(RefROI(:));
+        ScanROI = ScanROI - mean(ScanROI(:));
+        XX(i,1) = CalcCrossCorrelationCoef(RefROI,ScanROI);
+        
+        %Perform Cross-Correlation
+        [rimage, dxshift, dyshift] = custfftxc((RefImage(rrange,crange)),...
+            (ScanImage(rrange,crange)),0,RefImage,rc,cc,custfilt,windowfunc);%this is the screen shift in the F(i-1) frame
+        
+        %Calculate Confidence of Shift
+        XX(i,2) = (max(rimage(:))-mean(rimage(:)))/std(rimage(:));
+        
+        %Calculate Mutual Information (Requires Image Processing Toolbox)
+        if isfield(Settings,'CalcMI') && Settings.CalcMI
+            XX(i,3) = CalcMutualInformation(RefROI,ScanROI);
+        else
+            XX(i,3) = 0;
+        end
     end
-    
     if RefInd~=0 % new if statement for when there is a single ref image DTF 7/16/14 this is to adjust PC in Wilkinson method for that single ref case ***need to do it for all wilkinson cases***
          tx=(xstar-Settings.XStar(RefInd))*Settings.PixelSize; % vector on phosphor between PC of ref and PC of measured; uses notation from PCsensitivity paper
          ty=(ystar-Settings.YStar(RefInd))*Settings.PixelSize;
@@ -705,16 +706,20 @@ switch Settings.FCalcMethod
         %         F={};
         
         %Calculate Stress - BEJ Jan 2017
-        [~,Ustrain] = poldec(F);
-        Ustrain = Ustrain-eye(3);
-        for m = 1:3
-            for n = 1:3
-                for o = 1:3
-                    for p = 1:3
-                        sigma(m,n) = sigma(m,n)+Cc(m,n,o,p)*Ustrain(o,p);
+        if nargout == 4
+            [~,Ustrain] = poldec(F);
+            Ustrain = Ustrain-eye(3);
+            for m = 1:3
+                for n = 1:3
+                    for o = 1:3
+                        for p = 1:3
+                            sigma(m,n) = sigma(m,n)+Cc(m,n,o,p)*Ustrain(o,p);
+                        end
                     end
                 end
             end
+        else
+            Ustrain = 0;
         end
         assignin('base','Cc_CalcF',Cc)
         assignin('base','Ustrain',Ustrain)
