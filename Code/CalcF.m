@@ -169,18 +169,21 @@ for i=1:length(roixc)
         disp('No Ref Image')
     end
     
+    RefROI = RefImage(rrange,crange);
+    ScanROI = ScanImage(rrange,crange);
+    
+    RefROI = RefROI - mean(RefROI(:));
+    ScanROI = ScanROI - mean(ScanROI(:));
+    
+    %Perform Cross-Correlation
+    [rimage, dxshift, dyshift] = custfftxc((RefImage(rrange,crange)),...
+        (ScanImage(rrange,crange)),0,RefImage,rc,cc,custfilt,windowfunc);%this is the screen shift in the F(i-1) frame
+    
+    
     if nargout >= 3
         %Calculate Cross-Correlation Coefficient
-        RefROI = RefImage(rrange,crange);
-        ScanROI = ScanImage(rrange,crange);
-        
-        RefROI = RefROI - mean(RefROI(:));
-        ScanROI = ScanROI - mean(ScanROI(:));
         XX(i,1) = CalcCrossCorrelationCoef(RefROI,ScanROI);
         
-        %Perform Cross-Correlation
-        [rimage, dxshift, dyshift] = custfftxc((RefImage(rrange,crange)),...
-            (ScanImage(rrange,crange)),0,RefImage,rc,cc,custfilt,windowfunc);%this is the screen shift in the F(i-1) frame
         
         %Calculate Confidence of Shift
         XX(i,2) = (max(rimage(:))-mean(rimage(:)))/std(rimage(:));
