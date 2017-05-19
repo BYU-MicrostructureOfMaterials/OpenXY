@@ -9,3 +9,11 @@ Code/PSO_Settings.mat
 Code/SystemSettings.mat
 *.asv
 Code/itWorks.mat
+
+# Visual studio files
+*.sdf
+*.sln
+*.suo
+*.opensdf
+*.vcxproj*
+*Debug*
