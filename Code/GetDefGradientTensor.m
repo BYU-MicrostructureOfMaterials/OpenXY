@@ -13,8 +13,6 @@ DoLGrid = strcmp(Settings.ScanType,'L');
 % fftw('wisdom',Settings.largefftmeth);
 % disp(curMaterial)
 
-XX = zeros(Settings.NumROIs,3);
-
 H5Images = false;
 if size(Settings.ImageNamesList,1)==1
     H5Images = true;

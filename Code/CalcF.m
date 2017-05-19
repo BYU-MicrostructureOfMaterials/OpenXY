@@ -83,7 +83,7 @@ if length(g(:))<9
 else
     Qsc=g;
 end
-[g U]=poldec(Qsc);
+[~,U]=poldec(Qsc);
 if sum(sum(U-eye(3)))>1e-6
     error('g must be a pure rotation');
 end
@@ -138,7 +138,7 @@ Rshift = zeros(1,length(roixc));
 Cshift = zeros(1,length(roixc));
 dRshift = zeros(1,length(roixc));
 dCshift = zeros(1,length(roixc));
-
+XX = zeros(length(roixc),3);
 
 %% Go over each ROI
 for i=1:length(roixc)
@@ -169,28 +169,32 @@ for i=1:length(roixc)
         disp('No Ref Image')
     end
     
-    %Calculate Cross-Correlation Coefficient
     RefROI = RefImage(rrange,crange);
     ScanROI = ScanImage(rrange,crange);
     
     RefROI = RefROI - mean(RefROI(:));
     ScanROI = ScanROI - mean(ScanROI(:));
-    XX(i,1) = CalcCrossCorrelationCoef(RefROI,ScanROI);
     
     %Perform Cross-Correlation
     [rimage, dxshift, dyshift] = custfftxc((RefImage(rrange,crange)),...
         (ScanImage(rrange,crange)),0,RefImage,rc,cc,custfilt,windowfunc);%this is the screen shift in the F(i-1) frame
-     
-    %Calculate Confidence of Shift
-    XX(i,2) = (max(rimage(:))-mean(rimage(:)))/std(rimage(:));
     
-    %Calculate Mutual Information (Requires Image Processing Toolbox)
-    if isfield(Settings,'CalcMI') && Settings.CalcMI
-        XX(i,3) = CalcMutualInformation(RefROI,ScanROI);
-    else
-        XX(i,3) = 0;
+    
+    if nargout >= 3
+        %Calculate Cross-Correlation Coefficient
+        XX(i,1) = CalcCrossCorrelationCoef(RefROI,ScanROI);
+        
+        
+        %Calculate Confidence of Shift
+        XX(i,2) = (max(rimage(:))-mean(rimage(:)))/std(rimage(:));
+        
+        %Calculate Mutual Information (Requires Image Processing Toolbox)
+        if isfield(Settings,'CalcMI') && Settings.CalcMI
+            XX(i,3) = CalcMutualInformation(RefROI,ScanROI);
+        else
+            XX(i,3) = 0;
+        end
     end
-    
     if RefInd~=0 % new if statement for when there is a single ref image DTF 7/16/14 this is to adjust PC in Wilkinson method for that single ref case ***need to do it for all wilkinson cases***
          tx=(xstar-Settings.XStar(RefInd))*Settings.PixelSize; % vector on phosphor between PC of ref and PC of measured; uses notation from PCsensitivity paper
          ty=(ystar-Settings.YStar(RefInd))*Settings.PixelSize;
@@ -200,7 +204,7 @@ for i=1:length(roixc)
          dxshift=dxshift-tx-spminussx; % corrected ROI shift taking into account PC shift
          dyshift=dyshift-ty-spminussy; %****NOT SURE ABOUT SIGN ON THIS
     end
-    [xshift0,yshift0] = Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,cc,rc,Fo,Settings.PixelSize,alpha);%this is the screen shift in the g (hough) frame *****not used***
+%     [xshift0,yshift0] = Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,cc,rc,Fo,Settings.PixelSize,alpha);%this is the screen shift in the g (hough) frame *****not used***
     
     %     else
     %         [ro uo]=poldec(Fo);
@@ -446,7 +450,7 @@ switch Settings.FCalcMethod
         F=U+eye(3);
         F=g*F*g'; %Put in crystal frame
         %calculate the sum of the squared errors
-        [cx cy]=Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,roixc,roiyc,F,Settings.PixelSize,alpha);
+        [cx,cy]=Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,roixc,roiyc,F,Settings.PixelSize,alpha);
         SSE=sqrt(sum((cx(tempind)-Cshift(tempind)).^2+(cy(tempind)-Rshift(tempind)).^2)/length(tempind)) ;
         %         Fs{1}=F;
         %         SSEs(1)=SSE;
@@ -524,7 +528,7 @@ switch Settings.FCalcMethod
             U31 U32 U33];
         F=U+eye(3);
         %calculate the sum of the squared errors
-        [cx cy]=Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,roixc,roiyc,F,Settings.PixelSize,alpha);
+        [cx,cy]=Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,roixc,roiyc,F,Settings.PixelSize,alpha);
         SSE=sqrt(sum((cx(tempind)-Cshift(tempind)).^2+(cy(tempind)-Rshift(tempind)).^2)/length(tempind)) ;
         %         Fs{2}=F;
         %         SSEs(2)=SSE;
@@ -609,7 +613,7 @@ switch Settings.FCalcMethod
         A=U+eye(3);
         F=g*A*g';
         
-        [cx cy]=Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,roixc,roiyc,F,Settings.PixelSize,alpha);
+        [cx,cy]=Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,roixc,roiyc,F,Settings.PixelSize,alpha);
         SSE=sqrt(sum((cx(tempind)-Cshift(tempind)).^2+(cy(tempind)-Rshift(tempind)).^2)/length(tempind)) ;
         %         Fs{5}=F;
         %         SSEs(5)=SSE;
@@ -689,7 +693,7 @@ switch Settings.FCalcMethod
             U31 U32 U33];
         F=U+eye(3);
         
-        [cx cy]=Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,roixc,roiyc,F,Settings.PixelSize,alpha);
+        [cx,cy]=Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,roixc,roiyc,F,Settings.PixelSize,alpha);
         SSE=sqrt(sum((cx(tempind)-Cshift(tempind)).^2+(cy(tempind)-Rshift(tempind)).^2)/length(tempind)) ;
         %         Fs{6}=F;
         %         SSEs(6)=SSE;
@@ -705,16 +709,20 @@ switch Settings.FCalcMethod
         %         F={};
         
         %Calculate Stress - BEJ Jan 2017
-        [~,Ustrain] = poldec(F);
-        Ustrain = Ustrain-eye(3);
-        for m = 1:3
-            for n = 1:3
-                for o = 1:3
-                    for p = 1:3
-                        sigma(m,n) = sigma(m,n)+Cc(m,n,o,p)*Ustrain(o,p);
+        if nargout == 4
+            [~,Ustrain] = poldec(F);
+            Ustrain = Ustrain-eye(3);
+            for m = 1:3
+                for n = 1:3
+                    for o = 1:3
+                        for p = 1:3
+                            sigma(m,n) = sigma(m,n)+Cc(m,n,o,p)*Ustrain(o,p);
+                        end
                     end
                 end
             end
+        else
+            Ustrain = 0;
         end
         assignin('base','Cc_CalcF',Cc)
         assignin('base','Ustrain',Ustrain)
@@ -731,7 +739,7 @@ if Settings.DoShowPlot
     catch
         figure(100);
     end
-    [cx cy]=Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,roixc,roiyc,F,Settings.PixelSize,alpha);
+    [cx,cy]=Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,roixc,roiyc,F,Settings.PixelSize,alpha);
     cla
     imagesc(RefImage);
     axis image
@@ -742,7 +750,7 @@ if Settings.DoShowPlot
         PlotROIs(Settings,RefImage);
     end
     for i=1:length(Cshift)
-        if ~isempty(find(tempind==i))
+        if ~isempty(find(tempind==i, 1))
             %Should probably make this factor "*10" a variable...
             plot([roixc(i) roixc(i)+Cshift(i)],[roiyc(i) roiyc(i)+Rshift(i)],'g.-')
         else
@@ -777,7 +785,7 @@ if Settings.DoShowPlot
     end
     
     set(0,'currentfigure',101);
-    [cx cy]=Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,roixc,roiyc,F,Settings.PixelSize,alpha);
+    [cx,cy]=Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,roixc,roiyc,F,Settings.PixelSize,alpha);
     cla
     imagesc(ScanImage);
     axis image
@@ -788,7 +796,7 @@ if Settings.DoShowPlot
         PlotROIs(Settings,RefImage);
     end
     for i=1:length(Cshift)
-        if ~isempty(find(tempind==i))
+        if ~isempty(find(tempind==i, 1))
             %Should probably make this factor "*10" a variable...
             plot([roixc(i) roixc(i)+Cshift(i)],[roiyc(i) roiyc(i)+Rshift(i)],'g.-')
         else
