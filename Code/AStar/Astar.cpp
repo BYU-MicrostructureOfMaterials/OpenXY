@@ -73,8 +73,8 @@ void mexFunction(int nlhs, mxArray *plhs[],
     }
 
 	//astar.PrintPath();
-	cout << mrows << 'x' << ncols << endl;
-	astar.PrintMap();
+	//cout << mrows << 'x' << ncols << endl;
+	//astar.PrintMap();
 	delete[] MAP;
     
 }
