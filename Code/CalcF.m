@@ -1,4 +1,4 @@
-function [F, SSE, XX, sigma] = CalcF(RefImage,ScanImage,g,Fo,Ind,Settings,curMaterial,RefInd,PC)
+function [F, SSE, XX, sigma] = CalcF(RefImage,ScanImage,g,Fo,Ind,Settings,RefInd,PC)
 %Desc: This function can be used to calculate the deformation tensor F (in the crystal frame) that
 %describes the deformation to move the pattern RefImage onto the pattern ScanImage.
 % modified 10/28/14 by DTF to correctly change Pattern Center when using
@@ -21,7 +21,7 @@ function [F, SSE, XX, sigma] = CalcF(RefImage,ScanImage,g,Fo,Ind,Settings,curMat
 %
 %% handle inputs
 
-Material = ReadMaterial(curMaterial);
+Material = Settings.MaterialInfo(Settings.PhaseIndex(Ind));
 g0 = g;
 RefImage=double(RefImage);
 ScanImage=double(ScanImage);
