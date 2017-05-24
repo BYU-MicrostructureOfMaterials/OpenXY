@@ -1,11 +1,12 @@
 function [rhos,DDSettings] = SplitDD( Settings, alpha_data, alphaorbeta)
 % Written by Tim Ruggles
 % Implemented by Brian Jackson March 2015
+keyboard
 allMaterials = unique(Settings.Phase);
 matList = cell(0);
 for i = 1:length(allMaterials)
     M = ReadMaterial(allMaterials{i});
-    if isfield(M,'SplitDD')
+    if isfield(M,'SplitDD') && iscell(M.SplitDD)
         matList = cat(2,matList,M.SplitDD);
     end
 end

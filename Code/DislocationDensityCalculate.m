@@ -137,28 +137,17 @@ if ~strcmp(Settings.ScanType,'L')
 
     N = Settings.ScanLength;
     
-    lattice=cell(N,1);
-    Burgers=zeros(N,1);
-
     %Get info for Subscans
     if isfield(Settings,'Resize') && ~all(Settings.Resize == [c r])
         Oldsize = Settings.Resize;
     else
         Oldsize = [c r];
     end
-    if strcmp(Settings.ScanType,'Hexagonal')
-        FullLength = Oldsize(1)*Oldsize(2)-floor(Oldsize(2)/2);
-    elseif strcmp(Settings.ScanType,'Square')
-        FullLength = prod(Oldsize);
-    end
     
     %Get Material Info
-    for p=1:FullLength
-        Material = ReadMaterial(lower(Settings.Phase{p}));
-        lattice{p}=Material.lattice;
-        Burgers(p)=Material.Burgers;
-    end
-    b = Burgers;
+    lattice = {Settings.MaterialInfo(Settings.PhaseIndex).lattice}';
+    b = [Settings.MaterialInfo(Settings.PhaseIndex).Burgers]';
+
     if isempty(b)
        errordlg('No Burgers vector specified for this material in Materials sub-folder).','Error');
        return

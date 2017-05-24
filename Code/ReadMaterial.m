@@ -69,6 +69,8 @@ switch lower(Material)
         M.SplitDD = {'Al-18ss'};
     case 'iron-alpha'
         M.SplitDD = {'Fe'};
+    otherwise
+        M.SplitDD = [];
 end
         
         

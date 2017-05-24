@@ -1,0 +1,16 @@
+Material		testFile
+Fhkl		 
+dhkl		 
+hkl		 
+C11		1 
+C12		0 
+C13		0 
+C33		0 
+C44		0 
+C66		0 
+lattice		cubic
+a1		0 
+b1		0 
+c1		0 
+axs		0 
+Burgers		0 
