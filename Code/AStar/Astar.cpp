@@ -10,10 +10,8 @@ mxArray* getMexArray(const vector<int>& v){
 	return mx;
 }
 
-double* FixMatrix(double* A, int mrows, int ncols) {
+void FixMatrix(double* A, double* C, int mrows, int ncols) {
 	vector<double> B;
-	double* C;
-	C = new double [mrows*ncols];
 	for (int x = 0; x < mrows; x++){
 		for (int y = 0; y < ncols; y++) {
 			//B.push_back(A[y*mrows + x]);
@@ -23,7 +21,6 @@ double* FixMatrix(double* A, int mrows, int ncols) {
 	}
 	//for (int i = 0; i < mrows*ncols; i++)
 		//A[i] = B[i];
-	return C;
 }
 
 void mexFunction(int nlhs, mxArray *plhs[],
@@ -33,8 +30,8 @@ void mexFunction(int nlhs, mxArray *plhs[],
     if (nrhs!=3) {
         mexErrMsgIdAndTxt("MyToolbox:arrayProduct:nrhs","Three inputs required.");
     }
-    if (nlhs!=2) {
-        mexErrMsgIdAndTxt("MyToolbox:arrayProduct:nlhs","Two outputs required.");
+    if (nlhs!=3) {
+        mexErrMsgIdAndTxt("MyToolbox:arrayProduct:nlhs","Three outputs required.");
     }
     
     // Get Input (start,end,map)
@@ -44,6 +41,8 @@ void mexFunction(int nlhs, mxArray *plhs[],
 	double* MAP;
     int ncols;
     int mrows;
+
+	
     
     start  = mxGetPr(prhs[0]);
     goal   = mxGetPr(prhs[1]);
@@ -51,13 +50,17 @@ void mexFunction(int nlhs, mxArray *plhs[],
     ncols  = mxGetN(prhs[2]);
     mrows  = mxGetM(prhs[2]);
 
-	MAP = FixMatrix(MAP_in,mrows,ncols);
+	plhs[2] = mxCreateDoubleMatrix(mrows, ncols, mxREAL);
+	MAP = mxGetPr(plhs[2]);
+
+	FixMatrix(MAP_in, MAP, mrows, ncols);
     
     // Get Path
     AstarPlanner astar(MAP,ncols,mrows);
 	astar.SetStart(start[0], start[1]);
 	astar.SetGoal(goal[0], goal[1]);
 	astar.GetPath();
+
 	
 	// Create Output [path, success]
 	bool success;
@@ -75,6 +78,6 @@ void mexFunction(int nlhs, mxArray *plhs[],
 	//astar.PrintPath();
 	//cout << mrows << 'x' << ncols << endl;
 	//astar.PrintMap();
-	delete[] MAP;
+	//delete[] MAP;
     
 }
