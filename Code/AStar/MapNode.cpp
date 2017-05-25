@@ -67,6 +67,7 @@ bool MapSearchNode::GetSuccessors( AStarSearch<MapSearchNode> *astarsearch, MapS
     
     MapSearchNode NewNode;
 
+	// Left
     if( (GetMap( x-1, y ) < wall) 
         && !((parent_x == x-1) && (parent_y == y))
       ) 
@@ -75,6 +76,7 @@ bool MapSearchNode::GetSuccessors( AStarSearch<MapSearchNode> *astarsearch, MapS
         astarsearch->AddSuccessor( NewNode );
     }   
 
+	// Top
 	if ((GetMap(x, y - 1) < wall)
         && !((parent_x == x) && (parent_y == y-1))
       ) 
@@ -83,6 +85,7 @@ bool MapSearchNode::GetSuccessors( AStarSearch<MapSearchNode> *astarsearch, MapS
         astarsearch->AddSuccessor( NewNode );
     }   
 
+	// Right
 	if ((GetMap(x + 1, y) < wall)
         && !((parent_x == x+1) && (parent_y == y))
       ) 
@@ -91,13 +94,50 @@ bool MapSearchNode::GetSuccessors( AStarSearch<MapSearchNode> *astarsearch, MapS
         astarsearch->AddSuccessor( NewNode );
     }   
   
+	// Bottom
 	if ((GetMap(x, y + 1) < wall)
         && !((parent_x == x) && (parent_y == y+1))
         )
     {
 		NewNode = MapSearchNode(x, y + 1, map_, WIDTH, HEIGHT);
         astarsearch->AddSuccessor( NewNode );
-    }   
+    } 
+
+	// Bottom Right
+	if ((GetMap(x + 1, y + 1) < wall)
+		&& !((parent_x == x + 1) && (parent_y == y + 1))
+		)
+	{
+		NewNode = MapSearchNode(x + 1, y + 1, map_, WIDTH, HEIGHT);
+		astarsearch->AddSuccessor(NewNode);
+	}
+
+	// Bottom Left
+	if ((GetMap(x - 1, y + 1) < wall)
+		&& !((parent_x == x - 1) && (parent_y == y + 1))
+		)
+	{
+		NewNode = MapSearchNode(x - 1, y + 1, map_, WIDTH, HEIGHT);
+		astarsearch->AddSuccessor(NewNode);
+	}
+
+	// Top Right
+	if ((GetMap(x + 1, y - 1) < wall)
+		&& !((parent_x == x + 1) && (parent_y == y - 1))
+		)
+	{
+		NewNode = MapSearchNode(x + 1, y - 1, map_, WIDTH, HEIGHT);
+		astarsearch->AddSuccessor(NewNode);
+	}
+
+	// Top Left
+	if ((GetMap(x - 1, y - 1) < wall)
+		&& !((parent_x == x - 1) && (parent_y == y - 1))
+		)
+	{
+		NewNode = MapSearchNode(x - 1, y - 1, map_, WIDTH, HEIGHT);
+		astarsearch->AddSuccessor(NewNode);
+	}
     
     return true;
 }

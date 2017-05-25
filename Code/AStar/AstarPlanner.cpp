@@ -34,7 +34,7 @@ AstarPlanner::AstarPlanner(double *map, int W, int H, double Cmax, double Cmin){
 
 void AstarPlanner::ScaleMap() {
 	for (int i = 0; i < WIDTH*HEIGHT; i++) {
-		map_[i] = 1.0+start.wall*(map_[i]-Cost_min)/(Cost_max-Cost_min);
+		map_[i] = start.wall*(map_[i]-Cost_min)/(Cost_max-Cost_min);
 	}
 }
 
