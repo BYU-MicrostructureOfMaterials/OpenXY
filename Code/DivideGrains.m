@@ -9,14 +9,20 @@ q_symops = rmat2quat(permute(gensymops,[3 2 1]));
 subgrains = cell(numGrains0,1);
 
 plot = false;
+if plot
+    figure(1)
+    filename = 'DivideGrains.gif';
+    frame = 1;
+    t = 0.1;
+end
 progressbar('Dividing Grains');
 for gID = 1:numGrains0
     SplitGrain(gID);
     subgrains(gID) = {unique(grainmap(grainmap0 == gID))};
     progressbar(gID/numGrains0)
 end
-subgrainID = map2vec(grainmap);
-subRefInds = map2vec(RefMap);
+subgrainID = map2vec(grainmap,Settings.ScanType);
+subRefInds = map2vec(RefMap,Settings.ScanType);
 
     function SplitGrain(gID)
         gmap = grainmap==gID;
@@ -33,8 +39,13 @@ subRefInds = map2vec(RefMap);
         misomap = vec2map(miso,Settings.Nx,Settings.ScanType)*180/pi;
         
         if plot
+            figure(1);
             clf; imagesc(misomap); hold on; caxis([0,Settings.MisoTol]); colormap jet
             PlotRefImageInds(RefInd,[Settings.Nx,Settings.Ny],Settings.ScanType);
+            PlotGBs(grainmap);
+            drawnow;
+            RecordGIF(filename,frame,t)
+            frame = frame + 1;
         end
         
         percentout = sum(miso*180/pi > Settings.MisoTol)/length(gInds);

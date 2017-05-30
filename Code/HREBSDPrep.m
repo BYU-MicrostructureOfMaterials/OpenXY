@@ -35,9 +35,6 @@ if Settings.DoDDS && ~CheckSplitDDMaterials(unique(Settings.Phase))
     Settings.DoDDS = false;
 end
 
-%% Split Grains
-%[Settings.subgrainPaths,Settings.subgrainID,Settings.subRefInd] = SubGrainPaths(Settings);
-
 %% EMSoft Setup
 if strcmp(Settings.HROIMMethod,'Dynamic Simulated')
     %Check Path
@@ -140,6 +137,15 @@ if ~strcmp(Settings.HROIMMethod,'Simulated')&& ~isfield(Settings,'RefInd')
                 {Settings.Angles;Settings.IQ;Settings.CI;Settings.Fit}, Settings.grainID);
         end
     end  
+end
+
+%% Split Grains
+if 0
+    [Settings.subgrainPaths, Settings.subgrainID, Settings.subRefInd] = SubGrainPaths(Settings);
+else
+    Settings.subGrainPaths = [];
+    Settings.subgrainID = Settings.grainID;
+    Settings.subRefInd = Settings.RefInd;
 end
 
 %% Pattern Center Calibration

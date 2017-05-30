@@ -229,7 +229,8 @@ switch Settings.HROIMMethod
     case 'Real'
         %Find the grain of scan image and get the reference image for that
         %grain
-        RefImageInd = Settings.RefInd(ImageInd);
+        %RefImageInd = Settings.RefInd(ImageInd);
+        RefImageInd = Settings.subRefInd(ImageInd);
         if H5Images
             RefImage = ReadH5Pattern(H5ImageParams{:},RefImageInd);
         else
