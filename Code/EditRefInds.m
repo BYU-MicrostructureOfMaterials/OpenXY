@@ -1,4 +1,5 @@
-function RefInd = EditRefInds(ScanFilePath,grainID,ImageNames,ScanData,mapsize,ScanType,AutoRefInds,imsize,ImageFilt,Inds)
+function RefInd = EditRefInds(Fig,ScanFilePath,grainID,ImageNames,ScanData,...
+    mapsize,ScanType,AutoRefInds,imsize,ImageFilt,Inds)
 if nargin<8
     Inds = 0;
 end
@@ -37,7 +38,7 @@ end
 morepoints = 1;
 npoints = 1;
 
-main = figure(1);
+main = figure(Fig);
 cla
 imagesc(GrainMap)
 axis image
@@ -63,7 +64,17 @@ end
 
 while morepoints
     %Gets X,Y data from user
+    try
     [x,y, button] = ginput(1);
+    catch ME
+       if strcmp(ME.identifier,'MATLAB:ginput:FigureDeletionPause')
+           x = [];
+           y = [];
+           button = [];
+       else
+           rethrow(ME)
+       end
+    end
     if x > Nx
         x = Nx;
     elseif x < 1
@@ -153,15 +164,17 @@ while morepoints
     subT = sprintf('Secondary value: %s',bgtitle);
     
     %Plot Points
-    figure(main);
-    cla
-    imagesc(Map);
-    hold on
-    plot(Xind,Yind,'kd','MarkerFaceColor','k')
-    %title(Title{:})
-    axis image
-    title(T{:})
-    xlabel(subT)
+    if ishandle(main)
+        figure(main);
+        cla
+        imagesc(Map);
+        hold on
+        plot(Xind,Yind,'kd','MarkerFaceColor','k')
+        %title(Title{:})
+        axis image
+        title(T{:})
+        xlabel(subT)
+    end
     
     if button == 2
         plot(round(x),round(y),'rd','MarkerFaceColor','r')
@@ -178,15 +191,17 @@ IndsAll = IndsAll(sortI);
 RefInd = IndsAll(ic);
 
 %Plot Points
-cla
-imagesc(Map);
-hold on
-plot(Xind,Yind,'kd','MarkerFaceColor','k')
-%title(Title{:})
-axis image
+if ishandle(main)
+    cla
+    imagesc(Map);
+    hold on
+    plot(Xind,Yind,'kd','MarkerFaceColor','k')
+    %title(Title{:})
+    axis image
+    title('')
+    xlabel('')
+end
 if ishandle(pat); close(pat); end;
-title('')
-xlabel('')
 
 
 
