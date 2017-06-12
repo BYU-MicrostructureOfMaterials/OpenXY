@@ -42,8 +42,13 @@ IndVect = 1:length(GrainID);
 
 GrainID(GrainID==0)=1; % ***************this seems odd **************
 RefInd = zeros(size(IQ,1),1);
+firstGrain = min(GrainID);
+lastGrain = max(GrainID);
+
+SortedGrainInds{lastGrain} = [];
+
 %sort by grain ID
-for GrnInd = min(GrainID):max(GrainID)
+for GrnInd = firstGrain:lastGrain
     
     SortedGrainInds{GrnInd} = IndVect(GrainID == GrnInd);
         
@@ -52,21 +57,21 @@ for GrnInd = min(GrainID):max(GrainID)
 
         %Get Max CI for each grain;
 
-        [MaxCI(GrnInd) CIInd(GrnInd)] = max(CI(SortedGrainInds{GrnInd}));
+        [MaxCI,CIInd] = max(CI(SortedGrainInds{GrnInd}));
 
     %     [MeanCI(GrnInd) CIMeanInd(GrnInd)] = mean(CI(SortedGrainInds{GrnInd}));
     %     [CISort CISortInd] = sort(CI(SortedGrainInds{GrnInd}));
 
         %Get Max IQ for each grain;
 
-        [MaxIQ(GrnInd) IQInd(GrnInd)] = max(IQ(SortedGrainInds{GrnInd}));
+        [MaxIQ,IQInd] = max(IQ(SortedGrainInds{GrnInd}));
 
     %     [MeanIQ(GrnInd) IQMeanInd(GrnInd)] = mean(IQ(SortedGrainInds{GrnInd}));
     %     [IQSort IQSortInd] = sort(IQ(SortedGrainInds{GrnInd}));
 
         %Get Min Fit
 
-        [MinFit(GrnInd) FitInd(GrnInd)] = min(Fit(SortedGrainInds{GrnInd}));
+        [MinFit,FitInd] = min(Fit(SortedGrainInds{GrnInd}));
 
     %     [MeanFit(GrnInd) FitMeanInd(GrnInd)] = mean(Fit(SortedGrainInds{GrnInd}));
     %     [FitSort FitSortInd] = sort(Fit(SortedGrainInds{GrnInd}));
@@ -75,14 +80,14 @@ for GrnInd = min(GrainID):max(GrainID)
     %     IQDiff = MaxIQ(GrnInd) - MeanIQ(GrnInd);
     %     FitDiff = MeanFit(GrnInd) - MinFit(GrnInd);
 
-        MinFitTradeOff = MaxIQ(GrnInd)/IQ(SortedGrainInds{GrnInd}(FitInd(GrnInd))) + ...
-            MaxCI(GrnInd)/CI(SortedGrainInds{GrnInd}(FitInd(GrnInd)));
+        MinFitTradeOff = MaxIQ/IQ(SortedGrainInds{GrnInd}(FitInd)) + ...
+            MaxCI/CI(SortedGrainInds{GrnInd}(FitInd));
 
-        MaxCITradeOff = Fit(SortedGrainInds{GrnInd}(CIInd(GrnInd)))/MinFit(GrnInd) + ...
-            MaxIQ(GrnInd)/IQ(SortedGrainInds{GrnInd}(CIInd(GrnInd)));
+        MaxCITradeOff = Fit(SortedGrainInds{GrnInd}(CIInd))/MinFit + ...
+            MaxIQ/IQ(SortedGrainInds{GrnInd}(CIInd));
 
-        MaxIQTradeOff = Fit(SortedGrainInds{GrnInd}(IQInd(GrnInd)))/MinFit(GrnInd) + ...
-            MaxCI(GrnInd)/CI(SortedGrainInds{GrnInd}(IQInd(GrnInd)));
+        MaxIQTradeOff = Fit(SortedGrainInds{GrnInd}(IQInd))/MinFit + ...
+            MaxCI/CI(SortedGrainInds{GrnInd}(IQInd));
 
 
 
@@ -91,29 +96,29 @@ for GrnInd = min(GrainID):max(GrainID)
             OIMMapVals = ReadOIMMapData(MapDataPath);
             MapData = OIMMapVals{4};%use only the fourth "color" column in the exported OIM map data
             if DoUseMin
-                [MapVal(GrnInd) MapInd(GrnInd)] = min(MapData(SortedGrainInds{GrnInd}));
+                [~,MapInd] = min(MapData(SortedGrainInds{GrnInd}));
             else
-                [MapVal(GrnInd) MapInd(GrnInd)] = max(MapData(SortedGrainInds{GrnInd}));
+                [~,MapInd] = max(MapData(SortedGrainInds{GrnInd}));
             end
 
 
             %Do some voting - rate MapData > IQ > Fit > CI
-            Votes = [CIInd(GrnInd) FitInd(GrnInd) FitInd(GrnInd) IQInd(GrnInd)...
-                IQInd(GrnInd) IQInd(GrnInd) MapInd(GrnInd) MapInd(GrnInd) ...
-                MapInd(GrnInd) MapInd(GrnInd)];
+            Votes = [CIInd FitInd FitInd IQInd...
+                IQInd IQInd MapInd MapInd ...
+                MapInd MapInd];
         else
     %         Votes = [CIInd(GrnInd) FitInd(GrnInd) FitInd(GrnInd) IQInd(GrnInd) IQInd(GrnInd)...
     %              IQInd(GrnInd)];
-            Votes = [CIInd(GrnInd) FitInd(GrnInd) IQInd(GrnInd)];
-            [TradeOff VoteInd] = min([MaxCITradeOff MinFitTradeOff MaxIQTradeOff]);
+            Votes = [CIInd FitInd IQInd];
+            [~,VoteInd] = min([MaxCITradeOff MinFitTradeOff MaxIQTradeOff]);
 
         end
         %Get best reference image in each grain;
-        BestInd(GrnInd) = Votes(VoteInd);
+        BestInd = Votes(VoteInd);
     %     [MaxVotes(GrnInd) BestInd(GrnInd)] = max(histc(Votes,1:length(CI)));
 
 
         %Give all images in the same grain the new reference image path.
-        RefInd(SortedGrainInds{GrnInd}') = SortedGrainInds{GrnInd}(BestInd(GrnInd));
+        RefInd(SortedGrainInds{GrnInd}') = SortedGrainInds{GrnInd}(BestInd);
     end
 end
