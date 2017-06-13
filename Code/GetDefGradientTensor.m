@@ -84,6 +84,11 @@ elevang = Settings.CameraElevation;
 pixsize = Settings.PixelSize;
 Material = ReadMaterial(curMaterial);  % this should depend on the crystal structure maybe not here
 paramspat={xstar;ystar;zstar;pixsize;Av;sampletilt;elevang;Material.Fhkl;Material.dhkl;Material.hkl};
+if isfield(Settings,'camphi1')
+    paramspat{11} = Settings.camphi1;
+    paramspat{12} = Settings.camPHI;
+    paramspat{13} = Settings.camphi2;
+end
 % for new Dr. Fullwood condition
 
 if strcmp(Settings.ROIStyle,'Intensity')

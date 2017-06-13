@@ -142,6 +142,34 @@ if ~strcmp(Settings.HROIMMethod,'Simulated')&& ~isfield(Settings,'RefInd')
     end  
 end
 
+%% Check to see if camera orientation data exists
+
+if Settings.ImageTag
+    button = questdlg('Would you like to read the camera orientation calibration from the first TIFF image?');
+    if strcmp(button,'Yes')
+        info = imfinfo(Settings.ImageNamesList{1});
+        
+        start1 = strfind(info.UnknownTags.Value,'<detector-orientation-euler1-deg>');
+        end1 = strfind(info.UnknownTags.Value,'</detector-orientation-euler1-deg>');
+
+        Settings.camphi1 = str2double(info.UnknownTags.Value(start1+length('<detector-orientation-euler1-deg>'):end1-1))*pi/180;
+        
+        start2 = strfind(info.UnknownTags.Value,'<detector-orientation-euler2-deg>');
+        end2 = strfind(info.UnknownTags.Value,'</detector-orientation-euler2-deg>');
+
+        Settings.camPHI = str2double(info.UnknownTags.Value(start2+length('<detector-orientation-euler2-deg>'):end2-1))*pi/180;
+        
+        start3 = strfind(info.UnknownTags.Value,'<detector-orientation-euler3-deg>');
+        end3 = strfind(info.UnknownTags.Value,'</detector-orientation-euler3-deg>');
+
+        Settings.camphi2 = str2double(info.UnknownTags.Value(start3+length('<detector-orientation-euler1-deg>'):end3-1))*pi/180;
+    else
+        if isfield(Settings,'camphi1')
+            Settings = rmfield(Settings,{'camphi1','camPHI','camphi2'});
+        end
+    end
+end
+
 %% Pattern Center Calibration
 if ~isfield(Settings,'XStar')
     if isfield(Settings,'PCList') % For Fast GUI
