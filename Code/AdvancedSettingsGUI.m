@@ -180,12 +180,16 @@ handles.GrainMap = -1;
 handles.edited = false;
 
 %Update Components
-GNDMethod_Callback(handles.GNDMethod, eventdata, handles)
+GNDMethod_Callback(handles.GNDMethod, eventdata, handles);
+handles = guidata(hObject);
 if ~strcmp(handles.GNDMethod.String{handles.GNDMethod.Value},'Partial Cross-Correlation')
     DoStrain_Callback(handles.DoStrain, eventdata, handles,1);
+    handles = guidata(hObject);
 end
-HROIMMethod_Callback(handles.HROIMMethod, eventdata, handles,1); handles = guidata(hObject);
-DoDD_Callback(handles.DoDD, eventdata, handles); handles = guidata(hObject);
+HROIMMethod_Callback(handles.HROIMMethod, eventdata, handles,1);
+handles = guidata(hObject);
+DoDD_Callback(handles.DoDD, eventdata, handles);
+handles = guidata(hObject);
 GrainMethod_Callback(handles.GrainMethod, eventdata, handles,true)
 handles = guidata(hObject);
 guidata(hObject, handles);
@@ -1057,7 +1061,7 @@ else
 end
 
 %Generate New Ref Inds, if the selected method is different than the previously used method
-if ~strcmp(sel,GrainRefType)
+if ~strcmp(sel,GrainRefType) || ~isfield(handles,'AutoRefInds')
     handles.AutoRefInds = UpdateAutoInds(handles,sel);
 end
 
@@ -1184,7 +1188,7 @@ if isfield(handles.PrevSettings,value)
     if ischar(handles.Settings.(value))
         changed = ~strcmp(handles.Settings.(value),handles.PrevSettings.(value));
     else
-        changed =  any(handles.Settings.(value) ~= handles.PrevSettings.(value));
+        changed =  ~isequal(handles.Settings.(value),handles.PrevSettings.(value));
     end
 else
     changed = true;
