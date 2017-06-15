@@ -275,7 +275,7 @@ if name ~= 0
         else
             nameT = name;
         end
-        if size(name,2) > 50
+        if size(path,2) > 50
             pathT = [path(1:47),'...'];
         else
             pathT = path;

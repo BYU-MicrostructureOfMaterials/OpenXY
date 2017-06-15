@@ -11,12 +11,16 @@ r = data.rows;
 c = data.cols;
 
 %%
-Angles=cell2mat(data.g);
-n=length(Angles)/3;
-angles=zeros(n,3);
-n=[1:n];
-for i=1:3
-    angles(:,i)=Angles((n-1)*3+i)';
+if iscell(data.g)
+    Angles=cell2mat(data.g);
+    n=length(Angles)/3;
+    angles=zeros(n,3);
+    n=[1:n];
+    for i=1:3
+        angles(:,i)=Angles((n-1)*3+i)';
+    end
+else
+    angles = Settings.data.g;
 end
 if DoShowGB && ~strcmp(Settings.ScanType,'Hexagonal')
     % parameters for grain finding algorithm

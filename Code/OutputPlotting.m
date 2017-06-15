@@ -399,9 +399,6 @@ if UpdateFileLocations
     Settings.ImageNamesList=UpdatePath(Settings.ImageNamesList,NewDir,MainPathLength);
     Settings.FirstImagePath=UpdatePath(Settings.FirstImagePath,NewDir,MainPathLength);
     Settings.ScanFilePath=UpdatePath(Settings.ScanFilePath,NewDir,MainPathLength);
-    if ~strcmp(Settings.HROIMMethod,'Simulated')
-        Settings.RefImageNames=UpdatePath(Settings.RefImageNames,NewDir,MainPathLength);
-    end
     
     if exist('alpha_data','var')
         save(Settings.OutputPath ,'Settings','alpha_data'); 
@@ -414,6 +411,7 @@ end
 %Make a call to plotting function(s) depending on what is selected
 Components = get(handles.ComponentsListBox,'String');
 Calculations = get(handles.CalculatedListBox,'String');
+DoShowGB = get(handles.ShowGBCheckBox,'Value');
 
 %Check for strain components
 StrainComponentsList = {'e11';'e12';'e13';'e22';'e23';'e33'};
@@ -421,7 +419,6 @@ Matches = intersect(StrainComponentsList,Components);
 if ~isempty(Matches)
     smin = str2double(get(handles.StrainMinEdit,'String'));
     smax = str2double(get(handles.StrainMaxEdit,'String'));
-    DoShowGB = get(handles.ShowGBCheckBox,'Value');
     %Check that Settings exists and has the field Settings.data. Some cases
     %may require Settings to add the loaded variable data to the Settings
     %structure.
@@ -450,7 +447,7 @@ cmax = str2double(get(handles.DisloMaxEdit,'String'));
 
 if ~isempty(Matches)
     if exist('alpha_data','var')
-        DislocationDensityPlot(Settings, alpha_data, cmin, cmax);
+        DislocationDensityPlot(Settings, alpha_data, cmin, cmax, DoShowGB);
     else
         warndlg(['Warning, the file: ' FilePath ', does not contain an alpha_data file'],'Warning');
     end
@@ -473,7 +470,7 @@ end
 %check for tetragonaltity on the calculated measures list
 CalcMeasuresList = get(handles.CalculatedListBox,'String');
 if any(strcmp(CalcMeasuresList,'Tetragonality'))
-    TetragonalityOutput(Settings);
+    TetragonalityOutput(Settings,DoShowGB);
 end
 
 %Check for LineScan plots

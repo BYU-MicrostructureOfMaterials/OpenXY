@@ -180,13 +180,20 @@ handles.GrainMap = -1;
 handles.edited = false;
 
 %Update Components
-GNDMethod_Callback(handles.GNDMethod, eventdata, handles)
-DoStrain_Callback(handles.DoStrain, eventdata, handles);
-HROIMMethod_Callback(handles.HROIMMethod, eventdata, handles); handles = guidata(hObject);
-DoDD_Callback(handles.DoDD, eventdata, handles); handles = guidata(hObject);
+GNDMethod_Callback(handles.GNDMethod, eventdata, handles);
+handles = guidata(hObject);
+if ~strcmp(handles.GNDMethod.String{handles.GNDMethod.Value},'Partial Cross-Correlation')
+    DoStrain_Callback(handles.DoStrain, eventdata, handles,1);
+    handles = guidata(hObject);
+end
+HROIMMethod_Callback(handles.HROIMMethod, eventdata, handles,1);
+handles = guidata(hObject);
+DoDD_Callback(handles.DoDD, eventdata, handles);
+handles = guidata(hObject);
 GrainMethod_Callback(handles.GrainMethod, eventdata, handles,true)
 handles = guidata(hObject);
 guidata(hObject, handles);
+
 
 % UIWAIT makes AdvancedSettingsGUI wait for user response (see UIRESUME)
 %uiwait(handles.AdvancedSettingsGUI);
@@ -252,7 +259,7 @@ AdvancedSettingsGUI_CloseRequestFcn(handles.AdvancedSettingsGUI, eventdata, hand
 
 
 % --- Executes on selection change in HROIMMethod.
-function HROIMMethod_Callback(hObject, eventdata, handles)
+function HROIMMethod_Callback(hObject, eventdata, handles,~)
 % hObject    handle to HROIMMethod (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -337,8 +344,10 @@ switch HROIMMethod
         set(handles.HROIMedit,'Enable','off');
         set(handles.GrainRefType,'Enable','on');
         if ~handles.Fast, set(handles.EditRefPoints,'Enable','on'), end
-        handles.Settings.HROIMMethod = 'Real';  
-        GrainRefType_Callback(handles.GrainRefType, eventdata, handles);
+        handles.Settings.HROIMMethod = 'Real';
+        if nargin == 3
+            GrainRefType_Callback(handles.GrainRefType, eventdata, handles);
+        end
         set(handles.GrainRefType,'Enable','on');
         handles = guidata(hObject);
     case 'Real-Single Ref'
@@ -870,7 +879,7 @@ SaveColor(handles)
 guidata(hObject,handles);
 
 % --- Executes on button press in DoStrain.
-function DoStrain_Callback(hObject, eventdata, handles)
+function DoStrain_Callback(hObject, eventdata, handles,~)
 % hObject    handle to DoStrain (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -891,7 +900,9 @@ else
     %set(handles.GrainRefType,'Enable','off');
     set(handles.EditRefPoints,'Enable','off');
 end
+if nargin == 3
 HROIMMethod_Callback(handles.HROIMMethod,eventdata,handles);
+end
 handles.Settings.DoStrain = get(hObject,'Value');
 
 if ValChanged(handles,'DoStrain')
@@ -1050,7 +1061,7 @@ else
 end
 
 %Generate New Ref Inds, if the selected method is different than the previously used method
-if ~strcmp(sel,GrainRefType)
+if ~strcmp(sel,GrainRefType) || ~isfield(handles,'AutoRefInds')
     handles.AutoRefInds = UpdateAutoInds(handles,sel);
 end
 
@@ -1073,7 +1084,7 @@ else
     ImageNamesList = handles.Settings.ImageNamesList;
     imsize = handles.Settings.imsize;
 end
-RefInd = EditRefInds(handles.Settings.ScanFilePath,handles.Settings.grainID,ImageNamesList,ScanData,...
+RefInd = EditRefInds(handles.GrainMap,handles.Settings.ScanFilePath,handles.Settings.grainID,ImageNamesList,ScanData,...
     [handles.Settings.Nx handles.Settings.Ny],handles.Settings.ScanType,handles.AutoRefInds,...
     imsize,handles.Settings.ImageFilter,Inds);
 
@@ -1109,7 +1120,13 @@ else
     figure(handles.GrainMap)
     GrainMap = handles.GrainMap;
 end
+func = @(~,~) set(handles.ToggleGrainMap,'Value',0,'BackgroundColor',[1 1 1]*0.94);
+GrainMap.Name = 'Grain Map';
+GrainMap.MenuBar = 'None';
+GrainMap.IntegerHandle = 'off';
+GrainMap.DeleteFcn = func;
 set(handles.ToggleGrainMap,'Value',1,'BackgroundColor',[1 1 0])
+
 
 
 % --- Executes on selection change in GNDMethod.
@@ -1171,7 +1188,7 @@ if isfield(handles.PrevSettings,value)
     if ischar(handles.Settings.(value))
         changed = ~strcmp(handles.Settings.(value),handles.PrevSettings.(value));
     else
-        changed =  any(handles.Settings.(value) ~= handles.PrevSettings.(value));
+        changed =  ~isequal(handles.Settings.(value),handles.PrevSettings.(value));
     end
 else
     changed = true;

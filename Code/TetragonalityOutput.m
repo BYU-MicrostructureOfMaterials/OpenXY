@@ -1,4 +1,4 @@
-function TetragonalityOutput(Settings)
+function TetragonalityOutput(Settings,doShowGB)
 % plots tetragonality relative to cubic, based upon the deformation tensor
 % assuming a cubic lattice was chosen
 % more functionality (such as plotting average tetragonality in grains - in
@@ -46,3 +46,6 @@ axis equal tight
 axis off
 title('Tetragonality map')
 colorbar
+if doShowGB
+    PlotGBs(Settings.grainID,[Settings.Nx Settings.Ny],Settings.ScanType)
+end

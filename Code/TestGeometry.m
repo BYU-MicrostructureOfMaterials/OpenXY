@@ -410,7 +410,11 @@ if strcmp(GetPopupString(handles.SimType),'Dynamic')
         blinkline(h);blinkline(h);
     end
 else
-    
+    if isfield(Settings,'camphi1')
+        paramspat{11} = Settings.camphi1;
+        paramspat{12} = Settings.camPHI;
+        paramspat{13} = Settings.camphi2;
+    end
     genEBSDPatternHybridLineOverlay(g,paramspat,eye(3),Material.lattice,Material.a1,Material.b1,Material.c1,Material.axs,...
         'BlinkSpeed',speed,'Color',color,'MaxSpeed',handles.MaxSpeed,...
         'LineWidth',width);

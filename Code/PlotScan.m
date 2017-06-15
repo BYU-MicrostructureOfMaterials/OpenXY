@@ -10,7 +10,7 @@ Limits(1) = Mean - 3*StdDev;
 Limits(2) = Mean + 3*StdDev;
 if Limits(2)<=Limits(1)
     Limits(1) = Mean*0.5;
-    Limits(2) = Mean*1.5;
+    Limits(2) = Mean*1.5 + 1;
 end
 
 switch PlotType
