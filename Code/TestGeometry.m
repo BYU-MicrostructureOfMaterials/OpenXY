@@ -147,18 +147,22 @@ elseif strcmp(Settings.ScanType,'Hexagonal')
 end
 handles.indi = indi;
 handles.ind = 0;
+handles.refInd = 0;
 
 % Load plots into handles
 g = euler2gmat(Settings.Angles);
 handles.IPF = PlotIPF(g,[n m],Settings.ScanType,0);
 if strcmp(Settings.ScanType,'Square')
     handles.IQ = reshape(Settings.IQ,n,m)';
+    handles.CI = reshape(Settings.CI,n,m)';
 elseif strcmp(Settings.ScanType,'Hexagonal')
     handles.IQ = Hex2Array(Settings.IQ,n);
+    handles.CI = Hex2Array(Settings.CI,n);
 end
 handles.g = g;
     
 % Plot Map
+handles.doPlotPoints = false;
 MapSelection_SelectionChangedFcn(handles.MapSelection, eventdata, handles)
 
 % Set Position
@@ -174,6 +178,9 @@ set(gui,'KeyPressFcn',@TestGeometryGUI_KeyPressFcn);
 
 % Plot Pattern Prompt
 axes(handles.Pattern)
+text(0.5,0.5,{'Select a pattern by clicking'; 'a point on the map to the left'},'HorizontalAlignment','center')
+axis off
+axes(handles.ReferencePattern)
 text(0.5,0.5,{'Select a pattern by clicking'; 'a point on the map to the left'},'HorizontalAlignment','center')
 axis off
 
@@ -238,8 +245,10 @@ axes(handles.Map)
 % Plot Map
 if get(handles.IPFMap,'Value')
     im = PlotScan(handles.IPF,'IPF');
-else
+elseif handles.IQMap.Value
     im = PlotScan(handles.IQ,'IQ');
+else
+    im = PlotScan(handles.CI,'CI');
 end
 
 % Set Callback for button-press
@@ -250,6 +259,10 @@ set(im,'UserData',handles)
 if get(handles.PlotGB,'Value')
     PlotGBs(handles.Settings.grainID,[handles.Settings.Nx handles.Settings.Ny],handles.Settings.ScanType)
 end
+if handles.doPlotPoints
+    plotPoints(handles)
+end
+
 axis off
 
 % --- Executes on mouse press over axes background.
@@ -372,6 +385,14 @@ set(handles.IndexText,'String',num2str(ind))
 set(handles.LatticeText,'String',Material.lattice)
 set(handles.CIText,'String',Settings.CI(ind))
 set(handles.FitText,'String',Settings.Fit(ind))
+set(handles.IQText,'String',Settings.IQ(ind))
+set(handles.GrainText,'String',Settings.grainID(ind))
+set(handles.phi1Text,'String',Settings.Angles(ind,1))
+set(handles.PHIText,'String',Settings.Angles(ind,2))
+set(handles.phi2Text,'String',Settings.Angles(ind,3))
+[~,name,ext] = fileparts(Settings.ImageNamesList{ind});
+set(handles.FileText,'FontSize',6.0)
+set(handles.FileText,'String',[name ext])
 
 % Get params from GUI
 color = GetPopupString(handles.ColorScheme);
@@ -426,6 +447,78 @@ else
         set(handles.TestGeometryGUI,'Color','green')
     end
 end
+
+% Update RefrencePattern
+axes(handles.ReferencePattern)
+switch Settings.HROIMMethod
+    case 'Simulated' % Kinematic Simulation
+        RefIm = genEBSDPatternHybrid(g,paramspat,eye(3),Material.lattice,...
+            Material.a1,Material.b1,Material.c1,Material.axs);
+        if handles.Filter.Value && any(Settings.ImageFilter)
+            if strcmp(Settings.ImageFilterType,'standard') 
+            RefIm = custimfilt(RefIm,Settings.ImageFilter(1),...
+                Settings.PixelSize,Settings.ImageFilter(3),...
+                Settings.ImageFilter(4));
+            else
+               RefIm = localthresh(RefIm); 
+            end
+        end
+        handles.refInd = 0;
+    case 'Dynamic Simulated' % Dynamic Simulation
+        RefIm = genEBSDPatternHybrid_fromEMSoft(g,xstar,ystar,...
+            zstar,pixsize,mperpix,elevang,phase,Av,ind);
+        if handles.Filter.Value && any(Settings.ImageFilter)
+            if strcmp(Settings.ImageFilterType,'standard')
+                RefIm = custimfilt(RefIm,Settings.ImageFilter(1),...
+                    Settings.PixelSize,Settings.ImageFilter(3),...
+                    Settings.ImageFilter(4));
+            else
+                RefIm = localthresh(RefIm);
+            end
+        end
+        handles.refInd = 0;
+    case 'Real' % Real Refernce Grain
+        refInd = Settings.RefImageInd;
+        if ~refInd
+            refInd = Settings.RefInd(ind);
+        end
+        if get(handles.Filter,'Value')
+            ImageFilter = Settings.ImageFilter;
+            if strcmp(Settings.ImageFilterType,'standard')
+                RefIm=ReadEBSDImage(Settings.ImageNamesList{refInd},ImageFilter);
+            else
+                RefIm=localthresh(Settings.ImageNamesList{refInd});
+            end
+        else
+            RefIm=ReadEBSDImage(Settings.ImageNamesList{refInd},[0 0 0 0]);
+        end
+        handles.refInd = refInd;
+end
+imagesc(RefIm);
+axis image;
+xlim([0 pixsize]);
+ylim([0 pixsize]);
+colormap('gray');
+axis off;
+
+plotPoints(handles)
+
+function plotPoints(handles)
+handles.plotPoints = false;
+MapSelection_SelectionChangedFcn(handles.MapSelection,0,handles)
+handles.plotPoints = true;
+hold on;
+
+% Plot selected image
+[Y,X] = find(handles.indi == handles.ind);
+plot(X,Y,'kd','MarkerFaceColor','k','MarkerEdgeColor','w')
+
+if handles.refInd
+    [Y,X] = find(handles.indi == handles.refInd);
+    plot(X,Y,'ro','MarkerFaceColor','r','MarkerSize',4,'MarkerEdgeColor','w')
+end
+
+hold off;
 
 % --- Executes on selection change in BlinkSpeed.
 function BlinkSpeed_Callback(hObject, eventdata, handles)

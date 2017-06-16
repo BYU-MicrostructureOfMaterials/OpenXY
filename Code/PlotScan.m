@@ -22,6 +22,6 @@ switch PlotType
         colormap(gca,jet)
     case 'CI'
         im = imagesc(im,Limits);
-        colormap(gca,gray)
+        colormap(gca,jet)
 end
 axis image
