@@ -52,7 +52,7 @@ function TestGeometry_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to TestGeometryGUI (see VARARGIN)
 
-handles.outout = hObject;
+% handles.outout = hObject;
 
 % Accept Settings from MainGUI or Load Settings.mat
 if isempty(varargin)
@@ -162,7 +162,7 @@ end
 handles.g = g;
     
 % Plot Map
-handles.doPlotPoints = false;
+% handles.doPlotPoints = false;
 MapSelection_SelectionChangedFcn(handles.MapSelection, eventdata, handles)
 
 % Set Position
@@ -183,6 +183,20 @@ axis off
 axes(handles.ReferencePattern)
 text(0.5,0.5,{'Select a pattern by clicking'; 'a point on the map to the left'},'HorizontalAlignment','center')
 axis off
+
+% Plot GBs on seperate invisible axis
+axes(handles.GrainMap); axis image
+h = hggroup;
+PlotGBs(handles.Settings.grainID,[handles.Settings.Nx handles.Settings.Ny],handles.Settings.ScanType);
+lines = findobj('Type','Line');
+set(lines,'Parent',h);
+h.Visible = 'Off';
+
+% Set up Points axis
+axes(handles.Points)
+axis image
+handles.Points.XLim = handles.Map.XLim;
+handles.Points.YLim = handles.Map.YLim;
 
 % Choose default command line output for TestGeometryGUI
 handles.output = hObject;
@@ -256,14 +270,17 @@ set(im,'ButtonDownFcn',@SelectPoint)
 set(im,'UserData',handles)
 
 % Plot Grain Boundaries
-if get(handles.PlotGB,'Value')
-    PlotGBs(handles.Settings.grainID,[handles.Settings.Nx handles.Settings.Ny],handles.Settings.ScanType)
-end
-if handles.doPlotPoints
-    plotPoints(handles)
-end
+% if get(handles.PlotGB,'Value')
+%     PlotGBs(handles.Settings.grainID,[handles.Settings.Nx handles.Settings.Ny],handles.Settings.ScanType)
+% end
+% if handles.doPlotPoints
+%     plotPoints(handles)
+% end
 
 axis off
+% h = colorbar <-----Add This!
+uistack(handles.GrainMap, 'top')
+uistack(handles.Points, 'top')
 
 % --- Executes on mouse press over axes background.
 function Map_ButtonDownFcn(hObject, eventdata, handles)
@@ -465,8 +482,12 @@ switch Settings.HROIMMethod
         end
         handles.refInd = 0;
     case 'Dynamic Simulated' % Dynamic Simulation
-        RefIm = genEBSDPatternHybrid_fromEMSoft(g,xstar,ystar,...
-            zstar,pixsize,mperpix,elevang,phase,Av,ind);
+        if exist('GenPat','var')
+            RefIm = GenPat;
+        else
+            RefIm = genEBSDPatternHybrid_fromEMSoft(g,xstar,ystar,...
+                zstar,pixsize,mperpix,elevang,phase,Av,ind);
+        end
         if handles.Filter.Value && any(Settings.ImageFilter)
             if strcmp(Settings.ImageFilterType,'standard')
                 RefIm = custimfilt(RefIm,Settings.ImageFilter(1),...
@@ -504,9 +525,11 @@ axis off;
 plotPoints(handles)
 
 function plotPoints(handles)
-handles.plotPoints = false;
-MapSelection_SelectionChangedFcn(handles.MapSelection,0,handles)
-handles.plotPoints = true;
+% handles.plotPoints = false;
+% MapSelection_SelectionChangedFcn(handles.MapSelection,0,handles)
+% handles.plotPoints = true;
+axes(handles.Points)
+cla
 hold on;
 
 % Plot selected image
@@ -519,6 +542,9 @@ if handles.refInd
 end
 
 hold off;
+
+uistack(handles.GrainMap, 'top')
+uistack(handles.Points, 'top')
 
 % --- Executes on selection change in BlinkSpeed.
 function BlinkSpeed_Callback(hObject, eventdata, handles)
@@ -638,7 +664,13 @@ function PlotGB_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of PlotGB
-MapSelection_SelectionChangedFcn(handles.MapSelection, eventdata, handles)
+% MapSelection_SelectionChangedFcn(handles.MapSelection, eventdata, handles)
+if hObject.Value
+    handles.GrainMap.Children.Visible = 'On';
+    uistack(handles.GrainMap, 'top')
+else
+    handles.GrainMap.Children.Visible = 'Off';
+end
 
    
 
