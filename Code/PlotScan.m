@@ -21,7 +21,9 @@ switch PlotType
         im = image(im);
         colormap(gca,jet)
     case 'CI'
-        im = imagesc(im,Limits);
-        colormap(gca,jet)
+        im = imagesc(im,[0,1]);
+        colmap = parula(27);
+        colmap = [1 0 0; 1 0 0; 1 0 0; colmap(end:-1:1,1:3)];
+        colormap(gca,colmap)
 end
 axis image

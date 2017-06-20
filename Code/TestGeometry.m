@@ -22,7 +22,7 @@ function varargout = TestGeometry(varargin)
 
 % Edit the above text to modify the response to help TestGeometryGUI
 
-% Last Modified by GUIDE v2.5 12-Jan-2017 15:34:34
+% Last Modified by GUIDE v2.5 20-Jun-2017 11:41:01
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -258,27 +258,19 @@ axes(handles.Map)
 
 % Plot Map
 if get(handles.IPFMap,'Value')
-    im = PlotScan(handles.IPF,'IPF');
+    PlotScan(handles.IPF,'IPF');
 elseif handles.IQMap.Value
-    im = PlotScan(handles.IQ,'IQ');
+    PlotScan(handles.IQ,'IQ');
 else
-    im = PlotScan(handles.CI,'CI');
+    PlotScan(handles.CI,'CI');
 end
 
-% Set Callback for button-press
-set(im,'ButtonDownFcn',@SelectPoint)
-set(im,'UserData',handles)
-
-% Plot Grain Boundaries
-% if get(handles.PlotGB,'Value')
-%     PlotGBs(handles.Settings.grainID,[handles.Settings.Nx handles.Settings.Ny],handles.Settings.ScanType)
-% end
-% if handles.doPlotPoints
-%     plotPoints(handles)
-% end
-
 axis off
-% h = colorbar <-----Add This!
+if ~handles.IPFMap.Value
+    h = colorbar;
+    h.Position(1) = 1 - h.Position(3);
+    h.AxisLocation = 'in';
+end
 uistack(handles.GrainMap, 'top')
 uistack(handles.Points, 'top')
 
@@ -332,31 +324,11 @@ if handles.overicon
         y = round(pt(1,2));
     end
     handles.ind = handles.indi(y,x);
+    handles.IndexNumEdit.String = num2str(handles.ind);
     guidata(hObject,handles);
     PlotPattern(handles);
 end
-    
-
-function SelectPoint(im,~)
-return
-handles = get(im,'UserData');
-Settings = handles.Settings;
-n = Settings.Nx; m = Settings.Ny;
-if handles.ind == 0
-    set(handles.NumFam,'UserData',true);
-end
-
-% Get selected location
-[x,y, button] = ginput(1);
-x = round(x); y = round(y);
-if x < 0; x = 1; end;
-if y < 0; y = 1; end;
-if x > n; x = n; end;
-if y > m; y = m; end;
-handles.ind = handles.indi(y,x);
-guidata(handles.Map,handles)
-PlotPattern(handles)
-    
+        
 
 function PlotPattern(handles)
 ind = handles.ind;
@@ -730,6 +702,47 @@ function SimType_CreateFcn(hObject, eventdata, handles)
 % handles    empty - handles not created until after all CreateFcns called
 
 % Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function IndexNumEdit_Callback(hObject, eventdata, handles)
+% hObject    handle to IndexNumEdit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of IndexNumEdit as text
+%        str2double(get(hObject,'String')) returns contents of IndexNumEdit as a double
+
+
+% keyboard
+if ~all(isstrprop(hObject.String,'digit')) || isempty(hObject.String)
+   beep
+   hObject.String = num2str(handles.ind);
+   return;
+end
+val = str2double(hObject.String);
+if val <= 0
+    beep
+    val = 1;
+elseif val > handles.Settings.ScanLength
+    beep
+    val = handles.Settings.ScanLength;
+end
+handles.ind = val;
+PlotPattern(handles);
+guidata(hObject,handles);
+
+% --- Executes during object creation, after setting all properties.
+function IndexNumEdit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to IndexNumEdit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
