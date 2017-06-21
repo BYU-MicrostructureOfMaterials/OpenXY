@@ -892,7 +892,7 @@ CloseGUIs(handles)
 
 function SaveSettings(handles)
 Settings = handles.Settings;
-save('Settings.mat','Settings');
+save Settings.mat Settings
 
 function UpdateGUIs(handles)
 if ~isempty(handles.ROIGUI) && isvalid(handles.ROIGUI)
