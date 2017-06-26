@@ -239,7 +239,7 @@ PointSelectionGUI_CloseRequestFcn(handles.PointSelectionGUI, eventdata, handles)
 function SaveClose_Callback(hObject, eventdata, handles)
 SaveFunc = handles.SaveFunc;
 switch handles.context
-    case 'SubPlot'
+    case 'SubScan'
         mainHandles = guidata(handles.ParentGUI);
         SaveFunc(mainHandles,handles.corners(:,1),handles.corners(:,2));
 end
