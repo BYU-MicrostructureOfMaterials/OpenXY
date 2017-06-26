@@ -1,27 +1,16 @@
 function varargout = PointSelectionGUI(varargin)
-% POINTSELECTIONGUI MATLAB code for PointSelectionGUI.fig
-%      POINTSELECTIONGUI, by itself, creates a new POINTSELECTIONGUI or raises the existing
-%      singleton*.
-%
-%      H = POINTSELECTIONGUI returns the handle to a new POINTSELECTIONGUI or the handle to
-%      the existing singleton*.
-%
-%      POINTSELECTIONGUI('CALLBACK',hObject,eventData,handles,...) calls the local
-%      function named CALLBACK in POINTSELECTIONGUI.M with the given input arguments.
-%
-%      POINTSELECTIONGUI('Property','Value',...) creates a new POINTSELECTIONGUI or raises the
-%      existing singleton*.  Starting from the left, property value pairs are
-%      applied to the GUI before PointSelectionGUI_OpeningFcn gets called.  An
-%      unrecognized property name or invalid value makes property application
-%      stop.  All inputs are passed to PointSelectionGUI_OpeningFcn via varargin.
-%
-%      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
-%      instance to run (singleton)".
-%
-% See also: GUIDE, GUIDATA, GUIHANDLES
-
-% Edit the above text to modify the response to help PointSelectionGUI
-
+% POINTSELECTIONGUI Select points from the current scan
+% 
+% POINTSELECTIONGUI('Context',A1,...,An) opens POINTSELECTIONGUI set up to
+% be used in the context specified by the value 'Context'
+% 
+% List of contexts:
+% 'Test': Test the computation of the deformation gradient tensor
+% 
+% Written by Zach Clayburn, June, 2017
+% 
+% See also: TESTGEOMETRY
+% 
 % Last Modified by GUIDE v2.5 21-Jun-2017 15:41:55
 
 % Begin initialization code - DO NOT EDIT
@@ -46,36 +35,64 @@ end
 
 % --- Executes just before PointSelectionGUI is made visible.
 function PointSelectionGUI_OpeningFcn(hObject, eventdata, handles, varargin)
-% This function has no output args, see OutputFcn.
-% hObject    handle to figure
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-% varargin   command line arguments to PointSelectionGUI (see VARARGIN)
-
-% handles.outout = hObject;
-
 % Accept Settings from MainGUI or Load Settings.mat
-if isempty(varargin)
+try
+    handles.ParentGUI = varargin{1};
+    ParentHandle = guidata(handles.ParentGUI);
+    Settings = ParentHandle.Settings;
+    varargin(1) = [];
+catch 
     stemp=load('Settings.mat');
     Settings = stemp.Settings;
     clear stemp
-    handles.MainGUI = [];
-else
-    if length(varargin) == 2
-        handles.Fast = varargin{2};
-    end
-    handles.MainGUI = varargin{1};
-    MainHandle = guidata(handles.MainGUI);
-    Settings = MainHandle.Settings;
+    handles.ParentGUI = [];
 end
+
+% Verify the context of the call to PointSelectoinGUI
+if ~isempty(varargin)
+    if ~ischar(varargin{1})
+        throw(MException('PointSelectionGUI:ArgumentError',...
+            'First non-handle argument should be the context'))
+    end
+    
+    context = varargin{1};
+    
+else
+    throw(MException('PointSelectionGUI:ArgumentError',...
+        'Please input a context argument'));
+end
+    
+switch context
+    case 'SubScan' % Select SubScan from MainGUI
+        handles.PointSelectionGUI.Name = 'Select SubScan';
+        handles.context = context;
+        handles.multiPoints = 0;
+        handles.corners = [];
+        handles.SaveFunc = varargin{2};
+        handles.InstructionsText.String =...
+      'Right click to view point Properties, Left click to select corner.';
+    case 'Test' % The test button from MainGUI
+        handles.context = context;
+        handles.multiPoints = 0;
+    case 'RefPoints' % Edit reference points from Advanced Settings
+        handles.context = context;
+        handles.multiPoints = 1;
+    case 'PCCalcPoints' % Select the points used in PC computations
+        handles.context = context;
+        handles.doPoints = 2;
+    otherwise
+        throw(MException('PointSelectionGUI:ArgumentError',...
+            'Unrecognized context'))
+end
+
 
 % Excecute HREBSDPrep
 if ~isfield(Settings,'HREBSDPrep') || ~Settings.HREBSDPrep
     Settings = HREBSDPrep(Settings);
-    if ~isempty(handles.MainGUI) && isvalid(handles.MainGUI)
-        MainHandles = guidata(handles.MainGUI);
-        MainHandles.Settings = Settings;
-        guidata(MainHandles.MainGUI,MainHandles);
+    if ~isempty(handles.ParentGUI) && isvalid(handles.ParentGUI)
+        ParentHandles = guidata(handles.ParentGUI);
+        ParentHandles.Settings = Settings;
+        guidata(handles.ParentGUI,ParentHandles);
     end
 end
 handles.Settings = Settings;
@@ -166,13 +183,13 @@ handles.g = g;
 MapSelection_SelectionChangedFcn(handles.MapSelection, eventdata, handles)
 
 % Set Position
-if ~isempty(handles.MainGUI) && isvalid(handles.MainGUI)
-    MainSize = get(handles.MainGUI,'Position');
-    set(hObject,'Units','pixels');
-    GUIsize = get(hObject,'Position');
-    set(hObject,'Position',[MainSize(1)+MainSize(3)+20 MainSize(2)-(GUIsize(4)-MainSize(4))+26 GUIsize(3) GUIsize(4)]);
-    movegui(hObject,'onscreen');
-end
+% if ~isempty(handles.MainGUI) && isvalid(handles.MainGUI)
+%     MainSize = get(handles.MainGUI,'Position');
+%     set(hObject,'Units','pixels');
+%     GUIsize = get(hObject,'Position');
+%     set(hObject,'Position',[MainSize(1)+MainSize(3)+20 MainSize(2)-(GUIsize(4)-MainSize(4))+26 GUIsize(3) GUIsize(4)]);
+%     movegui(hObject,'onscreen');
+% end
 gui = findall(handles.PointSelectionGUI,'KeyPressFcn','');
 set(gui,'KeyPressFcn',@PointSelectionGUI_KeyPressFcn);
 
@@ -204,56 +221,32 @@ handles.output = hObject;
 % Update handles structure
 guidata(hObject, handles);
 
-% UIWAIT makes PointSelectionGUI wait for user response (see UIRESUME)
-%uiwait(handles.PointSelectionGUI);
 
 
 % --- Outputs from this function are returned to the command line.
 function varargout = PointSelectionGUI_OutputFcn(hObject, eventdata, handles) 
-% varargout  cell array for returning output args (see VARARGOUT);
-% hObject    handle to figure
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Get default command line output from handles structure
 varargout{1} = handles.output;
 
 % --- Executes when user attempts to close PointSelectionGUI.
 function PointSelectionGUI_CloseRequestFcn(hObject, eventdata, handles)
-% hObject    handle to PointSelectionGUI (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 delete(hObject);
 
 % --- Executes on button press in close.
 function close_Callback(hObject, eventdata, handles)
-% hObject    handle to close (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 PointSelectionGUI_CloseRequestFcn(handles.PointSelectionGUI, eventdata, handles)
 
 % --- Executes on button press in SaveClose.
 function SaveClose_Callback(hObject, eventdata, handles)
-% hObject    handle to SaveClose (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-TestGeometrySettings.blinkspeed = GetPopupString(handles.BlinkSpeed);
-TestGeometrySettings.color = GetPopupString(handles.ColorScheme);
-TestGeometrySettings.LineWidth = GetPopupString(handles.LineWidth);
-if get(handles.IPFMap,'Value')
-    TestGeometrySettings.MapType = 'IPF';
-else
-    TestGeometrySettings.MapType = 'Image Quality';
+SaveFunc = handles.SaveFunc;
+switch handles.context
+    case 'SubPlot'
+        mainHandles = guidata(handles.ParentGUI);
+        SaveFunc(mainHandles,handles.corners(:,1),handles.corners(:,2));
 end
-save('SystemSettings.mat','TestGeometrySettings','-append')
 PointSelectionGUI_CloseRequestFcn(handles.PointSelectionGUI, eventdata, handles)
-
 
 % --- Executes when selected object is changed in MapSelection.
 function MapSelection_SelectionChangedFcn(hObject, eventdata, handles)
-% hObject    handle to the selected object in MapSelection 
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 axes(handles.Map)
 
 % Plot Map
@@ -274,18 +267,9 @@ end
 uistack(handles.GrainMap, 'top')
 uistack(handles.Points, 'top')
 
-% --- Executes on mouse press over axes background.
-function Map_ButtonDownFcn(hObject, eventdata, handles)
-% hObject    handle to Map (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
 
 % --- Executes on mouse motion over figure - except title and menu.
 function PointSelectionGUI_WindowButtonMotionFcn(hObject, eventdata, handles)
-% hObject    handle to PointSelectionGUI (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 if isfield(handles,'Settings')
     pt = get(handles.Map,'currentpoint');
     rows = handles.Settings.Nx+0.5;
@@ -305,9 +289,6 @@ end
 % --- Executes on mouse press over figure background, over a disabled or
 % --- inactive control, or over an axes background.
 function PointSelectionGUI_WindowButtonDownFcn(hObject, eventdata, handles)
-% hObject    handle to PointSelectionGUI (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 if handles.overicon
     if handles.ind == 0
         set(handles.NumFam,'UserData',true);
@@ -326,7 +307,8 @@ if handles.overicon
     handles.ind = handles.indi(y,x);
     handles.IndexNumEdit.String = num2str(handles.ind);
     guidata(hObject,handles);
-    PlotPattern(handles);
+    PlotPattern(handles);handles = guidata(hObject);
+    plotPoints(handles);handles = guidata(hObject);
 end
         
 
@@ -493,13 +475,9 @@ xlim([0 pixsize]);
 ylim([0 pixsize]);
 colormap('gray');
 axis off;
-
-plotPoints(handles)
+guidata(handles.PointSelectionGUI,handles);
 
 function plotPoints(handles)
-% handles.plotPoints = false;
-% MapSelection_SelectionChangedFcn(handles.MapSelection,0,handles)
-% handles.plotPoints = true;
 axes(handles.Points)
 cla
 hold on;
@@ -509,23 +487,48 @@ hold on;
 plot(X,Y,'kd','MarkerFaceColor','k','MarkerEdgeColor','w')
 
 if handles.refInd
-    [Y,X] = find(handles.indi == handles.refInd);
-    plot(X,Y,'ro','MarkerFaceColor','r','MarkerSize',4,'MarkerEdgeColor','w')
+    [Y2,X2] = find(handles.indi == handles.refInd);
+    plot(X2,Y2,'ro','MarkerFaceColor','r','MarkerSize',4,'MarkerEdgeColor','w')
 end
 
+if strcmp(handles.context,'SubScan') 
+    if strcmp(get(gcbf, 'SelectionType'),'alt')
+        if size(handles.corners) == [2 2]
+            handles.corners = [];
+        end
+        handles.corners(end+1,:) = [X Y];
+    end
+    plotBox(handles)
+    guidata(handles.PointSelectionGUI,handles)
+end
 hold off;
 
 uistack(handles.GrainMap, 'top')
 uistack(handles.Points, 'top')
 
+function plotBox(handles)
+% axes(handles.Points)
+corners = handles.corners;
+if isempty(corners)
+    return;
+end
+S.XData = [min(corners(:,1)) - 0.5;...
+    min(corners(:,1)) - 0.5;...
+    max(corners(:,1)) + 0.5;...
+    max(corners(:,1)) + 0.5];
+S.YData = [min(corners(:,2)) - 0.5;...
+    max(corners(:,2)) + 0.5;...
+    max(corners(:,2)) + 0.5;...
+    min(corners(:,2)) - 0.5];
+S.FaceAlpha = 0;
+plot(corners(:,1),corners(:,2),'*b')
+if size(handles.corners) == [2 2]
+    patch(S)
+    
+end
+
 % --- Executes on selection change in BlinkSpeed.
 function BlinkSpeed_Callback(hObject, eventdata, handles)
-% hObject    handle to BlinkSpeed (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = cellstr(get(hObject,'String')) returns BlinkSpeed contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from BlinkSpeed
 if handles.ind
     PlotPattern(handles)
 end
@@ -533,12 +536,6 @@ end
 
 % --- Executes during object creation, after setting all properties.
 function BlinkSpeed_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to BlinkSpeed (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
@@ -558,12 +555,6 @@ end
 
 % --- Executes during object creation, after setting all properties.
 function NumFam_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to NumFam (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
@@ -571,23 +562,12 @@ end
 
 % --- Executes on slider movement.
 function LineWidth_Callback(hObject, eventdata, handles)
-% hObject    handle to LineWidth (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'Value') returns position of slider
-%        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
 if handles.ind
     PlotPattern(handles)
 end
 
 % --- Executes during object creation, after setting all properties.
 function LineWidth_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to LineWidth (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
 if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor',[.9 .9 .9]);
 end
@@ -595,35 +575,18 @@ end
 
 % --- Executes on button press in Filter.
 function Filter_Callback(hObject, eventdata, handles)
-% hObject    handle to Filter (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of Filter
 if handles.ind
     PlotPattern(handles)
 end
 
 % --- Executes on selection change in ColorScheme.
 function ColorScheme_Callback(hObject, eventdata, handles)
-% hObject    handle to ColorScheme (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = cellstr(get(hObject,'String')) returns ColorScheme contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from ColorScheme
 if handles.ind
     PlotPattern(handles)
 end
 
 % --- Executes during object creation, after setting all properties.
 function ColorScheme_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to ColorScheme (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
@@ -631,12 +594,6 @@ end
 
 % --- Executes on button press in PlotGB.
 function PlotGB_Callback(hObject, eventdata, handles)
-% hObject    handle to PlotGB (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of PlotGB
-% MapSelection_SelectionChangedFcn(handles.MapSelection, eventdata, handles)
 if hObject.Value
     handles.GrainMap.Children.Visible = 'On';
     uistack(handles.GrainMap, 'top')
@@ -659,23 +616,8 @@ Value = IndList(strcmp(List,String));
 if isempty(Value); Value =1; end;
 set(Popup, 'Value', Value);
 
-
-% --- If Enable == 'on', executes on mouse press in 5 pixel border.
-% --- Otherwise, executes on mouse press in 5 pixel border or over BlinkText.
-function BlinkText_ButtonDownFcn(hObject, eventdata, handles)
-% hObject    handle to BlinkText (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
 % --- Executes on key press with focus on PointSelectionGUI and none of its controls.
 function PointSelectionGUI_KeyPressFcn(hObject, eventdata, handles)
-% hObject    handle to PointSelectionGUI (see GCBO)
-% eventdata  structure with the following fields (see MATLAB.UI.FIGURE)
-%	Key: name of the key that was pressed, in lower case
-%	Character: character interpretation of the key(s) that was pressed
-%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
-% handles    structure with handles and user data (see GUIDATA)
 handles = guidata(hObject);
 % Close Figure with CTRL-L
 if strcmp(eventdata.Key,'l') && ~isempty(eventdata.Modifier) && strcmp(eventdata.Modifier,'control')
@@ -685,24 +627,12 @@ end
 
 % --- Executes on selection change in SimType.
 function SimType_Callback(hObject, eventdata, handles)
-% hObject    handle to SimType (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = cellstr(get(hObject,'String')) returns SimType contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from SimType
 if handles.ind
     PlotPattern(handles)
 end
 
 % --- Executes during object creation, after setting all properties.
 function SimType_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to SimType (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
@@ -710,15 +640,6 @@ end
 
 
 function IndexNumEdit_Callback(hObject, eventdata, handles)
-% hObject    handle to IndexNumEdit (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of IndexNumEdit as text
-%        str2double(get(hObject,'String')) returns contents of IndexNumEdit as a double
-
-
-% keyboard
 if ~all(isstrprop(hObject.String,'digit')) || isempty(hObject.String)
    beep
    hObject.String = num2str(handles.ind);
@@ -738,12 +659,6 @@ guidata(hObject,handles);
 
 % --- Executes during object creation, after setting all properties.
 function IndexNumEdit_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to IndexNumEdit (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end

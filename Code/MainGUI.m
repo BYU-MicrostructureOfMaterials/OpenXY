@@ -219,6 +219,7 @@ handles.AdvancedGUI = [];
 handles.ROIGUI = [];
 handles.TestGeomGUI = [];
 handles.PCGUI = [];
+handles.SubScanGUI = [];
 
 % Update handles structure
 guidata(hObject, handles);
@@ -849,20 +850,35 @@ function SubScan_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 if handles.ScanFileLoaded
-    [im, PlotType] = ChoosePlot([handles.Settings.Nx handles.Settings.Ny],handles.Settings.IQ,handles.Settings.Angles);
-    [X,Y] = SelectSubscan(im,PlotType);
-    Inds = 1:handles.Settings.ScanLength;
-    IndMap = vec2map(Inds',handles.Settings.Nx,handles.Settings.ScanType);
-    SubInds = IndMap(Y(1):Y(2),X(1):X(2));
-    handles.Settings.Inds = reshape(SubInds',[numel(SubInds) 1]);
-    
-    %Update Size
-    newsize = fliplr(size(SubInds));
-    handles.Settings.Resize = newsize;
-    SizeStr =  [num2str(newsize(1)) 'x' num2str(newsize(2)) ' (Subscan)'];
-    set(handles.ScanSizeText,'String',SizeStr);
+    handles.SubScanGUI = PointSelectionGUI(handles.MainGUI,...
+        'SubScan',@adjustSubplot);
+%     [im, PlotType] = ChoosePlot([handles.Settings.Nx handles.Settings.Ny],handles.Settings.IQ,handles.Settings.Angles);
+%     [X,Y] = SelectSubscan(im,PlotType);
+%     Inds = 1:handles.Settings.ScanLength;
+%     IndMap = vec2map(Inds',handles.Settings.Nx,handles.Settings.ScanType);
+%     SubInds = IndMap(Y(1):Y(2),X(1):X(2));
+%     handles.Settings.Inds = reshape(SubInds',[numel(SubInds) 1]);
+%     
+%     %Update Size
+%     newsize = fliplr(size(SubInds));
+%     handles.Settings.Resize = newsize;
+%     SizeStr =  [num2str(newsize(1)) 'x' num2str(newsize(2)) ' (Subscan)'];
+%     set(handles.ScanSizeText,'String',SizeStr);
     guidata(handles.MainGUI,handles);
 end
+
+function adjustSubplot(handles,X,Y)
+Inds = 1:handles.Settings.ScanLength;
+IndMap = vec2map(Inds',handles.Settings.Nx,handles.Settings.ScanType);
+SubInds = IndMap(Y(1):Y(2),X(1):X(2));
+handles.Settings.Inds = reshape(SubInds',[numel(SubInds) 1]);
+
+%Update Size
+newsize = fliplr(size(SubInds));
+handles.Settings.Resize = newsize;
+SizeStr =  [num2str(newsize(1)) 'x' num2str(newsize(2)) ' (Subscan)'];
+set(handles.ScanSizeText,'String',SizeStr);
+guidata(handles.MainGUI,handles);
 
 function CloseGUIs(handles)
 if ~isempty(handles.MicroscopeGUI) && isvalid(handles.MicroscopeGUI)
@@ -879,6 +895,9 @@ if ~isempty(handles.PCGUI) && isvalid(handles.PCGUI)
 end
 if ~isempty(handles.TestGeomGUI) && isvalid(handles.TestGeomGUI)
     close(handles.TestGeomGUI)
+end
+if ~isempty(handles.SubScanGUI) && isvalid(handles.SubScanGUI)
+    close(handles.SubScanGUI)
 end
 
 
