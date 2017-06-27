@@ -744,15 +744,20 @@ end
 %% for visualizing process
 if Settings.DoShowPlot
     DoPlotROIs = 0;
-    try
-        set(0,'currentfigure',100);
-    catch
-        figure(100);
+    if Settings.DoShowPlot ~= 2
+        try
+            set(0,'currentfigure',100);
+        catch
+            figure(100);
+        end
+    else
+        axes(Settings.reffAxis)
     end
     [cx,cy]=Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,roixc,roiyc,F,Settings.PixelSize,alpha);
     cla
     imagesc(RefImage);
     axis image
+    axis off
     colormap gray
     hold on
     if DoPlotROIs
@@ -769,10 +774,14 @@ if Settings.DoShowPlot
         plot([roixc(i) roixc(i)+cx(i)],[roiyc(i) roiyc(i)+cy(i)],'b.-')
     end
     drawnow
-    try
-        set(0,'currentfigure',101);
-    catch
-        figure(101);
+    if Settings.DoShowPlot ~= 2
+        try
+            set(0,'currentfigure',101);
+        catch
+            figure(101);
+        end
+    else
+        axes(Settings.patternAxis)
     end
     text = get(gca,'title');
     if ~isempty(text.String)
@@ -787,18 +796,22 @@ if Settings.DoShowPlot
     else
         iter = 1;
     end
-    set(0,'currentfigure',100);
-    if RefInd~=0
-        title({'Reference Image';['Image ' num2str(RefInd) ' (' num2str(iter) ')']})
-    else
-        title({'Simulated Reference Image';[' (' num2str(iter) ')']})
+    if Settings.DoShowPlot ~= 2
+        set(0,'currentfigure',100);
+        if RefInd~=0
+            title({'Reference Image';['Image ' num2str(RefInd) ' (' num2str(iter) ')']})
+        else
+            title({'Simulated Reference Image';[' (' num2str(iter) ')']})
+        end
+        if Settings.DoShowPlot ~= 2
+            set(0,'currentfigure',101);
+        end
     end
-    
-    set(0,'currentfigure',101);
     [cx,cy]=Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,roixc,roiyc,F,Settings.PixelSize,alpha);
     cla
     imagesc(ScanImage);
     axis image
+    axis off
     colormap gray
     hold on
     if DoPlotROIs
@@ -815,9 +828,11 @@ if Settings.DoShowPlot
         plot([roixc(i) roixc(i)+cx(i)],[roiyc(i) roiyc(i)+cy(i)],'b.-')
     end
     drawnow
-    title({'Experimental Image';['Image ' num2str(Ind) ' (' num2str(iter) ')']})
-    U
-    SSE
+    if Settings.DoShowPlot ~= 2
+        title({'Experimental Image';['Image ' num2str(Ind) ' (' num2str(iter) ')']})
+        U
+        SSE
+    end
 % keyboard
 %     save shifts Rshift Cshift cx cy
     return

@@ -220,6 +220,7 @@ handles.ROIGUI = [];
 handles.TestGeomGUI = [];
 handles.PCGUI = [];
 handles.SubScanGUI = [];
+handles.TestGUI = [];
 
 % Update handles structure
 guidata(hObject, handles);
@@ -837,7 +838,8 @@ function TestButton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 if handles.ScanFileLoaded && handles.ImageLoaded
-    TestSettingsPntbyPnt(handles.Settings,handles.MainGUI);
+%     TestSettingsPntbyPnt(handles.Settings,handles.MainGUI);
+    PointSelectionGUI(handles.MainGUI,'Test');
 else
     warndlg({'Cannot run test'; 'Must select scan file data and first image'},'OpenXY: Invalid Operation');
 end
@@ -898,6 +900,9 @@ if ~isempty(handles.TestGeomGUI) && isvalid(handles.TestGeomGUI)
 end
 if ~isempty(handles.SubScanGUI) && isvalid(handles.SubScanGUI)
     close(handles.SubScanGUI)
+end
+if ~isempty(handles.TestGUI) && isvalid(handles.TestGUI)
+    close(handles.TestGUI)
 end
 
 

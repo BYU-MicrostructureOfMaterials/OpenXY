@@ -65,25 +65,27 @@ end
 switch context
     case 'SubScan' % Select SubScan from MainGUI
         handles.PointSelectionGUI.Name = 'Select SubScan';
-        handles.context = context;
         handles.multiPoints = 0;
         handles.corners = [];
         handles.SaveFunc = varargin{2};
-        handles.InstructionsText.String =...
-      'Right click to view point Properties, Left click to select corner.';
+        handles.InstructionsText.String = 'Left click to view point Properties, Right click to select corner.';
     case 'Test' % The test button from MainGUI
-        handles.context = context;
         handles.multiPoints = 0;
+        Settings.DoShowPlot = 2;
+        Settings.SinglePattern = 0;
+        Settings.patternAxis = handles.Pattern;
+        Settings.reffAxis = handles.ReferencePattern;
+        handles.SaveClose.Visible = 'Off';
+        handles.InstructionsText.String = 'Left click to view point Properties, Right click to run cross corelation.';
     case 'RefPoints' % Edit reference points from Advanced Settings
-        handles.context = context;
         handles.multiPoints = 1;
     case 'PCCalcPoints' % Select the points used in PC computations
-        handles.context = context;
         handles.doPoints = 2;
     otherwise
         throw(MException('PointSelectionGUI:ArgumentError',...
             'Unrecognized context'))
 end
+handles.context = context;
 
 
 % Excecute HREBSDPrep
@@ -490,16 +492,25 @@ if handles.refInd
     [Y2,X2] = find(handles.indi == handles.refInd);
     plot(X2,Y2,'ro','MarkerFaceColor','r','MarkerSize',4,'MarkerEdgeColor','w')
 end
-
-if strcmp(handles.context,'SubScan') 
-    if strcmp(get(gcbf, 'SelectionType'),'alt')
-        if size(handles.corners) == [2 2]
-            handles.corners = [];
+switch handles.context
+    case 'SubScan'
+        if strcmp(get(gcbf, 'SelectionType'),'alt')
+            if size(handles.corners) == [2 2]
+                handles.corners = [];
+            end
+            handles.corners(end+1,:) = [X Y];
         end
-        handles.corners(end+1,:) = [X Y];
-    end
-    plotBox(handles)
-    guidata(handles.PointSelectionGUI,handles)
+        plotBox(handles)
+        guidata(handles.PointSelectionGUI,handles)
+    case 'Test'
+        if strcmp(get(gcbf, 'SelectionType'),'alt')
+            [F,g,U,SSE] = GetDefGradientTensor(handles.ind,...
+                handles.Settings,handles.Settings.Phase{handles.ind});
+            F
+            g
+            U
+            SSE
+        end
 end
 hold off;
 
