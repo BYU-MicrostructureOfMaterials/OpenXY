@@ -71,11 +71,11 @@ if ~exist(CprFilePath,'file')
         [ctfName, ctfPath] = uigetfile('.cpr','Select a .cpr file');
         cd(w);
         if ctfName == 0
-            error('No .cpr file found');
+            throw(MException('OpenXY:MissingcprFile','Cancel'));
         end
         CprFilePath = fullfile(ctfPath,ctfName);
     else
-        error('No .cpr file found');
+        throw(MException('OpenXY:MissingcprFile',yn));
     end
 end
 cpr = fopen(CprFilePath);
@@ -111,7 +111,7 @@ Phase = cell(size(PhaseNum));
 if max(PhaseNums) <= length(ScanParams.material) || (any(PhaseNums==0) && length(PhaseNums)==2)
     % Remove phases labeled zero, only if there is only one other phase
     PhaseNums(PhaseNums==0)=[]; 
-    PhaseNum(PhaseNum==0) = 1;
+    PhaseNum(PhaseNum==0) = PhaseNums(1);
     
     for i = 1:length(PhaseNums)
         Phase(PhaseNum==PhaseNums(i)) = {strtrim(lower(ScanParams.material{i}))};
