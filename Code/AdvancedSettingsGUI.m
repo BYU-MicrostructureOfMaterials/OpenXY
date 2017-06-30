@@ -1066,7 +1066,7 @@ if ~strcmp(sel,GrainRefType) || ~isfield(handles,'AutoRefInds')
 end
 
 %Get Previously Inds or Start New
-Inds = 0;
+Inds = [];
 if isfield(handles.Settings,'RefInd')
     sel2 = questdlg({'Existing Manual Inds detected';'Edit map or clear?'},'Manual Reference Selection','Edit','Clear','Edit');
     if strcmp(sel2,'Edit')
@@ -1075,32 +1075,33 @@ if isfield(handles.Settings,'RefInd')
 end
 
 %Manually Edit Inds
-handles.GrainMap = OpenGrainMap(handles);
-ScanData = [handles.Settings.CI handles.Settings.Fit handles.Settings.IQ handles.Settings.Angles];
-if ~isfield(handles.Settings,'ImageNamesList')
-    ImageNamesList = {};
-    imsize = [];
-else
-    ImageNamesList = handles.Settings.ImageNamesList;
-    imsize = handles.Settings.imsize;
-end
-RefInd = EditRefInds(handles.GrainMap,handles.Settings.ScanFilePath,handles.Settings.grainID,ImageNamesList,ScanData,...
-    [handles.Settings.Nx handles.Settings.Ny],handles.Settings.ScanType,handles.AutoRefInds,...
-    imsize,handles.Settings.ImageFilter,Inds);
+% handles.GrainMap = OpenGrainMap(handles);
+handles.GrainMap = PointSelectionGUI(handles.AdvancedSettingsGUI,'RefPoints',Inds,@saveRefPoints);
+guidata(hObject,handles);
 
-%Check if anything changed
-if ~strcmp(GrainRefType,'Manual') && ~all(RefInd==handles.AutoRefInds)
-    GrainRefType = 'Manual';
-    SetPopupValue(handles.GrainRefType,GrainRefType)
-    handles.Settings.GrainRefImageType = GrainRefType;
-end
+function saveRefPoints(handles,inds)
+% Add the Auto inds that were not put in manually, then  generates the
+% refference inds.
+inds = inds';
+grainID = handles.Settings.grainID;
+AutoRefInds = handles.AutoRefInds;
+[Grains,GrainInds,ic] = unique(grainID);
+GrainRefInds = AutoRefInds(GrainInds);
+Grain = grainID(inds);
+EmptyGrains = Grains(~ismember(Grains,Grain));
+[~,sortI] = sort([Grain;EmptyGrains]);
+IndsAll = [inds; GrainRefInds(EmptyGrains)];
+IndsAll = IndsAll(sortI);
+
+RefInd = IndsAll(ic);
+
 handles.Settings.RefInd = RefInd;
 if ValChanged(handles,'RefInd')
     handles.edited = true;
 end
 SaveColor(handles)
 
-guidata(hObject,handles);
+guidata(handles.AdvancedSettingsGUI,handles);
 
 function AutoRefInds = UpdateAutoInds(handles,GrainRefType)
 if strcmp(GrainRefType,'Min Kernel Avg Miso')

@@ -11,6 +11,7 @@ g = euler2gmat(Angles);
 sel = questdlg('Select Image to Display','Resize Scan','Image Quality','IPF','Image Quality');
 if strcmp(sel,'Image Quality')
     if strcmp(ScanType,'Square')
+        sel = 'IQ';
         im = reshape(IQ,Nx,Ny)';
     elseif strcmp(ScanType,'Hexagonal')
         im = Hex2Array(IQ,mapsize(1));

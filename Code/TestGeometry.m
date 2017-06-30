@@ -380,7 +380,9 @@ set(handles.phi1Text,'String',Settings.Angles(ind,1))
 set(handles.PHIText,'String',Settings.Angles(ind,2))
 set(handles.phi2Text,'String',Settings.Angles(ind,3))
 [~,name,ext] = fileparts(Settings.ImageNamesList{ind});
+if ~ismac
 set(handles.FileText,'FontSize',6.0)
+end
 set(handles.FileText,'String',[name ext])
 
 % Get params from GUI

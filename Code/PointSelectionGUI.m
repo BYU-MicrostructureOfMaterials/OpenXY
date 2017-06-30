@@ -78,7 +78,10 @@ switch context
         handles.SaveClose.Visible = 'Off';
         handles.InstructionsText.String = 'Left click to view point Properties, Right click to run cross corelation.';
     case 'RefPoints' % Edit reference points from Advanced Settings
+        handles.PointSelectionGUI.Name = 'Edit RefInds';
         handles.multiPoints = 1;
+        grainInd = varargin{2};
+        handles.SaveFunc = varargin{3};
     case 'PCCalcPoints' % Select the points used in PC computations
         handles.doPoints = 2;
     otherwise
@@ -165,6 +168,10 @@ elseif strcmp(Settings.ScanType,'Hexagonal')
     indi = Hex2Array(indi,NumColsOdd);
 end
 handles.indi = indi;
+if exist('grainInd','var')
+    handles.grainInd = grainInd;
+    handles.inds = unique(grainInd);
+end
 handles.ind = 0;
 handles.refInd = 0;
 
@@ -216,6 +223,9 @@ axes(handles.Points)
 axis image
 handles.Points.XLim = handles.Map.XLim;
 handles.Points.YLim = handles.Map.YLim;
+if isfield(handles,'inds')
+    plotPoints(handles);
+end
 
 % Choose default command line output for PointSelectionGUI
 handles.output = hObject;
@@ -244,6 +254,9 @@ switch handles.context
     case 'SubScan'
         mainHandles = guidata(handles.ParentGUI);
         SaveFunc(mainHandles,handles.corners(:,1),handles.corners(:,2));
+    case 'RefPoints'
+        mainHandles = guidata(handles.ParentGUI);
+        SaveFunc(mainHandles,handles.inds);
 end
 PointSelectionGUI_CloseRequestFcn(handles.PointSelectionGUI, eventdata, handles)
 
@@ -306,8 +319,26 @@ if handles.overicon
     else
         y = round(pt(1,2));
     end
-    handles.ind = handles.indi(y,x);
-    handles.IndexNumEdit.String = num2str(handles.ind);
+    if handles.multiPoints
+        ind = handles.indi(y,x);
+        switch handles.multiPoints
+            case 1 % One point per grain
+                grainID = handles.Settings.grainID;
+                grain = grainID(ind);
+                filledGrains = grainID(handles.inds);
+                if any(ismember(filledGrains,grain))
+                    handles.inds(grainID(handles.inds) == grain) = ind;
+                else
+                    handles.inds(end+1) = ind;
+                end
+                handles.ind = ind;
+            case 2 % Unlimited Points
+                
+        end
+    else
+        handles.ind = handles.indi(y,x);
+        handles.IndexNumEdit.String = num2str(handles.ind);
+    end
     guidata(hObject,handles);
     PlotPattern(handles);handles = guidata(hObject);
     plotPoints(handles);handles = guidata(hObject);
@@ -482,38 +513,47 @@ guidata(handles.PointSelectionGUI,handles);
 function plotPoints(handles)
 axes(handles.Points)
 cla
-hold on;
 
-% Plot selected image
-[Y,X] = find(handles.indi == handles.ind);
-plot(X,Y,'kd','MarkerFaceColor','k','MarkerEdgeColor','w')
-
-if handles.refInd
-    [Y2,X2] = find(handles.indi == handles.refInd);
-    plot(X2,Y2,'ro','MarkerFaceColor','r','MarkerSize',4,'MarkerEdgeColor','w')
-end
-switch handles.context
-    case 'SubScan'
-        if strcmp(get(gcbf, 'SelectionType'),'alt')
-            if size(handles.corners) == [2 2]
-                handles.corners = [];
+if handles.multiPoints
+    hold on
+    l = length(handles.inds);
+    X = zeros(1,l);
+    Y = zeros(1,l);
+    for ii = 1:l
+        [Y(ii),X(ii)] = find(handles.indi == handles.inds(ii));
+    end
+    plot(X,Y,'kd','MarkerFaceColor','k','MarkerEdgeColor','w')
+else 
+    % Plot selected image
+    [Y,X] = find(handles.indi == handles.ind);
+    plot(X,Y,'kd','MarkerFaceColor','k','MarkerEdgeColor','w')
+    
+    if handles.refInd
+        [Y2,X2] = find(handles.indi == handles.refInd);
+        plot(X2,Y2,'ro','MarkerFaceColor','r','MarkerSize',4,'MarkerEdgeColor','w')
+    end
+    switch handles.context
+        case 'SubScan'
+            if strcmp(get(gcbf, 'SelectionType'),'alt')
+                if size(handles.corners) == [2 2]
+                    handles.corners = [];
+                end
+                handles.corners(end+1,:) = [X Y];
             end
-            handles.corners(end+1,:) = [X Y];
-        end
-        plotBox(handles)
-        guidata(handles.PointSelectionGUI,handles)
-    case 'Test'
-        if strcmp(get(gcbf, 'SelectionType'),'alt')
-            [F,g,U,SSE] = GetDefGradientTensor(handles.ind,...
-                handles.Settings,handles.Settings.Phase{handles.ind});
-            F
-            g
-            U
-            SSE
-        end
+            plotBox(handles)
+            guidata(handles.PointSelectionGUI,handles)
+        case 'Test'
+            if strcmp(get(gcbf, 'SelectionType'),'alt')
+                [F,g,U,SSE] = GetDefGradientTensor(handles.ind,...
+                    handles.Settings,handles.Settings.Phase{handles.ind});
+                F
+                g
+                U
+                SSE
+            end
+    end
+    hold off;
 end
-hold off;
-
 uistack(handles.GrainMap, 'top')
 uistack(handles.Points, 'top')
 
