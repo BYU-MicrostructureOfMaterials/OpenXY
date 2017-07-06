@@ -32,7 +32,7 @@ phi2=1.089678865;
 % [g]=(euler2gmat(phi1+pi/2,PHI,phi2)); % change from hkl to TSL
 [g]=(euler2gmat(phi1,PHI,phi2)); % no change from hkl to tsl
 
-[pic]=genEBSDPatternHybrid_fromEMSoft(g,xstar,ystar,zstar,pixsize,mperpix,elevang,Material,Av);
+[pic]=genEBSDPatternHybrid_fromEMSoft(g,xstar,ystar,zstar,pixsize,mperpix,elevang,sampletilt,Material,Av);
 %took out elevang from the list 
 figure
 imagesc(pic)

@@ -75,11 +75,12 @@ switch Algorithm
                 zstar=PCprime(3);
                 pixsize=cell2mat(paramspat(4));
                 Av=cell2mat(paramspat(5));
+                sampleTilt = paramspat{6};
                 elevang=cell2mat(paramspat(7));
                 mperpix = Settings.mperpix;
                 curMaterial=cell2mat(Settings.Phase(Ind)); %****may need updating for material of this point - where is that info?
                 for i = 1:3
-                    I1 = genEBSDPatternHybrid_fromEMSoft(g,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av,Ind);
+                    I1 = genEBSDPatternHybrid_fromEMSoft(g,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,sampleTilt,Av,Ind);
                     
                     clear global rs cs Gs
                     %     [F SSE] = CalcF(I1,I0,g,F,ImageInd,Settings,Settings.Material); % old version
