@@ -15,14 +15,15 @@ switch Settings.HROIMMethod
         zstar=PC(3);
         pixsize=cell2mat(params2(4));
         Av=cell2mat(params2(5));
+        sampleTilt = params2{6};
         elevang=cell2mat(params2(7));
         mperpix = Settings.mperpix;
         curMaterial=cell2mat(Settings.Phase(ImageInd)); %****may need updating for material of this point - where is that info?
-        I1 = genEBSDPatternHybrid_fromEMSoft(g,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av);
+        I1 = genEBSDPatternHybrid_fromEMSoft(g,xstar,ystar,zstar,pixsize,mperpix,elevang,sampleTilt,curMaterial,Av);
 
         %Calculate Cross-Correlation Coefficient
         % crop image ********optimize this later
-        [xs ys]=size(I1);
+        [xs,ys]=size(I1);
         I0=I0(round(xs/4):round(3*xs/4),round(ys/4):round(3*ys/4));
         I1=I1(round(xs/4):round(3*xs/4),round(ys/4):round(3*ys/4));
     

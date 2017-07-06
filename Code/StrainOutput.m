@@ -22,6 +22,7 @@ if iscell(data.g)
 else
     angles = Settings.data.g;
 end
+%{
 if DoShowGB && ~strcmp(Settings.ScanType,'Hexagonal')
     % parameters for grain finding algorithm
     clean=1;    %set to 1 to clean up small grains
@@ -44,6 +45,8 @@ if DoShowGB && ~strcmp(Settings.ScanType,'Hexagonal')
         Y=Y';
     end
 end
+%}
+
 % Strain plots ************************
 
 %Ignore obviously bad points
@@ -139,6 +142,7 @@ for i=1:3
             end
             
             if DoShowGB && ~strcmp(Settings.ScanType,'Hexagonal')
+%{
                 if ~strcmp(Settings.Material,'Scan File')
                     h=gcf;set(h,'Position',[50 50 750 750])
                     hold on
@@ -147,8 +151,9 @@ for i=1:3
                     axis off
                     shading interp
                 else
+%}
                     PlotGBs(Settings.grainID,[Settings.Nx Settings.Ny],Settings.ScanType)
-                end
+%                 end
             end
         end
         
