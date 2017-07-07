@@ -315,6 +315,10 @@ if name ~= 0
                     set(handles.ScanFolderText,'String','Select a Scan');
                     set(handles.ScanFolderText,'TooltipString','');
                     set(handles.ScanSizeText,'String','Select a Scan');
+                    openFiles = fopen('all');
+                    for ii = openFiles
+                        fclose(ii);
+                    end
                     rethrow(ME);
                 end
             end
