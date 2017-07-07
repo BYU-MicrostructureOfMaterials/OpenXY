@@ -1,6 +1,6 @@
 function [pic]=genEBSDPatternHybrid_fromEMSoft(g,xstar,ystar,zstar,pixsize,mperpix,elevang,sampleTilt,Material,Av,ImageInd)
 
-if nargin < 10
+if nargin < 11
     ImageInd = 0;
 end
 
