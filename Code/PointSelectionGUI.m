@@ -422,7 +422,7 @@ end
 im = imagesc(I2); axis image; xlim([0 pixsize]); ylim([0 pixsize]); colormap('gray'); axis off;
 
 if strcmp(GetPopupString(handles.SimType),'Dynamic')
-    GenPat = genEBSDPatternHybrid_fromEMSoft(g,xstar,ystar,zstar,pixsize,mperpix,elevang,phase,Av,ind);
+    GenPat = genEBSDPatternHybrid_fromEMSoft(g,xstar,ystar,zstar,pixsize,mperpix,elevang,sampletilt,phase,Av,ind);
     cla(handles.DynamicPattern)
     h = imagesc(handles.DynamicPattern,GenPat); colormap(handles.DynamicPattern,gray);
     uistack(handles.DynamicPattern,'top')
@@ -473,7 +473,7 @@ switch Settings.HROIMMethod
             RefIm = GenPat;
         else
             RefIm = genEBSDPatternHybrid_fromEMSoft(g,xstar,ystar,...
-                zstar,pixsize,mperpix,elevang,phase,Av,ind);
+                zstar,pixsize,mperpix,elevang,sampletilt,phase,Av,ind);
         end
         if handles.Filter.Value && any(Settings.ImageFilter)
             if strcmp(Settings.ImageFilterType,'standard')

@@ -73,8 +73,8 @@ switch (lattice)
                 end
             end
         end
-        NewP(1:size(KeepList,1),:);
-        
+%         NewP(1:size(KeepList,1),:);% This loop doesn't apear to be doing anything
+        NewP = NewP(KeepList,:);
         
         
     case 'hexagonal'
