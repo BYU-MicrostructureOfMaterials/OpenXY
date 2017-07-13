@@ -70,6 +70,7 @@ switch context
         handles.SaveFunc = varargin{2};
         handles.InstructionsText.String = 'Left click to view point Properties, Right click to select corner.';
     case 'Test' % The test button from MainGUI
+        handles.PointSelectionGUI.Name = 'Test Cross-Corelation';
         handles.multiPoints = 0;
         Settings.DoShowPlot = 2;
         Settings.SinglePattern = 0;
@@ -78,10 +79,12 @@ switch context
         handles.SaveClose.Visible = 'Off';
         handles.InstructionsText.String = 'Left click to view point Properties, Right click to run cross corelation.';
     case 'RefPoints' % Edit reference points from Advanced Settings
-        handles.PointSelectionGUI.Name = 'Edit RefInds';
+        handles.PointSelectionGUI.Name = 'Edit Refrence points';
         handles.multiPoints = 1;
         grainInd = varargin{2};
         handles.SaveFunc = varargin{3};
+        handles.PlotGB.Value = 1;
+%         PlotGB_Callback(handles.PlotGB,eventdata,handles);
     case 'PCCalcPoints' % Select the points used in PC computations
         handles.doPoints = 2;
     otherwise
@@ -151,8 +154,6 @@ else
 end
 SetPopupValue(handles.SimType,SimType);
 
-% Turn off GB's by default
-set(handles.PlotGB,'Value',0)
 
 % Filter by default
 set(handles.Filter,'Value',1)
@@ -217,6 +218,7 @@ PlotGBs(handles.Settings.grainID,[handles.Settings.Nx handles.Settings.Ny],handl
 lines = findobj('Type','Line');
 set(lines,'Parent',h);
 h.Visible = 'Off';
+PlotGB_Callback(handles.PlotGB,eventdata,handles);
 
 % Set up Points axis
 axes(handles.Points)
