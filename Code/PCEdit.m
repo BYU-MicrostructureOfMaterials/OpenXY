@@ -157,19 +157,12 @@ delete(handles.PCEdit);
 
 
 % --- Executes when user attempts to close PCEdit.
-function PCEdit_CloseRequestFcn(hObject, eventdata, handles,~)
+function PCEdit_CloseRequestFcn(hObject, eventdata, handles)
 % hObject    handle to PCEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: delete(hObject) closes the figure
-if nargin ~= 4
-    handles.xstar = [];
-    handles.ystar = [];
-    handles.zstar = [];
-    guidata(handles.PCEdit,handles);
-end
-
 if ishandle(handles.fig)
     close(handles.fig)
 end
@@ -184,7 +177,7 @@ function DoneButton_Callback(hObject, eventdata, handles)
 % hObject    handle to DoneButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-PCEdit_CloseRequestFcn(handles.PCEdit, eventdata, handles,1);
+PCEdit_CloseRequestFcn(handles.PCEdit, eventdata, handles);
 
 
 function XStarEdit_Callback(hObject, eventdata, handles)
@@ -427,7 +420,7 @@ axes(handles.StrainMinaxes)
 if get(handles.IPFPlot,'Value')
     PlotScan(handles.IPF_map,'IPF');
 elseif get(handles.IQPlot,'Value')
-    PlotScan(handles.IQ_map,'IQ');
+    PlotScan(handles.IQ_map,'Image Quality');
 end
 
 %Plot Calibration Points
@@ -467,9 +460,9 @@ function SelectPoints_Callback(hObject, eventdata, handles)
 % hObject    handle to SelectPoints (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-uiwait(SelectPointsGUI(handles.PCEdit,'PC'));
-
-handles = guidata(hObject);
+handles.PCData.CalibrationIndices...
+    = SelectCalibrationPoints(handles.IQ_map,handles.IPF_map,...
+    handles.PCData.CalibrationIndices);
 numpats = length(handles.PCData.CalibrationIndices);
 set(handles.numpats,'String',numpats);
 handles.PCData.numpats = numpats;
@@ -593,6 +586,10 @@ function CancelButton_Callback(hObject, eventdata, handles)
 % hObject    handle to CancelButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+handles.xstar = [];
+handles.ystar = [];
+handles.zstar = [];
+guidata(handles.PCEdit,handles);
 PCEdit_CloseRequestFcn(handles.PCEdit, eventdata, handles);
 
 

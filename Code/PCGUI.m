@@ -327,12 +327,9 @@ if strcmp(type,'Strain Minimization')
     PCSettings = PCEdit([PCinit 'Strain Minimization' PlaneFit def_name {''}],handles.V);
     if ~isempty([PCSettings{1:3}])
         
-        uiwait(SelectPointsGUI(handles.PCGUI,'Strain Minimization'))
-        handles = guidata(hObject);
         %Perform Strain Minimization
         disp('Starting Strain Minimization Pattern Center Calibration...')
-        PCData = PCStrainMinimization(Settings,PCSettings{5},...
-            handles.PCData.CalibrationIndices);
+        PCData = PCStrainMinimization(Settings,PCSettings{5});
         %Add New PC to List
         Settings.PCList(end+1,:) = {PCData.MeanXStar PCData.MeanYStar PCData.MeanZStar  PCSettings{4:6} PCData 0};
         set(handles.PCList,'String',Settings.PCList(:,6));
@@ -640,7 +637,7 @@ elseif get(handles.IPFPlot,'Value')
     end
     guidata(handles.PCGUI,handles);
 elseif get(handles.IQPlot,'Value')
-    PlotScan(handles.IQ_map,'IQ');
+    PlotScan(handles.IQ_map,'Image Quality');
     
     %Plot Calibration Points
     if ~emptylist && ismember(handles.Settings.PCList{cur,4},{'Strain Minimization','Grid'})
