@@ -213,14 +213,14 @@ enableRunButton(handles);
 setappdata(hObject,'enableRunButton',@enableRunButton);
 setappdata(hObject,'UpdateGUIs',@UpdateGUIs);
 
-% Instantiate holders for other GUIs
+% Instantiate holders for other GUIs%tag
 handles.MicroscopeGUI = [];
 handles.AdvancedGUI = [];
 handles.ROIGUI = [];
 handles.TestGeomGUI = [];
 handles.PCGUI = [];
 handles.SubScanGUI = [];
-handles.TestGUI = [];
+handles.TestCalcFGUI = [];
 
 % Update handles structure
 guidata(hObject, handles);
@@ -790,9 +790,11 @@ function TestGeometry_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 if handles.ScanFileLoaded && handles.ImageLoaded
-    TestGeomGUI = TestGeometry(handles.MainGUI);
-    handles = guidata(handles.MainGUI); % To get HREBSDPrep Data
-    handles.TestGeomGUI = TestGeomGUI;
+    if isempty(handles.TestGeomGUI) || ~isvalid(handles.TestGeomGUI)
+        TestGeomGUI = PointSelectionGUI(handles.MainGUI,'TestGeometry');
+        handles = guidata(handles.MainGUI); % To get HREBSDPrep Data
+        handles.TestGeomGUI = TestGeomGUI;
+    end
 else
     warndlg({'Cannot open Test Geometry menu';'Must select scan file data and first image'},'OpenXY: Invalid Operation')
 end
@@ -859,8 +861,9 @@ function TestButton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 if handles.ScanFileLoaded && handles.ImageLoaded
-%     TestSettingsPntbyPnt(handles.Settings,handles.MainGUI);
-    PointSelectionGUI(handles.MainGUI,'Test');
+    if isempty(handles.TestCalcFGUI) || ~isvalid(handles.TestCalcFGUI)
+        handles.TestCalcFGUI = PointSelectionGUI(handles.MainGUI,'Test');
+    end
 else
     warndlg({'Cannot run test'; 'Must select scan file data and first image'},'OpenXY: Invalid Operation');
 end
@@ -873,21 +876,11 @@ function SubScan_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 if handles.ScanFileLoaded
-    handles.SubScanGUI = PointSelectionGUI(handles.MainGUI,...
-        'SubScan',@adjustSubplot);
-%     [im, PlotType] = ChoosePlot([handles.Settings.Nx handles.Settings.Ny],handles.Settings.IQ,handles.Settings.Angles);
-%     [X,Y] = SelectSubscan(im,PlotType);
-%     Inds = 1:handles.Settings.ScanLength;
-%     IndMap = vec2map(Inds',handles.Settings.Nx,handles.Settings.ScanType);
-%     SubInds = IndMap(Y(1):Y(2),X(1):X(2));
-%     handles.Settings.Inds = reshape(SubInds',[numel(SubInds) 1]);
-%     
-%     %Update Size
-%     newsize = fliplr(size(SubInds));
-%     handles.Settings.Resize = newsize;
-%     SizeStr =  [num2str(newsize(1)) 'x' num2str(newsize(2)) ' (Subscan)'];
-%     set(handles.ScanSizeText,'String',SizeStr);
-    guidata(handles.MainGUI,handles);
+    if isempty(handles.SubScanGUI) || ~isvalid(handles.SubScanGUI)
+        handles.SubScanGUI = PointSelectionGUI(handles.MainGUI,...
+            'SubScan',@adjustSubplot);
+        guidata(handles.MainGUI,handles);
+    end
 end
 
 function adjustSubplot(handles,X,Y)
@@ -922,8 +915,8 @@ end
 if ~isempty(handles.SubScanGUI) && isvalid(handles.SubScanGUI)
     close(handles.SubScanGUI)
 end
-if ~isempty(handles.TestGUI) && isvalid(handles.TestGUI)
-    close(handles.TestGUI)
+if ~isempty(handles.TestCalcFGUI) && isvalid(handles.TestCalcFGUI)
+    close(handles.TestCalcFGUI)
 end
 
 
@@ -939,7 +932,7 @@ function SaveSettings(handles)
 Settings = handles.Settings;
 save Settings.mat Settings
 
-function UpdateGUIs(handles)
+function UpdateGUIs(handles)%tag
 if ~isempty(handles.ROIGUI) && isvalid(handles.ROIGUI)
     h = guidata(handles.ROIGUI);
     h.Settings = handles.Settings;
@@ -964,4 +957,14 @@ if ~isempty(handles.AdvancedGUI) && isvalid(handles.AdvancedGUI)
     h = guidata(handles.AdvancedGUI);
     h.Settings = handles.Settings;
     guidata(handles.AdvancedGUI,h);
+end
+if ~isempty(handles.SubScanGUI) && isvalid(handles.SubScanGUI)
+    h = guidata(handles.SubScanGUI);
+    h.Settings = handles.Settings;
+    guidata(handles.SubScanGUI,h);
+end
+if ~isempty(handles.TestCalcFGUI) && isvalid(handles.TestCalcFGUI)
+    h = guidata(handles.TestCalcFGUI);
+    h.Settings = handles.Settings;
+    guidata(handles.TestCalcFGUI,h);
 end

@@ -176,7 +176,7 @@ set(gui,'KeyPressFcn',@AdvancedSettingsGUI_KeyPressFcn);
 
 % Update handles structure
 handles.Settings = Settings;
-handles.GrainMap = -1;
+handles.GrainMap = [];
 handles.edited = false;
 
 %Update Components
@@ -1037,47 +1037,49 @@ function EditRefPoints_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-%Get List of Available options
-list = get(handles.GrainRefType,'String');
-GrainRefType = list(get(handles.GrainRefType,'Value'));
-
-options = list(~strcmp(list,'Manual'));
-if ~isfield(handles.Settings,'KernelAvgMisoPath') || ~exist(handles.Settings.KernelAvgMisoPath,'dir')
-    options = options(~strcmp(options,'Min Kernel Avg Miso'));
-end
-
-%Query User for selection
-if length(options)>1
-    %Check if current selection is in the list of possible options
-    if ~ismember(GrainRefType,options)
-        def = options{1};
+if isempty(handles.GrainMap) || ~isvalid(handles.GrainMap)
+    %Get List of Available options
+    list = get(handles.GrainRefType,'String');
+    GrainRefType = list(get(handles.GrainRefType,'Value'));
+    
+    options = list(~strcmp(list,'Manual'));
+    if ~isfield(handles.Settings,'KernelAvgMisoPath') || ~exist(handles.Settings.KernelAvgMisoPath,'dir')
+        options = options(~strcmp(options,'Min Kernel Avg Miso'));
+    end
+    
+    %Query User for selection
+    if length(options)>1
+        %Check if current selection is in the list of possible options
+        if ~ismember(GrainRefType,options)
+            def = options{1};
+        else
+            def = GrainRefType;
+        end
+        sel = questdlg('Select Method for Automatic selection (for leftover grains)','Manual Reference Selection',...
+            options,def);
     else
-        def = GrainRefType;
+        sel = options;
     end
-    sel = questdlg('Select Method for Automatic selection (for leftover grains)','Manual Reference Selection',...
-        options,def);
-else
-    sel = options;
-end
-
-%Generate New Ref Inds, if the selected method is different than the previously used method
-if ~strcmp(sel,GrainRefType) || ~isfield(handles,'AutoRefInds')
-    handles.AutoRefInds = UpdateAutoInds(handles,sel);
-end
-
-%Get Previously Inds or Start New
-Inds = [];
-if isfield(handles.Settings,'RefInd')
-    sel2 = questdlg({'Existing Manual Inds detected';'Edit map or clear?'},'Manual Reference Selection','Edit','Clear','Edit');
-    if strcmp(sel2,'Edit')
-        Inds = handles.Settings.RefInd;
+    
+    %Generate New Ref Inds, if the selected method is different than the previously used method
+    if ~strcmp(sel,GrainRefType) || ~isfield(handles,'AutoRefInds')
+        handles.AutoRefInds = UpdateAutoInds(handles,sel);
     end
+    
+    %Get Previously Inds or Start New
+    Inds = [];
+    if isfield(handles.Settings,'RefInd')
+        sel2 = questdlg({'Existing Manual Inds detected';'Edit map or clear?'},'Manual Reference Selection','Edit','Clear','Edit');
+        if strcmp(sel2,'Edit')
+            Inds = handles.Settings.RefInd;
+        end
+    end
+    
+    %Manually Edit Inds
+    % handles.GrainMap = OpenGrainMap(handles);
+    handles.GrainMap = PointSelectionGUI(handles.AdvancedSettingsGUI,'RefPoints',Inds,@saveRefPoints);
+    guidata(hObject,handles);
 end
-
-%Manually Edit Inds
-% handles.GrainMap = OpenGrainMap(handles);
-handles.GrainMap = PointSelectionGUI(handles.AdvancedSettingsGUI,'RefPoints',Inds,@saveRefPoints);
-guidata(hObject,handles);
 
 function saveRefPoints(handles,inds)
 % Add the Auto inds that were not put in manually, then  generates the

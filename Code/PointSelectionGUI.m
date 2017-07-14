@@ -11,10 +11,11 @@ function varargout = PointSelectionGUI(varargin)
 % 
 % See also: TESTGEOMETRY
 % 
-% Last Modified by GUIDE v2.5 21-Jun-2017 15:41:55
+
+% Last Modified by GUIDE v2.5 14-Jul-2017 12:44:06
 
 % Begin initialization code - DO NOT EDIT
-gui_Singleton = 1;
+gui_Singleton = 0;
 gui_State = struct('gui_Name',       mfilename, ...
                    'gui_Singleton',  gui_Singleton, ...
                    'gui_OpeningFcn', @PointSelectionGUI_OpeningFcn, ...
@@ -63,6 +64,10 @@ else
 end
     
 switch context
+    case 'TestGeometry' %Test Geometry from MainGUI
+        handles.PointSelectionGUI.Name = 'Test Geometry';
+        handles.multiPoints = 0;
+        handles.SaveFunc = @testGeometrySaveCloseFcn;
     case 'SubScan' % Select SubScan from MainGUI
         handles.PointSelectionGUI.Name = 'Select SubScan';
         handles.multiPoints = 0;
@@ -84,7 +89,8 @@ switch context
         grainInd = varargin{2};
         handles.SaveFunc = varargin{3};
         handles.PlotGB.Value = 1;
-%         PlotGB_Callback(handles.PlotGB,eventdata,handles);
+        handles.SelectByIndPannel.Visible = 'Off';
+        handles.ClearPointsButton.Visible = 'On';
     case 'PCCalcPoints' % Select the points used in PC computations
         handles.doPoints = 2;
     otherwise
@@ -280,6 +286,7 @@ if ~handles.IPFMap.Value
     h = colorbar;
     h.Position(1) = 1 - h.Position(3);
     h.AxisLocation = 'in';
+    h.UIContextMenu = [];
 end
 uistack(handles.GrainMap, 'top')
 uistack(handles.Points, 'top')
@@ -515,9 +522,9 @@ guidata(handles.PointSelectionGUI,handles);
 function plotPoints(handles)
 axes(handles.Points)
 cla
+hold on
 
 if handles.multiPoints
-    hold on
     l = length(handles.inds);
     X = zeros(1,l);
     Y = zeros(1,l);
@@ -548,14 +555,18 @@ else
             if strcmp(get(gcbf, 'SelectionType'),'alt')
                 [F,g,U,SSE] = GetDefGradientTensor(handles.ind,...
                     handles.Settings,handles.Settings.Phase{handles.ind});
-                F
-                g
-                U
-                SSE
+                fprintf(1,'F =\n%10.4f %10.4f %10.4f \n%10.4f %10.4f %10.4f \n%10.4f %10.4f %10.4f \n\n',F)
+                fprintf(1,'g =\n%10.4f %10.4f %10.4f \n%10.4f %10.4f %10.4f \n%10.4f %10.4f %10.4f \n\n',g)
+                fprintf(1,'U =\n%10.4f %10.4f %10.4f \n%10.4f %10.4f %10.4f \n%10.4f %10.4f %10.4f \n\n',U)
+                fprintf(1,'SSE =\n%10.4f \n\n',SSE)
+                assignin('base','F',F)
+                assignin('base','g',g)
+                assignin('base','U',U)
+                assignin('base','SSE',SSE)
             end
     end
-    hold off;
 end
+hold off;
 uistack(handles.GrainMap, 'top')
 uistack(handles.Points, 'top')
 
@@ -715,3 +726,13 @@ function IndexNumEdit_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+% --- Executes on button press in ClearPointsButton.
+function ClearPointsButton_Callback(hObject,~,handles)
+handles.inds = [];
+guidata(hObject,handles);
+plotPoints(handles);
+
+function testGeometrySaveCloseFcn(handles)
+% Add save functionality after redoing systemSettings
+PointSelectionGUI_CloseRequestFcn(handles.PointSelectionGUI,0,0)

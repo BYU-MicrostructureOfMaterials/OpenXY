@@ -22,8 +22,8 @@ switch PlotType
         colormap(gca,jet)
     case 'CI'
         im = imagesc(im,[0,1]);
-        colmap = parula(27);
-        colmap = [1 0 0; 1 0 0; 1 0 0; colmap(end:-1:1,1:3)];
+        colmap = parula(54);
+        colmap = [repmat([1 0 0],6,1); flip(colmap)];
         colormap(gca,colmap)
 end
 axis image
