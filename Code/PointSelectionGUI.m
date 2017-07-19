@@ -42,7 +42,7 @@ try
     ParentHandle = guidata(handles.ParentGUI);
     Settings = ParentHandle.Settings;
     varargin(1) = [];
-catch 
+catch ME %#ok
     stemp=load('Settings.mat');
     Settings = stemp.Settings;
     clear stemp
@@ -92,10 +92,15 @@ switch context
         handles.SelectByIndPannel.Visible = 'Off';
         handles.ClearPointsButton.Visible = 'On';
     case 'PCCalcPoints' % Select the points used in PC computations
-        handles.doPoints = 2;
+        handles.PointSelectionGUI.Name = 'Edit Calibration Points';
+        handles.multiPoints = 2;
+        handles.SelectByIndPannel.Visible = 'Off';
+        handles.ClearPointsButton.Visible = 'On';
+        handles.SaveFunc = varargin{2};
+        handles.inds = varargin{3};
     otherwise
-        throw(MException('PointSelectionGUI:ArgumentError',...
-            'Unrecognized context'))
+        error('PointSelectionGUI:ArgumentError',...
+            '''%s'' is not a recognized context',context)
 end
 handles.context = context;
 
@@ -221,7 +226,7 @@ axis off
 axes(handles.GrainMap); axis image
 h = hggroup;
 PlotGBs(handles.Settings.grainID,[handles.Settings.Nx handles.Settings.Ny],handles.Settings.ScanType);
-lines = findobj('Type','Line');
+lines = findobj('Type','Line','-and','Parent',handles.GrainMap);
 set(lines,'Parent',h);
 h.Visible = 'Off';
 PlotGB_Callback(handles.PlotGB,eventdata,handles);
@@ -258,13 +263,15 @@ PointSelectionGUI_CloseRequestFcn(handles.PointSelectionGUI, eventdata, handles)
 % --- Executes on button press in SaveClose.
 function SaveClose_Callback(hObject, eventdata, handles)
 SaveFunc = handles.SaveFunc;
+parentHandles = guidata(handles.ParentGUI);
 switch handles.context
     case 'SubScan'
-        mainHandles = guidata(handles.ParentGUI);
-        SaveFunc(mainHandles,handles.corners(:,1),handles.corners(:,2));
+        SaveFunc(parentHandles,handles.corners(:,1),handles.corners(:,2));
     case 'RefPoints'
-        mainHandles = guidata(handles.ParentGUI);
-        SaveFunc(mainHandles,handles.inds);
+        SaveFunc(parentHandles,handles.inds);
+    case 'PCCalcPoints'
+        PCEditHandles = guidata(parentHandles.PCEditGUI);
+        SaveFunc(PCEditHandles,handles.inds);
 end
 PointSelectionGUI_CloseRequestFcn(handles.PointSelectionGUI, eventdata, handles)
 
@@ -340,10 +347,15 @@ if handles.overicon
                 else
                     handles.inds(end+1) = ind;
                 end
-                handles.ind = ind;
             case 2 % Unlimited Points
-                
+                [~,location] = ismember(ind,handles.inds);
+                if any(location)
+                    handles.inds(location) = [];
+                else
+                    handles.inds(end+1) = ind;
+                end
         end
+        handles.ind = ind;
     else
         handles.ind = handles.indi(y,x);
         handles.IndexNumEdit.String = num2str(handles.ind);

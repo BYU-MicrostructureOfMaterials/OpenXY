@@ -70,6 +70,10 @@ else
 end
 handles.PrevSettings = Settings;
 
+%Set up containers for GUIs
+handles.PCEditGUI = [];
+handles.PointSelectionGUI = [];
+
 %Fast GUI
 if handles.Fast
     if ~isfield(Settings,'PCList')
@@ -186,6 +190,12 @@ function PCGUI_CloseRequestFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: delete(hObject) closes the figure
+if ~isempty(handles.PCEditGUI) && isvalid(handles.PCEditGUI)
+    delete(handles.PCEditGUI);
+end
+if ~isempty(handles.PointSelectionGUI) && isvalid(handles.PointSelectionGUI)
+    delete(handles.PointSelectionGUI);
+end
 delete(hObject);
 
 % --- Executes on button press in CloseButton.
@@ -293,7 +303,7 @@ type = GetPopupString(handles.NewPCType);
 index = GetListIndex(handles);
 Settings = handles.Settings;
 canceled = false;
-if index > 0
+if any(index)
     Sel = Settings.PCList(index,:);
     PCinit = Sel(1:3);
     PlaneFit = Sel(5);
@@ -306,141 +316,194 @@ end
 if isempty(find(index,1))
     set(handles.PCList,'Value',1);
 end
-
-if strcmp(type,'Strain Minimization')
-    %Setup Initial Params
-    def_name = 'StrainMin';
-    count = sum(cell2mat(strfind(handles.Settings.PCList(:,6),def_name))>0);
-    if count
-        def_name = [def_name num2str(count)];
-    end
+switch type
     
-    %Import Scan Info
-    if handles.Fast
-        disp('Reading Scan File...')
-        Settings = ImportScanInfo(Settings,Settings.ScanFilePath);
-        disp('Generate Image Names List...')
-        Settings.ImageNamesList = ImportImageNamesList(Settings);
-        handles = GenPlots(handles,Settings);
-    end
-    
-    PCSettings = PCEdit([PCinit 'Strain Minimization' PlaneFit def_name {''}],handles.V);
-    if ~isempty([PCSettings{1:3}])
-        
-        %Perform Strain Minimization
-        disp('Starting Strain Minimization Pattern Center Calibration...')
-        PCData = PCStrainMinimization(Settings,PCSettings{5});
-        %Add New PC to List
-        Settings.PCList(end+1,:) = {PCData.MeanXStar PCData.MeanYStar PCData.MeanZStar  PCSettings{4:6} PCData 0};
-        set(handles.PCList,'String',Settings.PCList(:,6));
-        handles.Settings = Settings;
-        guidata(handles.PCGUI,handles);
-    else
-        canceled = true;
-    end
-elseif strcmp(type,'Manual')
-     %Setup Initial Params
-    def_name = 'Manual';
-    count = sum(cell2mat(strfind(handles.Settings.PCList(:,6),def_name))>0);
-    if count
-        def_name = [def_name num2str(count)];
-    end
-    PCSettings = PCEdit([PCinit 'Manual' PlaneFit def_name {''}],handles.V);
-    if ~isempty([PCSettings{1:3}])
-        count = sum(cell2mat(strfind(handles.Settings.PCList(:,6),PCSettings{6}))>0);
+    case 'Strain Minimization'
+        %Setup Initial Params
+        def_name = 'StrainMin';
+        count = sum(cell2mat(strfind(handles.Settings.PCList(:,6),def_name))>0);
         if count
-            PCSettings{6} = [PCSettings{6} num2str(count)];
+            def_name = [def_name num2str(count)];
         end
-
-        %Add to PC List
-        Settings.PCList(end+1,:) = [PCSettings {0}];
-        index = get(handles.PCList,'Value');
-        set(handles.PCList,'String',Settings.PCList(:,6));
-        handles.Settings = Settings;
-        guidata(handles.PCGUI,handles);
-    else
-        canceled = true;
-    end
-elseif strcmp(type,'Grid')
-    def_name = 'Grid';
-    count = sum(cell2mat(strfind(handles.Settings.PCList(:,6),def_name))>0);
-    if count
-        def_name = [def_name num2str(count)];
-    end
-    
-    %Import Scan Info
-    if ~isfield(Settings,'ImageNamesList')
-        disp('Reading Scan File...')
-        Settings = ImportScanInfo(Settings,Settings.ScanFilePath);
-        disp('Generate Image Names List...')
-        Settings.ImageNamesList = ImportImageNamesList(Settings);
         
-        handles = GenPlots(handles,Settings);
-    end
-    
-    plots.IQ_map = handles.IQ_map; plots.IPF_map = handles.IPF_map;
-    PCSettings = PCEdit([PCinit 'Grid' PlaneFit def_name {''}],handles.V,plots);
-    
-    if ~isempty([PCSettings{1:3}])
-        PCData = PCSettings{7};
-        if isempty(PCData.CalibrationIndices)
-            warndlg('No Calibration Indices Selected. Calibration Aborted')
-        else
-            PCData.xstar = PCSettings{1};
-            PCData.ystar = PCSettings{2};
-            PCData.zstar = PCSettings{3};
-            disp('Starting Grid Pattern Center Calibration...')
-            PCData = PCGrid(Settings,PCData);
+        %Import Scan Info
+        if handles.Fast
+            disp('Reading Scan File...')
+            Settings = ImportScanInfo(Settings,Settings.ScanFilePath);
+            disp('Generate Image Names List...')
+            Settings.ImageNamesList = ImportImageNamesList(Settings);
+            handles = GenPlots(handles,Settings);
+        end
         
-            %Add to PC List
-            Settings.PCList(end+1,:) = {PCData.xstar PCData.ystar PCData.zstar...
-                'Grid' 'Naive' def_name PCData 0};
+        PCSettings = PCEdit([PCinit 'Strain Minimization' PlaneFit def_name {''}],handles.V,[]);
+        if ~isempty([PCSettings{1:3}])
+            
+            %Perform Strain Minimization
+            disp('Starting Strain Minimization Pattern Center Calibration...')
+            PCData = PCStrainMinimization(Settings,PCSettings{5});
+            %Add New PC to List
+            Settings.PCList(end+1,:) = {PCData.MeanXStar PCData.MeanYStar PCData.MeanZStar  PCSettings{4:6} PCData 0};
             set(handles.PCList,'String',Settings.PCList(:,6));
             handles.Settings = Settings;
             guidata(handles.PCGUI,handles);
         end
-    else
-        canceled = true;
-    end
-elseif strcmp(type,'Tiff')
-    def_name = 'TIFF';
-    count = sum(cell2mat(strfind(handles.Settings.PCList(:,6),def_name))>0);
-    sel = 'Yes';
-    if count
-        sel = questdlg('A Tiff PC has already been imported. Continue?','Tiff PC Calibration','Yes','No','No');
-        def_name = [def_name num2str(count)];
-    end
-    if strcmp(sel,'Yes')
-        %Read PC from images
-        disp('Reading Pattern Center from Tiff Images...')
-        [PCData.XStar,PCData.YStar,PCData.ZStar] = ReadTiffPC(handles.Settings.ImageNamesList,...
-            [handles.Settings.Nx handles.Settings.Ny],handles.Settings.VHRatio);
         
-        %Add to PC List
-        Settings.PCList(end+1,:) = {PCData.XStar(1) PCData.YStar(1) PCData.ZStar(1)...
-            'Tiff' 'None' def_name PCData 0};
-        set(handles.PCList,'String',Settings.PCList(:,6));
-        handles.Settings = Settings;
-        guidata(handles.PCGUI,handles);
-    end
-    
+    case 'Manual'
+        %Setup Initial Params
+        def_name = 'Manual';
+        count = sum(cell2mat(strfind(handles.Settings.PCList(:,6),def_name))>0);
+        if count
+            def_name = [def_name num2str(count)];
+        end
+        if isempty(handles.PCEditGUI) || ~isvalid(handles.PCEditGUI)
+            handles.PCEditGUI = PCEdit([PCinit 'Manual' PlaneFit def_name {''}],handles.V,[],handles.PCGUI,@addManual);
+        end
+        %{
+        if ~isempty([PCSettings{1:3}])
+            count = sum(cell2mat(strfind(handles.Settings.PCList(:,6),PCSettings{6}))>0);
+            if count
+                PCSettings{6} = [PCSettings{6} num2str(count)];
+            end
+            
+            %Add to PC List
+            Settings.PCList(end+1,:) = [PCSettings {0}];
+            index = get(handles.PCList,'Value');
+            set(handles.PCList,'String',Settings.PCList(:,6));
+            handles.Settings = Settings;
+            guidata(handles.PCGUI,handles);
+        else
+            canceled = true;
+        end
+        %}
+    case 'Grid'
+        def_name = 'Grid';
+        count = sum(cell2mat(strfind(handles.Settings.PCList(:,6),def_name))>0);
+        if count
+            def_name = [def_name num2str(count)];
+        end
+        
+        %Import Scan Info
+        if ~isfield(Settings,'ImageNamesList')
+            disp('Reading Scan File...')
+            Settings = ImportScanInfo(Settings,Settings.ScanFilePath);
+            disp('Generate Image Names List...')
+            Settings.ImageNamesList = ImportImageNamesList(Settings);
+            
+            handles = GenPlots(handles,Settings);
+        end
+        if isempty(handles.PCEditGUI) || ~isvalid(handles.PCEditGUI)
+            plots.IQ_map = handles.IQ_map; plots.IPF_map = handles.IPF_map;
+            handles.PCEditGUI = PCEdit([PCinit 'Grid' PlaneFit def_name {''}],handles.V,plots,handles.PCGUI,@addGrid);
+        else
+%             disp('PCEdit already open!');
+        end
+        %{
+        if ~isempty([PCSettings{1:3}])
+            PCData = PCSettings{7};
+            if isempty(PCData.CalibrationIndices)
+                warndlg('No Calibration Indices Selected. Calibration Aborted')
+            else
+                PCData.xstar = PCSettings{1};
+                PCData.ystar = PCSettings{2};
+                PCData.zstar = PCSettings{3};
+                disp('Starting Grid Pattern Center Calibration...')
+                PCData = PCGrid(Settings,PCData);
+                
+                %Add to PC List
+                Settings.PCList(end+1,:) = {PCData.xstar PCData.ystar PCData.zstar...
+                    'Grid' 'Naive' def_name PCData 0};
+                set(handles.PCList,'String',Settings.PCList(:,6));
+                handles.Settings = Settings;
+                guidata(handles.PCGUI,handles);
+            end
+        else
+            canceled = true;
+        end
+        %}
+        
+    case 'Tiff'
+        def_name = 'TIFF';
+        count = sum(cell2mat(strfind(handles.Settings.PCList(:,6),def_name))>0);
+        sel = 'Yes';
+        if count
+            sel = questdlg('A Tiff PC has already been imported. Continue?','Tiff PC Calibration','Yes','No','No');
+            def_name = [def_name num2str(count)];
+        end
+        if strcmp(sel,'Yes')
+            %Read PC from images
+            disp('Reading Pattern Center from Tiff Images...')
+            [PCData.XStar,PCData.YStar,PCData.ZStar] = ReadTiffPC(handles.Settings.ImageNamesList,...
+                [handles.Settings.Nx handles.Settings.Ny],handles.Settings.VHRatio);
+            
+            %Add to PC List
+            Settings.PCList(end+1,:) = {PCData.XStar(1) PCData.YStar(1) PCData.ZStar(1)...
+                'Tiff' 'None' def_name PCData 0};
+            set(handles.PCList,'String',Settings.PCList(:,6));
+            handles.Settings = Settings;
+            guidata(handles.PCGUI,handles);
+        end
 end
+guidata(hObject,handles);
+% if ~canceled
+%     doAutoRun(handles)
+% end
 
+function doAutoRun(handles)
 %autoRuns OpenXY after completing PC Calculations
 autoRun = get(handles.AutoRun,'value');
-if autoRun && ~canceled
+if autoRun
     PCListString = cellstr(get(handles.PCList,'string'));
     listSize = size(PCListString);
     set(handles.PCList,'value',listSize(1));
-    PCList_Callback(handles.PCList, eventdata, handles);
-    handles = guidata(hObject);
+    PCList_Callback = handles.PCList.Callback;
+    PCList_Callback(handles.PCList,handles);
+    handles = guidata(handles.PCGUI);
     UpdateGUIs(handles);
     UpdatePlot(handles);
     mainHandles = guidata(handles.MainGUI);
     RunButton_callback = mainHandles.RunButton.Callback;
     runButton = mainHandles.RunButton;
-    RunButton_callback(runButton,eventdata);
+    RunButton_callback(runButton,[]);
 end
+
+function addStrainMin(handles)
+
+function addManual(handles,PCSettings)
+count = sum(cell2mat(strfind(handles.Settings.PCList(:,6),PCSettings{6}))>0);
+if count
+    PCSettings{6} = [PCSettings{6} num2str(count)];
+end
+Settings = handles.Settings;
+%Add to PC List
+Settings.PCList(end+1,:) = [PCSettings {0}];
+set(handles.PCList,'String',Settings.PCList(:,6));
+handles.Settings = Settings;
+guidata(handles.PCGUI,handles);
+doAutoRun(handles);
+
+
+function addGrid(handles,PCSettings)
+PCData = PCSettings{7};
+Settings = handles.Settings;
+if isempty(PCData.CalibrationIndices)
+    warndlg('No Calibration Indices Selected. Calibration Aborted')
+else
+    PCData.xstar = PCSettings{1};
+    PCData.ystar = PCSettings{2};
+    PCData.zstar = PCSettings{3};
+    disp('Starting Grid Pattern Center Calibration...')
+    PCData = PCGrid(Settings,PCData);
+    
+    %Add to PC List
+    Settings.PCList(end+1,:) = {PCData.xstar PCData.ystar PCData.zstar...
+        'Grid' 'Naive' def_name PCData 0};
+    set(handles.PCList,'String',Settings.PCList(:,6));
+    handles.Settings = Settings;
+    guidata(handles.PCGUI,handles);
+end
+
+
+function addTiff(handles)
 
 % --- Executes on selection change in NewPCType.
 function NewPCType_Callback(hObject, eventdata, handles)
@@ -637,7 +700,7 @@ elseif get(handles.IPFPlot,'Value')
     end
     guidata(handles.PCGUI,handles);
 elseif get(handles.IQPlot,'Value')
-    PlotScan(handles.IQ_map,'Image Quality');
+    PlotScan(handles.IQ_map,'IQ');
     
     %Plot Calibration Points
     if ~emptylist && ismember(handles.Settings.PCList{cur,4},{'Strain Minimization','Grid'})

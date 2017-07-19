@@ -1,11 +1,7 @@
 function PCData = PCStrainMinimization(Settings,PlaneFit,Inds)
     if nargin < 3
         %Select Calibration Points
-        try
-            Inds = SelectCalibrationPoints([Settings.Nx,Settings.Ny],Settings.IQ,Settings.Angles);
-        catch ME
-            rethrow(ME)
-        end
+        Inds = SelectCalibrationPoints([Settings.Nx,Settings.Ny],Settings.IQ,Settings.Angles);
     end
     
     %Perform Strain Minimization PC Calibration

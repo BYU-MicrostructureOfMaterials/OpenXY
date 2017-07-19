@@ -25,5 +25,7 @@ switch PlotType
         colmap = parula(54);
         colmap = [repmat([1 0 0],6,1); flip(colmap)];
         colormap(gca,colmap)
+    otherwise
+        warning('''%s'' is not a recognized plot type',PlotType)
 end
 axis image

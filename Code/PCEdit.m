@@ -59,6 +59,8 @@ set(handles.PCType,'Enable','off');
 %Populate PlaneFit box
 set(handles.PlaneFit,'String',{'Naive','None'});
 
+handles.output = hObject;
+
 %Read Input
 input = varargin{1};
 handles.xstar = input{1};
@@ -77,12 +79,15 @@ if ~isempty(varargin{2})
 end
 
 %Read in image maps
-if length(varargin) > 2 && ~isempty(varargin{3})
+if ~isempty(varargin{3})
     handles.IQ_map = varargin{3}.IQ_map;
     handles.IPF_map = varargin{3}.IPF_map;
     set(handles.IPFPlot,'Value',1);
     guidata(handles.PCEdit,handles);
 end
+
+handles.PCGUI = varargin{4};
+handles.saveFunc = varargin{5};
 UpdatePC(handles);
 
 %Update GUI components
@@ -137,7 +142,7 @@ handles.fig = {};
 guidata(hObject, handles);
 
 % UIWAIT makes PCEdit wait for user response (see UIRESUME)
-uiwait(handles.PCEdit);
+% uiwait(handles.PCEdit);
 
 
 % --- Outputs from this function are returned to the command line.
@@ -148,13 +153,13 @@ function varargout = PCEdit_OutputFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Get default command line output from handles structure
-varargout{1} = {handles.xstar,...
-                handles.ystar,...
-                handles.zstar,...
-                GetPopupString(handles.PCType),GetPopupString(handles.PlaneFit)...
-                get(handles.NameEdit,'String'),handles.PCData};
-delete(handles.PCEdit);
-
+% varargout{1} = {handles.xstar,...
+%                 handles.ystar,...
+%                 handles.zstar,...
+%                 GetPopupString(handles.PCType),GetPopupString(handles.PlaneFit)...
+%                 get(handles.NameEdit,'String'),handles.PCData};
+% delete(handles.PCEdit);
+varargout{1} = handles.output;
 
 % --- Executes when user attempts to close PCEdit.
 function PCEdit_CloseRequestFcn(hObject, eventdata, handles)
@@ -163,6 +168,7 @@ function PCEdit_CloseRequestFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: delete(hObject) closes the figure
+%{
 if ishandle(handles.fig)
     close(handles.fig)
 end
@@ -171,12 +177,22 @@ if strcmp(get(hObject,'waitstatus'),'waiting')
 else
     delete(hObject);
 end
+%}
+PCGHandles = guidata(handles.PCGUI);
+if ~isempty(PCGHandles.PointSelectionGUI) && isvalid(PCGHandles.PointSelectionGUI)
+    delete(PCGHandles.PointSelectionGUI);
+end
+delete(hObject);
 
 % --- Executes on button press in DoneButton.
 function DoneButton_Callback(hObject, eventdata, handles)
 % hObject    handle to DoneButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+PCData = {handles.xstar,handles.ystar,handles.zstar,...
+    GetPopupString(handles.PCType),GetPopupString(handles.PlaneFit)...
+    get(handles.NameEdit,'String'),handles.PCData};
+handles.saveFunc(guidata(handles.PCGUI),PCData);
 PCEdit_CloseRequestFcn(handles.PCEdit, eventdata, handles);
 
 
@@ -420,7 +436,7 @@ axes(handles.StrainMinaxes)
 if get(handles.IPFPlot,'Value')
     PlotScan(handles.IPF_map,'IPF');
 elseif get(handles.IQPlot,'Value')
-    PlotScan(handles.IQ_map,'Image Quality');
+    PlotScan(handles.IQ_map,'IQ');
 end
 
 %Plot Calibration Points
@@ -460,6 +476,7 @@ function SelectPoints_Callback(hObject, eventdata, handles)
 % hObject    handle to SelectPoints (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+%{
 handles.PCData.CalibrationIndices...
     = SelectCalibrationPoints(handles.IQ_map,handles.IPF_map,...
     handles.PCData.CalibrationIndices);
@@ -468,7 +485,23 @@ set(handles.numpats,'String',numpats);
 handles.PCData.numpats = numpats;
 UpdatePlot(handles);
 guidata(handles.PCEdit,handles);
+%}
+PCGUIhandles = guidata(handles.PCGUI);
+saveFunc = @saveNewPoints;
+inds = handles.PCData.CalibrationIndices;
+if isempty(PCGUIhandles.PointSelectionGUI) || ~isvalid(PCGUIhandles.PointSelectionGUI)
+    PCGUIhandles.PointSelectionGUI = PointSelectionGUI(handles.PCGUI,'PCCalcPoints',saveFunc,inds);
+end
+guidata(handles.PCGUI,PCGUIhandles);
 
+function saveNewPoints(handles,calibrationInds)
+handles.PCData.CalibrationIndices...
+    = calibrationInds;
+numpats = length(handles.PCData.CalibrationIndices);
+set(handles.numpats,'String',numpats);
+handles.PCData.numpats = numpats;
+UpdatePlot(handles);
+guidata(handles.PCEdit,handles);
 
 
 function numpats_Callback(hObject, eventdata, handles)
@@ -586,10 +619,10 @@ function CancelButton_Callback(hObject, eventdata, handles)
 % hObject    handle to CancelButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.xstar = [];
-handles.ystar = [];
-handles.zstar = [];
-guidata(handles.PCEdit,handles);
+% handles.xstar = [];
+% handles.ystar = [];
+% handles.zstar = [];
+% guidata(handles.PCEdit,handles);
 PCEdit_CloseRequestFcn(handles.PCEdit, eventdata, handles);
 
 
