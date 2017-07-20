@@ -192,8 +192,8 @@ function DoneButton_Callback(hObject, eventdata, handles)
 PCData = {handles.xstar,handles.ystar,handles.zstar,...
     GetPopupString(handles.PCType),GetPopupString(handles.PlaneFit)...
     get(handles.NameEdit,'String'),handles.PCData};
-handles.saveFunc(guidata(handles.PCGUI),PCData);
 PCEdit_CloseRequestFcn(handles.PCEdit, eventdata, handles);
+handles.saveFunc(guidata(handles.PCGUI),PCData);
 
 
 function XStarEdit_Callback(hObject, eventdata, handles)

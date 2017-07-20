@@ -98,6 +98,14 @@ switch context
         handles.ClearPointsButton.Visible = 'On';
         handles.SaveFunc = varargin{2};
         handles.inds = varargin{3};
+    case 'StrainMin'
+        handles.PointSelectionGUI.Name = 'Edit Calibration Points';
+        handles.multiPoints = 2;
+        handles.SelectByIndPannel.Visible = 'Off';
+        handles.ClearPointsButton.Visible = 'On';
+        handles.SaveFunc = varargin{2};
+        handles.inds = [];
+        handles.PCSettings = varargin{3};
     otherwise
         error('PointSelectionGUI:ArgumentError',...
             '''%s'' is not a recognized context',context)
@@ -264,6 +272,7 @@ PointSelectionGUI_CloseRequestFcn(handles.PointSelectionGUI, eventdata, handles)
 function SaveClose_Callback(hObject, eventdata, handles)
 SaveFunc = handles.SaveFunc;
 parentHandles = guidata(handles.ParentGUI);
+PointSelectionGUI_CloseRequestFcn(handles.PointSelectionGUI, eventdata, handles)
 switch handles.context
     case 'SubScan'
         SaveFunc(parentHandles,handles.corners(:,1),handles.corners(:,2));
@@ -272,8 +281,9 @@ switch handles.context
     case 'PCCalcPoints'
         PCEditHandles = guidata(parentHandles.PCEditGUI);
         SaveFunc(PCEditHandles,handles.inds);
+    case 'StrainMin'
+        SaveFunc(parentHandles,handles.PCSettings,handles.inds)
 end
-PointSelectionGUI_CloseRequestFcn(handles.PointSelectionGUI, eventdata, handles)
 
 % --- Executes when selected object is changed in MapSelection.
 function MapSelection_SelectionChangedFcn(hObject, eventdata, handles)

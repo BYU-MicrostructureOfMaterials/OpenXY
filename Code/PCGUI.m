@@ -334,7 +334,12 @@ switch type
             Settings.ImageNamesList = ImportImageNamesList(Settings);
             handles = GenPlots(handles,Settings);
         end
-        
+        if isempty(handles.PCEditGUI) || ~isvalid(handles.PCEditGUI)
+            handles.PCEditGUI = PCEdit(...
+                [PCinit 'Strain Minimization' PlaneFit def_name {''}],...
+                handles.V,[],handles.PCGUI,@catchStrainMin);
+        end
+        %{
         PCSettings = PCEdit([PCinit 'Strain Minimization' PlaneFit def_name {''}],handles.V,[]);
         if ~isempty([PCSettings{1:3}])
             
@@ -347,6 +352,7 @@ switch type
             handles.Settings = Settings;
             guidata(handles.PCGUI,handles);
         end
+        %}
         
     case 'Manual'
         %Setup Initial Params
@@ -356,7 +362,9 @@ switch type
             def_name = [def_name num2str(count)];
         end
         if isempty(handles.PCEditGUI) || ~isvalid(handles.PCEditGUI)
-            handles.PCEditGUI = PCEdit([PCinit 'Manual' PlaneFit def_name {''}],handles.V,[],handles.PCGUI,@addManual);
+            handles.PCEditGUI = PCEdit(...
+                [PCinit 'Manual' PlaneFit def_name {''}]...
+                ,handles.V,[],handles.PCGUI,@addManual);
         end
         %{
         if ~isempty([PCSettings{1:3}])
@@ -466,7 +474,25 @@ if autoRun
     RunButton_callback(runButton,[]);
 end
 
-function addStrainMin(handles)
+function catchStrainMin(handles,PCSettings)
+h = PointSelectionGUI(handles.PCGUI,'StrainMin',@addStrainMin,PCSettings);
+handles.PointSelectionGUI = h;
+handles.PCEditGUI = h;
+guidata(handles.PCGUI,handles)
+
+function addStrainMin(handles,PCSettings,inds)
+Settings = handles.Settings;
+%Perform Strain Minimization
+disp('Starting Strain Minimization Pattern Center Calibration...')
+PCData = PCStrainMinimization(Settings,PCSettings{5},inds);
+%Add New PC to List
+Settings.PCList(end+1,:) = {PCData.MeanXStar PCData.MeanYStar PCData.MeanZStar  PCSettings{4:6} PCData 0};
+set(handles.PCList,'String',Settings.PCList(:,6));
+handles.Settings = Settings;
+guidata(handles.PCGUI,handles);
+UpdateGUIs(handles);
+doAutoRun(handles);
+
 
 function addManual(handles,PCSettings)
 count = sum(cell2mat(strfind(handles.Settings.PCList(:,6),PCSettings{6}))>0);
@@ -479,6 +505,7 @@ Settings.PCList(end+1,:) = [PCSettings {0}];
 set(handles.PCList,'String',Settings.PCList(:,6));
 handles.Settings = Settings;
 guidata(handles.PCGUI,handles);
+UpdateGUIs(handles);
 doAutoRun(handles);
 
 
@@ -501,6 +528,8 @@ else
     handles.Settings = Settings;
     guidata(handles.PCGUI,handles);
 end
+UpdateGUIs(handles);
+doAutoRun(handles);
 
 
 function addTiff(handles)
