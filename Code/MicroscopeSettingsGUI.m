@@ -372,7 +372,7 @@ if ~isempty(handles.MainGUI) && isvalid(handles.MainGUI)
         TestGeomHandles = guidata(MainHandles.TestGeomGUI);
         % Update Settings
         TestGeomHandles.Settings = handles.Settings;
-        guidata(TestGeomHandles.TestGeometryGUI,TestGeomHandles);
+        guidata(TestGeomHandles.PointSelectionGUI,TestGeomHandles);
         % Update Graphs
         PlotPatternFcn = get(TestGeomHandles.NumFam,'Callback');
         PlotPatternFcn(TestGeomHandles.NumFam,[]);

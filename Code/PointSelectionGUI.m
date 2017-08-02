@@ -740,7 +740,8 @@ elseif val > handles.Settings.ScanLength
     val = handles.Settings.ScanLength;
 end
 handles.ind = val;
-PlotPattern(handles);
+PlotPattern(handles);handles = guidata(hObject);
+plotPoints(handles);handles = guidata(hObject);
 guidata(hObject,handles);
 
 % --- Executes during object creation, after setting all properties.
