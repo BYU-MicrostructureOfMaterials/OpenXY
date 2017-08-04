@@ -86,6 +86,7 @@ if ~isempty(varargin{3})
     guidata(handles.PCEdit,handles);
 end
 
+%Set up comunication between GUIs
 handles.PCGUI = varargin{4};
 handles.saveFunc = varargin{5};
 UpdatePC(handles);

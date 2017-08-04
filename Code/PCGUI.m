@@ -569,74 +569,78 @@ if ~isempty(handles.Settings.PCList)
     else
         plots = [];
     end
-    EditedPC = PCEdit(handles.Settings.PCList(index,:),handles.V,plots);
-    if ~isempty([EditedPC{1:3}])
-        XStars = abs([handles.Settings.PCList{:,1}] - EditedPC{1}) < 1e-6;
-        YStars = abs([handles.Settings.PCList{:,2}] - EditedPC{2}) < 1e-6;
-        ZStars = abs([handles.Settings.PCList{:,3}] - EditedPC{3}) < 1e-6;
-        
-        %Check for unique names
-        match = strcmp(EditedPC{6},handles.Settings.PCList(~index,6));
-        if any(match)
-            warndlg({'Name already exists. Names must be unique.';'Aborting edits'})
-            return
-        end
+    handles.PCEditGUI = PCEdit(handles.Settings.PCList(index,:),handles.V,plots,...
+        handles.PCGUI,@placeholder);
+end
 
-        %Edit or Add
-        GridEdit = false;
-        SREdit = false;
-        if ~any(XStars&YStars&ZStars) %Manually Edited PC
-            %EditedPC{4} = 'Manual';
-        end
-        
-
-        %Check for changes requiring recalibration
-        if strcmp(EditedPC{4},'Strain Minimization')
-            if isfield(EditedPC{7},'CalibrationIndices')
-                if length(EditedPC{7}.CalibrationIndices) ~= length(handles.Settings.PCList{index,7}.CalibrationIndices)
-                    SREdit = true;
-                elseif ~all(EditedPC{7}.CalibrationIndices == handles.Settings.PCList{index,7}.CalibrationIndices) %Calibration Points changed
-                    SREdit = true;
-                end
-            end
-        end
-        if strcmp(EditedPC{4},'Grid')
-            if EditedPC{7}.numpc ~= handles.Settings.PCList{index,7}.numpc || ...
-                    EditedPC{7}.numpats ~= handles.Settings.PCList{index,7}.numpats || ...
-                    EditedPC{7}.deltapc ~= handles.Settings.PCList{index,7}.deltapc
-                GridEdit = true;
-            end
-            if isfield(EditedPC{7},'CalibrationIndices') && EditedPC{7}.numpats == handles.Settings.PCList{index,7}.numpats && ~all(EditedPC{7}.CalibrationIndices == handles.Settings.PCList{index,7}.CalibrationIndices)
-                GridEdit = true;
-            end
-        end
-
-        %Re-perform Calibrations, if necessary
-        if SREdit
-            sel = questdlg('Edits require a new calibration. Continue?','PC Edit','Yes','No','Yes');
-            if strcmp(sel,'Yes')
-                PCData = PCStrainMinimization(handles.Settings,EditedPC{5},EditedPC{7}.CalibrationIndices);
-                EditedPC = {PCData.MeanXStar PCData.MeanYStar PCData.MeanZStar  EditedPC{4:6} PCData};
-                set(handles.PCList,'String',handles.Settings.PCList(:,6));
-            end
-        end
-        if GridEdit
-            sel = questdlg('Edits require a new calibration. Continue?','Yes','No','Yes');
-            if strcmp(sel,'Yes')
-                PCData = PCGrid(handles.Settings,EditedPC{7});
-                EditedPC = {PCData.xstar PCData.ystar PCData.zstar...
-                    'Grid' 'Naive' EditedPC{6} PCData};
-            end
-        end
-        
-        handles.Settings.PCList(index,1:end-1) = EditedPC;
-        set(handles.PCList,'String',handles.Settings.PCList(:,6));
-        
-        guidata(handles.PCGUI,handles);
-        PCList_Callback(handles.PCList, eventdata, handles);
-        handles = guidata(handles.PCGUI);
-        guidata(handles.PCGUI,handles);
+function placeholder(handles,EditedPC)
+if ~isempty([EditedPC{1:3}])
+    index = GetListIndex(handles);
+    XStars = abs([handles.Settings.PCList{:,1}] - EditedPC{1}) < 1e-6;
+    YStars = abs([handles.Settings.PCList{:,2}] - EditedPC{2}) < 1e-6;
+    ZStars = abs([handles.Settings.PCList{:,3}] - EditedPC{3}) < 1e-6;
+    
+    %Check for unique names
+    match = strcmp(EditedPC{6},handles.Settings.PCList(~index,6));
+    if any(match)
+        warndlg({'Name already exists. Names must be unique.';'Aborting edits'})
+        return
     end
+    
+    %Edit or Add
+    GridEdit = false;
+    SREdit = false;
+    if ~any(XStars&YStars&ZStars) %Manually Edited PC
+        %EditedPC{4} = 'Manual';
+    end
+    
+    
+    %Check for changes requiring recalibration
+    if strcmp(EditedPC{4},'Strain Minimization')
+        if isfield(EditedPC{7},'CalibrationIndices')
+            if length(EditedPC{7}.CalibrationIndices) ~= length(handles.Settings.PCList{index,7}.CalibrationIndices)
+                SREdit = true;
+            elseif ~all(EditedPC{7}.CalibrationIndices == handles.Settings.PCList{index,7}.CalibrationIndices) %Calibration Points changed
+                SREdit = true;
+            end
+        end
+    end
+    if strcmp(EditedPC{4},'Grid')
+        if EditedPC{7}.numpc ~= handles.Settings.PCList{index,7}.numpc || ...
+                EditedPC{7}.numpats ~= handles.Settings.PCList{index,7}.numpats || ...
+                EditedPC{7}.deltapc ~= handles.Settings.PCList{index,7}.deltapc
+            GridEdit = true;
+        end
+        if isfield(EditedPC{7},'CalibrationIndices') && EditedPC{7}.numpats == handles.Settings.PCList{index,7}.numpats && ~all(EditedPC{7}.CalibrationIndices == handles.Settings.PCList{index,7}.CalibrationIndices)
+            GridEdit = true;
+        end
+    end
+    
+    %Re-perform Calibrations, if necessary
+    if SREdit
+        sel = questdlg('Edits require a new calibration. Continue?','PC Edit','Yes','No','Yes');
+        if strcmp(sel,'Yes')
+            PCData = PCStrainMinimization(handles.Settings,EditedPC{5},EditedPC{7}.CalibrationIndices);
+            EditedPC = {PCData.MeanXStar PCData.MeanYStar PCData.MeanZStar  EditedPC{4:6} PCData};
+            set(handles.PCList,'String',handles.Settings.PCList(:,6));
+        end
+    end
+    if GridEdit
+        sel = questdlg('Edits require a new calibration. Continue?','Yes','No','Yes');
+        if strcmp(sel,'Yes')
+            PCData = PCGrid(handles.Settings,EditedPC{7});
+            EditedPC = {PCData.xstar PCData.ystar PCData.zstar...
+                'Grid' 'Naive' EditedPC{6} PCData};
+        end
+    end
+    
+    handles.Settings.PCList(index,1:end-1) = EditedPC;
+    set(handles.PCList,'String',handles.Settings.PCList(:,6));
+    
+    guidata(handles.PCGUI,handles);
+    PCList_Callback(handles.PCList, [], handles);
+    handles = guidata(handles.PCGUI);
+    guidata(handles.PCGUI,handles);
 end
 
 
