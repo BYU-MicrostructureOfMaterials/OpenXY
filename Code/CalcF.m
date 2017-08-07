@@ -209,10 +209,10 @@ for i=1:length(roixc)
          tx=(xstar-Settings.XStar(RefInd))*Settings.PixelSize; % vector on phosphor between PC of ref and PC of measured; uses notation from PCsensitivity paper
          ty=(ystar-Settings.YStar(RefInd))*Settings.PixelSize;
 %          tantheta=atan2(sqrt((cc-Settings.YStar(Settings.RefImageInd))^2+(rc-Settings.XStar(Settings.RefImageInd))^2),Settings.ZStar(Settings.RefImageInd));
-         spminussx=(zstar-Settings.ZStar(RefInd))*(rc-Settings.XStar(RefInd)*Settings.PixelSize)/Settings.ZStar(RefInd); % difference of vectors from PC to ROI center for ref and scan pattern
-         spminussy=(zstar-Settings.ZStar(RefInd))*(cc-Settings.YStar(RefInd)*Settings.PixelSize)/Settings.ZStar(RefInd);
+         spminussx=(zstar-Settings.ZStar(RefInd))*(cc-Settings.XStar(RefInd)*Settings.PixelSize)/Settings.ZStar(RefInd); % difference of vectors from PC to ROI center for ref and scan pattern
+         spminussy=(zstar-Settings.ZStar(RefInd))*(rc-Settings.YStar(RefInd)*Settings.PixelSize)/Settings.ZStar(RefInd);
          dxshift=dxshift-tx-spminussx; % corrected ROI shift taking into account PC shift
-         dyshift=dyshift-ty-spminussy; %****NOT SURE ABOUT SIGN ON THIS
+         dyshift=dyshift-ty-spminussy; %****NOT SURE ABOUT SIGN ON THIS        
     end
 %     [xshift0,yshift0] = Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,cc,rc,Fo,Settings.PixelSize,alpha);%this is the screen shift in the g (hough) frame *****not used***
     
