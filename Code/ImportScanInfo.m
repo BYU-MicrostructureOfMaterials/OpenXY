@@ -61,7 +61,6 @@ if ~strcmp(ext,'.h5')
                     if strcmp(choice,ScanP)
                         Nx = NumColsOdd;
                         Ny = NumRows;
-                        set(ScanSizeText,'String',ScanP);
                     else
                         Settings.ScanParams.OriginalSize = [NumColsOdd, NumRows];
                         Settings.ScanParams.NumColsOdd = Nx;
