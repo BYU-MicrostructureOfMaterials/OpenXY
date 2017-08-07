@@ -6,7 +6,7 @@ function Settings = GetHROIMDefaultSettings()
 %through the advanced settings button.
 %Edit values within the file to make them the default for local copies of
 %the code.
-
+Settings = OXY;
 %% Main GUI
 NumberOfCores = feature('numCores');
 %MainGUI Settings
@@ -32,7 +32,7 @@ Settings.ImageFilter = [9 90 0 0];
 
 %% Advanced Settings
 %HROIM Settings
-Settings.DoStrain = 1;
+Settings.DoStrain = true;
 Settings.HROIMMethod = 'Real'; %{'Simulated', 'Real'}, %Someday will add Hybrid
 Settings.IterationLimit = 6;
 Settings.RefImageInd = 0;
@@ -52,7 +52,7 @@ Settings.DDSMethod = 'Nye-Kroner'; %{'Nye-Kroner','Nye-Kroner (Pantleon)','Disto
 %Kernel Average Misorientation
 Settings.KernelAvgMisoPath = '';
 %Calculation Options
-Settings.EnableProfiler = 0;
+Settings.EnableProfiler = false;
 
 %% PC Calibration
 Settings.PlaneFit = 'Naive';
@@ -69,8 +69,8 @@ Settings.mperpix = 25;
 Settings.HREBSDPrep = false; % Flag if HREBSD Prep has been run
 
 %% Old Variables
-Settings.DoUsePCFile = 0;
-Settings.PCFilePath = [];
+Settings.DoUsePCFile = false;
+Settings.PCFilePath = '';
 %Options are: {'Real Sample','Real Crystal','Collin Sample','Collin Crystal'}; 
 Settings.FCalcMethod = 'Collin Crystal';
 

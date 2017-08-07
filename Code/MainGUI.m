@@ -126,9 +126,9 @@ tb = ver;
 if ~any(strcmp({tb.Name},'Image Processing Toolbox'))
     w = warndlg({'Image Processing Toolbox not installed.','Mutual Information won''t be calculated'});
     uiwait(w,5);
-    handles.Settings.CalcMI = 0;
+    handles.Settings.CalcMI = false;
 else
-    handles.Settings.CalcMI = 1;
+    handles.Settings.CalcMI = true;
 end
 
 if ~any(strcmp({tb.Name},'Parallel Computing Toolbox')) && Settings.DoParallel > 1
@@ -562,7 +562,7 @@ function DisplayShiftsBox_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of DisplayShiftsBox
-handles.Settings.DoShowPlot = get(hObject,'Value');
+handles.Settings.DoShowPlot = logical(get(hObject,'Value'));
 guidata(hObject, handles);
 
 
