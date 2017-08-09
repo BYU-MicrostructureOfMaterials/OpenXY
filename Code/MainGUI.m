@@ -55,7 +55,7 @@ function MainGUI_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.output = hObject;
 
 %Load in Settings
-handles.Settings = GetHROIMDefaultSettings();
+handles.Settings = OXY;% GetHROIMDefaultSettings();
 
 %Loads saved Settings data into GUI
 handles.Fast = false;

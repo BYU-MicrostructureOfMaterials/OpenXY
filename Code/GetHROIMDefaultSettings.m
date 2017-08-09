@@ -6,7 +6,7 @@ function Settings = GetHROIMDefaultSettings()
 %through the advanced settings button.
 %Edit values within the file to make them the default for local copies of
 %the code.
-Settings = OXY;
+
 %% Main GUI
 NumberOfCores = feature('numCores');
 %MainGUI Settings
