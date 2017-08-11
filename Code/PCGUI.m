@@ -231,8 +231,8 @@ if ~isempty(handles.Settings.PCList)
             if strcmp(handles.Settings.PCList{index,5},'Naive')
                 handles.Settings.XStar = xstar - handles.Settings.XData/handles.Settings.PhosphorSize;
                 detector_angle = pi/2 - handles.Settings.SampleTilt + handles.Settings.CameraElevation;
-                handles.Settings.YStar = ystar + handles.Settings.YData/handles.Settings.PhosphorSize*sin(detector_angle);
-                handles.Settings.ZStar = zstar + handles.Settings.YData/handles.Settings.PhosphorSize*cos(detector_angle);
+                handles.Settings.YStar = ystar + handles.Settings.YData/handles.Settings.PhosphorSize*cos(detector_angle);
+                handles.Settings.ZStar = zstar + handles.Settings.YData/handles.Settings.PhosphorSize*sin(detector_angle);
             else
                 handles.Settings.XStar(:) = xstar;
                 handles.Settings.YStar(:) = ystar;

@@ -70,8 +70,8 @@ parfor i=1:npoints
     else
         if strcmp(Settings.PlaneFit,'Naive')
             xstar = ScanParams.xstar-Settings.XData(Ind)/Settings.PhosphorSize;
-            ystar = ScanParams.ystar+Settings.YData(Ind)/Settings.PhosphorSize*sin(pi/2 - Settings.SampleTilt + Settings.CameraElevation);
-            zstar = ScanParams.zstar+Settings.YData(Ind)/Settings.PhosphorSize*cos(pi/2 - Settings.SampleTilt+Settings.CameraElevation);
+            ystar = ScanParams.ystar+Settings.YData(Ind)/Settings.PhosphorSize*cos(pi/2 - Settings.SampleTilt + Settings.CameraElevation);
+            zstar = ScanParams.zstar+Settings.YData(Ind)/Settings.PhosphorSize*sin(pi/2 - Settings.SampleTilt+Settings.CameraElevation);
         else
             xstar = ScanParams.xstar;
             ystar = ScanParams.ystar;

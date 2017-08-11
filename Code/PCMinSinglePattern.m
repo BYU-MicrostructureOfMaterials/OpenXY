@@ -11,8 +11,8 @@ if isfield(Settings,'XStar')
 else
     if strcmp(Settings.PlaneFit,'Naive')
         xstar = ScanParams.xstar-Settings.XData(Ind)/Settings.PhosphorSize;
-        ystar = ScanParams.ystar+Settings.YData(Ind)/Settings.PhosphorSize*sin(Settings.SampleTilt-Settings.CameraElevation);
-        zstar = ScanParams.zstar+Settings.YData(Ind)/Settings.PhosphorSize*cos(Settings.SampleTilt-Settings.CameraElevation);
+        ystar = ScanParams.ystar+Settings.YData(Ind)/Settings.PhosphorSize*cos(Settings.SampleTilt-Settings.CameraElevation);
+        zstar = ScanParams.zstar+Settings.YData(Ind)/Settings.PhosphorSize*sin(Settings.SampleTilt-Settings.CameraElevation);
     else
         xstar = ScanParams.xstar;
         ystar = ScanParams.ystar;
