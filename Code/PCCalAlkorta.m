@@ -1,5 +1,6 @@
 function PCData = PCCalAlkorta(Settings,PlaneFit,Inds)
 
+%% Boring initiation stuff
 if nargin < 3
     %Select Calibration Points
     try
@@ -9,8 +10,6 @@ if nargin < 3
         rethrow(ME)
     end
 end
-
-Settings.DoShowPlot = true;
 
 %Perform Strain Minimization PC Calibration
 npoints = length(Inds);
@@ -24,29 +23,31 @@ elevang = Settings.CameraElevation;
 
 pixsize = Settings.PixelSize;
 
-iterCalcF = 12;
+iterCalcF = 4;
 
 
 
 Settings.SampleTilt
 Settings.CameraElevation
 
+%I commented out the parallel code because it's a pain to get plots when
+%you run in parallel.
 
-NumCores = min(Settings.DoParallel, npoints);
-try
-    ppool = gcp('nocreate');
-    if isempty(ppool)
-        parpool(NumCores);
-    end
-catch
-    ppool = matlabpool('size');%#ok
-    if ~ppool
-        matlabpool('local',NumCores);%#ok 
-    end
-end
-M = NumCores;
-pctRunOnAll javaaddpath('java')
-ppm = ParforProgMon( 'Point Calibration ', npoints,1,400,50 );
+% NumCores = min(Settings.DoParallel, npoints);
+% try
+%     ppool = gcp('nocreate');
+%     if isempty(ppool)
+%         parpool(NumCores);
+%     end
+% catch
+%     ppool = matlabpool('size');
+%     if ~ppool
+%         matlabpool('local',NumCores); 
+%     end
+% end
+% M = NumCores;
+% pctRunOnAll javaaddpath('java')
+% ppm = ParforProgMon( 'Point Calibration ', npoints,1,400,50 );
 
 if size(Settings.ImageNamesList,1)>1
     ImagePath = Settings.ImageNamesList{1};
@@ -60,6 +61,13 @@ end
 Settings.roixc = roixc;
 Settings.roiyc = roiyc;
 
+ScanParams = Settings.ScanParams;
+
+% Material = ReadMaterial(Settings.Phase{1});
+% paramspat={.5;.5;.7;pixsize;Av;sampletilt;elevang;Material.Fhkl;Material.dhkl;Material.hkl};
+
+
+
 %Single Processor Calculation
 for i=1:npoints
     
@@ -71,23 +79,28 @@ for i=1:npoints
         zstar = Settings.ZStar(Ind);
     else
         if strcmp(Settings.PlaneFit,'Naive')
-            xstar = Settings.ScanParams.xstar-Settings.XData(Ind)/Settings.PhosphorSize;
-            ystar = Settings.ScanParams.ystar+Settings.YData(Ind)/Settings.PhosphorSize*sin(pi/2 - Settings.SampleTilt + Settings.CameraElevation);
-            zstar = Settings.ScanParams.zstar+Settings.YData(Ind)/Settings.PhosphorSize*cos(pi/2 - Settings.SampleTilt+Settings.CameraElevation);
+            xstar = ScanParams.xstar-Settings.XData(Ind)/Settings.PhosphorSize;
+            ystar = ScanParams.ystar+Settings.YData(Ind)/Settings.PhosphorSize*cos(pi/2 - Settings.SampleTilt + Settings.CameraElevation);
+            zstar = ScanParams.zstar+Settings.YData(Ind)/Settings.PhosphorSize*sin(pi/2 - Settings.SampleTilt + Settings.CameraElevation);
         else
-            xstar = Settings.ScanParams.xstar;
-            ystar = Settings.ScanParams.ystar;
-            zstar = Settings.ScanParams.zstar;
+            xstar = ScanParams.xstar;
+            ystar = ScanParams.ystar;
+            zstar = ScanParams.zstar;
         end
     end
 
 %     xstar = .5;
 %     ystar = .5;
 %     zstar = .7;
-    
+%     xstar = ScanParams.xstar-Settings.XData(Ind)/Settings.PhosphorSize;
+%     ystar = ScanParams.ystar+Settings.YData(Ind)/Settings.PhosphorSize*cos(pi/2 - Settings.SampleTilt + Settings.CameraElevation);
+%     zstar = ScanParams.zstar+Settings.YData(Ind)/Settings.PhosphorSize*sin(pi/2 - Settings.SampleTilt + Settings.CameraElevation);
+            
     xs = zeros(iterCalcF+1,1);
     ys = xs;
     zs = xs;
+    bbb = zeros(3,3,iterCalcF);
+    bn = zeros(iterCalcF,1);
     
     xs(1) = xstar;
     ys(1) = ystar;
@@ -103,14 +116,23 @@ for i=1:npoints
     end
 
 
-%     gr = euler2gmat(Settings.Angles(Ind,1),Settings.Angles(Ind,2),Settings.Angles(Ind,3));
+    gr = euler2gmat(Settings.Angles(Ind,1),Settings.Angles(Ind,2),Settings.Angles(Ind,3))
 
-    useeuler = 0;
+    xactual = .5-Settings.XData(Ind)/Settings.PhosphorSize;
+    yactual = .5+Settings.YData(Ind)/Settings.PhosphorSize*cos(pi/2 - Settings.SampleTilt + Settings.CameraElevation);
+    zactual = .7+Settings.YData(Ind)/Settings.PhosphorSize*sin(pi/2 - Settings.SampleTilt + Settings.CameraElevation);
 
     for j=1:iterCalcF
-        gr = euler2gmat(Settings.Angles(Ind,1),Settings.Angles(Ind,2),Settings.Angles(Ind,3));
+%         gr = euler2gmat(Settings.Angles(Ind,1),Settings.Angles(Ind,2),Settings.Angles(Ind,3));
         paramspat={xstar;ystar;zstar;pixsize;Av;sampletilt;elevang;Material.Fhkl;Material.dhkl;Material.hkl};
+%         paramspat{1} = xstar;
+%         paramspat{2} = ystar;
+%         paramspat{3} = zstar;
+%         paramspat{8} = Material.Fhkl;
+%         paramspat{9} = Material.dhkl;
+%         paramspat{10} = Material.hkl;
 
+        useeuler = 0;
         if isfield(Settings,'camphi1')
             useeuler = 1;
             paramspat{11} = Settings.camphi1;
@@ -124,7 +146,6 @@ for i=1:npoints
 
         %Initialize
         clear global rs cs Gs
-%         Settings.DoShowPlot = false;
         [F1,SSE1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),Ind,Settings,Settings.Phase{Ind},0);
 
         %%%%New stuff to remove rotation error from strain measurement DTF  7/14/14
@@ -138,10 +159,10 @@ for i=1:npoints
             clear global rs cs Gs
             [F1,SSE1,XX,sigma] = CalcF(RefImage,ScanImage,gr,eye(3),Ind,Settings,Settings.Phase{Ind},0);
         end
-        %%%%%
+        %%%%
+        
+        %%%%% Improved convergence routine should replace this loop:
 
-        %Improved convergence routine should replace this loop:
-%         Settings.DoShowPlot = true;
         for ii = 1:Settings.IterationLimit
 %             if SSE1 > 25 % need to make this a variable in the AdvancedSettings GUI
 %                 if ii == 1
@@ -168,6 +189,8 @@ for i=1:npoints
         end
         [r u]=poldec(F1);
         
+        misg = r - eye(3);
+        
 
         if ~useeuler
             alpha = pi/2 - sampletilt + elevang;
@@ -176,80 +199,83 @@ for i=1:npoints
                 -1     0            0;...
                 0   sin(alpha) -cos(alpha)];
         else
-            Qmp = euler2gmat(camphi1,camPHI,camphi2);
+            Qmp = euler2gmat(Settings.camphi1,Settings.camPHI,Settings.camphi2);
             Qmi = [0 -1 0;1 0 0;0 0 1];
             Qio = [cos(sampletilt) 0 -sin(sampletilt);0 1 0;sin(sampletilt) 0 cos(sampletilt)];
             Qpo = Qio*Qmi*Qmp'*[-1 0 0;0 1 0;0 0 -1];
+            Qps = Qpo;
         end
 
-        beta = ((Qps'*gr'*F1*gr*Qps) - eye(3));
+        beta = ((Qps'*gr'*F1*gr*Qps) - eye(3))
         
-%         xstar = xstar - beta(1,3)*zstar;
+        d1 = xstar - xactual;
+        d2 = -(ystar - yactual);
+        d3 = -(zstar - zactual);
+        betatheoretical = [d3/3 0 -d1;0 d3/3 -d2;0 0 -2*d3/3]./(zstar + 2*d3/3)
+
+
+%% This block of code for Alkorta
+        
+%         xstar = xstar + beta(1,3)*zstar;
 %         ystar = ystar - beta(2,3)*zstar;
-%         zstar = zstar - 2*beta(3,3)*zstar/3;
+%         zstar = zstar - 3*beta(3,3)*zstar/2;
+
+%% This block of code for mine
+
         zstarnew = zstar*(1 - beta(3,3)/2)/(1 + beta(3,3));
-        xstarnew = xstar + beta(1,3)*(zstarnew + 2*zstar)/3;
-        ystarnew = ystar - beta(2,3)*(zstarnew + 2*zstar)/3;
+        xstarnew = xstar + beta(1,3)*(2*zstarnew + zstar)/3;
+        ystarnew = ystar - beta(2,3)*(2*zstarnew + zstar)/3;
         
         xstar = xstarnew;
         ystar = ystarnew;
         zstar = zstarnew;
-%         fprintf(2,'Pattern %d did not converge!\n',i)
+        
+%% End 
         
         xs(j+1) = xstar;
         ys(j+1) = ystar;
         zs(j+1) = zstar;
         
+        bbb(:,:,j) = beta;
+        bn(j) = norm(beta);
         
 %         gr = r'*gr;
     end
     
     
-%     xactual = .5-Settings.XData(Ind)/Settings.PhosphorSize;
-%     yactual = .5+Settings.YData(Ind)/Settings.PhosphorSize*sin(pi/2 - Settings.SampleTilt + Settings.CameraElevation);
-%     zactual = .7+Settings.YData(Ind)/Settings.PhosphorSize*cos(pi/2 - Settings.SampleTilt+Settings.CameraElevation);
-%     figure; plot(xs)
-%     hold on; plot(xactual*ones(size(xs)),'r')
-%     figure; plot(ys)
-%     hold on; plot(yactual*ones(size(xs)),'r')
-%     figure; plot(zs)
-%     hold on; plot(zactual*ones(size(xs)),'r')
+    
+    figure(3*i-2); plot(xs)
+    hold on; plot(xactual*ones(size(xs)),'r')
+    figure(3*i-1); plot(ys)
+    hold on; plot(yactual*ones(size(xs)),'r')
+    figure(3*i); plot(zs)
+    hold on; plot(zactual*ones(size(xs)),'r')
+    figure(4)
+    plot(bn)
+    
     
     drawnow
     
-%     Ind
-%     [Settings.XData(Ind) Settings.YData(Ind)]
-%     [xactual yactual zactual]
-    if SSE1 < 1
-        PCref = [xstar ystar zstar]
-        disp(['Point: ' num2str(i)])
-    else
-        PCref = [nan nan nan]
-        fprintf(2,'Point %d did not converge!\n',i)
-    end
+    Ind
+    [Settings.XData(Ind) Settings.YData(Ind)]
+    [xactual yactual zactual]
+
+    PCref = [xstar ystar zstar]
+    disp(['Point: ' num2str(i)])
     CalibrationPointsPC(i,:) = PCref';
+    
+%     ppm.increment();
 
-    ppm.increment();
 end
-keyboard
-ppm.delete();
+% ppm.delete();
 
-keyboard
 
-%Filter outliers
-meanPC = mean(CalibrationPointsPC);
-stdDevPC = std(CalibrationPointsPC);
-badPCPoints = any(CalibrationPointsPC > meanPC + stdDevPC |...
-    CalibrationPointsPC < meanPC - stdDevPC,2);
-npoints = npoints - sum(badPCPoints);
-CalibrationPointsPC = CalibrationPointsPC(~badPCPoints,:);
-Inds = Inds(~badPCPoints);
 
 %Calculate Mean Pattern Center
 if strcmp(PlaneFit,'Naive')
     PCData.MeanXStar = mean(CalibrationPointsPC(:,1)+(Settings.XData(Inds))/Settings.PhosphorSize);
-    PCData.MeanYStar = mean(CalibrationPointsPC(:,2)-(Settings.YData(Inds))/Settings.PhosphorSize*sin(Settings.SampleTilt-Settings.CameraElevation));
-    PCData.MeanZStar = mean(CalibrationPointsPC(:,3)-(Settings.YData(Inds))/Settings.PhosphorSize*cos(Settings.SampleTilt-Settings.CameraElevation));
+    PCData.MeanYStar = mean(CalibrationPointsPC(:,2)-(Settings.YData(Inds))/Settings.PhosphorSize*cos(pi/2 - Settings.SampleTilt + Settings.CameraElevation));
+    PCData.MeanZStar = mean(CalibrationPointsPC(:,3)-(Settings.YData(Inds))/Settings.PhosphorSize*sin(pi/2 - Settings.SampleTilt + Settings.CameraElevation));
 else
     PCData.MeanXStar = mean(CalibrationPointsPC(:,1));
     PCData.MeanYStar = mean(CalibrationPointsPC(:,2));
