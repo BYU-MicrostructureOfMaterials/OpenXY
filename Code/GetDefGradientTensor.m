@@ -247,7 +247,7 @@ switch Settings.HROIMMethod
         clear global rs cs Gs
 %         disp(RefImagePath);
         gr = euler2gmat(Settings.Angles(RefImageInd,:));
-        [F1,SSE1,XX,sigma] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,RefImageInd);
+        [F1,SSE1,XX,sigma] = CalcFShift(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,RefImageInd);
         
     case 'Hybrid'
         %Use simulated pattern method on one reference image then use
@@ -269,11 +269,11 @@ if DoLGrid
     
     % evaluate point a using b as the reference
     clear global rs cs Gs
-    [F.a SSE.a] = CalcF(ScanImage,LegAImage,gr,eye(3),ImageInd,Settings,curMaterial,ImageInd); %note - sending in index of scan point for now - no PC correction!!!
+    [F.a SSE.a] = CalcFRuggles(ScanImage,LegAImage,gr,eye(3),ImageInd,Settings,curMaterial,ImageInd); %note - sending in index of scan point for now - no PC correction!!!
     
     % evaluate point c using b as the refrerence
     clear global rs cs Gs
-    [F.c SSE.c] = CalcF(ScanImage,LegCImage,gr,eye(3),ImageInd,Settings,curMaterial,ImageInd);%note - sending in index of scan point for now - no PC correction!!!
+    [F.c SSE.c] = CalcFRuggles(ScanImage,LegCImage,gr,eye(3),ImageInd,Settings,curMaterial,ImageInd);%note - sending in index of scan point for now - no PC correction!!!
     
     Settings.FCalcMethod = KeepFCalcMethod;
     

@@ -223,14 +223,14 @@ if ~isempty(handles.Settings.PCList)
     type = handles.Settings.PCList{index,4};
 
     if ~handles.Fast
-        if strcmp(type,'Tiff')
+        if strcmp(type,'Tiff')||strcmp(type,'Alkorta')
             handles.Settings.XStar = handles.Settings.PCList{index,7}.XStar;
             handles.Settings.YStar = handles.Settings.PCList{index,7}.YStar;
             handles.Settings.ZStar = handles.Settings.PCList{index,7}.ZStar;
         else
             if strcmp(handles.Settings.PCList{index,5},'Naive')
                 handles.Settings.XStar = xstar - handles.Settings.XData/handles.Settings.PhosphorSize;
-                detector_angle = handles.Settings.SampleTilt-handles.Settings.CameraElevation;
+                detector_angle = pi/2 - handles.Settings.SampleTilt + handles.Settings.CameraElevation;
                 handles.Settings.YStar = ystar + handles.Settings.YData/handles.Settings.PhosphorSize*sin(detector_angle);
                 handles.Settings.ZStar = zstar + handles.Settings.YData/handles.Settings.PhosphorSize*cos(detector_angle);
             else
@@ -329,13 +329,11 @@ if strcmp(type,'Strain Minimization')
         
         %Perform Strain Minimization
         disp('Starting Strain Minimization Pattern Center Calibration...')
-        try
-            PCData = PCStrainMinimization(Settings,PCSettings{5});
-        catch
-            return;
-        end
+        PCData = PCCalAlkorta(Settings,PCSettings{5});
         %Add New PC to List
-        Settings.PCList(end+1,:) = {PCData.MeanXStar PCData.MeanYStar PCData.MeanZStar  PCSettings{4:6} PCData 0};
+%         Settings.PCList(end+1,:) = {PCData.MeanXStar PCData.MeanYStar PCData.MeanZStar  PCSettings{4:6} PCData 0};
+        Settings.PCList(end+1,:) = {PCData.XStar(1) PCData.YStar(1) PCData.ZStar(1)...
+            'Alkorta' 'None' def_name PCData 0};
         set(handles.PCList,'String',Settings.PCList(:,6));
         handles.Settings = Settings;
         guidata(handles.PCGUI,handles);
