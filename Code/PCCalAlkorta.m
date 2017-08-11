@@ -25,7 +25,7 @@ pixsize = Settings.PixelSize;
 
 iterCalcF = 4;
 
-
+doShowPlots = false;
 
 Settings.SampleTilt
 Settings.CameraElevation
@@ -243,19 +243,19 @@ for i=1:npoints
     end
     
     
-    
-    figure(3*i-2); plot(xs)
-    hold on; plot(xactual*ones(size(xs)),'r')
-    figure(3*i-1); plot(ys)
-    hold on; plot(yactual*ones(size(xs)),'r')
-    figure(3*i); plot(zs)
-    hold on; plot(zactual*ones(size(xs)),'r')
-    figure(4)
-    plot(bn)
-    
-    
-    drawnow
-    
+    if doShowPlot
+        figure(3*i-2); plot(xs)
+        hold on; plot(xactual*ones(size(xs)),'r')
+        figure(3*i-1); plot(ys)
+        hold on; plot(yactual*ones(size(xs)),'r')
+        figure(3*i); plot(zs)
+        hold on; plot(zactual*ones(size(xs)),'r')
+        figure(4)
+        plot(bn)
+        
+        
+        drawnow
+    end
     Ind
     [Settings.XData(Ind) Settings.YData(Ind)]
     [xactual yactual zactual]
@@ -306,5 +306,10 @@ PCData.ZStar = coeffs(7)*Settings.XData+coeffs(8)*Settings.YData+coeffs(9);
 
 
 
+C = [coeffs(1) coeffs(2);coeffs(4) coeffs(5);coeffs(7) coeffs(8)];
+S = C*Settings.mperpix*Settings.PixelSize;
+PCData.xmapphos = S*[1;0];
+PCData.ymapphos = S*[0;1];
+PCData.normalvecphos = cross(xmapphos/norm(xmapphos),ymapphos/norm(ymapphos));
 % CalibrationPointsPC
 % Inds
