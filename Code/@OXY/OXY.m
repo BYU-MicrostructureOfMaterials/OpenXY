@@ -33,15 +33,6 @@ classdef OXY < matlab.mixin.Copyable
         
         %If true, will display GUI elements during computations
         DisplayGUI@logical = true
-        
-        
-        ROISizePercent@double scalar = 25
-        ROISize@double scalar
-        NumROIs@double scalar = 48
-        ROIStyle@char = 'Grid'
-        ROIFilter@double vector = [2 50 1 1]
-        ImageFilterType@char = 'standard'
-        ImageFilter@double vector = [9 90 0 0]
               
         DoStrain@logical = true
         HROIMMethod@char = 'Real'
@@ -74,13 +65,6 @@ classdef OXY < matlab.mixin.Copyable
         YStar@double vector
         ZStar@double vector
                 
-        AccelVoltage@double scalar = 20
-        SampleTilt@double scalar = 70*pi/180
-        SampleAzimuthal@double scalar = 0
-        CameraElevation@double scalar = 10*pi/180
-        CameraAzimuthal@double scalar = 0
-        mperpix@double scalar = 25
-        PhosphorSize@double scalar
                 
         HREBSDPrep@logical = false
         CalcMI@logical
@@ -111,16 +95,78 @@ classdef OXY < matlab.mixin.Copyable
         
     end
     
+    properties (SetObservable = true, AbortSet = true)
+        
+        %Electron acceleration voltage
+        %   The acceleration voltage of the microscope scan used, in
+        %   kiloelectronvolts
+        AccelVoltage@double scalar = 20
+        %The Tilt of the material sample
+        %   The angle of the sample tilt, endited in Microscope Settings in
+        %   degrees, but storted in radians. Typicaly 70 degrees.
+        SampleTilt@double scalar = 70*pi/180
+        SampleAzimuthal@double scalar = 0
+        CameraElevation@double scalar = 10*pi/180
+        CameraAzimuthal@double scalar = 0
+        mperpix@double scalar = 25
+        
+        ROISizePercent@double scalar = 25
+        ROIStyle@char = 'Grid'
+        ROIFilter@double vector = [2 50 1 1]
+        ImageFilterType@char = 'standard'
+        ImageFilter@double vector = [9 90 0 0]
+        
+    end
+    
+    properties (Dependent = true)
+        
+        PhosphorSize
+        ROISize
+        
+    end
+    
+    properties (Dependent = true, SetObservable = true)
+        
+        NumROIs
+
+    end
+    
+    properties (Access = protected, Hidden = true)
+        hiddenNumROI@double scalar = 48
+    end
+    
+    events
+        
+        
+    end
+    
+    
     methods
         function obj = OXY
             %OXY Construct an instance of this class
             %   Should only be called by MainGUI at startup
         end
-%{        
-        function obj2 = createCopy(obj)
-            
+        
+        function value = get.PhosphorSize(obj)
+            value = obj.mperpix * obj.PixelSize;
         end
-%}        
+        
+        function value = get.ROISize(obj)
+            value = round(obj.ROISizePercent/100 * obj.PixelSize);
+        end
+        
+        function value = get.NumROIs(obj)
+            if strcmp(obj.ROIStyle,'Grid')
+                value = 48;
+            else
+                value = obj.hiddenNumROI;
+            end
+        end
+        
+        function set.NumROIs(obj,value)
+            obj.hiddenNumROI = value;
+        end
+        
     end
 end
 

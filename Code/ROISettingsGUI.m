@@ -22,7 +22,7 @@ function varargout = ROISettingsGUI(varargin)
 
 % Edit the above text to modify the response to help ROISettingsGUI
 
-% Last Modified by GUIDE v2.5 04-Aug-2017 12:39:01
+% Last Modified by GUIDE v2.5 16-Aug-2017 14:05:13
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -42,12 +42,6 @@ else
     gui_mainfcn(gui_State, varargin{:});
 end
 % End initialization code - DO NOT EDIT
-
-% --- Executes during object creation, after setting all properties.
-function ROISettingsGUI_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to ROISettingsGUI (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
 
 
 % --- Executes just before ROISettingsGUI is made visible.
@@ -75,7 +69,6 @@ else
     MainHandles = guidata(handles.MainGUI);
     Settings = MainHandles.Settings;
 end
-handles.PrevSettings = Settings;
 
 %Fast GUI
 if handles.Fast
@@ -94,7 +87,6 @@ if ~isempty(handles.MainGUI) && isvalid(handles.MainGUI)
     MainSize = get(handles.MainGUI,'Position');
     set(hObject,'Units','pixels');
     GUIsize = get(hObject,'Position');
-    ScreenSize = get(groot,'ScreenSize');
     height = MainSize(2)+MainSize(4)+70;
     if ismac
         GUIsize(3) = GUIsize(3)*1.2;
@@ -102,8 +94,8 @@ if ~isempty(handles.MainGUI) && isvalid(handles.MainGUI)
     set(hObject,'Position',[MainSize(1)-230-20 height GUIsize(3) GUIsize(4)]);
     movegui(hObject,'onscreen')
 end
-handles.ColorSave = get(handles.SaveButton,'BackgroundColor');
-handles.ColorEdit = [1 1 0]; % Yellow
+
+%Set up Keyboard shortcuts (currently undocumented)
 gui = findall(handles.ROISettingsGUI,'KeyPressFcn','');
 set(gui,'KeyPressFcn',@ROISettingsGUI_KeyPressFcn);
 
@@ -112,29 +104,29 @@ set(gui,'KeyPressFcn',@ROISettingsGUI_KeyPressFcn);
 colormap gray;
 
 %ROI Size
-set(handles.ROISizeEdit,'String',num2str(Settings.ROISizePercent));
+handles.ROISizeEdit.String = num2str(Settings.ROISizePercent);
 %NumROI Popup
 MaxROINum = 50;
-set(handles.NumROIPopup,'String',num2cell(1:MaxROINum));
+handles.NumROIPopup.String = num2cell(1:MaxROINum);
 SetPopupValue(handles.NumROIPopup,Settings.NumROIs);
 %ROI Style Popup
 ROIStyleList = {'Grid','Radial','Intensity','Annular'};
-set(handles.ROIStylePopup, 'String', ROIStyleList);
+handles.ROIStylePopup.String = ROIStyleList;
 SetPopupValue(handles.ROIStylePopup,Settings.ROIStyle);
 %ROIFilter
-set(handles.ROIFilter1,'String',num2str(Settings.ROIFilter(1)));
-set(handles.ROIFilter2,'String',num2str(Settings.ROIFilter(2)));
-set(handles.ROIFilter3,'String',num2str(Settings.ROIFilter(3)));
-set(handles.ROIFilter4,'String',num2str(Settings.ROIFilter(4)));
+handles.ROIFilter1.String = num2str(Settings.ROIFilter(1));
+handles.ROIFilter2.String = num2str(Settings.ROIFilter(2));
+handles.ROIFilter3.String = num2str(Settings.ROIFilter(3));
+handles.ROIFilter4.String = num2str(Settings.ROIFilter(4));
 %Image Filter Type Popup
 ImageFilterTypeList = {'standard','localthresh'};
-set(handles.ImageFilterType, 'String', ImageFilterTypeList);
+handles.ImageFilterType.String = ImageFilterTypeList;
 SetPopupValue(handles.ImageFilterType,Settings.ImageFilterType);
 %ImageFilter
-set(handles.ImageFilter1,'String',num2str(Settings.ImageFilter(1)));
-set(handles.ImageFilter2,'String',num2str(Settings.ImageFilter(2)));
-set(handles.ImageFilter3,'String',num2str(Settings.ImageFilter(3)));
-set(handles.ImageFilter4,'String',num2str(Settings.ImageFilter(4)));
+handles.ImageFilter1.String = num2str(Settings.ImageFilter(1));
+handles.ImageFilter2.String = num2str(Settings.ImageFilter(2));
+handles.ImageFilter3.String = num2str(Settings.ImageFilter(3));
+handles.ImageFilter4.String = num2str(Settings.ImageFilter(4));
 
 %Draw Original Image
 axes(handles.OriginalImage);
@@ -159,17 +151,32 @@ handles = guidata(hObject);
 DrawSimPath(handles)
 guidata(hObject, handles);
 
+%Set up Listeners
+imListenProperties = {'ROISizePercent','ROIStyle','ImageFilter',...
+    'ImageFilterType','NumROIs'};
+handles.imListener = addlistener(Settings,imListenProperties,'PostSet',...
+    @(~,event)imListenFcn(hObject,event));
+simListenProperties = {'AccelVoltage','SampleTilt','ImageFilter'...
+    'CameraElevation','mperpix'};
+handles.imListener = addlistener(Settings,simListenProperties,'PostSet',...
+    @(~,event)simListenFcn(hObject,event));
+
+
 % Update handles structure
-handles.edited = false;
 ROIStylePopup_Callback(handles.ROIStylePopup, eventdata, handles)
 handles.Settings = Settings;
 guidata(hObject, handles);
 UpdateImage(handles);
-SaveColor(handles)
 
-% UIWAIT makes ROISettingsGUI wait for user response (see UIRESUME)
-%uiwait(handles.ROISettingsGUI);
+function imListenFcn(hObject,event)
 
+handles = guidata(hObject);
+UpdateImage(handles)
+
+function simListenFcn(hObject,event)
+
+handles = guidata(hObject);
+DrawSimPath(handles);
 
 % --- Outputs from this function are returned to the command line.
 function varargout = ROISettingsGUI_OutputFcn(hObject, eventdata, handles) 
@@ -178,7 +185,6 @@ function varargout = ROISettingsGUI_OutputFcn(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Get default command line output from handles structure
 varargout{1} = handles.output;
 
 % --- Executes when user attempts to close ROISettingsGUI.
@@ -186,152 +192,27 @@ function ROISettingsGUI_CloseRequestFcn(hObject, eventdata, handles)
 % hObject    handle to ROISettingsGUI (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
-% Hint: delete(hObject) closes the figure
+delete(handles.imListener)
 delete(hObject);
 
 
-% --- Executes on button press in SaveButton.
-function SaveButton_Callback(hObject, eventdata, handles)
-% hObject    handle to SaveButton (see GCBO)
+% --- Executes on button press in DoneButton.
+function DoneButton_Callback(hObject, eventdata, handles)
+% hObject    handle to DoneButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-if ~isempty(handles.MainGUI) && isvalid(handles.MainGUI)
-    MainHandles = guidata(handles.MainGUI);
-    MainHandles.Settings = handles.Settings;
-    guidata(handles.MainGUI,MainHandles);
-    UpdateMainGUIs = getappdata(handles.MainGUI,'UpdateGUIs');
-    UpdateMainGUIs(MainHandles);
-end
-UpdateTestGeom(handles)
-handles.PrevSettings = handles.Settings;
-handles.edited = false;
-guidata(hObject,handles);
-SaveColor(handles)
-
-% --- Executes on button press in CancelButton.
-function CancelButton_Callback(hObject, eventdata, handles)
-% hObject    handle to CancelButton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-handles.Settings = handles.PrevSettings;
-guidata(hObject,handles);
 ROISettingsGUI_CloseRequestFcn(handles.ROISettingsGUI, eventdata, handles);
 
 
-function ImageFilter1_Callback(hObject, eventdata, handles)
+
+function ImageFilter_Callback(hObject, eventdata, handles)
 % hObject    handle to ImageFilter1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of ImageFilter1 as text
-%        str2double(get(hObject,'String')) returns contents of ImageFilter1 as a double
-handles.Settings.ImageFilter(1) = str2double(get(hObject,'String'));
-UpdateImage(handles)
-if ValChanged(handles,'ImageFilter')
-    handles.edited = true;
-end
-SaveColor(handles)
-guidata(hObject,handles);
+ind = str2double(hObject.Tag(end));
+handles.Settings.ImageFilter(ind) = str2double(get(hObject,'String'));
 
-% --- Executes during object creation, after setting all properties.
-function ImageFilter1_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to ImageFilter1 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-
-function ImageFilter2_Callback(hObject, eventdata, handles)
-% hObject    handle to ImageFilter2 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of ImageFilter2 as text
-%        str2double(get(hObject,'String')) returns contents of ImageFilter2 as a double
-handles.Settings.ImageFilter(2) = str2double(get(hObject,'String'));
-UpdateImage(handles)
-if ValChanged(handles,'ImageFilter')
-    handles.edited = true;
-end
-SaveColor(handles)
-guidata(hObject,handles);
-
-% --- Executes during object creation, after setting all properties.
-function ImageFilter2_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to ImageFilter2 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-
-function ImageFilter3_Callback(hObject, eventdata, handles)
-% hObject    handle to ImageFilter3 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of ImageFilter3 as text
-%        str2double(get(hObject,'String')) returns contents of ImageFilter3 as a double
-handles.Settings.ImageFilter(3) = str2double(get(hObject,'String'));
-UpdateImage(handles)
-if ValChanged(handles,'ImageFilter')
-    handles.edited = true;
-end
-SaveColor(handles)
-guidata(hObject,handles);
-
-% --- Executes during object creation, after setting all properties.
-function ImageFilter3_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to ImageFilter3 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-
-function ImageFilter4_Callback(hObject, eventdata, handles)
-% hObject    handle to ImageFilter4 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of ImageFilter4 as text
-%        str2double(get(hObject,'String')) returns contents of ImageFilter4 as a double
-handles.Settings.ImageFilter(4) = str2double(get(hObject,'String'));
-UpdateImage(handles)
-if ValChanged(handles,'ImageFilter')
-    handles.edited = true;
-end
-SaveColor(handles)
-guidata(hObject,handles);
-
-% --- Executes during object creation, after setting all properties.
-function ImageFilter4_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to ImageFilter4 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 
 % --- Executes on selection change in ImageFilterType.
@@ -340,28 +221,8 @@ function ImageFilterType_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns ImageFilterType contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from ImageFilterType
 contents = cellstr(get(hObject,'String'));
 handles.Settings.ImageFilterType = contents{get(hObject,'Value')};
-UpdateImage(handles)
-if ValChanged(handles,'ImageFilterType')
-    handles.edited = true;
-end
-SaveColor(handles)
-guidata(hObject,handles);
-
-% --- Executes during object creation, after setting all properties.
-function ImageFilterType_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to ImageFilterType (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 
 
@@ -370,28 +231,8 @@ function ROISizeEdit_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of ROISizeEdit as text
-%        str2double(get(hObject,'String')) returns contents of ROISizeEdit as a double
 handles.Settings.ROISizePercent = str2double(get(hObject,'String'));
-handles.Settings.ROISize = round((handles.Settings.ROISizePercent * .01)*handles.Settings.PixelSize);
-UpdateImage(handles);
-if ValChanged(handles,'ROISizePercent')
-    handles.edited = true;
-end
-SaveColor(handles)
-guidata(hObject,handles);
 
-% --- Executes during object creation, after setting all properties.
-function ROISizeEdit_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to ROISizeEdit (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 
 % --- Executes on selection change in NumROIPopup.
@@ -400,28 +241,9 @@ function NumROIPopup_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns NumROIPopup contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from NumROIPopup
 contents = cellstr(get(hObject,'String'));
 handles.Settings.NumROIs = str2double(contents{get(hObject,'Value')});
-UpdateImage(handles);
-if ValChanged(handles,'NumROIs')
-    handles.edited = true;
-end
-SaveColor(handles)
-guidata(hObject,handles);
 
-% --- Executes during object creation, after setting all properties.
-function NumROIPopup_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to NumROIPopup (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 
 % --- Executes on selection change in ROIStylePopup.
@@ -430,151 +252,29 @@ function ROIStylePopup_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns ROIStylePopup contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from ROIStylePopup
 contents = cellstr(get(hObject,'String'));
 ROIStyle = contents{get(hObject,'Value')};
 handles.Settings.ROIStyle = ROIStyle;
 if strcmp(ROIStyle,'Grid')
     SetPopupValue(handles.NumROIPopup,num2str(48));
-    handles.Settings.NumROIs = 48;
     set(handles.NumROIPopup,'Enable','off')
 else
     set(handles.NumROIPopup,'Enable','on')
 end
-UpdateImage(handles)
-if ValChanged(handles,'ROIStyle')
-    handles.edited = true;
-end
-SaveColor(handles)
-guidata(hObject,handles);
-
-% --- Executes during object creation, after setting all properties.
-function ROIStylePopup_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to ROIStylePopup (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 
 
-function ROIFilter1_Callback(hObject, eventdata, handles)
+function ROIFilter_Callback(hObject, eventdata, handles)
 % hObject    handle to ROIFilter1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of ROIFilter1 as text
-%        str2double(get(hObject,'String')) returns contents of ROIFilter1 as a double
-handles.Settings.ROIFilter(1) = str2double(get(hObject,'String'));
-UpdateImage(handles)
-if ValChanged(handles,'ROIFilter')
-    handles.edited = true;
-end
-SaveColor(handles)
+ind = str2double(hObject.Tag(end));
+
+handles.Settings.ROIFilter(ind) = str2double(get(hObject,'String'));
 guidata(hObject,handles);
 
-% --- Executes during object creation, after setting all properties.
-function ROIFilter1_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to ROIFilter1 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
 
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-
-function ROIFilter2_Callback(hObject, eventdata, handles)
-% hObject    handle to ROIFilter2 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of ROIFilter2 as text
-%        str2double(get(hObject,'String')) returns contents of ROIFilter2 as a double
-handles.Settings.ROIFilter(2) = str2double(get(hObject,'String'));
-UpdateImage(handles)
-if ValChanged(handles,'ROIFilter')
-    handles.edited = true;
-end
-SaveColor(handles)
-guidata(hObject,handles);
-
-% --- Executes during object creation, after setting all properties.
-function ROIFilter2_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to ROIFilter2 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-
-function ROIFilter3_Callback(hObject, eventdata, handles)
-% hObject    handle to ROIFilter3 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of ROIFilter3 as text
-%        str2double(get(hObject,'String')) returns contents of ROIFilter3 as a double
-handles.Settings.ROIFilter(3) = str2double(get(hObject,'String'));
-UpdateImage(handles)
-if ValChanged(handles,'ROIFilter')
-    handles.edited = true;
-end
-SaveColor(handles)
-guidata(hObject,handles);
-
-% --- Executes during object creation, after setting all properties.
-function ROIFilter3_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to ROIFilter3 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-function ROIFilter4_Callback(hObject, eventdata, handles)
-% hObject    handle to ROIFilter4 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of ROIFilter4 as text
-%        str2double(get(hObject,'String')) returns contents of ROIFilter4 as a double
-handles.Settings.ROIFilter(4) = str2double(get(hObject,'String'));
-UpdateImage(handles)
-if ValChanged(handles,'ROIFilter')
-    handles.edited = true;
-end
-SaveColor(handles)
-guidata(hObject,handles);
-
-% --- Executes during object creation, after setting all properties.
-function ROIFilter4_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to ROIFilter4 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 % --- Executes on button press in HideROIs.
 function HideROIs_Callback(hObject, eventdata, handles)
@@ -582,7 +282,6 @@ function HideROIs_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hint: get(hObject,'Value') returns toggle state of HideROIs
 UpdateImage(handles)
 
 function UpdateImage(handles)
@@ -700,7 +399,7 @@ String = num2str(String);
 List = get(Popup,'String');
 IndList = 1:length(List);
 Value = IndList(strcmp(List,String));
-if isempty(Value); Value =1; end;
+if isempty(Value); Value =1; end
 set(Popup, 'Value', Value);
     
 function string = GetPopupString(Popup)
@@ -708,19 +407,6 @@ List = get(Popup,'String');
 Value = get(Popup,'Value');
 string = List{Value};    
 
-function SaveColor(handles)
-if handles.edited
-    set(handles.SaveButton,'BackgroundColor',handles.ColorEdit);
-else
-    set(handles.SaveButton,'BackgroundColor',handles.ColorSave);
-end
-
-function changed = ValChanged(handles,value)
-if ischar(handles.Settings.(value))
-    changed = ~strcmp(handles.Settings.(value),handles.PrevSettings.(value));
-else
-    changed =  any(handles.Settings.(value) ~= handles.PrevSettings.(value));
-end
 
 
 % --- Executes on key press with focus on ROISettingsGUI and none of its controls.
@@ -734,11 +420,11 @@ function ROISettingsGUI_KeyPressFcn(hObject, eventdata, handles)
 handles = guidata(hObject);
 % Save Figure with CTRL-S
 if strcmp(eventdata.Key,'s') && ~isempty(eventdata.Modifier) && strcmp(eventdata.Modifier,'control')
-    SaveButton_Callback(handles.SaveButton, eventdata, handles);
+    SaveButton_Callback(handles.DoneButton, eventdata, handles);
 end
 % Close Figure with CTRL-L
 if strcmp(eventdata.Key,'l') && ~isempty(eventdata.Modifier) && strcmp(eventdata.Modifier,'control')
-    CancelButton_Callback(handles.SaveButton, eventdata, handles);
+    CancelButton_Callback(handles.DoneButton, eventdata, handles);
 end
 
 function DrawSimPath(handles)
@@ -810,3 +496,4 @@ if ~isempty(handles.MainGUI) && isvalid(handles.MainGUI)
         end
     end
 end
+
