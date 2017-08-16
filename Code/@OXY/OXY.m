@@ -1,5 +1,5 @@
-classdef OXY < handle
-    %OXY Handle Object behind OpenXY
+classdef OXY < matlab.mixin.Copyable
+    %OXY Handle Object that stores the Settings and data of OpenXY
         
     properties
         
