@@ -63,6 +63,7 @@ else
         'Please input a context argument'));
 end
     
+
 switch context
     case 'TestGeometry' %Test Geometry from MainGUI
         handles.PointSelectionGUI.Name = 'Test Geometry';
@@ -74,6 +75,8 @@ switch context
         handles.corners = [];
         handles.SaveFunc = varargin{2};
         handles.InstructionsText.String = 'Left click to view point Properties, Right click to select corner.';
+        handles.oldInds = Settings.Inds;
+        Settings.Inds = 1:Settings.trueScanLength;
     case 'Test' % The test button from MainGUI
         handles.PointSelectionGUI.Name = 'Test Cross-Corelation';
         handles.multiPoints = 0;

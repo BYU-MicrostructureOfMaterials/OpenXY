@@ -78,13 +78,13 @@ handles.PointSelectionGUI = [];
 if handles.Fast
     if ~isfield(Settings,'PCList')
         Settings.PCList = {};
-        if isfield(Settings,'ScanParams')
+        if isprop(Settings,'ScanParams')
             xstar = Settings.ScanParams.xstar;
             ystar = Settings.ScanParams.ystar;
             zstar = Settings.ScanParams.zstar;
             Settings.PCList = {xstar,ystar,zstar,...
                 'Scan File','Naive','Default',{''}};
-        elseif isfield(Settings,'XStar')
+        elseif isprop(Settings,'XStar')
             xstar = Settings.XStar(1);
             ystar = Settings.YStar(1);
             zstar = Settings.ZStar(1);
@@ -103,18 +103,18 @@ end
 
 %Populate PCMethod Box
 TypeString = {'Strain Minimization','Grid','Tiff','Manual'};
-if ~Settings.ImageTag; TypeString(3) = []; end;
+if ~Settings.ImageTag; TypeString(3) = []; end
 set(handles.NewPCType,'String',TypeString);
 
 %Populate List Box
-if ~isfield(Settings,'PCList')
+if isempty(Settings.PCList)
     Settings.PCList = {Settings.ScanParams.xstar,Settings.ScanParams.ystar,Settings.ScanParams.zstar,...
         'Scan File','Naive','Default',{''}};
 end
 set(handles.PCList,'String',Settings.PCList(:,6));
 
 %Load Plots
-if isfield(Settings,'IQ')
+if ~handles.Fast
     handles = GenPlots(handles,Settings);
 else
     axes(handles.PCaxes)
@@ -674,7 +674,7 @@ String = num2str(String);
 List = get(Popup,'String');
 IndList = 1:length(List);
 Value = IndList(strcmp(List,String));
-if isempty(Value); Value =1; end;
+if isempty(Value); Value =1; end
 set(Popup, 'Value', Value);
 
 function string = GetPopupString(Popup)
@@ -843,11 +843,6 @@ if ~isempty(handles.Settings.PCList)
     guidata(hObject,handles);
 end
 
-% --------------------------------------------------------------------
-function List_Callback(hObject, eventdata, handles)
-% hObject    handle to List (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 
 
 % --- Executes on mouse press over figure background.
@@ -855,12 +850,3 @@ function PCGUI_ButtonDownFcn(hObject, eventdata, handles)
 % hObject    handle to PCGUI (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
-
-% --- Executes on button press in AutoRun.
-function AutoRun_Callback(hObject, eventdata, handles)
-% hObject    handle to AutoRun (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of AutoRun

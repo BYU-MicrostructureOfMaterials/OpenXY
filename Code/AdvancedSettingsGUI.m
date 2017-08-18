@@ -79,7 +79,7 @@ end
 
 %HROIM Method
 if ~isfield(Settings,'DoStrain')
-    Settings.DoStrain = 1;
+    Settings.DoStrain = true;
 end
 set(handles.DoStrain,'Value',Settings.DoStrain);
 
@@ -573,7 +573,7 @@ function DoDD_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of DoDD
-handles.Settings.CalcDerivatives = get(hObject,'Value');
+handles.Settings.CalcDerivatives = logical(get(hObject,'Value'));
 if get(hObject,'Value')
     set(handles.DoSplitDD,'Enable','on');
     set(handles.SkipPoints,'Enable','on');
@@ -705,7 +705,7 @@ if strcmp(get(hObject,'Enable'),'off')
     enable = 'off';
 end
 set(handles.DDSMethod,'Enable',enable);
-handles.Settings.DoDDS = get(hObject,'Value');
+handles.Settings.DoDDS = logical(get(hObject,'Value'));
 if ValChanged(handles,'DoDDS')
     handles.edited = true;
 end
@@ -903,7 +903,7 @@ end
 if nargin == 3
 HROIMMethod_Callback(handles.HROIMMethod,eventdata,handles);
 end
-handles.Settings.DoStrain = get(hObject,'Value');
+handles.Settings.DoStrain = logical(get(hObject,'Value'));
 
 if ValChanged(handles,'DoStrain')
     handles.edited = true;

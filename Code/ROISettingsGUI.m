@@ -158,7 +158,7 @@ handles.imListener = addlistener(Settings,imListenProperties,'PostSet',...
     @(~,event)imListenFcn(hObject,event));
 simListenProperties = {'AccelVoltage','SampleTilt','ImageFilter'...
     'CameraElevation','mperpix'};
-handles.imListener = addlistener(Settings,simListenProperties,'PostSet',...
+handles.simListener = addlistener(Settings,simListenProperties,'PostSet',...
     @(~,event)simListenFcn(hObject,event));
 
 
@@ -169,12 +169,10 @@ guidata(hObject, handles);
 UpdateImage(handles);
 
 function imListenFcn(hObject,event)
-
 handles = guidata(hObject);
 UpdateImage(handles)
 
 function simListenFcn(hObject,event)
-
 handles = guidata(hObject);
 DrawSimPath(handles);
 
@@ -193,6 +191,7 @@ function ROISettingsGUI_CloseRequestFcn(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 delete(handles.imListener)
+delete(handles.simListener)
 delete(hObject);
 
 

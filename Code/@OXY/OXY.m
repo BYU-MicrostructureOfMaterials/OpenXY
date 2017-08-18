@@ -1,7 +1,147 @@
 classdef OXY < matlab.mixin.Copyable
     %OXY Handle Object that stores the Settings and data of OpenXY
+    
+    methods
+        function obj = OXY
+            %OXY Construct an instance of this class
+            %   Should only be called by MainGUI at startup
+        end
         
-    properties
+        function value = get.PhosphorSize(obj)
+            value = obj.mperpix * obj.PixelSize;
+        end
+        
+        function value = get.ROISize(obj)
+            value = round(obj.ROISizePercent/100 * obj.PixelSize);
+        end
+        
+        function value = get.NumROIs(obj)
+            if strcmp(obj.ROIStyle,'Grid')
+                value = 48;
+            else
+                value = obj.hiddenNumROI;
+            end
+        end
+        
+        function set.NumROIs(obj,value)
+            obj.hiddenNumROI = value;
+        end
+        
+        function value = get.grainID(obj)
+            if ~obj.isSubScan
+                value = obj.hiddengrainID;
+            else
+                value = obj.hiddengrainID(obj.Inds);
+            end
+        end
+        
+        function set.grainID(obj,value)
+            obj.hiddengrainID = value;
+        end
+        
+        function value = get.ScanLength(obj)
+            if ~obj.isSubScan
+                value = obj.hiddenScanLength;
+            else
+                value = obj.hiddenScanLength(obj.Inds);
+            end
+        end
+        
+        function set.ScanLength(obj,value)
+            obj.hiddenScanLength = value;
+        end
+        
+        function value = get.Angles(obj)
+            if ~obj.isSubScan
+                value = obj.hiddenAngles;
+            else
+                value = obj.hiddenAngles(obj.Inds);
+            end
+        end
+        
+        function set.Angles(obj,value)
+            obj.hiddenAngles = value;
+        end
+        
+        function value = get.XData(obj)
+            if ~obj.isSubScan
+                value = obj.hiddenXData;
+            else
+                value = obj.hiddenXData(obj.Inds);
+            end
+        end
+        
+        function set.XData(obj,value)
+            obj.hiddenXData = value;
+        end
+        
+        function value = get.YData(obj)
+            if ~obj.isSubScan
+                value = obj.hiddenYData;
+            else
+                value = obj.hiddenYData(obj.Inds);
+            end
+        end
+        
+        function set.YData(obj,value)
+            obj.hiddenYData = value;
+        end
+        
+        function value = get.IQ(obj)
+            if ~obj.isSubScan
+                value = obj.hiddenIQ;
+            else
+                value = obj.hiddenIQ(obj.Inds);
+            end
+        end
+        
+        function set.IQ(obj,value)
+            obj.hiddenIQ = value;
+        end
+        
+        function value = get.CI(obj)
+            if ~obj.isSubScan
+                value = obj.hiddenCI;
+            else
+                value = obj.hiddenCI(obj.Inds);
+            end
+        end
+        
+        function set.CI(obj,value)
+            obj.hiddenCI = value;
+        end
+        
+        function value = get.Fit(obj)
+            if ~obj.isSubScan
+                value = obj.hiddenFit;
+            else
+                value = obj.hiddenFit(obj.Inds);
+            end
+        end
+        
+        function set.Fit(obj,value)
+            obj.hiddenFit = value;
+        end
+        
+        function value = get.Phase(obj)
+            if ~obj.isSubScan
+                value = obj.hiddenPhase;
+            else
+                value = obj.hiddenPhase(obj.Inds);
+            end
+        end
+        
+        function set.Phase(obj,value)
+            obj.hiddenPhase = value;
+        end
+        
+        function value = trueScanLength(obj)
+            value = obj.hiddenScanLength;
+        end
+        
+    end
+    
+    properties %General Properties
         
         %The Path of the scan file 
         %   The scan file is the scan produced by either OIM or AZTEK(.ang,
@@ -23,7 +163,7 @@ classdef OXY < matlab.mixin.Copyable
         Material@char = 'Scan File'
         
         %The number of workers used for parallel processing. Defaults to one less than the available cores
-        DoParallel@double scalar =feature('numCores')-1
+        DoParallel@double scalar = feature('numCores')-1
         
         %If true, Shifts will be visualized during cross-corelation
         DoShowPlot@logical = false
@@ -33,11 +173,16 @@ classdef OXY < matlab.mixin.Copyable
         
         %If true, will display GUI elements during computations
         DisplayGUI@logical = true
-              
+        
+        Nx@double scalar
+        Ny@double scalar
+        
+        isSubScan@logical = false
+        
         DoStrain@logical = true
         HROIMMethod@char = 'Real'
         IterationLimit@double scalar = 6
-        RefImageInd@double scalar = 0
+        
         StandardDeviation@double scalar = 2
         MisoTol@double scalar = 5
         GrainRefImageType@char = 'IQ > Fit > CI'
@@ -71,17 +216,6 @@ classdef OXY < matlab.mixin.Copyable
                 
         ScanParams@struct
         GrainVals@struct
-        ScanLength@double scalar
-        Angles@double matrix
-        XData@double vector
-        YData@double vector
-        IQ@double vector
-        CI@double vector
-        Fit@double vector
-        Nx@double scalar
-        Ny@double scalar
-        grainID@double vector
-        Phase@cell vector
         PixelSize@double scalar
         imsize@double vector
         ImageNamesList@cell vector
@@ -93,9 +227,11 @@ classdef OXY < matlab.mixin.Copyable
         FCalcMethod@char = 'Collin Crystal'
         largefftmeth@char
         
+        %Old variable, I will probably get rid of it after this is working
+        oldSize
     end
     
-    properties (SetObservable = true, AbortSet = true)
+    properties (SetObservable = true, AbortSet = true) 
         
         %Electron acceleration voltage
         %   The acceleration voltage of the microscope scan used, in
@@ -116,6 +252,11 @@ classdef OXY < matlab.mixin.Copyable
         ImageFilterType@char = 'standard'
         ImageFilter@double vector = [9 90 0 0]
         
+        %Index to single refference immage
+        %   If zero, RefInds is used
+        RefImageInd@double scalar = 0
+
+        
     end
     
     properties (Dependent = true)
@@ -123,50 +264,45 @@ classdef OXY < matlab.mixin.Copyable
         PhosphorSize
         ROISize
         
+        grainID@double vector
+        ScanLength@double scalar
+        Angles@double matrix
+        XData@double vector
+        YData@double vector
+        IQ@double vector
+        CI@double vector
+        Fit@double vector
+        Phase@cell vector
+        
     end
     
-    properties (Dependent = true, SetObservable = true)
+    
+    properties (Dependent = true, SetObservable = true, AbortSet = true)
         
         NumROIs
 
     end
     
     properties (Access = protected, Hidden = true)
+        
         hiddenNumROI@double scalar = 48
+        
+        
+        hiddengrainID
+        hiddenScanLength@double scalar
+        hiddenAngles@double matrix
+        hiddenXData@double vector
+        hiddenYData@double vector
+        hiddenIQ@double vector
+        hiddenCI@double vector
+        hiddenFit@double vector
+        hiddenPhase@cell vector
+        
     end
     
     events
         
         
-    end
-    
-    
-    methods
-        function obj = OXY
-            %OXY Construct an instance of this class
-            %   Should only be called by MainGUI at startup
-        end
-        
-        function value = get.PhosphorSize(obj)
-            value = obj.mperpix * obj.PixelSize;
-        end
-        
-        function value = get.ROISize(obj)
-            value = round(obj.ROISizePercent/100 * obj.PixelSize);
-        end
-        
-        function value = get.NumROIs(obj)
-            if strcmp(obj.ROIStyle,'Grid')
-                value = 48;
-            else
-                value = obj.hiddenNumROI;
-            end
-        end
-        
-        function set.NumROIs(obj,value)
-            obj.hiddenNumROI = value;
-        end
-        
-    end
+    end    
 end
 

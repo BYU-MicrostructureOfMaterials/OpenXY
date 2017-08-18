@@ -14,7 +14,7 @@ end
 %FirstPic = ReadEBSDImage(Settings.FirstImagePath,Settings.ImageFilter);
 Settings.largefftmeth = fftw('wisdom');
 %Settings.PixelSize = size(FirstPic,1);
-Settings.ROISize = round((Settings.ROISizePercent * .01)*Settings.PixelSize);
+% Settings.ROISize = round((Settings.ROISizePercent * .01)*Settings.PixelSize);
 
 %% Import Scan (for Fast GUI)
 if ~isfield(Settings,'ImageNamesList')

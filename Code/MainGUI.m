@@ -889,8 +889,11 @@ handles.Settings.Inds = reshape(SubInds',[numel(SubInds) 1]);
 
 %Update Size
 newsize = fliplr(size(SubInds));
-handles.Settings.Resize = newsize;
-SizeStr =  [num2str(newsize(1)) 'x' num2str(newsize(2)) ' (Subscan)'];
+handles.Settings.oldSize = [Settings.Nx Settings.Ny];
+handles.Settings.Nx = newsize(1);
+handles.Settings.Ny = newsize(2);
+handles.Settings.isSubScan = true;
+SizeStr = [num2str(newsize(1)) 'x' num2str(newsize(2)) ' (Subscan)'];
 set(handles.ScanSizeText,'String',SizeStr);
 guidata(handles.MainGUI,handles);
 
