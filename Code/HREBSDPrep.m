@@ -129,6 +129,7 @@ end
 %% Get Reference Image(s) when not Simulated Method
 % Get reference images and assign the name to each scan image (or main
 % image - image b in the case of an L-grid scan)
+%{
 if ~strcmp(Settings.HROIMMethod,'Simulated')&& isempty(Settings.RefInd)
     disp('Getting Reference Image Indices...')
     if Settings.RefImageInd~=0
@@ -143,6 +144,7 @@ if ~strcmp(Settings.HROIMMethod,'Simulated')&& isempty(Settings.RefInd)
         end
     end  
 end
+%}
 
 %% Check to see if camera orientation data exists
 

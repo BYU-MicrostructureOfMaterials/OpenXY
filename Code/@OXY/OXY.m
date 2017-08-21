@@ -5,7 +5,16 @@ classdef OXY < matlab.mixin.Copyable
         function obj = OXY
             %OXY Construct an instance of this class
             %   Should only be called by MainGUI at startup
+            
+            obj.subScanListener = addlistener(obj,'isSubScan','PostSet',...
+                @(source,event) UpdateRefImageInds(obj));
         end
+        
+        function delete(obj)
+            delete(obj.subScanListener);
+        end
+        
+        UpdateRefImageInds(obj)
         
         function value = get.PhosphorSize(obj)
             value = obj.mperpix * obj.PixelSize;
@@ -188,10 +197,10 @@ classdef OXY < matlab.mixin.Copyable
         end
         
         function value = get.RefInd(obj)
-            if ~obj.isSubScan
+            if obj.RefImageInd == 0
                 value = obj.hiddenRefInd;
             else
-                value = obj.hiddenRefInd(obj.Inds);
+                value(1:obj.ScanLength) = obj.RefImageInd;
             end
         end
         
@@ -237,7 +246,6 @@ classdef OXY < matlab.mixin.Copyable
         Nx@double scalar
         Ny@double scalar
         
-        isSubScan@logical = false
         
         DoStrain@logical = true
         HROIMMethod@char = 'Real'
@@ -311,7 +319,8 @@ classdef OXY < matlab.mixin.Copyable
         %   If zero, RefInds is used
         RefImageInd@double scalar = 0
 
-        
+        isSubScan@logical = false
+                
     end
     
     properties (Dependent = true)
@@ -363,6 +372,7 @@ classdef OXY < matlab.mixin.Copyable
         hiddenImageNamesList@cell vector
         hiddenRefInd@double vector
         
+        subScanListener
     end
     
     events

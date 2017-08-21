@@ -356,6 +356,7 @@ if name ~= 0
         handles.Settings = rmfield(handles.Settings,{'Inds','Resize'});
     end
     handles.ScanFileLoaded = true;
+    handles.Settings.UpdateRefImageInds;
 elseif ~handles.ScanFileLoaded
     set(handles.ScanNameText,'String','Select a Scan');
     set(handles.ScanFolderText,'String','Select a Scan');
