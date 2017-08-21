@@ -6,7 +6,7 @@ function Settings = HREBSDPrep(Settings)
 fftw('planner','exhaustive');
 
 %% Orientation-based GND Option
-if strcmp(Settings.GNDMethod,'Orientation') && ~Settings.DoStrain && ~isfield(Settings,'PixelSize')
+if strcmp(Settings.GNDMethod,'Orientation') && ~Settings.DoStrain && isempty(Settings.PixelSize)
     Settings.PixelSize = 0;
     Settings.PhosphorSize = 3700;
 end
@@ -17,7 +17,7 @@ Settings.largefftmeth = fftw('wisdom');
 % Settings.ROISize = round((Settings.ROISizePercent * .01)*Settings.PixelSize);
 
 %% Import Scan (for Fast GUI)
-if ~isfield(Settings,'ImageNamesList')
+if isempty(Settings.ImageNamesList)
     disp('Reading Scan File...')
     Settings = ImportScanInfo(Settings,Settings.ScanFilePath);
     if ~isempty(Settings.FirstImagePath)
@@ -112,7 +112,8 @@ if strcmp(Settings.HROIMMethod,'Dynamic Simulated')
 end
 
 %% Set up Sub-scan
-if isfield(Settings,'Inds') && isfield(Settings,'Resize') && ...
+%{
+if ~isempty(Settings.Inds) && ~isempty(Settings.Resize) && ...
         length(Settings.Inds) < Settings.ScanLength
     Settings.ScanLength = length(Settings.Inds);
     Oldsize = [Settings.Nx Settings.Ny];
@@ -123,12 +124,12 @@ else
     Inds = 1:Settings.ScanLength;
     Settings.Inds = Inds;
 end
-
+%}
 
 %% Get Reference Image(s) when not Simulated Method
 % Get reference images and assign the name to each scan image (or main
 % image - image b in the case of an L-grid scan)
-if ~strcmp(Settings.HROIMMethod,'Simulated')&& ~isfield(Settings,'RefInd')
+if ~strcmp(Settings.HROIMMethod,'Simulated')&& isempty(Settings.RefInd)
     disp('Getting Reference Image Indices...')
     if Settings.RefImageInd~=0
         Settings.RefInd(1:Settings.ScanLength,1)= Settings.RefImageInd;
@@ -165,15 +166,15 @@ if Settings.ImageTag
 
         Settings.camphi2 = str2double(info.UnknownTags.Value(start3+length('<detector-orientation-euler1-deg>'):end3-1))*pi/180;
     else
-        if isfield(Settings,'camphi1')
+        if ~isempty(Settings.camphi1)
             Settings = rmfield(Settings,{'camphi1','camPHI','camphi2'});
         end
     end
 end
 
 %% Pattern Center Calibration
-if ~isfield(Settings,'XStar')
-    if isfield(Settings,'PCList') % For Fast GUI
+if isempty(Settings.XStar)
+    if ~isempty(Settings.PCList) % For Fast GUI
         index = find([Settings.PCList{:,8}]);
         Settings.PlaneFit = Settings.PCList{index,6};
         xstar = Settings.PCList{index,1};
@@ -188,7 +189,7 @@ if ~isfield(Settings,'XStar')
     %Default Naive Plane Fit *****need to include Settings.SampleAzimuthal
     %and Settings.CameraAzimuthal ******
     FullLength = length(Settings.XData);
-    if isfield(Settings,'PlaneFit') && strcmp(Settings.PlaneFit,'Naive')
+    if ~isempty(Settings.PlaneFit) && strcmp(Settings.PlaneFit,'Naive')
         Settings.XStar(1:FullLength) = xstar-Settings.XData/Settings.PhosphorSize;
         Settings.YStar(1:FullLength) = ystar+Settings.YData/Settings.PhosphorSize*sin(Settings.SampleTilt-Settings.CameraElevation);
         Settings.ZStar(1:FullLength) = zstar+Settings.YData/Settings.PhosphorSize*cos(Settings.SampleTilt-Settings.CameraElevation);

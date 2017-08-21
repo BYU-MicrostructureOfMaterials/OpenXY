@@ -55,7 +55,7 @@ classdef OXY < matlab.mixin.Copyable
             if ~obj.isSubScan
                 value = obj.hiddenAngles;
             else
-                value = obj.hiddenAngles(obj.Inds);
+                value = obj.hiddenAngles(obj.Inds,:);
             end
         end
         
@@ -135,6 +135,66 @@ classdef OXY < matlab.mixin.Copyable
             obj.hiddenPhase = value;
         end
         
+        function value = get.XStar(obj)
+            if ~obj.isSubScan
+                value = obj.hiddenXStar;
+            else
+                value = obj.hiddenXStar(obj.Inds);
+            end
+        end
+        
+        function set.XStar(obj,value)
+            obj.hiddenXStar = value;
+        end
+        
+        function value = get.YStar(obj)
+            if ~obj.isSubScan
+                value = obj.hiddenYStar;
+            else
+                value = obj.hiddenYStar(obj.Inds);
+            end
+        end
+        
+        function set.YStar(obj,value)
+            obj.hiddenYStar = value;
+        end
+        
+        function value = get.ZStar(obj)
+            if ~obj.isSubScan
+                value = obj.hiddenZStar;
+            else
+                value = obj.hiddenZStar(obj.Inds);
+            end
+        end
+        
+        function set.ZStar(obj,value)
+            obj.hiddenZStar = value;
+        end
+        
+        function set.ImageNamesList(obj,value)
+            obj.hiddenImageNamesList = value;
+        end
+        
+        function value = get.ImageNamesList(obj)
+            if ~obj.isSubScan
+                value = obj.hiddenImageNamesList;
+            else
+                value = obj.hiddenImageNamesList(obj.Inds);
+            end
+        end
+        
+        function set.RefInd(obj,value)
+            obj.hiddenRefInd = value;
+        end
+        
+        function value = get.RefInd(obj)
+            if ~obj.isSubScan
+                value = obj.hiddenRefInd;
+            else
+                value = obj.hiddenRefInd(obj.Inds);
+            end
+        end
+        
         function value = trueScanLength(obj)
             value = obj.hiddenScanLength;
         end
@@ -206,9 +266,6 @@ classdef OXY < matlab.mixin.Copyable
                 
         PlaneFit@char = 'Naive'
         PCList@cell matrix
-        XStar@double vector
-        YStar@double vector
-        ZStar@double vector
                 
                 
         HREBSDPrep@logical = false
@@ -218,17 +275,15 @@ classdef OXY < matlab.mixin.Copyable
         GrainVals@struct
         PixelSize@double scalar
         imsize@double vector
-        ImageNamesList@cell vector
         Inds@double vector
-        RefInd@double vector
                 
         DoUsePCFile@logical = false
         PCFilePath@char 
         FCalcMethod@char = 'Collin Crystal'
         largefftmeth@char
         
-        %Old variable, I will probably get rid of it after this is working
         oldSize
+        
     end
     
     properties (SetObservable = true, AbortSet = true) 
@@ -273,6 +328,11 @@ classdef OXY < matlab.mixin.Copyable
         CI@double vector
         Fit@double vector
         Phase@cell vector
+        XStar@double vector
+        YStar@double vector
+        ZStar@double vector
+        ImageNamesList@cell vector
+        RefInd@double vector
         
     end
     
@@ -297,6 +357,11 @@ classdef OXY < matlab.mixin.Copyable
         hiddenCI@double vector
         hiddenFit@double vector
         hiddenPhase@cell vector
+        hiddenXStar@double vector
+        hiddenYStar@double vector
+        hiddenZStar@double vector
+        hiddenImageNamesList@cell vector
+        hiddenRefInd@double vector
         
     end
     

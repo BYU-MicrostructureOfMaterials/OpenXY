@@ -194,7 +194,7 @@ end
 
 %Files
 [fpath,name,ext] = fileparts(handles.Settings.ScanFilePath);
-if strcmp(ext,'.h5'); filterind = 2; else filterind = 1; end;
+if strcmp(ext,'.h5'); filterind = 2; else; filterind = 1; end
 SetScanFields(handles,[name ext],fpath,filterind);
 handles = guidata(hObject);
 [fpath,name,ext] = fileparts(handles.Settings.FirstImagePath);
@@ -244,11 +244,11 @@ function MainGUI_CloseRequestFcn(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hint: delete(hObject) closes the figure
 SaveSettings(handles);
 pos = get(handles.MainGUI,'Position');
 save('SystemSettings.mat','pos','-append')
 CloseGUIs(handles)
+delete(handles.Settings);
 delete(hObject);
 
 
@@ -559,7 +559,6 @@ function DisplayShiftsBox_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hint: get(hObject,'Value') returns toggle state of DisplayShiftsBox
 handles.Settings.DoShowPlot = logical(get(hObject,'Value'));
 guidata(hObject, handles);
 
@@ -570,8 +569,6 @@ function MaterialPopup_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns MaterialPopup contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from MaterialPopup
 Material = GetPopupString(hObject);
 handles.Settings.Material = Material;
 
@@ -592,8 +589,6 @@ function MaterialPopup_CreateFcn(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
@@ -605,8 +600,6 @@ function ScanTypePopup_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns ScanTypePopup contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from ScanTypePopup
 handles.Settings.ScanType = GetPopupString(hObject);
 guidata(hObject, handles);
 
@@ -616,8 +609,6 @@ function ScanTypePopup_CreateFcn(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
@@ -629,8 +620,6 @@ function ProcessorsPopup_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns ProcessorsPopup contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from ProcessorsPopup
 DoParallel = get(hObject,'Value');
 handles.Settings.DoParallel = DoParallel;
 if DoParallel > 1
@@ -650,8 +639,6 @@ function ProcessorsPopup_CreateFcn(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
@@ -846,7 +833,6 @@ ScreenSize = get(groot,'ScreenSize');
 set(hObject,'Units','pixels');
 movegui(hObject,'center');
 GUIsize = get(hObject,'Position');
-%set(handles.MainGUI,'Position',[(ScreenSize(3)-GUIsize(3))/2 (ScreenSize(4)-(500+GUIsize(4))) GUIsize(3)*1.1 GUIsize(4)]);
 if ismac
     GUIsize(3) = GUIsize(3)*1.1;
     set(hObject,'Position',GUIsize);
@@ -873,28 +859,35 @@ function SubScan_Callback(hObject, eventdata, handles)
 % hObject    handle to SubScan (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-if handles.ScanFileLoaded
-    if isempty(handles.SubScanGUI) || ~isvalid(handles.SubScanGUI)
-        handles.SubScanGUI = PointSelectionGUI(handles.MainGUI,...
-            'SubScan',@adjustSubplot);
-        guidata(handles.MainGUI,handles);
+if ~handles.Settings.isSubScan
+    if handles.ScanFileLoaded
+        if isempty(handles.SubScanGUI) || ~isvalid(handles.SubScanGUI)
+            handles.SubScanGUI = PointSelectionGUI(handles.MainGUI,...
+                'SubScan',@adjustSubplot);
+            guidata(handles.MainGUI,handles);
+        end
     end
+else
+    hObject.String = 'Select Subscan';
+    handles.Settings.Inds = 1:handles.Settings.trueScanLength;
 end
 
 function adjustSubplot(handles,X,Y)
+Settings = handles.Settings;
 Inds = 1:handles.Settings.ScanLength;
 IndMap = vec2map(Inds',handles.Settings.Nx,handles.Settings.ScanType);
 SubInds = IndMap(Y(1):Y(2),X(1):X(2));
-handles.Settings.Inds = reshape(SubInds',[numel(SubInds) 1]);
+Settings.Inds = reshape(SubInds',[numel(SubInds) 1]);
 
 %Update Size
 newsize = fliplr(size(SubInds));
-handles.Settings.oldSize = [Settings.Nx Settings.Ny];
-handles.Settings.Nx = newsize(1);
-handles.Settings.Ny = newsize(2);
-handles.Settings.isSubScan = true;
+Settings.oldSize = [Settings.Nx Settings.Ny];
+Settings.Nx = newsize(1);
+Settings.Ny = newsize(2);
+Settings.isSubScan = true;
 SizeStr = [num2str(newsize(1)) 'x' num2str(newsize(2)) ' (Subscan)'];
 set(handles.ScanSizeText,'String',SizeStr);
+handles.SubScan.String = 'Reset Subscan';
 guidata(handles.MainGUI,handles);
 
 function CloseGUIs(handles)
