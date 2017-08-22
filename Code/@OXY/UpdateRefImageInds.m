@@ -1,5 +1,5 @@
 
-function UpdateRefImageInds(obj)%,ScanFileVals, GrainID, MapDataPath, DoUseMin)
+function UpdateRefImageInds(obj)
 %UpdateRefImageInds
 %Ref Ind = UpdateRefImageInds(ScanFileVals, GrainID, MapDataPath, DoUseMin)
 %Given an ImageNamesList and the path for the OIM output file GrainFilePath
@@ -40,51 +40,38 @@ IndVect = 1:length(GrainID);
 
 GrainID(GrainID==0)=1; % ***************this seems odd **************
 RefInd = zeros(size(IQ,1),1);
-grains = unique(GrainID);
-
-SortedGrainInds{length(grains)} = [];
 
 %sort by grain ID
-for GrnInd = grains'
+for GrnInd = unique(GrainID)'
     
-    SortedGrainInds{GrnInd} = IndVect(GrainID == GrnInd);
+    SortedGrainInds = IndVect(GrainID == GrnInd);
         
     
-    if numel(SortedGrainInds{GrnInd}) ~= 0
+    if numel(SortedGrainInds) ~= 0
 
         %Get Max CI for each grain;
 
-        [MaxCI,CIInd] = max(CI(SortedGrainInds{GrnInd}));
+        [MaxCI,CIInd] = max(CI(SortedGrainInds));
 
-    %     [MeanCI(GrnInd) CIMeanInd(GrnInd)] = mean(CI(SortedGrainInds{GrnInd}));
-    %     [CISort CISortInd] = sort(CI(SortedGrainInds{GrnInd}));
 
         %Get Max IQ for each grain;
 
-        [MaxIQ,IQInd] = max(IQ(SortedGrainInds{GrnInd}));
+        [MaxIQ,IQInd] = max(IQ(SortedGrainInds));
 
-    %     [MeanIQ(GrnInd) IQMeanInd(GrnInd)] = mean(IQ(SortedGrainInds{GrnInd}));
-    %     [IQSort IQSortInd] = sort(IQ(SortedGrainInds{GrnInd}));
 
         %Get Min Fit
 
-        [MinFit,FitInd] = min(Fit(SortedGrainInds{GrnInd}));
+        [MinFit,FitInd] = min(Fit(SortedGrainInds));
 
-    %     [MeanFit(GrnInd) FitMeanInd(GrnInd)] = mean(Fit(SortedGrainInds{GrnInd}));
-    %     [FitSort FitSortInd] = sort(Fit(SortedGrainInds{GrnInd}));
 
-    %     CIDiff = MaxCI(GrnInd) - MeanCI(GrnInd);
-    %     IQDiff = MaxIQ(GrnInd) - MeanIQ(GrnInd);
-    %     FitDiff = MeanFit(GrnInd) - MinFit(GrnInd);
+        MinFitTradeOff = MaxIQ/IQ(SortedGrainInds(FitInd)) + ...
+            MaxCI/CI(SortedGrainInds(FitInd));
 
-        MinFitTradeOff = MaxIQ/IQ(SortedGrainInds{GrnInd}(FitInd)) + ...
-            MaxCI/CI(SortedGrainInds{GrnInd}(FitInd));
+        MaxCITradeOff = Fit(SortedGrainInds(CIInd))/MinFit + ...
+            MaxIQ/IQ(SortedGrainInds(CIInd));
 
-        MaxCITradeOff = Fit(SortedGrainInds{GrnInd}(CIInd))/MinFit + ...
-            MaxIQ/IQ(SortedGrainInds{GrnInd}(CIInd));
-
-        MaxIQTradeOff = Fit(SortedGrainInds{GrnInd}(IQInd))/MinFit + ...
-            MaxCI/CI(SortedGrainInds{GrnInd}(IQInd));
+        MaxIQTradeOff = Fit(SortedGrainInds(IQInd))/MinFit + ...
+            MaxCI/CI(SortedGrainInds(IQInd));
 
 
 
@@ -93,9 +80,9 @@ for GrnInd = grains'
             OIMMapVals = ReadOIMMapData(obj.KernelAvgMisoPath);
             MapData = OIMMapVals{4};%use only the fourth "color" column in the exported OIM map data
             if DoUseMin
-                [~,MapInd] = min(MapData(SortedGrainInds{GrnInd}));
+                [~,MapInd] = min(MapData(SortedGrainInds));
             else
-                [~,MapInd] = max(MapData(SortedGrainInds{GrnInd}));
+                [~,MapInd] = max(MapData(SortedGrainInds));
             end
 
 
@@ -104,19 +91,16 @@ for GrnInd = grains'
                 IQInd IQInd MapInd MapInd ...
                 MapInd MapInd];
         else
-    %         Votes = [CIInd(GrnInd) FitInd(GrnInd) FitInd(GrnInd) IQInd(GrnInd) IQInd(GrnInd)...
-    %              IQInd(GrnInd)];
             Votes = [CIInd FitInd IQInd];
             [~,VoteInd] = min([MaxCITradeOff MinFitTradeOff MaxIQTradeOff]);
 
         end
         %Get best reference image in each grain;
         BestInd = Votes(VoteInd);
-    %     [MaxVotes(GrnInd) BestInd(GrnInd)] = max(histc(Votes,1:length(CI)));
 
 
         %Give all images in the same grain the new reference image path.
-        RefInd(SortedGrainInds{GrnInd}') = SortedGrainInds{GrnInd}(BestInd);
+        RefInd(SortedGrainInds') = SortedGrainInds(BestInd);
     end
 end
 

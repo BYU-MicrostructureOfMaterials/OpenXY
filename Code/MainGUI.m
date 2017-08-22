@@ -871,6 +871,12 @@ if ~handles.Settings.isSubScan
 else
     hObject.String = 'Select Subscan';
     handles.Settings.Inds = 1:handles.Settings.trueScanLength;
+    handles.Settings.isSubScan = false;
+    oldsize = handles.Settings.oldSize;
+    handles.Settings.Nx = oldsize(1);
+    handles.Settings.Ny = oldsize(2);
+    SizeStr = [num2str(oldsize(1)) 'x' num2str(oldsize(2))];
+    set(handles.ScanSizeText,'String',SizeStr);
 end
 
 function adjustSubplot(handles,X,Y)

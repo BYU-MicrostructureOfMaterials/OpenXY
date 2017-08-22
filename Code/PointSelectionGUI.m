@@ -239,6 +239,8 @@ PlotGBs(handles.Settings.grainID,[handles.Settings.Nx handles.Settings.Ny],handl
 lines = findobj('Type','Line','-and','Parent',handles.GrainMap);
 set(lines,'Parent',h);
 h.Visible = 'Off';
+handles.GrainMap.XLim = handles.Map.XLim;
+handles.GrainMap.YLim = handles.Map.YLim;
 PlotGB_Callback(handles.PlotGB,eventdata,handles);
 
 % Set up Points axis
@@ -303,10 +305,13 @@ end
 axis off
 if ~handles.IPFMap.Value
     h = colorbar;
-    h.Position(1) = 1 - h.Position(3);
-    h.AxisLocation = 'in';
+%     h.Position(1) = 1 - h.Position(3);
+%     h.AxisLocation = 'in';
     h.UIContextMenu = [];
 end
+pause(0.00001)
+handles.Points.Position = handles.Map.Position;
+handles.GrainMap.Position = handles.Map.Position;
 uistack(handles.GrainMap, 'top')
 uistack(handles.Points, 'top')
 
@@ -761,3 +766,7 @@ plotPoints(handles);
 function testGeometrySaveCloseFcn(handles)
 % Add save functionality after redoing systemSettings
 PointSelectionGUI_CloseRequestFcn(handles.PointSelectionGUI,0,0)
+
+function handles = matchMaps(handles)
+handles.Points.Position = handles.Map.Position;
+handles.GrainMap.Position = handles.Map.Position;
