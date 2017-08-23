@@ -248,7 +248,6 @@ classdef OXY < matlab.mixin.Copyable
         
         
         DoStrain@logical = true
-        HROIMMethod@char = 'Real'
         IterationLimit@double scalar = 6
         
         StandardDeviation@double scalar = 2
@@ -257,7 +256,6 @@ classdef OXY < matlab.mixin.Copyable
         GrainMethod@char = 'Grain File'
         MinGrainSize@double scalar = 0
                 
-        CalcDerivatives@logical = false
         GNDMethod@char = 'Full'
         NumSkipPts@double scalar = 0
         IQCutoff@double scalar = 0
@@ -320,6 +318,9 @@ classdef OXY < matlab.mixin.Copyable
         RefImageInd@double scalar = 0
 
         isSubScan@logical = false
+        
+        HROIMMethod@char = 'Real'
+        CalcDerivatives@logical = false
                 
     end
     

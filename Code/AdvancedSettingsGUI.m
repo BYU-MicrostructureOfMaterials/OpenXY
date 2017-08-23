@@ -69,22 +69,18 @@ else
     MainHandle = guidata(handles.MainGUI);
     Settings = MainHandle.Settings;
 end
-handles.PrevSettings = Settings;
 
 %Fast GUI
 if handles.Fast
-    set(handles.EditRefPoints,'Enable','off')
-    set(handles.ToggleGrainMap,'Enable','off')
+    handles.EditRefPoints.Enable = 'off';
+    handles.ToggleGrainMap.Enable = 'off';
 end
 
 %HROIM Method
-if ~isfield(Settings,'DoStrain')
-    Settings.DoStrain = true;
-end
-set(handles.DoStrain,'Value',Settings.DoStrain);
+handles.DoStrain.Value = Settings.DoStrain;
 
 HROIMMethodList = {'Simulated-Kinematic','Simulated-Dynamic','Real-Grain Ref','Real-Single Ref'};
-set(handles.HROIMMethod, 'String', HROIMMethodList);
+handles.HROIMMethod.String = HROIMMethodList;
 if strcmp(Settings.HROIMMethod,'Simulated')
     SetPopupValue(handles.HROIMMethod,'Simulated-Kinematic');
 elseif strcmp(Settings.HROIMMethod,'Dynamic Simulated')
@@ -98,52 +94,52 @@ else
 end
 
 %Standard Deviation
-set(handles.StandardDeviation,'String',num2str(Settings.StandardDeviation));
+handles.StandardDeviation.String = num2str(Settings.StandardDeviation);
 %Misorientation Tolerance
-set(handles.MisoTol,'String',num2str(Settings.MisoTol));
+handles.MisoTol.String = num2str(Settings.MisoTol);
 %Grain Ref Type
 GrainRefImageTypeList = {'Min Kernel Avg Miso','IQ > Fit > CI','Manual'};
-set(handles.GrainRefType, 'String', GrainRefImageTypeList);
+handles.GrainRefType.String = GrainRefImageTypeList;
 SetPopupValue(handles.GrainRefType,Settings.GrainRefImageType);
 %Grain ID Method
-set(handles.GrainMethod,'String',{'Grain File','Find Grains'});
+handles.GrainMethod.String = {'Grain File','Find Grains'};
 [~,~,ext] = fileparts(Settings.ScanFilePath);
 
     
 if strcmp(ext,'.ctf')
     SetPopupValue(handles.GrainMethod,'Find Grains');
-    set(handles.GrainMethod,'Enable','off')
+    handles.GrainMethod.Enable = 'off';
 elseif strcmp(Settings.ScanType,'Hexagonal') % Find Grains not yet compatibile with hexagonal scan
     SetPopupValue(handles.GrainMethod,'Grain File')
-    set(handles.GrainMethod,'Enable','off')
+    handles.GrainMethod.Enable = 'off';
 else
     SetPopupValue(handles.GrainMethod,Settings.GrainMethod);
-    set(handles.GrainMethod,'Enable','on');
+    handles.GrainMethod.Enable = 'on';
 end
 
 %Min Grain Size
-set(handles.MinGrainSize,'String',num2str(Settings.MinGrainSize))
+handles.MinGrainSize.String = num2str(Settings.MinGrainSize);
 
 %Dislocation Density Method
 GNDMethods = {'Full Cross-Correlation','Partial Cross-Correlation','Orientation-based'};
-set(handles.GNDMethod,'String',GNDMethods);
+handles.GNDMethod.String = GNDMethods;
 val = find(~cellfun('isempty',strfind(GNDMethods,Settings.GNDMethod)));
-set(handles.GNDMethod,'Value',val);
+handles.GNDMethod.Value = val;
 
 %Calculate Dislocation Density
-set(handles.DoDD,'Value', Settings.CalcDerivatives);
+handles.DoDD.Value = Settings.CalcDerivatives;
 %Number of Skip Points
-set(handles.SkipPoints,'String',Settings.NumSkipPts);
+handles.SkipPoints.String = Settings.NumSkipPts;
 %IQ Cutoff
-set(handles.IQCutoff,'String',num2str(Settings.IQCutoff));
+handles.IQCutoff.String = num2str(Settings.IQCutoff);
 
 %SplitDD
 %Do SplitDD
-set(handles.DoSplitDD,'Value',Settings.DoDDS);
+handles.DoSplitDD.Value = Settings.DoDDS;
 DDSMethods = {'Nye-Kroner','Nye-Kroner (Pantleon)','Distortion Matching'};
-set(handles.DDSMethod,'String',DDSMethods);
+handles.DDSMethod.String = DDSMethods;
 index = find(strcmp(DDSMethods,Settings.DDSMethod));
-set(handles.DDSMethod,'Value',index)
+handles.DDSMethod.Value = index;
 
 %Kernel Avg Miso
 if iscell(Settings.KernelAvgMisoPath)
@@ -151,22 +147,22 @@ if iscell(Settings.KernelAvgMisoPath)
 end
 if exist(Settings.KernelAvgMisoPath,'file')
     [path,name,ext] = fileparts(Settings.KernelAvgMisoPath);
-    set(handles.KAMname,'String',[name ext]);
-    set(handles.KAMpath,'String',path);
+    handles.KAMname.String = [name ext];
+    handles.KAMpath.String = path;
 else
-    set(handles.KAMname,'String','No File Selected');
-    set(handles.KAMpath,'String','No File Selected');
+    handles.KAMname.String = 'No File Selected';
+    handles.KAMpath.String = 'No File Selected';
 end
 
 %Calculation Options
-set(handles.EnableProfiler,'Value',Settings.EnableProfiler);
+handles.EnableProfiler.Value = Settings.EnableProfiler;
 
 %Set Position and Visuals
 if ~isempty(handles.MainGUI)
     MainSize = get(handles.MainGUI,'Position');
-    set(hObject,'Units','pixels');
-    GUIsize = get(hObject,'Position');
-    set(hObject,'Position',[MainSize(1)-GUIsize(3)-20 MainSize(2)-(GUIsize(4)-MainSize(4))+26 GUIsize(3) GUIsize(4)]);
+    hObject.Units = 'pixels';
+    GUIsize = hObject.Position;
+    hObject.Position = [MainSize(1)-GUIsize(3)-20 MainSize(2)-(GUIsize(4)-MainSize(4))+26 GUIsize(3) GUIsize(4)];
     movegui(hObject,'onscreen');
 end
 handles.ColorSave = get(handles.SaveButton,'BackgroundColor');
@@ -177,7 +173,6 @@ set(gui,'KeyPressFcn',@AdvancedSettingsGUI_KeyPressFcn);
 % Update handles structure
 handles.Settings = Settings;
 handles.GrainMap = [];
-handles.edited = false;
 
 %Update Components
 GNDMethod_Callback(handles.GNDMethod, eventdata, handles);
@@ -186,17 +181,144 @@ if ~strcmp(handles.GNDMethod.String{handles.GNDMethod.Value},'Partial Cross-Corr
     DoStrain_Callback(handles.DoStrain, eventdata, handles,1);
     handles = guidata(hObject);
 end
-HROIMMethod_Callback(handles.HROIMMethod, eventdata, handles,1);
+
+listenProperties = {'HROIMMethod','CalcDerivatives'};
+handles.listener = addlistener(Settings,listenProperties,'PostSet',...
+    @(src,evnt) updateFunc(evnt,hObject));
+guidata(hObject,handles);
+updateFunc([],hObject);
 handles = guidata(hObject);
-DoDD_Callback(handles.DoDD, eventdata, handles);
-handles = guidata(hObject);
-GrainMethod_Callback(handles.GrainMethod, eventdata, handles,true)
+GrainMethod_Callback(handles.GrainMethod, eventdata, handles)
 handles = guidata(hObject);
 guidata(hObject, handles);
 
+function updateFunc(event,hObject)
 
-% UIWAIT makes AdvancedSettingsGUI wait for user response (see UIRESUME)
-%uiwait(handles.AdvancedSettingsGUI);
+handles = guidata(hObject);
+HROIMMethod = handles.Settings.HROIMMethod;
+
+eventdata = [];
+
+%HROIMMethod update
+switch HROIMMethod
+    case 'Simulated-Kinematic'
+        handles.HROIMlabel.String = 'Iteration Limit';
+        handles.HROIMedit.String = num2str(handles.Settings.IterationLimit);
+        handles.GrainRefType.Enable = 'off';
+        handles.SelectKAM.Enable = 'off';
+        handles.EditRefPoints.Enable = 'off';
+        if get(handles.DoStrain,'Value')
+            set(handles.HROIMedit,'Enable','on');
+        else
+            set(handles.HROIMedit,'Enable','off');
+        end
+%         ToggleGrainMap_Callback(handles.ToggleGrainMap,eventdata,handles);
+    case 'Simulated-Dynamic'
+        %Check for EMsoft
+        EMsoftPath = GetEMsoftPath;
+        if isempty(EMsoftPath)
+            HROIMMethod = 'Simulated';
+            SetPopupValue(handles.HROIMMethod,'Simulated-Kinematic');
+            handles.Settings.HROIMMethod = HROIMMethod;
+        end
+        
+        %Validate EMsoft setup
+        if ~isempty(EMsoftPath)  && strcmp(HROIMMethod,'Simulated-Dynamic')
+            %Check if Monte-Carlo Simulation data has been generated
+            valid = 1;
+            if isfield(handles.Settings,'Phase')
+                mats = unique(handles.Settings.Phase);
+            elseif strcmp(handles.Settings.Material,'Scan File')
+                valid = 0;
+                warndlgpause({'Material must be specified before selecting Simulation-Dynamic','Resetting to kinematic simulation'},'Select Material');
+                SetPopupValue(handles.HROIMMethod,'Simulated-Kinematic');
+                handles.Settings.HROIMMethod = 'Simulated';
+                mats = {};
+            else
+                mats = handles.Settings.Material;
+            end
+            EMdataPath = fullfile(fileparts(EMsoftPath),'EMdata');
+            EMsoftMats = dir(EMdataPath);
+            EMsoftMats = {EMsoftMats(~cellfun(@isempty,strfind({EMsoftMats.name},'EBSDmaster'))).name}';
+            EMsoftMats = cellfun(@(x) x(1:strfind(x,'_EBSDmaster')-1),EMsoftMats,'UniformOutput',false);
+            inlist = ismember(mats,EMsoftMats);
+            if ~all(inlist)
+                valid = 0;
+                msg = {['No master EBSD files for: ' strjoin(mats(~inlist),', ')], ['Search path: ' EMdataPath],'Resetting to kinematic simulation'};
+                warndlgpause(msg,'No EMsoft data found');
+                SetPopupValue(handles.HROIMMethod,'Simulated-Kinematic');
+                handles.Settings.HROIMMethod = 'Simulated';
+            end
+            
+            %Set method to simualated dynamic
+            if valid
+                handles.HROIMlabel.String = 'Iteration Limit';
+                handles.HROIMedit.String = num2str(handles.Settings.IterationLimit);
+                handles.GrainRefType.Enable = 'off';
+                handles.SelectKAM.Enable = 'off';
+                handles.EditRefPoints.Enable = 'off';
+                handles.Settings.HROIMMethod = 'Dynamic Simulated';
+                if get(handles.DoStrain,'Value')
+                    set(handles.HROIMedit,'Enable','on');
+                else
+                    set(handles.HROIMedit,'Enable','off');
+                end
+                handles.Settings.RefInd = [];
+%                 ToggleGrainMap_Callback(handles.ToggleGrainMap,eventdata,handles);
+            end
+        end
+    case 'Real-Grain Ref'
+        handles.HROIMlabel.String = 'Ref Image Index';
+        handles.Settings.RefImageInd = 0;
+        handles.HROIMedit.String = num2str(handles.Settings.RefImageInd);
+        handles.HROIMedit.Enable = 'off';
+        handles.GrainRefType.Enable = 'on';
+        if ~handles.Fast; handles.EditRefPoints.Enable = 'on'; end
+        handles.Settings.HROIMMethod = 'Real';
+        if nargin == 3
+            GrainRefType_Callback(handles.GrainRefType, eventdata, handles);
+        end
+        handles.GrainRefType.Enable = 'on';
+    case 'Real-Single Ref'
+        handles.HROIMlabel.String = 'Ref Image Index';
+        if handles.Settings.RefImageInd == 0
+            handles.Settings.RefImageInd = 1;
+            if ~handles.Fast
+                handles.Settings.RefInd(1:handles.Settings.ScanLength) = 1;
+            end
+        end
+        handles.HROIMedit.String = num2str(handles.Settings.RefImageInd);
+        handles.HROIMedit.Enable = 'on';
+        handles.GrainRefType.Enable = 'on';
+        handles.EditRefPoints.Enable = 'off';
+        GrainRefType_Callback(handles.GrainRefType, eventdata, handles);
+        handles = guidata(handles.HROIMMethod);
+        handles.Settings.HROIMMethod = 'Real';
+        handles.Settings.GrainRefImageType = 'Manual';
+        SetPopupValue(handles.GrainRefType,'Manual');
+        handles.GrainRefType.Enable = 'off';
+end
+
+%DoDD update (CalcDerivatives)
+if handles.DoDD.Value
+    handles.DoSplitDD.Enable = 'on';
+    handles.SkipPoints.Enable = 'on';
+    handles.IQCutoff.Enable = 'on';
+    handles.GNDMethod.Enable = 'on';
+    GNDMethod_Callback(handles.GNDMethod, eventdata, handles);
+    DoSplitDD_Callback(handles.DoSplitDD, eventdata, handles);
+    handles = guidata(hObject);
+else
+    handles.DoStrain.Enable = 'on';
+    handles.DoSplitDD.Enable = 'off';
+    handles.SkipPoints.Enable = 'off';
+    handles.IQCutoff.Enable = 'off';
+    handles.GNDMethod.Enable = 'off';
+    DoSplitDD_Callback(handles.DoSplitDD, eventdata, handles);
+    handles = guidata(hObject);
+end
+
+guidata(hObject,handles)
 
 
 % --- Outputs from this function are returned to the command line.
@@ -215,10 +337,10 @@ function AdvancedSettingsGUI_CloseRequestFcn(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hint: delete(hObject) closes the figure
 if ishandle(handles.GrainMap)
     close(handles.GrainMap)
 end
+delete(handles.listener)
 delete(hObject);
 
 % --- Executes on button press in SaveButton.
@@ -243,17 +365,14 @@ if ~isempty(handles.MainGUI) && isvalid(handles.MainGUI)
     UpdateMainGUIs = getappdata(handles.MainGUI,'UpdateGUIs');
     UpdateMainGUIs(MainHandles);
 end
-handles.PrevSettings = handles.Settings;
-handles.edited = false;
 guidata(hObject,handles);
-SaveColor(handles)
+
 
 % --- Executes on button press in CancelButton.
 function CancelButton_Callback(hObject, eventdata, handles)
 % hObject    handle to CancelButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.Settings = handles.PrevSettings;
 guidata(hObject,handles);
 AdvancedSettingsGUI_CloseRequestFcn(handles.AdvancedSettingsGUI, eventdata, handles);
 
@@ -264,17 +383,17 @@ function HROIMMethod_Callback(hObject, eventdata, handles,~)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns HROIMMethod contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from HROIMMethod
 contents = cellstr(get(hObject,'String'));
 HROIMMethod = contents{get(hObject,'Value')};
+handles.Settings.HROIMMethod = HROIMMethod;
+%{
 switch HROIMMethod
     case 'Simulated-Kinematic'
-        set(handles.HROIMlabel,'String','Iteration Limit');
-        set(handles.HROIMedit,'String',num2str(handles.Settings.IterationLimit));
-        set(handles.GrainRefType,'Enable','off');
-        set(handles.SelectKAM,'Enable','off');
-        set(handles.EditRefPoints,'Enable','off')
+        handles.HROIMlabel.String = 'Iteration Limit';
+        handles.HROIMedit.String = num2str(handles.Settings.IterationLimit);
+        handles.GrainRefType.Enable = 'off';
+        handles.SelectKAM.Enable = 'off';
+        handles.EditRefPoints.Enable = 'off';
         handles.Settings.HROIMMethod = 'Simulated';
         if get(handles.DoStrain,'Value')
             set(handles.HROIMedit,'Enable','on');
@@ -322,11 +441,11 @@ switch HROIMMethod
             
             %Set method to simualated dynamic
             if valid
-                set(handles.HROIMlabel,'String','Iteration Limit');
-                set(handles.HROIMedit,'String',num2str(handles.Settings.IterationLimit));
-                set(handles.GrainRefType,'Enable','off');
-                set(handles.SelectKAM,'Enable','off');
-                set(handles.EditRefPoints,'Enable','off')
+                handles.HROIMlabel.String = 'Iteration Limit';
+                handles.HROIMedit.String = num2str(handles.Settings.IterationLimit);
+                handles.GrainRefType.Enable = 'off';
+                handles.SelectKAM.Enable = 'off';
+                handles.EditRefPoints.Enable = 'off';
                 handles.Settings.HROIMMethod = 'Dynamic Simulated';
                 if get(handles.DoStrain,'Value')
                     set(handles.HROIMedit,'Enable','on');
@@ -338,61 +457,43 @@ switch HROIMMethod
             end
         end
     case 'Real-Grain Ref'
-        set(handles.HROIMlabel,'String','Ref Image Index');
+        handles.HROIMlabel.String = 'Ref Image Index';
         handles.Settings.RefImageInd = 0;
-        set(handles.HROIMedit,'String',num2str(handles.Settings.RefImageInd));
-        set(handles.HROIMedit,'Enable','off');
-        set(handles.GrainRefType,'Enable','on');
-        if ~handles.Fast, set(handles.EditRefPoints,'Enable','on'), end
+        handles.HROIMedit.String = num2str(handles.Settings.RefImageInd);
+        handles.HROIMedit.Enable = 'off';
+        handles.GrainRefType.Enable = 'on';
+        if ~handles.Fast; handles.EditRefPoints.Enable = 'on'; end
         handles.Settings.HROIMMethod = 'Real';
         if nargin == 3
             GrainRefType_Callback(handles.GrainRefType, eventdata, handles);
         end
-        set(handles.GrainRefType,'Enable','on');
-        handles = guidata(hObject);
+        handles.GrainRefType.Enable = 'on';
     case 'Real-Single Ref'
-        set(handles.HROIMlabel,'String','Ref Image Index');
+        handles.HROIMlabel.String = 'Ref Image Index';
         if handles.Settings.RefImageInd == 0
             handles.Settings.RefImageInd = 1;
             if ~handles.Fast
                 handles.Settings.RefInd(1:handles.Settings.ScanLength) = 1;
             end
         end
-        set(handles.HROIMedit,'String',num2str(handles.Settings.RefImageInd));
-        set(handles.HROIMedit,'Enable','on');
-        set(handles.GrainRefType,'Enable','on');
-        set(handles.EditRefPoints,'Enable','off')
+        handles.HROIMedit.String = num2str(handles.Settings.RefImageInd);
+        handles.HROIMedit.Enable = 'on';
+        handles.GrainRefType.Enable = 'on';
+        handles.EditRefPoints.Enable = 'off';
         GrainRefType_Callback(handles.GrainRefType, eventdata, handles);
         handles = guidata(hObject);
         handles.Settings.HROIMMethod = 'Real';
         handles.Settings.GrainRefImageType = 'Manual';
         SetPopupValue(handles.GrainRefType,'Manual');
-        set(handles.GrainRefType,'Enable','off');
+        handles.GrainRefType.Enable = 'off';
 end
-if ValChanged(handles,'HROIMMethod')
-    handles.edited = true;
-end
-SaveColor(handles)
+%}
 guidata(hObject,handles);
 
 function warndlgpause(msg,title)
 h = warndlg(msg,title);
 uiwait(h,7);
-if isvalid(h); close(h); end;
-
-
-% --- Executes during object creation, after setting all properties.
-function HROIMMethod_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to HROIMMethod (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
+if isvalid(h); close(h); end
 
 
 function HROIMedit_Callback(hObject, eventdata, handles)
@@ -400,15 +501,11 @@ function HROIMedit_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of HROIMedit as text
-%        str2double(get(hObject,'String')) returns contents of HROIMedit as a double
 contents = cellstr(get(handles.HROIMMethod,'String'));
 HROIMMethod = contents{get(handles.HROIMMethod,'Value')};
 switch HROIMMethod
-    case 'Simulated-Kinematic'
-        handles.Settings.IterationLimit = str2double(get(hObject,'String'));
-    case 'Simulated-Dynamic'
-        handles.Settings.IterationLimit = str2double(get(hObject,'String'));
+    case {'Simulated-Kinematic','Simulated-Dynamic'}
+        handles.Settings.IterationLimit = str2double(hObject.String);
     case 'Real-Grain Ref'
         handles.Settings.RefImageInd = 0;
     case 'Real-Single Ref'
@@ -418,30 +515,13 @@ switch HROIMMethod
             handles.Settings.RefImageInd = round(input);
             handles.Settings.RefInd(1:handles.Settings.ScanLength) = round(input);
             set(hObject,'String',num2str(round(input)));
-            ToggleGrainMap_Callback(handles.ToggleGrainMap,eventdata,handles);
+%             ToggleGrainMap_Callback(handles.ToggleGrainMap,eventdata,handles);
         else
             msgbox(['Invalid input. Must be between 1 and ' num2str(handles.Settings.ScanLength) '.'],'Invalid Image Index');
             set(hObject,'String',num2str(handles.Settings.RefImageInd));
         end
 end
-if ValChanged(handles,'IterationLimit') || ValChanged(handles,'RefImageInd')
-    handles.edited = true;
-end
-SaveColor(handles)
 guidata(hObject,handles);
-
-% --- Executes during object creation, after setting all properties.
-function HROIMedit_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to HROIMedit (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
 
 
 function StandardDeviation_Callback(hObject, eventdata, handles)
@@ -449,27 +529,8 @@ function StandardDeviation_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of StandardDeviation as text
-%        str2double(get(hObject,'String')) returns contents of StandardDeviation as a double
 handles.Settings.StandardDeviation = str2double(get(hObject,'String'));
-if ValChanged(handles,'StandardDeviation')
-    handles.edited = true;
-end
-SaveColor(handles)
 guidata(hObject,handles);
-
-% --- Executes during object creation, after setting all properties.
-function StandardDeviation_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to StandardDeviation (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
 
 
 function MisoTol_Callback(hObject, eventdata, handles)
@@ -477,29 +538,11 @@ function MisoTol_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of MisoTol as text
-%        str2double(get(hObject,'String')) returns contents of MisoTol as a double
 handles.Settings.MisoTol = str2double(get(hObject,'String'));
 handles.Settings.grainID = CalcGrainID(handles.Settings);
 
 GrainRefType_Callback(handles.GrainRefType, eventdata, handles);
-if ValChanged(handles,'MisoTol')
-    handles.edited = true;
-end
-SaveColor(handles)
 guidata(hObject,handles);
-
-% --- Executes during object creation, after setting all properties.
-function MisoTol_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to MisoTol (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 
 % --- Executes on selection change in GrainRefType.
@@ -508,8 +551,6 @@ function GrainRefType_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns GrainRefType contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from GrainRefType
 contents = cellstr(get(hObject,'String'));
 GrainRefType = contents{get(hObject,'Value')};
 if strcmp(GrainRefType,'Min Kernel Avg Miso')
@@ -528,7 +569,7 @@ if ~handles.Fast
         case 'IQ > Fit > CI'
             handles.AutoRefInds = UpdateAutoInds(handles,handles.Settings.GrainRefImageType);
             handles.Settings.RefInd = handles.AutoRefInds;
-            ToggleGrainMap_Callback(handles.ToggleGrainMap,eventdata,handles);
+%             ToggleGrainMap_Callback(handles.ToggleGrainMap,eventdata,handles);
         case 'Manual'
             grainIDs = unique(handles.Settings.grainID);
             if ~isfield(handles.Settings,'RefInd') || isempty(handles.Settings.RefInd)
@@ -542,28 +583,11 @@ if ~handles.Fast
                 EditRefPoints_Callback(handles.EditRefPoints, eventdata, handles);
                 handles = guidata(hObject);
             end
-            ToggleGrainMap_Callback(handles.ToggleGrainMap,eventdata,handles);
+%             ToggleGrainMap_Callback(handles.ToggleGrainMap,eventdata,handles);
     end
 end
 handles.Settings.GrainRefImageType = GrainRefType;
-if ValChanged(handles,'GrainRefImageType')
-    handles.edited = true;
-end
-SaveColor(handles)
 guidata(hObject,handles);
-
-
-% --- Executes during object creation, after setting all properties.
-function GrainRefType_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to GrainRefType (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 
 % --- Executes on button press in DoDD.
@@ -572,8 +596,8 @@ function DoDD_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hint: get(hObject,'Value') returns toggle state of DoDD
 handles.Settings.CalcDerivatives = logical(get(hObject,'Value'));
+%{
 if get(hObject,'Value')
     set(handles.DoSplitDD,'Enable','on');
     set(handles.SkipPoints,'Enable','on');
@@ -591,10 +615,7 @@ else
     DoSplitDD_Callback(handles.DoSplitDD, eventdata, handles);
     handles = guidata(hObject);
 end
-if ValChanged(handles,'CalcDerivatives')
-    handles.edited = true;
-end
-SaveColor(handles)
+%}
 guidata(hObject,handles);
 
 
@@ -604,8 +625,6 @@ function SkipPoints_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of SkipPoints as text
-%        str2double(get(hObject,'String')) returns contents of SkipPoints as a double
 %Input validation
 Settings = handles.Settings;
 UserInput = get(hObject,'String');
@@ -627,25 +646,7 @@ end
 handles.Settings.NumSkipPts = str2double(get(hObject,'String'));
 
 %Updates handles object
-if ValChanged(handles,'NumSkipPts')
-    handles.edited = true;
-end
-SaveColor(handles)
 guidata(hObject,handles);
-
-
-% --- Executes during object creation, after setting all properties.
-function SkipPoints_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to SkipPoints (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
 
 
 function IQCutoff_Callback(hObject, eventdata, handles)
@@ -653,27 +654,9 @@ function IQCutoff_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of IQCutoff as text
-%        str2double(get(hObject,'String')) returns contents of IQCutoff as a double
 handles.Settings.IQCutoff = str2double(get(hObject,'String'));
-if ValChanged(handles,'IQCutoff')
-    handles.edited = true;
-end
-SaveColor(handles)
 guidata(hObject,handles);
 
-
-% --- Executes during object creation, after setting all properties.
-function IQCutoff_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to IQCutoff (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 % --- Executes on button press in DoSplitDD.
 function DoSplitDD_Callback(hObject, eventdata, handles)
@@ -681,7 +664,6 @@ function DoSplitDD_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hint: get(hObject,'Value') returns toggle state of DoSplitDD
 Settings = handles.Settings;
 if isfield(Settings,'Phase')
     allMaterials = unique(Settings.Phase);
@@ -706,10 +688,6 @@ if strcmp(get(hObject,'Enable'),'off')
 end
 set(handles.DDSMethod,'Enable',enable);
 handles.Settings.DoDDS = logical(get(hObject,'Value'));
-if ValChanged(handles,'DoDDS')
-    handles.edited = true;
-end
-SaveColor(handles)
 guidata(hObject,handles);
 
 % --- Executes on selection change in SplitDDMethod.
@@ -718,8 +696,6 @@ function SplitDDMethod_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns SplitDDMethod contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from SplitDDMethod
 contents = cellstr(get(hObject,'String'));
 val = contents{get(hObject,'Value')};
 switch val
@@ -736,88 +712,18 @@ handles.Settings.rdoptions.minscheme = minscheme;
 guidata(hObject,handles);
 
 
-
-% --- Executes during object creation, after setting all properties.
-function SplitDDMethod_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to SplitDDMethod (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-
-% --- Executes on selection change in SplitDDOpt.
-function SplitDDOpt_Callback(hObject, eventdata, handles)
-% hObject    handle to SplitDDOpt (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = cellstr(get(hObject,'String')) returns SplitDDOpt contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from SplitDDOpt
-contents = cellstr(get(hObject,'String'));
-val = contents{get(hObject,'Value')};
-switch val
-    case 'L1'
-        L1 = 1; x0type = 0;
-    case 'L2'
-        L1 = 0; x0type = 1;
-    case 'L1 from L2'
-        L1 = 1; x0type = 1;
-end
-handles.Settings.rdoptions.L1 = L1;
-handles.Settings.rdoptions.x0type = x0type;
-guidata(hObject,handles);
-
-% --- Executes during object creation, after setting all properties.
-function SplitDDOpt_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to SplitDDOpt (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
 % --- Executes on selection change in DDSMethod.
 function DDSMethod_Callback(hObject, eventdata, handles)
 % hObject    handle to DDSMethod (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns DDSMethod contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from DDSMethod
 contents = cellstr(get(hObject,'String'));
 val = contents{get(hObject,'Value')};
 handles.Settings.DDSMethod = val;
 handles.Settings.rdoptions.Pantleon = strcmp(val,'Pantleon');
 
-if ValChanged(handles,'DDSMethod')
-    handles.edited = true;
-end
-SaveColor(handles)
 guidata(hObject,handles);
-
-
-
-% --- Executes during object creation, after setting all properties.
-function DDSMethod_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to DDSMethod (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 
 % --- Executes on button press in SelectKAM.
@@ -845,10 +751,6 @@ if name ~= 0 %Nothing selected
     guidata(hObject,handles);
 end
 cd(w);
-if ValChanged(handles,'KernelAvgMisoPath')
-    handles.edited = true;
-end
-SaveColor(handles)
 guidata(hObject,handles);
 
 
@@ -869,13 +771,7 @@ function EnableProfiler_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hint: get(hObject,'Value') returns toggle state of EnableProfiler
-handles.Settings.EnableProfiler = get(hObject,'Value');
-
-if ValChanged(handles,'EnableProfiler')
-    handles.edited = true;
-end
-SaveColor(handles)
+handles.Settings.EnableProfiler = logical(get(hObject,'Value'));
 guidata(hObject,handles);
 
 % --- Executes on button press in DoStrain.
@@ -884,7 +780,6 @@ function DoStrain_Callback(hObject, eventdata, handles,~)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hint: get(hObject,'Value') returns toggle state of DoStrain
 if get(hObject,'Value')
     set(handles.HROIMMethod,'Enable','on');
     set(handles.HROIMedit,'Enable','on');
@@ -904,28 +799,18 @@ if nargin == 3
 HROIMMethod_Callback(handles.HROIMMethod,eventdata,handles);
 end
 handles.Settings.DoStrain = logical(get(hObject,'Value'));
-
-if ValChanged(handles,'DoStrain')
-    handles.edited = true;
-end
-SaveColor(handles)
 guidata(hObject,handles);
 
 
 % --- Executes on selection change in GrainMethod.
-function GrainMethod_Callback(hObject, eventdata, handles, init)
+function GrainMethod_Callback(hObject, eventdata, handles)
 % hObject    handle to GrainMethod (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns GrainMethod contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from GrainMethod
-if nargin < 4
-    init = false;
-end
 contents = get(hObject,'String');
 Method = contents{get(hObject,'Value')};
-if ~strcmp(handles.Settings.GrainMethod,Method) || init
+if ~strcmp(handles.Settings.GrainMethod,Method) 
     handles.Settings.GrainMethod = Method;
     if ~handles.Fast
         if strcmp(Method,'Find Grains')
@@ -938,27 +823,7 @@ if ~strcmp(handles.Settings.GrainMethod,Method) || init
     end
 end
 GrainRefType_Callback(handles.GrainRefType, eventdata, handles);
-if ValChanged(handles,'GrainMethod')
-    handles.edited = true;
-end
-SaveColor(handles)
 guidata(hObject,handles);
-
-    
-
-
-% --- Executes during object creation, after setting all properties.
-function GrainMethod_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to GrainMethod (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
 
 
 function MinGrainSize_Callback(hObject, eventdata, handles)
@@ -966,32 +831,12 @@ function MinGrainSize_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of MinGrainSize as text
-%        str2double(get(hObject,'String')) returns contents of MinGrainSize as a double
 handles.Settings.MinGrainSize = str2double(get(hObject,'String'));
 if ~handles.Fast
     handles.Settings.grainID = CalcGrainID(handles.Settings);
 end
 GrainRefType_Callback(handles.GrainRefType, eventdata, handles);
-if ValChanged(handles,'MinGrainSize')
-    handles.edited = true;
-end
-SaveColor(handles)
-% guidata(hObject,handles);
-
-
-
-% --- Executes during object creation, after setting all properties.
-function MinGrainSize_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to MinGrainSize (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
+guidata(hObject,handles);
 
 
 % --- Executes on button press in ToggleGrainMap.
@@ -1000,7 +845,6 @@ function ToggleGrainMap_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hint: get(hObject,'Value') returns toggle state of ToggleGrainMap
 if get(hObject,'Value') && ~handles.Fast
     handles.GrainMap = OpenGrainMap(handles);
     cla
@@ -1098,11 +942,6 @@ IndsAll = IndsAll(sortI);
 RefInd = IndsAll(ic);
 
 handles.Settings.RefInd = RefInd;
-if ValChanged(handles,'RefInd')
-    handles.edited = true;
-end
-SaveColor(handles)
-
 guidata(handles.AdvancedSettingsGUI,handles);
 
 function AutoRefInds = UpdateAutoInds(handles,GrainRefType)
@@ -1138,8 +977,6 @@ function GNDMethod_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns GNDMethod contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from GNDMethod
 contents = get(hObject,'String');
 set(handles.DoStrain,'Enable','on');
 sel = contents{get(hObject,'Value')};
@@ -1160,42 +997,7 @@ switch sel
         handles.Settings.GNDMethod = 'Orientation';
         
 end
-if ValChanged(handles,'GNDMethod')
-    handles.edited = true;
-end
-SaveColor(handles)
 guidata(hObject,handles);
-
-
-% --- Executes during object creation, after setting all properties.
-function GNDMethod_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to GNDMethod (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-function SaveColor(handles)
-if handles.edited
-    set(handles.SaveButton,'BackgroundColor',handles.ColorEdit);
-else
-    set(handles.SaveButton,'BackgroundColor',handles.ColorSave);
-end
-
-function changed = ValChanged(handles,value)
-if isfield(handles.PrevSettings,value)
-    if ischar(handles.Settings.(value))
-        changed = ~strcmp(handles.Settings.(value),handles.PrevSettings.(value));
-    else
-        changed =  ~isequal(handles.Settings.(value),handles.PrevSettings.(value));
-    end
-else
-    changed = true;
-end
 
 
 % --- Executes on key press with focus on AdvancedSettingsGUI and none of its controls.
@@ -1215,4 +1017,3 @@ end
 if strcmp(eventdata.Key,'l') && ~isempty(eventdata.Modifier) && strcmp(eventdata.Modifier,'control')
     CancelButton_Callback(handles.SaveButton, eventdata, handles);
 end
-
