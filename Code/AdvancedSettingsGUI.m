@@ -73,7 +73,6 @@ end
 %Fast GUI
 if handles.Fast
     handles.EditRefPoints.Enable = 'off';
-    handles.ToggleGrainMap.Enable = 'off';
 end
 
 %HROIM Method
@@ -182,7 +181,8 @@ if ~strcmp(handles.GNDMethod.String{handles.GNDMethod.Value},'Partial Cross-Corr
     handles = guidata(hObject);
 end
 
-listenProperties = {'HROIMMethod','CalcDerivatives'};
+listenProperties = {'HROIMMethod','CalcDerivatives','GrainMethod',...
+    'MisoTol','MinGrainSize'};
 handles.listener = addlistener(Settings,listenProperties,'PostSet',...
     @(src,evnt) updateFunc(evnt,hObject));
 guidata(hObject,handles);
@@ -201,18 +201,17 @@ eventdata = [];
 
 %HROIMMethod update
 switch HROIMMethod
-    case 'Simulated-Kinematic'
+    case 'Simulated'
         handles.HROIMlabel.String = 'Iteration Limit';
         handles.HROIMedit.String = num2str(handles.Settings.IterationLimit);
         handles.GrainRefType.Enable = 'off';
         handles.SelectKAM.Enable = 'off';
         handles.EditRefPoints.Enable = 'off';
         if get(handles.DoStrain,'Value')
-            set(handles.HROIMedit,'Enable','on');
+            handles.HROIMedit.Enable = 'on';
         else
-            set(handles.HROIMedit,'Enable','off');
+            handles.HROIMedit.Enable = 'off';
         end
-%         ToggleGrainMap_Callback(handles.ToggleGrainMap,eventdata,handles);
     case 'Simulated-Dynamic'
         %Check for EMsoft
         EMsoftPath = GetEMsoftPath;
@@ -224,34 +223,9 @@ switch HROIMMethod
         
         %Validate EMsoft setup
         if ~isempty(EMsoftPath)  && strcmp(HROIMMethod,'Simulated-Dynamic')
-            %Check if Monte-Carlo Simulation data has been generated
-            valid = 1;
-            if isfield(handles.Settings,'Phase')
-                mats = unique(handles.Settings.Phase);
-            elseif strcmp(handles.Settings.Material,'Scan File')
-                valid = 0;
-                warndlgpause({'Material must be specified before selecting Simulation-Dynamic','Resetting to kinematic simulation'},'Select Material');
-                SetPopupValue(handles.HROIMMethod,'Simulated-Kinematic');
-                handles.Settings.HROIMMethod = 'Simulated';
-                mats = {};
-            else
-                mats = handles.Settings.Material;
-            end
-            EMdataPath = fullfile(fileparts(EMsoftPath),'EMdata');
-            EMsoftMats = dir(EMdataPath);
-            EMsoftMats = {EMsoftMats(~cellfun(@isempty,strfind({EMsoftMats.name},'EBSDmaster'))).name}';
-            EMsoftMats = cellfun(@(x) x(1:strfind(x,'_EBSDmaster')-1),EMsoftMats,'UniformOutput',false);
-            inlist = ismember(mats,EMsoftMats);
-            if ~all(inlist)
-                valid = 0;
-                msg = {['No master EBSD files for: ' strjoin(mats(~inlist),', ')], ['Search path: ' EMdataPath],'Resetting to kinematic simulation'};
-                warndlgpause(msg,'No EMsoft data found');
-                SetPopupValue(handles.HROIMMethod,'Simulated-Kinematic');
-                handles.Settings.HROIMMethod = 'Simulated';
-            end
             
             %Set method to simualated dynamic
-            if valid
+            if checkEMSoftMat(handles)
                 handles.HROIMlabel.String = 'Iteration Limit';
                 handles.HROIMedit.String = num2str(handles.Settings.IterationLimit);
                 handles.GrainRefType.Enable = 'off';
@@ -264,7 +238,6 @@ switch HROIMMethod
                     set(handles.HROIMedit,'Enable','off');
                 end
                 handles.Settings.RefInd = [];
-%                 ToggleGrainMap_Callback(handles.ToggleGrainMap,eventdata,handles);
             end
         end
     case 'Real-Grain Ref'
@@ -275,9 +248,7 @@ switch HROIMMethod
         handles.GrainRefType.Enable = 'on';
         if ~handles.Fast; handles.EditRefPoints.Enable = 'on'; end
         handles.Settings.HROIMMethod = 'Real';
-        if nargin == 3
-            GrainRefType_Callback(handles.GrainRefType, eventdata, handles);
-        end
+        GrainRefType_Callback(handles.GrainRefType, eventdata, handles);
         handles.GrainRefType.Enable = 'on';
     case 'Real-Single Ref'
         handles.HROIMlabel.String = 'Ref Image Index';
@@ -318,7 +289,40 @@ else
     handles = guidata(hObject);
 end
 
+%GrainMethod update
+if strcmp(handles.Settings.GrainMethod,'Grain File')
+    handles.MinGrainSize.Enable = 'Off';
+else
+    handles.MinGrainSize.Enable = 'On';
+end
+
 guidata(hObject,handles)
+
+function valid = checkEMSoftMat(handles)
+%Check if Monte-Carlo Simulation data has been generated
+valid = 1;
+if isfield(handles.Settings,'Phase')
+    mats = unique(handles.Settings.Phase);
+elseif strcmp(handles.Settings.Material,'Scan File')
+    valid = 0;
+    warndlgpause({'Material must be specified before selecting Simulation-Dynamic','Resetting to kinematic simulation'},'Select Material');
+    SetPopupValue(handles.HROIMMethod,'Simulated-Kinematic');
+    handles.Settings.HROIMMethod = 'Simulated';
+    mats = {};
+else
+    mats = handles.Settings.Material;
+end
+EMdataPath = fullfile(fileparts(EMsoftPath),'EMdata');
+EMsoftMats = dir(EMdataPath);
+EMsoftMats = {EMsoftMats(~cellfun(@isempty,strfind({EMsoftMats.name},'EBSDmaster'))).name}';
+EMsoftMats = cellfun(@(x) x(1:strfind(x,'_EBSDmaster')-1),EMsoftMats,'UniformOutput',false);
+inlist = ismember(mats,EMsoftMats);
+if ~all(inlist)
+    valid = 0;
+    msg = {['No master EBSD files for: ' strjoin(mats(~inlist),', ')], ['Search path: ' EMdataPath],'Resetting to kinematic simulation'};
+    warndlgpause(msg,'No EMsoft data found');
+    SetPopupValue(handles.HROIMMethod,'Simulated-Kinematic');
+end
 
 
 % --- Outputs from this function are returned to the command line.
@@ -385,6 +389,9 @@ function HROIMMethod_Callback(hObject, eventdata, handles,~)
 
 contents = cellstr(get(hObject,'String'));
 HROIMMethod = contents{get(hObject,'Value')};
+if strcmp(HROIMMethod,'Simulated-Kinematic')
+    HROIMMethod = 'Simulated';
+end
 handles.Settings.HROIMMethod = HROIMMethod;
 %{
 switch HROIMMethod
@@ -515,7 +522,6 @@ switch HROIMMethod
             handles.Settings.RefImageInd = round(input);
             handles.Settings.RefInd(1:handles.Settings.ScanLength) = round(input);
             set(hObject,'String',num2str(round(input)));
-%             ToggleGrainMap_Callback(handles.ToggleGrainMap,eventdata,handles);
         else
             msgbox(['Invalid input. Must be between 1 and ' num2str(handles.Settings.ScanLength) '.'],'Invalid Image Index');
             set(hObject,'String',num2str(handles.Settings.RefImageInd));
@@ -539,8 +545,6 @@ function MisoTol_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 handles.Settings.MisoTol = str2double(get(hObject,'String'));
-handles.Settings.grainID = CalcGrainID(handles.Settings);
-
 GrainRefType_Callback(handles.GrainRefType, eventdata, handles);
 guidata(hObject,handles);
 
@@ -569,7 +573,6 @@ if ~handles.Fast
         case 'IQ > Fit > CI'
             handles.AutoRefInds = UpdateAutoInds(handles,handles.Settings.GrainRefImageType);
             handles.Settings.RefInd = handles.AutoRefInds;
-%             ToggleGrainMap_Callback(handles.ToggleGrainMap,eventdata,handles);
         case 'Manual'
             grainIDs = unique(handles.Settings.grainID);
             if ~isfield(handles.Settings,'RefInd') || isempty(handles.Settings.RefInd)
@@ -583,7 +586,6 @@ if ~handles.Fast
                 EditRefPoints_Callback(handles.EditRefPoints, eventdata, handles);
                 handles = guidata(hObject);
             end
-%             ToggleGrainMap_Callback(handles.ToggleGrainMap,eventdata,handles);
     end
 end
 handles.Settings.GrainRefImageType = GrainRefType;
@@ -810,8 +812,9 @@ function GrainMethod_Callback(hObject, eventdata, handles)
 
 contents = get(hObject,'String');
 Method = contents{get(hObject,'Value')};
+handles.Settings.GrainMethod = Method;
+%{
 if ~strcmp(handles.Settings.GrainMethod,Method) 
-    handles.Settings.GrainMethod = Method;
     if ~handles.Fast
         if strcmp(Method,'Find Grains')
             set(handles.MinGrainSize,'Enable','on')
@@ -822,6 +825,7 @@ if ~strcmp(handles.Settings.GrainMethod,Method)
         end
     end
 end
+%}
 GrainRefType_Callback(handles.GrainRefType, eventdata, handles);
 guidata(hObject,handles);
 
@@ -832,47 +836,8 @@ function MinGrainSize_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 handles.Settings.MinGrainSize = str2double(get(hObject,'String'));
-if ~handles.Fast
-    handles.Settings.grainID = CalcGrainID(handles.Settings);
-end
 GrainRefType_Callback(handles.GrainRefType, eventdata, handles);
 guidata(hObject,handles);
-
-
-% --- Executes on button press in ToggleGrainMap.
-function ToggleGrainMap_Callback(hObject, eventdata, handles)
-% hObject    handle to ToggleGrainMap (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-if get(hObject,'Value') && ~handles.Fast
-    handles.GrainMap = OpenGrainMap(handles);
-    cla
-    GrainMap = vec2map(handles.Settings.grainID,handles.Settings.Nx,handles.Settings.ScanType);
-    if size(GrainMap,1) == 1 %Line Scans
-        GrainMap = repmat(GrainMap,round(size(GrainMap,2)/6),1);
-    end
-    imagesc(GrainMap)
-    axis image
-    
-    if strcmp(handles.Settings.HROIMMethod,'Real')
-        if handles.Settings.RefImageInd == 0
-            if isfield(handles.Settings,'RefInd')
-                [X,Y] = ind2sub2([handles.Settings.Nx,handles.Settings.Ny],handles.Settings.RefInd,handles.Settings.ScanType);
-            end
-        else
-            [X,Y] = ind2sub2([handles.Settings.Nx,handles.Settings.Ny],handles.Settings.RefImageInd,handles.Settings.ScanType);
-        end
-        hold on
-        plot(X,Y,'kd','MarkerFaceColor','k')
-    end
-    guidata(hObject,handles);
-elseif ishandle(handles.GrainMap)
-    close(handles.GrainMap)
-    set(hObject,'BackgroundColor',[1 1 1]*0.94)
-else
-    set(hObject,'BackgroundColor',[1 1 1]*0.94)
-end
 
 
 % --- Executes on button press in EditRefPoints.
@@ -953,22 +918,6 @@ else
     AutoRefInds = GetRefImageInds(...
         {handles.Settings.Angles;handles.Settings.IQ;handles.Settings.CI;handles.Settings.Fit}, handles.Settings.grainID);
 end
-
-function GrainMap = OpenGrainMap(handles)
-if ~ishandle(handles.GrainMap)
-    pos = get(handles.AdvancedSettingsGUI,'Position');
-    GrainMap = figure('Position',[pos(1)+pos(3)+15 pos(2) 500 500]);
-else
-    figure(handles.GrainMap)
-    GrainMap = handles.GrainMap;
-end
-func = @(~,~) set(handles.ToggleGrainMap,'Value',0,'BackgroundColor',[1 1 1]*0.94);
-GrainMap.Name = 'Grain Map';
-GrainMap.MenuBar = 'None';
-GrainMap.IntegerHandle = 'off';
-GrainMap.DeleteFcn = func;
-set(handles.ToggleGrainMap,'Value',1,'BackgroundColor',[1 1 0])
-
 
 
 % --- Executes on selection change in GNDMethod.

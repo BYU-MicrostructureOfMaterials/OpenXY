@@ -24,7 +24,7 @@ function UpdateRefImageInds(obj)
 
 
 DoUseMapData = 0;
-if strcmp(obj.KernelAvgMisoPath,'Min Kernel Avg Miso')
+if strcmp(obj.GrainRefImageType,'Min Kernel Avg Miso')
     DoUseMapData = 1;
     DoUseMin = 1;%#ok
 end

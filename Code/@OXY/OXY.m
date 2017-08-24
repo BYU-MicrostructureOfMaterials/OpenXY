@@ -8,13 +8,32 @@ classdef OXY < matlab.mixin.Copyable
             
             obj.subScanListener = addlistener(obj,'isSubScan','PostSet',...
                 @(source,event) UpdateRefImageInds(obj));
+            
+            obj.grainRefListener = addlistener(obj,{'GrainRefImageType',...
+                'MisoTol'},'PostSet',@(source,event)...
+                UpdateRefImageInds(obj));
+            obj.grainMethodListener = addlistener(obj,{'GrainMethod',...
+                'MisoTol','MinGrainSize'},'PostSet',@(Source,event)...
+                UpdateGrainID(obj));
         end
         
         function delete(obj)
             delete(obj.subScanListener);
+            delete(obj.grainRefListener);
+            delete(obj.grainMethodListener);
+        end
+        
+        function value = trueScanLength(obj)
+            value = obj.hiddenScanLength;
         end
         
         UpdateRefImageInds(obj)
+        
+        UpdateGrainID(Settings)
+        
+    end
+    
+    methods%Getters and Setters
         
         function value = get.PhosphorSize(obj)
             value = obj.mperpix * obj.PixelSize;
@@ -203,11 +222,7 @@ classdef OXY < matlab.mixin.Copyable
                 value(1:obj.ScanLength) = obj.RefImageInd;
             end
         end
-        
-        function value = trueScanLength(obj)
-            value = obj.hiddenScanLength;
-        end
-        
+                
     end
     
     properties %General Properties
@@ -251,10 +266,6 @@ classdef OXY < matlab.mixin.Copyable
         IterationLimit@double scalar = 6
         
         StandardDeviation@double scalar = 2
-        MisoTol@double scalar = 5
-        GrainRefImageType@char = 'IQ > Fit > CI'
-        GrainMethod@char = 'Grain File'
-        MinGrainSize@double scalar = 0
                 
         GNDMethod@char = 'Full'
         NumSkipPts@double scalar = 0
@@ -321,7 +332,12 @@ classdef OXY < matlab.mixin.Copyable
         
         HROIMMethod@char = 'Real'
         CalcDerivatives@logical = false
-                
+        GrainRefImageType@char = 'IQ > Fit > CI'
+        
+        GrainMethod@char = 'Grain File'
+        MisoTol@double scalar = 5
+        MinGrainSize@double scalar = 0
+        
     end
     
     properties (Dependent = true)
@@ -374,6 +390,8 @@ classdef OXY < matlab.mixin.Copyable
         hiddenRefInd@double vector
         
         subScanListener
+        grainRefListener
+        grainMethodListener
     end
     
     events
