@@ -43,8 +43,8 @@ function PCData = PCStrainMinimization(Settings,PlaneFit,Inds)
     %Calculate Mean Pattern Center
     if strcmp(PlaneFit,'Naive')
         PCData.MeanXStar = mean(CalibrationPointsPC(:,1)+(Settings.XData(Inds))/Settings.PhosphorSize);
-		PCData.MeanYStar = mean(CalibrationPointsPC(:,2)-(Settings.YData(Inds))/Settings.PhosphorSize*sin(Settings.SampleTilt-Settings.CameraElevation));
-		PCData.MeanZStar = mean(CalibrationPointsPC(:,3)-(Settings.YData(Inds))/Settings.PhosphorSize*cos(Settings.SampleTilt-Settings.CameraElevation));
+		PCData.MeanYStar = mean(CalibrationPointsPC(:,2)-(Settings.YData(Inds))/Settings.PhosphorSize*cos(pi/2 - Settings.SampleTilt + Settings.CameraElevation));
+		PCData.MeanZStar = mean(CalibrationPointsPC(:,3)-(Settings.YData(Inds))/Settings.PhosphorSize*sin(pi/2 - Settings.SampleTilt + Settings.CameraElevation));
     else
         PCData.MeanXStar = mean(CalibrationPointsPC(:,1));
         PCData.MeanYStar = mean(CalibrationPointsPC(:,2));

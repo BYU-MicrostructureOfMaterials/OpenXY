@@ -29,9 +29,9 @@ ScanImage=double(ScanImage);
 roixc = Settings.roixc;
 roiyc = Settings.roiyc;
 if nargin < 9
-	xstar = Settings.XStar(Ind);
-	ystar = Settings.YStar(Ind);
-	zstar = Settings.ZStar(Ind);
+    xstar = Settings.XStar(Ind);
+    ystar = Settings.YStar(Ind);
+    zstar = Settings.ZStar(Ind);
 else
     xstar=PC(1);
     ystar=PC(2);
@@ -209,11 +209,13 @@ for i=1:length(roixc)
          tx=(xstar-Settings.XStar(RefInd))*Settings.PixelSize; % vector on phosphor between PC of ref and PC of measured; uses notation from PCsensitivity paper
          ty=(ystar-Settings.YStar(RefInd))*Settings.PixelSize;
 %          tantheta=atan2(sqrt((cc-Settings.YStar(Settings.RefImageInd))^2+(rc-Settings.XStar(Settings.RefImageInd))^2),Settings.ZStar(Settings.RefImageInd));
-         spminussx=(zstar-Settings.ZStar(RefInd))*(cc-Settings.XStar(RefInd)*Settings.PixelSize)/Settings.ZStar(RefInd); % difference of vectors from PC to ROI center for ref and scan pattern
-         spminussy=(zstar-Settings.ZStar(RefInd))*(rc-Settings.YStar(RefInd)*Settings.PixelSize)/Settings.ZStar(RefInd);
+         spminussx=(zstar-Settings.ZStar(RefInd))*(rc-Settings.XStar(RefInd)*Settings.PixelSize)/Settings.ZStar(RefInd); % difference of vectors from PC to ROI center for ref and scan pattern
+         spminussy=(zstar-Settings.ZStar(RefInd))*(cc-Settings.YStar(RefInd)*Settings.PixelSize)/Settings.ZStar(RefInd);
          dxshift=dxshift-tx-spminussx; % corrected ROI shift taking into account PC shift
-         dyshift=dyshift-ty-spminussy; %****NOT SURE ABOUT SIGN ON THIS        
+         dyshift=dyshift+ty+spminussy; %****NOT SURE ABOUT SIGN ON THIS        
+        
     end
+
 %     [xshift0,yshift0] = Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,cc,rc,Fo,Settings.PixelSize,alpha);%this is the screen shift in the g (hough) frame *****not used***
     
     %     else
@@ -671,19 +673,21 @@ switch Settings.FCalcMethod
         
         
         %answers
-        b1=-q1-(q1.*rp1+q2.*rp2+q3.*rp3).*rp1;
-        b2=-q2-(q1.*rp1+q2.*rp2+q3.*rp3).*rp2;
-        b3=-q3-(q1.*rp1+q2.*rp2+q3.*rp3).*rp3;
-        b5=0;
-        b6=0;
-        b7=0;
-        b4 = [b1;b2;b3;b5;b6;b7];
-        A4 = [A1;A2;A3;A5;A6;A7];
+        b1=-q1+(q1.*rp1+q2.*rp2+q3.*rp3).*rp1;
+        b2=-q2+(q1.*rp1+q2.*rp2+q3.*rp3).*rp2;
+        b3=-q3+(q1.*rp1+q2.*rp2+q3.*rp3).*rp3;
+%         b5=0;
+%         b6=0;
+%         b7=0;
+%         b4 = [b1;b2;b3;b5;b6;b7];
+%         A4 = [A1;A2;A3;A5;A6;A7];
+        b7 = 0;
+        A7 = [1 0 0 0 1 0 0 0 1];
         
         % Using only the last of the traction free conditions (see
         % Wilkinson methods above): **********************
-%         b4 = [b1;b2;b3;b7];
-%         A4 = [A1;A2;A3;A7];
+        b4 = [b1;b2;b3;b7];
+        A4 = [A1;A2;A3;A7];
         
         %solve for variables
         X3=A4\b4;
@@ -743,6 +747,7 @@ end
 
 %% for visualizing process
 if Settings.DoShowPlot
+    sf = 1;
     DoPlotROIs = 0;
     if Settings.DoShowPlot ~= 2
         try
@@ -767,11 +772,11 @@ if Settings.DoShowPlot
     for i=1:length(Cshift)
         if ~isempty(find(tempind==i, 1))
             %Should probably make this factor "*10" a variable...
-            plot([roixc(i) roixc(i)+Cshift(i)],[roiyc(i) roiyc(i)+Rshift(i)],'g.-')
+            plot([roixc(i) roixc(i)+sf*Cshift(i)],[roiyc(i) roiyc(i)+sf*Rshift(i)],'g.-')
         else
-            plot([roixc(i) roixc(i)+Cshift(i)],[roiyc(i) roiyc(i)+Rshift(i)],'r.-')
+            plot([roixc(i) roixc(i)+sf*Cshift(i)],[roiyc(i) roiyc(i)+sf*Rshift(i)],'r.-')
         end
-        plot([roixc(i) roixc(i)+cx(i)],[roiyc(i) roiyc(i)+cy(i)],'b.-')
+        plot([roixc(i) roixc(i)+sf*cx(i)],[roiyc(i) roiyc(i)+sf*cy(i)],'b.-')
     end
     drawnow
     if Settings.DoShowPlot ~= 2
@@ -821,11 +826,11 @@ if Settings.DoShowPlot
     for i=1:length(Cshift)
         if ~isempty(find(tempind==i, 1))
             %Should probably make this factor "*10" a variable...
-            plot([roixc(i) roixc(i)+Cshift(i)],[roiyc(i) roiyc(i)+Rshift(i)],'g.-')
+            plot([roixc(i) roixc(i)+sf*Cshift(i)],[roiyc(i) roiyc(i)+sf*Rshift(i)],'g.-')
         else
-            plot([roixc(i) roixc(i)+Cshift(i)],[roiyc(i) roiyc(i)+Rshift(i)],'r.-')
+            plot([roixc(i) roixc(i)+sf*Cshift(i)],[roiyc(i) roiyc(i)+sf*Rshift(i)],'r.-')
         end
-        plot([roixc(i) roixc(i)+cx(i)],[roiyc(i) roiyc(i)+cy(i)],'b.-')
+        plot([roixc(i) roixc(i)+sf*cx(i)],[roiyc(i) roiyc(i)+sf*cy(i)],'b.-')
     end
     drawnow
     if Settings.DoShowPlot ~= 2

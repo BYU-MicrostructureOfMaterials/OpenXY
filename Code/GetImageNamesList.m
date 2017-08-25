@@ -301,7 +301,7 @@ else
                 end
             end
         case 'Hexagonal'
-            NumColsOdd = Dimensions(1);
+            NumColsOdd = ceil(Dimensions(1)); % settings.Nx is the same as NumColsOdd, so this should not be divided by 2 DTF Jul 27 17
             NumColsEven = NumColsOdd-1;
             i = 1;
             for Y = 0:NumRows-1

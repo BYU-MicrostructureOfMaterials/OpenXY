@@ -193,8 +193,8 @@ if isempty(Settings.XStar)
     FullLength = length(Settings.XData);
     if ~isempty(Settings.PlaneFit) && strcmp(Settings.PlaneFit,'Naive')
         Settings.XStar(1:FullLength) = xstar-Settings.XData/Settings.PhosphorSize;
-        Settings.YStar(1:FullLength) = ystar+Settings.YData/Settings.PhosphorSize*sin(Settings.SampleTilt-Settings.CameraElevation);
-        Settings.ZStar(1:FullLength) = zstar+Settings.YData/Settings.PhosphorSize*cos(Settings.SampleTilt-Settings.CameraElevation);
+        Settings.YStar(1:FullLength) = ystar+Settings.YData/Settings.PhosphorSize*cos(pi/2 - Settings.SampleTilt+Settings.CameraElevation);
+        Settings.ZStar(1:FullLength) = zstar+Settings.YData/Settings.PhosphorSize*sin(pi/2 - Settings.SampleTilt+Settings.CameraElevation);
     else
         Settings.XStar(1:FullLength) = xstar;
         Settings.YStar(1:FullLength) = ystar;
