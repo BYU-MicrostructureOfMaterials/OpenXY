@@ -16,9 +16,9 @@ function PCData = PCStrainMinimization(Settings,PlaneFit,Inds)
                 parpool(NumCores);
             end
         catch
-            ppool = matlabpool('size');
+            ppool = matlabpool('size');%#ok<DPOOL>
             if ~ppool
-                matlabpool('local',NumCores); 
+                matlabpool('local',NumCores);%#ok<DPOOL>
             end
         end
         pctRunOnAll javaaddpath('java')

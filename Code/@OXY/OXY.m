@@ -10,7 +10,7 @@ classdef OXY < matlab.mixin.Copyable
                 @(source,event) UpdateRefImageInds(obj));
             
             obj.grainRefListener = addlistener(obj,{'GrainRefImageType',...
-                'MisoTol'},'PostSet',@(source,event)...
+                'MisoTol','KernelAvgMisoPath'},'PostSet',@(source,event)...
                 UpdateRefImageInds(obj));
             obj.grainMethodListener = addlistener(obj,{'GrainMethod',...
                 'MisoTol','MinGrainSize'},'PostSet',@(Source,event)...
@@ -26,7 +26,7 @@ classdef OXY < matlab.mixin.Copyable
         function value = trueScanLength(obj)
             value = obj.hiddenScanLength;
         end
-        
+                
         UpdateRefImageInds(obj)
         
         UpdateGrainID(Settings)
@@ -211,8 +211,18 @@ classdef OXY < matlab.mixin.Copyable
             end
         end
         
-        function set.RefInd(obj,value)
-            obj.hiddenRefInd = value;
+        function set.RefInd(obj,inds)
+            obj.UpdateRefImageInds
+            if isrow(inds);inds = inds';end
+            [Grains,GrainInds,ic] = unique(obj.grainID);
+            GrainRefInds = obj.hiddenRefInd(GrainInds);
+            Grain = obj.grainID(inds);
+            EmptyGrains = Grains(~ismember(Grains,Grain));
+            [~,sortI] = sort([Grain;EmptyGrains]);
+            IndsAll = [inds; GrainRefInds(EmptyGrains)];
+            IndsAll = IndsAll(sortI);
+            
+            obj.hiddenRefInd = IndsAll(ic);
         end
         
         function value = get.RefInd(obj)
@@ -275,10 +285,6 @@ classdef OXY < matlab.mixin.Copyable
         DoDDS@logical = false
         DDSMethod@char = 'Nye-Kroner'
         
-        
-        KernelAvgMisoPath@char
-        
-        
         EnableProfiler@logical = false
                 
         PlaneFit@char = 'Naive'
@@ -323,20 +329,34 @@ classdef OXY < matlab.mixin.Copyable
         ROIFilter@double vector = [2 50 1 1]
         ImageFilterType@char = 'standard'
         ImageFilter@double vector = [9 90 0 0]
-        
         %Index to single refference immage
         %   If zero, RefInds is used
         RefImageInd@double scalar = 0
 
         isSubScan@logical = false
         
-        HROIMMethod@char = 'Real'
         CalcDerivatives@logical = false
+        %The method used to select the reference image in each grain
+        %   Available methods:
+        %   -Min Kernel Avg Miso
+        %   -IQ > Fit > CI
+        %   -Manual(this one should go away)
         GrainRefImageType@char = 'IQ > Fit > CI'
         
         GrainMethod@char = 'Grain File'
         MisoTol@double scalar = 5
         MinGrainSize@double scalar = 0
+        KernelAvgMisoPath@char
+        
+    end
+    
+    properties (SetObservable = true)
+        
+        %The Method used to compute the deformation gradient tenso
+        %   -Simulated:
+        %   -Dynamic Simulated:
+        %   -Real:
+        HROIMMethod@char = 'Real'
         
     end
     

@@ -25,7 +25,12 @@ function UpdateRefImageInds(obj)
 
 DoUseMapData = 0;
 if strcmp(obj.GrainRefImageType,'Min Kernel Avg Miso')
+    if isempty(obj.KernelAvgMisoPath) || ~exist(obj.KernelAvgMisoPath,'file')
+        return
+    end
     DoUseMapData = 1;
+    OIMMapVals = ReadOIMMapData(obj.KernelAvgMisoPath);
+    MapData = OIMMapVals{4};%use only the fourth "color" column in the exported OIM map data
     DoUseMin = 1;%#ok
 end
 DoUseMin = 1;
@@ -77,8 +82,6 @@ for GrnInd = unique(GrainID)'
 
         if DoUseMapData
 
-            OIMMapVals = ReadOIMMapData(obj.KernelAvgMisoPath);
-            MapData = OIMMapVals{4};%use only the fourth "color" column in the exported OIM map data
             if DoUseMin
                 [~,MapInd] = min(MapData(SortedGrainInds));
             else
@@ -104,4 +107,4 @@ for GrnInd = unique(GrainID)'
     end
 end
 
-obj.RefInd = RefInd;
+obj.hiddenRefInd = RefInd;

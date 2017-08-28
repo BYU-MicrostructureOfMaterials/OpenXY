@@ -182,13 +182,11 @@ if ~strcmp(handles.GNDMethod.String{handles.GNDMethod.Value},'Partial Cross-Corr
 end
 
 listenProperties = {'HROIMMethod','CalcDerivatives','GrainMethod',...
-    'MisoTol','MinGrainSize'};
+    'MisoTol','MinGrainSize','GrainRefImageType'};
 handles.listener = addlistener(Settings,listenProperties,'PostSet',...
     @(src,evnt) updateFunc(evnt,hObject));
 guidata(hObject,handles);
 updateFunc([],hObject);
-handles = guidata(hObject);
-GrainMethod_Callback(handles.GrainMethod, eventdata, handles)
 handles = guidata(hObject);
 guidata(hObject, handles);
 
@@ -212,7 +210,7 @@ switch HROIMMethod
         else
             handles.HROIMedit.Enable = 'off';
         end
-    case 'Simulated-Dynamic'
+    case 'Dynamic Simulated'
         %Check for EMsoft
         EMsoftPath = GetEMsoftPath;
         if isempty(EMsoftPath)
@@ -231,7 +229,7 @@ switch HROIMMethod
                 handles.GrainRefType.Enable = 'off';
                 handles.SelectKAM.Enable = 'off';
                 handles.EditRefPoints.Enable = 'off';
-                handles.Settings.HROIMMethod = 'Dynamic Simulated';
+                %handles.Settings.HROIMMethod = 'Dynamic Simulated';
                 if get(handles.DoStrain,'Value')
                     set(handles.HROIMedit,'Enable','on');
                 else
@@ -240,34 +238,27 @@ switch HROIMMethod
                 handles.Settings.RefInd = [];
             end
         end
-    case 'Real-Grain Ref'
+    case 'Real'
         handles.HROIMlabel.String = 'Ref Image Index';
-        handles.Settings.RefImageInd = 0;
-        handles.HROIMedit.String = num2str(handles.Settings.RefImageInd);
-        handles.HROIMedit.Enable = 'off';
         handles.GrainRefType.Enable = 'on';
-        if ~handles.Fast; handles.EditRefPoints.Enable = 'on'; end
-        handles.Settings.HROIMMethod = 'Real';
-        GrainRefType_Callback(handles.GrainRefType, eventdata, handles);
-        handles.GrainRefType.Enable = 'on';
-    case 'Real-Single Ref'
-        handles.HROIMlabel.String = 'Ref Image Index';
-        if handles.Settings.RefImageInd == 0
-            handles.Settings.RefImageInd = 1;
-            if ~handles.Fast
-                handles.Settings.RefInd(1:handles.Settings.ScanLength) = 1;
+        contents = cellstr(handles.HROIMMethod.String);
+        realVal = contents{handles.HROIMMethod.Value};
+        if strcmp(realVal,'Real-Grain Ref')
+            handles.Settings.RefImageInd = 0;
+            handles.HROIMedit.String = num2str(handles.Settings.RefImageInd);
+            handles.HROIMedit.Enable = 'off';
+            if ~handles.Fast; handles.EditRefPoints.Enable = 'on'; end
+            handles.GrainRefType.Enable = 'on';
+        else
+            if handles.Settings.RefImageInd == 0
+                handles.Settings.RefImageInd = 1;
             end
+            handles.HROIMedit.String = num2str(handles.Settings.RefImageInd);
+            handles.HROIMedit.Enable = 'on';
+            handles.EditRefPoints.Enable = 'off';
+            SetPopupValue(handles.GrainRefType,'Manual');
+            handles.GrainRefType.Enable = 'off';
         end
-        handles.HROIMedit.String = num2str(handles.Settings.RefImageInd);
-        handles.HROIMedit.Enable = 'on';
-        handles.GrainRefType.Enable = 'on';
-        handles.EditRefPoints.Enable = 'off';
-        GrainRefType_Callback(handles.GrainRefType, eventdata, handles);
-        handles = guidata(handles.HROIMMethod);
-        handles.Settings.HROIMMethod = 'Real';
-        handles.Settings.GrainRefImageType = 'Manual';
-        SetPopupValue(handles.GrainRefType,'Manual');
-        handles.GrainRefType.Enable = 'off';
 end
 
 %DoDD update (CalcDerivatives)
@@ -295,6 +286,19 @@ if strcmp(handles.Settings.GrainMethod,'Grain File')
 else
     handles.MinGrainSize.Enable = 'On';
 end
+
+%GrainRefimageType update
+if strcmp(handles.Settings.GrainRefImageType,'Min Kernel Avg Miso')
+    handles.SelectKAM.Enable = 'on';
+    if isempty(handles.Settings.KernelAvgMisoPath) ||...
+            ~exist(handles.Settings.KernelAvgMisoPath,'file')
+        SelectKAM_Callback(handles.SelectKAM,eventdata,handles);
+        handles = guidata(hObject);
+    end
+else
+    set(handles.SelectKAM,'Enable','off');
+end
+
 
 guidata(hObject,handles)
 
@@ -389,10 +393,14 @@ function HROIMMethod_Callback(hObject, eventdata, handles,~)
 
 contents = cellstr(get(hObject,'String'));
 HROIMMethod = contents{get(hObject,'Value')};
-if strcmp(HROIMMethod,'Simulated-Kinematic')
-    HROIMMethod = 'Simulated';
+switch HROIMMethod
+    case 'Simulated-Kinematic'
+        handles.Settings.HROIMMethod = 'Simulated';
+    case 'Simulated-Dynamic'
+        handles.Settings.HROIMMethod = 'Dynamic Simulated';
+    case {'Real-Single Ref','Real-Grain Ref'}
+        handles.Settings.HROIMMethod = 'Real';
 end
-handles.Settings.HROIMMethod = HROIMMethod;
 %{
 switch HROIMMethod
     case 'Simulated-Kinematic'
@@ -557,11 +565,8 @@ function GrainRefType_Callback(hObject, eventdata, handles)
 
 contents = cellstr(get(hObject,'String'));
 GrainRefType = contents{get(hObject,'Value')};
-if strcmp(GrainRefType,'Min Kernel Avg Miso')
-    set(handles.SelectKAM,'Enable','on');
-else
-    set(handles.SelectKAM,'Enable','off');
-end
+handles.Settings.GrainRefImageType = GrainRefType;
+%{
 if ~handles.Fast
     switch GrainRefType
         case 'Min Kernel Avg Miso'
@@ -588,7 +593,7 @@ if ~handles.Fast
             end
     end
 end
-handles.Settings.GrainRefImageType = GrainRefType;
+%}
 guidata(hObject,handles);
 
 
@@ -741,16 +746,17 @@ else
 end
 cd(path);
 [name, path] = uigetfile('*.txt','OIM Map Data');
-if name ~= 0 %Nothing selected
-    set(handles.KAMname,'String',name);
-    set(handles.KAMname,'TooltipString',name);
-    set(handles.KAMpath,'String',path);
-    set(handles.KAMpath,'TooltipString',path);
+if isa(name,'char') %File Selected
+    handles.KAMname.String = name;
+    handles.KAMname.TooltipString = name;
+    handles.KAMpath.String = path;
+    handles.KAMpath.TooltipString = path;
     handles.Settings.KernelAvgMisoPath = fullfile(path,name);
     
     %Get RefImageInds
-    handles.AutoRefInds = UpdateAutoInds(handles,handles.Settings.GrainRefImageType);
     guidata(hObject,handles);
+else % No File Selected
+    handles.SelectKAM.Enable = 'Off';
 end
 cd(w);
 guidata(hObject,handles);
@@ -852,7 +858,7 @@ if isempty(handles.GrainMap) || ~isvalid(handles.GrainMap)
     GrainRefType = list(get(handles.GrainRefType,'Value'));
     
     options = list(~strcmp(list,'Manual'));
-    if ~isfield(handles.Settings,'KernelAvgMisoPath') || ~exist(handles.Settings.KernelAvgMisoPath,'dir')
+    if isempty(handles.Settings.KernelAvgMisoPath) || ~exist(handles.Settings.KernelAvgMisoPath,'dir')
         options = options(~strcmp(options,'Min Kernel Avg Miso'));
     end
     
@@ -876,13 +882,15 @@ if isempty(handles.GrainMap) || ~isvalid(handles.GrainMap)
     end
     
     %Get Previously Inds or Start New
-    Inds = [];
-    if isfield(handles.Settings,'RefInd')
+    Inds = handles.Settings.RefInd;
+    %{
+    if ~isempty(handles.Settings,'RefInd')
         sel2 = questdlg({'Existing Manual Inds detected';'Edit map or clear?'},'Manual Reference Selection','Edit','Clear','Edit');
         if strcmp(sel2,'Edit')
             Inds = handles.Settings.RefInd;
         end
     end
+    %}
     
     %Manually Edit Inds
     % handles.GrainMap = OpenGrainMap(handles);
@@ -893,20 +901,20 @@ end
 function saveRefPoints(handles,inds)
 % Add the Auto inds that were not put in manually, then  generates the
 % refference inds.
-inds = inds';
-grainID = handles.Settings.grainID;
-AutoRefInds = handles.AutoRefInds;
-[Grains,GrainInds,ic] = unique(grainID);
-GrainRefInds = AutoRefInds(GrainInds);
-Grain = grainID(inds);
-EmptyGrains = Grains(~ismember(Grains,Grain));
-[~,sortI] = sort([Grain;EmptyGrains]);
-IndsAll = [inds; GrainRefInds(EmptyGrains)];
-IndsAll = IndsAll(sortI);
+% inds = inds';
+% grainID = handles.Settings.grainID;
+% AutoRefInds = handles.AutoRefInds;
+% [Grains,GrainInds,ic] = unique(grainID);
+% GrainRefInds = AutoRefInds(GrainInds);
+% Grain = grainID(inds);
+% EmptyGrains = Grains(~ismember(Grains,Grain));
+% [~,sortI] = sort([Grain;EmptyGrains]);
+% IndsAll = [inds; GrainRefInds(EmptyGrains)];
+% IndsAll = IndsAll(sortI);
+% 
+% RefInd = IndsAll(ic);
 
-RefInd = IndsAll(ic);
-
-handles.Settings.RefInd = RefInd;
+handles.Settings.RefInd = inds;
 guidata(handles.AdvancedSettingsGUI,handles);
 
 function AutoRefInds = UpdateAutoInds(handles,GrainRefType)
