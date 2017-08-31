@@ -307,6 +307,16 @@ classdef OXY < matlab.mixin.Copyable
         
         oldSize
         
+        %For OIM H5 files in the hexGrid style, validity of each data point
+        %   The way hexagonal scans are saved in H5 files, there is a dummy
+        %   value saved in the 'hole' on the end of odd columns. This is a
+        %   vector of logicals that tell wether or not a point is a valid
+        %   point or a dummy value. This is only currently saved because it
+        %   is needed to read the patterns from the H5 file. If a more
+        %   elegant solution is come up with, this variable can be gotten
+        %   rid of.
+        valid@logical vector = []
+        
     end
     
     properties (SetObservable = true, AbortSet = true) 
