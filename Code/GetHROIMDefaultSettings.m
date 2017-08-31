@@ -74,5 +74,6 @@ Settings.PCFilePath = [];
 %Options are: {'Real Sample','Real Crystal','Collin Sample','Collin Crystal'}; 
 Settings.FCalcMethod = 'Collin Crystal';
 
-
+%% HDF5 variables
+Settings.valid = [];
 

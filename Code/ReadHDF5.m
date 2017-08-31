@@ -48,11 +48,21 @@ ScanData.ystar = double(h5read(filepath, [HeaderName '/Pattern Center Calibratio
 ScanData.zstar = double(h5read(filepath, [HeaderName '/Pattern Center Calibration/z-star']));
 
 %Import Critical Scan Data
-Grid = h5read(filepath, [HeaderName 'Grid Type']);
+Grid = deblank(h5read(filepath, [HeaderName 'Grid Type']));
 if strcmp(Grid,'SqrGrid')
     Settings.ScanType = 'Grid';
-elseif strcmp(Grid,'Hex')
+    Settings.valid = [];
+elseif strcmp(Grid,'HexGrid')
     Settings.ScanType = 'Hexagonal';
+    valid = ~logical(h5read(filepath, [DataName 'Valid']));
+    Settings.CI = Settings.CI(valid);
+    Settings.Fit = Settings.Fit(valid);
+    Settings.IQ = Settings.IQ(valid);
+    Settings.Angles = Settings.Angles(valid,:);
+    Settings.XData = Settings.XData(valid);
+    Settings.YData = Settings.YData(valid);
+    PhaseNum = PhaseNum(valid);
+    Settings.valid = valid;
 end
 Settings.Nx = double(h5read(filepath, [HeaderName 'nColumns']));
 Settings.Ny = double(h5read(filepath, [HeaderName 'nRows']));

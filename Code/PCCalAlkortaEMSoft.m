@@ -41,7 +41,7 @@ if size(Settings.ImageNamesList,1)>1
     ImagePath = Settings.ImageNamesList{1};
     ScanImage = ReadEBSDImage(ImagePath,Settings.ImageFilter);
 else
-    ScanImage = ReadH5Pattern(Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter,1);
+    ScanImage = ReadH5Pattern(Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter,Settings.valid,1);
 end
 
 [roixc,roiyc]= GetROIs(ScanImage,Settings.NumROIs,pixsize,Settings.ROISize,...
@@ -88,7 +88,7 @@ if Settings.DoParallel == 1
             ImagePath = Settings.ImageNamesList{Ind};
             ScanImage = ReadEBSDImage(ImagePath,Settings.ImageFilter);
         else
-            ScanImage = ReadH5Pattern(Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter,Ind);
+            ScanImage = ReadH5Pattern(Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter,Settings.valid,Ind);
         end
         
         
@@ -247,7 +247,7 @@ else
             ImagePath = Settings.ImageNamesList{Ind};
             ScanImage = ReadEBSDImage(ImagePath,Settings.ImageFilter);
         else
-            ScanImage = ReadH5Pattern(Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter,Ind);
+            ScanImage = ReadH5Pattern(Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter,Settings.valid,Ind);
         end
         
         

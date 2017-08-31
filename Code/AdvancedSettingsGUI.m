@@ -1086,7 +1086,7 @@ else
 end
 RefInd = EditRefInds(handles.GrainMap,handles.Settings.ScanFilePath,handles.Settings.grainID,ImageNamesList,ScanData,...
     [handles.Settings.Nx handles.Settings.Ny],handles.Settings.ScanType,handles.AutoRefInds,...
-    imsize,handles.Settings.ImageFilter,Inds);
+    imsize,handles.Settings.ImageFilter,Inds,handles.Settings.valid);
 
 %Check if anything changed
 if ~strcmp(GrainRefType,'Manual') && ~all(RefInd==handles.AutoRefInds)

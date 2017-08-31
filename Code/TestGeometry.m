@@ -385,7 +385,7 @@ width = WidthOptions(val);
 % Read Pattern and plot with overlay
 axes(handles.Pattern)
 if (size(Settings.ImageNamesList,1)  ==  1)%H5 Format
-    H5ImageParams = {Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter};
+    H5ImageParams = {Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter,Settings.valid};
     I2 = ReadH5Pattern(H5ImageParams{:},ind);
 else%.ang/.ctf
     if get(handles.Filter,'Value')

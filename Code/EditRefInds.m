@@ -1,5 +1,5 @@
 function RefInd = EditRefInds(Fig,ScanFilePath,grainID,ImageNames,ScanData,...
-    mapsize,ScanType,AutoRefInds,imsize,ImageFilt,Inds)
+    mapsize,ScanType,AutoRefInds,imsize,ImageFilt,Inds,valid)
 if nargin<8
     Inds = 0;
 end
@@ -127,7 +127,7 @@ while morepoints
                     pattern = ReadEBSDImage(ImageNames{ind,1},ImageFilt);
                 else
                     pattern = ReadH5Pattern(ScanFilePath,ImageNames,...
-                        imsize,ImageFilt,ind);
+                        imsize,ImageFilt,valid,ind);
                 end
             else
                 pattern = imread('NoImage.jpg');
