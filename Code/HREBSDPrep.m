@@ -82,7 +82,7 @@ if strcmp(Settings.HROIMMethod,'Dynamic Simulated')
             end
         else
             ScanImage = ReadH5Pattern(Settings.ScanFilePath,Settings.ImageNamesList,...
-                Settings.imsize,Settings.ImageFilter,Settings.RefImageInd);
+                Settings.imsize,Settings.ImageFilter,Settings.valid,Settings.RefImageInd);
         end
         
         %Extract Variables

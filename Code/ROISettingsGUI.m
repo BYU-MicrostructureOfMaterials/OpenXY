@@ -133,7 +133,7 @@ axes(handles.OriginalImage);
 if ~handles.h5
     handles.OrigImage = imread(Settings.FirstImagePath);
 else
-    handles.OrigImage = ReadH5Pattern(Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter,1);
+    handles.OrigImage = ReadH5Pattern(Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter,Settings.valid,1);
 end
 imagesc(CropSquare(handles.OrigImage)); colormap(gca,gray);
 set(gca,'xcolor',get(gcf,'color'));
@@ -301,7 +301,7 @@ if ~handles.h5
         Image=localthresh(Settings.FirstImagePath);
     end
 else
-    Image = ReadH5Pattern(Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter,1);
+    Image = ReadH5Pattern(Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter,Settings.valid,1);
 end
 
 axes(handles.FilteredImage);

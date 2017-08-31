@@ -16,7 +16,7 @@ DoLGrid = strcmp(Settings.ScanType,'L');
 H5Images = false;
 if size(Settings.ImageNamesList,1)==1
     H5Images = true;
-    H5ImageParams = {Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter};
+    H5ImageParams = {Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter,Settings.valid};
 end
 
 if DoLGrid

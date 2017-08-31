@@ -121,7 +121,7 @@ if ~strcmp(Settings.ScanType,'L')
     if size(Settings.ImageNamesList,1)>1
         ScanImage = ReadEBSDImage(Settings.ImageNamesList{1},Settings.ImageFilter);
     else
-        ScanImage = ReadH5Pattern(Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter,1);
+        ScanImage = ReadH5Pattern(Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter,Settings.valid,1);
     end
     
     [roixc,roiyc]= GetROIs(ScanImage,Settings.NumROIs,Settings.PixelSize,...
@@ -523,8 +523,8 @@ function [AllFa,AllSSEa,AllFc,AllSSEc, misanglea, misanglec] = DDCalc(RefInd,Ref
         image_b = ReadEBSDImage(Settings.ImageNamesList{cnt},ImageFilter);
         image_c = ReadEBSDImage(Settings.ImageNamesList{RefIndC},ImageFilter);
     else
-        H5ImageParams = {Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter};
-        image_a = ReadH5Pattern(H5ImageParams{:},RefIndA);
+        H5ImageParams = {Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter,Settings.valid};
+        image_a = ReadH5Pattern(H5ImageParams{:},RefIndA,Settings.valid);
         image_b = ReadH5Pattern(H5ImageParams{:},cnt);
         image_c = ReadH5Pattern(H5ImageParams{:},RefIndC);
     end
