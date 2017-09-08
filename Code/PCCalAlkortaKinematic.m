@@ -139,7 +139,7 @@ if Settings.DoParallel == 1
             %Initialize
             clear global rs cs Gs
             F1 = CalcF(RefImage,ScanImage,gr,eye(3),Ind,Settings,Settings.Phase{Ind},0);
-            
+            %{
             %%%%New stuff to remove rotation error from strain measurement DTF  7/14/14
             for iq=1:4
                 [rr,uu]=poldec(F1); % extract the rotation part of the deformation, rr
@@ -152,7 +152,7 @@ if Settings.DoParallel == 1
                 F1 = CalcF(RefImage,ScanImage,gr,eye(3),Ind,Settings,Settings.Phase{Ind},0);
             end
             %%%%
-            
+            %}
             %%%%% Improved convergence routine should replace this loop:
             
             for ii = 1:Settings.IterationLimit
@@ -361,7 +361,7 @@ else
             %Initialize
             clear global rs cs Gs
             F1 = CalcF(RefImage,ScanImage,gr,eye(3),Ind,Settings,Settings.Phase{Ind},0);
-            
+            %{
             %%%%New stuff to remove rotation error from strain measurement DTF  7/14/14
             for iq=1:4
                 [rr,uu]=poldec(F1); % extract the rotation part of the deformation, rr
@@ -374,7 +374,7 @@ else
                 F1 = CalcF(RefImage,ScanImage,gr,eye(3),Ind,Settings,Settings.Phase{Ind},0);
             end
             %%%%
-            
+            %}
             %%%%% Improved convergence routine should replace this loop:
             
             for ii = 1:Settings.IterationLimit

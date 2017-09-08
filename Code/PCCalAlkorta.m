@@ -14,6 +14,8 @@ goodInds = Settings.CI(Inds) > CICutoff & Settings.Fit(Inds) < FitCutoff;
 removedInds = Inds(~goodInds);
 Inds = Inds(goodInds);
 
+fprintf('Starting calibriations with %u points.\n',length(Inds))
+
 if strcmp(Settings.HROIMMethod,'Dynamic Simulated')
     PCData = PCCalAlkortaEMSoft(Settings,PlaneFit,Inds);
 else
