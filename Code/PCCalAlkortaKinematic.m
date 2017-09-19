@@ -283,7 +283,7 @@ else
     ppm =...
         ParforProgMon('Point Calibration ',npoints*(1+iterCalcF),1,400,50);
     
-    for i=1:npoints
+    parfor(i=1:npoints,NumCores)
         
         Ind = Inds(i);
         
@@ -359,7 +359,7 @@ else
                 Settings.PixelSize,Settings.ImageFilter(3),Settings.ImageFilter(4));
             
             %Initialize
-            clear global rs cs Gs
+            clearGlobal
             F1 = CalcF(RefImage,ScanImage,gr,eye(3),Ind,Settings,Settings.Phase{Ind},0);
             
             %%%%New stuff to remove rotation error from strain measurement DTF  7/14/14
@@ -370,7 +370,7 @@ else
                 RefImage = custimfilt(RefImage,Settings.ImageFilter(1), ...
                     Settings.PixelSize,Settings.ImageFilter(3),Settings.ImageFilter(4));
                 
-                clear global rs cs Gs
+                clearGlobal
                 F1 = CalcF(RefImage,ScanImage,gr,eye(3),Ind,Settings,Settings.Phase{Ind},0);
             end
             %%%%
@@ -397,7 +397,7 @@ else
                 NewRefImage = custimfilt(NewRefImage, Settings.ImageFilter(1), Settings.PixelSize, ...
                     Settings.ImageFilter(3), Settings.ImageFilter(4));
                 %         keyboard
-                clear global rs cs Gs
+                clearGlobal
                 F1 = CalcF(NewRefImage,ScanImage,gr,FTemp,Ind,Settings,Settings.Phase{Ind},0);
                 
             end
@@ -516,3 +516,5 @@ ymapphos = S*[0;1];PCData.ymapphos = ymapphos;
 PCData.normalvecphos = cross(xmapphos/norm(xmapphos),ymapphos/norm(ymapphos));
 % CalibrationPointsPC
 % Inds
+function clearGlobal
+clear global rs cs Gs

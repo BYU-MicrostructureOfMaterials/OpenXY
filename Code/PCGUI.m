@@ -727,7 +727,7 @@ elseif get(handles.IPFPlot,'Value')
     PlotScan(handles.IPF_map,'IPF');
     
     %Plot Calibration Points
-    if ~emptylist && ismember(handles.Settings.PCList{cur,4},{'Strain Minimization','Grid'})
+    if ~emptylist && ismember(handles.Settings.PCList{cur,4},{'Strain Minimization','Grid','Alkorta'})
         hold on
         [Xinds,Yinds] = ind2sub([Nx Ny],handles.Settings.PCList{cur,7}.CalibrationIndices);
         plot(Xinds,Yinds,'kd','MarkerFaceColor','k')
@@ -737,7 +737,7 @@ elseif get(handles.IQPlot,'Value')
     PlotScan(handles.IQ_map,'IQ');
     
     %Plot Calibration Points
-    if ~emptylist && ismember(handles.Settings.PCList{cur,4},{'Strain Minimization','Grid'})
+    if ~emptylist && ismember(handles.Settings.PCList{cur,4},{'Strain Minimization','Grid','Alkorta'})
         hold on
         [Xinds,Yinds] = ind2sub([Nx Ny],handles.Settings.PCList{cur,7}.CalibrationIndices);
         plot(Xinds,Yinds,'kd','MarkerFaceColor','k')
