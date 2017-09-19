@@ -108,3 +108,4 @@ for GrnInd = unique(GrainID)'
 end
 
 obj.hiddenRefInd = RefInd;
+obj.notify('grainReffEvent')

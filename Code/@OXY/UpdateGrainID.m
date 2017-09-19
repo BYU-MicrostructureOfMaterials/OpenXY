@@ -1,6 +1,7 @@
 function UpdateGrainID(Settings)
 if strcmp(Settings.GrainMethod,'Grain File')
     Settings.grainID = Settings.GrainVals.grainID;
+    Settings.notify('grainMethodEvent')
     return;
 end
 % Get grainID
@@ -26,4 +27,5 @@ clean = MinGrainSize ~= 0;
 grainID = findgrains(angles, lattice, clean, MinGrainSize, mistol)';
 grainID = reshape(grainID,Settings.Ny,Settings.Nx);
 Settings.grainID = reshape(grainID',Settings.Nx*Settings.Ny,1);
+Settings.notify('grainMethodEvent')
 

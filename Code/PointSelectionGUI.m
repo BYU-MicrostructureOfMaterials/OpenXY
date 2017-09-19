@@ -114,6 +114,12 @@ switch context
 end
 handles.context = context;
 
+% Create listener objects
+handles.refPointListener = addlistener(Settings,'grainReffEvent',...
+    @(src,evnt) refPointUpdateFunc(evnt,hObject));
+
+handles.grainMethodListener = addlistener(Settings,'grainMethodEvent',...
+    @(src,evnt) grainMethodUpdateFunc(evnt,hObject));
 
 % Excecute HREBSDPrep
 if ~isfield(Settings,'HREBSDPrep') || ~Settings.HREBSDPrep
@@ -258,6 +264,26 @@ handles.output = hObject;
 % Update handles structure
 guidata(hObject, handles);
 
+function refPointUpdateFunc(event,hObject)
+handles = guidata(hObject);
+if ~isempty(handles.ind) && handles.ind > 0
+    PlotPattern(handles);handles = guidata(hObject);
+    plotPoints(handles);
+end
+
+function grainMethodUpdateFunc(event,hObject)
+handles = guidata(hObject);
+axes(handles.GrainMap);
+cla
+axis image off
+h = hggroup;
+PlotGBs(handles.Settings.grainID,[handles.Settings.Nx handles.Settings.Ny],handles.Settings.ScanType);
+lines = findobj('Type','Line','-and','Parent',handles.GrainMap);
+set(lines,'Parent',h);
+h.Visible = 'Off';
+handles.GrainMap.XLim = handles.Map.XLim;
+handles.GrainMap.YLim = handles.Map.YLim;
+PlotGB_Callback(handles.PlotGB,[],handles);
 
 
 % --- Outputs from this function are returned to the command line.
@@ -266,6 +292,8 @@ varargout{1} = handles.output;
 
 % --- Executes when user attempts to close PointSelectionGUI.
 function PointSelectionGUI_CloseRequestFcn(hObject, eventdata, handles)
+delete(handles.refPointListener);
+delete(handles.grainMethodListener);
 delete(hObject);
 
 % --- Executes on button press in close.

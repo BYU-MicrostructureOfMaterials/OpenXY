@@ -235,6 +235,13 @@ classdef OXY < matlab.mixin.Copyable
                 
     end
     
+    events
+        
+        grainReffEvent
+        
+        grainMethodEvent
+    end
+    
     properties %General Properties
         
         %The Path of the scan file 
@@ -315,7 +322,7 @@ classdef OXY < matlab.mixin.Copyable
         %   is needed to read the patterns from the H5 file. If a more
         %   elegant solution is come up with, this variable can be gotten
         %   rid of.
-        valid@logical vector = []
+        valid@logical vector
         
     end
     

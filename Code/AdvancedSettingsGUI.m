@@ -915,6 +915,7 @@ function saveRefPoints(handles,inds)
 % RefInd = IndsAll(ic);
 
 handles.Settings.RefInd = inds;
+handles.Settings.notify('grainReffEvent');
 guidata(handles.AdvancedSettingsGUI,handles);
 
 function AutoRefInds = UpdateAutoInds(handles,GrainRefType)
