@@ -89,7 +89,7 @@ UpdatePC(handles);
 pos = get(handles.PCEdit,'Position');
 Type = input{4};
 switch Type
-    case 'Strain Minimization'
+    case {'Strain Minimization','Alkorta'}
         if ~isempty(handles.PCData) && isfield(handles.PCData,'CalibrationIndices') % Editing PC
             set(handles.StrainMinPanel,'Visible','on','Position',[44 0.5 40 17]);
             set(handles.PCEdit,'Position',[pos(1) pos(2) 88 pos(4)]);
@@ -385,7 +385,11 @@ String = num2str(String);
 List = get(Popup,'String');
 IndList = 1:length(List);
 Value = IndList(strcmp(List,String));
-if isempty(Value); Value =1; end;
+if isempty(Value)
+    List{end+1} = String;
+    set(Popup,'String',List);
+    Value = length(List);
+end
 set(Popup, 'Value', Value);
 
 function string = GetPopupString(Popup)
@@ -424,7 +428,7 @@ elseif get(handles.IQPlot,'Value')
 end
 
 %Plot Calibration Points
-if ismember(GetPopupString(handles.PCType),{'Strain Minimization','Grid'})
+if ismember(GetPopupString(handles.PCType),{'Strain Minimization','Grid','Alkorta'})
     [Xinds,Yinds] = ind2sub([Nx Ny],handles.PCData.CalibrationIndices);
     hold on
     plot(handles.StrainMinaxes,Xinds,Yinds,'kd','MarkerFaceColor','k','MarkerSize',3)

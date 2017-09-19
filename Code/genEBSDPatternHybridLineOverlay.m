@@ -226,17 +226,19 @@ addParameter(p,'BlinkSpeed',0.5,@(x) isnumeric(x));
 addParameter(p,'Color','g');
 addParameter(p,'LineWidth',0.5);
 addParameter(p,'MaxSpeed',2)
+addParameter(p,'LineStyle','-')
 parse(p,varargin{:})
 period = p.Results.BlinkSpeed;
 color = p.Results.Color;
 width = p.Results.LineWidth;
 maxspeed = p.Results.MaxSpeed;
+lineStyle = p.Results.LineStyle;
 
 hold on;
 if strcmp(color,'holiday')
     color = 'g';
 end
-h = plot(masterx,mastery,color,'LineWidth',width);
+h = plot(masterx,mastery,color,'LineWidth',width,'LineStyle',lineStyle);
 if period == maxspeed
     set(h,'Visible','off')
 elseif period > 0
