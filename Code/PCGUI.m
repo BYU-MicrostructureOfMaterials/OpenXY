@@ -168,9 +168,31 @@ guidata(hObject, handles);
 
 %Update PC 
 PCList_Callback(handles.PCList, eventdata, handles);
+handles = guidata(hObject);
 
-% UIWAIT makes PCGUI wait for user response (see UIRESUME)
-%uiwait(handles.PCGUI);
+% Set up GB Map
+handles.GBMapListener = addlistener(Settings,'grainMethodEvent',...
+    @(source,event) drawGBMap(hObject));
+guidata(hObject,handles);
+drawGBMap(hObject);
+
+function drawGBMap(hObject)
+handles = guidata(hObject);
+
+axes(handles.GBaxis)
+cla;
+handles.GBaxis.Position = handles.PCaxes.Position;
+axis image off
+GrainMap = vec2map(handles.Settings.grainID,handles.Settings.Nx,handles.Settings.ScanType);
+PlotGBs(GrainMap);
+
+handles.GBaxis.XLim = handles.PCaxes.XLim;
+handles.GBaxis.YLim = handles.PCaxes.YLim;
+if handles.PlotGB.Value
+    set(handles.GBaxis.Children,'Visible','On');
+else
+    set(handles.GBaxis.Children,'Visible','Off');
+end
 
 
 % --- Outputs from this function are returned to the command line.
@@ -196,6 +218,7 @@ end
 if ~isempty(handles.PointSelectionGUI) && isvalid(handles.PointSelectionGUI)
     delete(handles.PointSelectionGUI);
 end
+delete(handles.GBMapListener);
 delete(hObject);
 
 % --- Executes on button press in CloseButton.
@@ -703,6 +726,7 @@ cla(handles.PCaxes,'reset')
 
 %Plot Selected graph
 if get(handles.PCPlot,'Value') && ~emptylist
+    handles.GBaxis.Visible = 'Off';
     ind = strcmp('Scan File',handles.Settings.PCList(:,4));
     if any(ind)
         ScanPC = [handles.Settings.PCList{ind,1:3}];
@@ -723,8 +747,12 @@ if get(handles.PCPlot,'Value') && ~emptylist
     end
     colormap jet
     shading flat
-elseif get(handles.IPFPlot,'Value')
-    PlotScan(handles.IPF_map,'IPF');
+else
+    if get(handles.IPFPlot,'Value')
+        PlotScan(handles.IPF_map,'IPF');
+    else
+        PlotScan(handles.IQ_map,'IQ');
+    end
     
     %Plot Calibration Points
     if ~emptylist && ismember(handles.Settings.PCList{cur,4},{'Strain Minimization','Grid','Alkorta'})
@@ -732,26 +760,17 @@ elseif get(handles.IPFPlot,'Value')
         [Xinds,Yinds] = ind2sub([Nx Ny],handles.Settings.PCList{cur,7}.CalibrationIndices);
         plot(Xinds,Yinds,'kd','MarkerFaceColor','k')
     end
-    guidata(handles.PCGUI,handles);
-elseif get(handles.IQPlot,'Value')
-    PlotScan(handles.IQ_map,'IQ');
     
-    %Plot Calibration Points
-    if ~emptylist && ismember(handles.Settings.PCList{cur,4},{'Strain Minimization','Grid','Alkorta'})
-        hold on
-        [Xinds,Yinds] = ind2sub([Nx Ny],handles.Settings.PCList{cur,7}.CalibrationIndices);
-        plot(Xinds,Yinds,'kd','MarkerFaceColor','k')
+    %Plot Grain Boundaries
+    if handles.PlotGB.Value
+        set(handles.GBaxis.Children,'Visible','On');
+        uistack(handles.GBaxis,'top');
+    else
+        set(handles.GBaxis.Children,'Visible','Off');
     end
-end
 
-%Plot Grain Boundaries
-if ~get(handles.PCPlot,'Value')
-    if get(handles.PlotGB,'Value')
-        axes(handles.PCaxes)
-        GrainMap = vec2map(handles.Settings.grainID,handles.Settings.Nx,handles.Settings.ScanType);
-        PlotGBs(GrainMap);
-    end
 end
+guidata(handles.PCGUI,handles);
 
 % --- Executes on button press in PlotGB.
 function PlotGB_Callback(hObject, eventdata, handles)

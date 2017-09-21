@@ -121,6 +121,9 @@ handles.refPointListener = addlistener(Settings,'grainReffEvent',...
 handles.grainMethodListener = addlistener(Settings,'grainMethodEvent',...
     @(src,evnt) grainMethodUpdateFunc(evnt,hObject));
 
+handles.HROIMMethodListener = addlistener(Settings,'HROIMMethod',...
+    'PostSet',@(Src,evnt) refPointUpdateFunc(evnt,hObject));
+
 % Excecute HREBSDPrep
 if ~isfield(Settings,'HREBSDPrep') || ~Settings.HREBSDPrep
     Settings = HREBSDPrep(Settings);
@@ -285,7 +288,6 @@ handles.GrainMap.XLim = handles.Map.XLim;
 handles.GrainMap.YLim = handles.Map.YLim;
 PlotGB_Callback(handles.PlotGB,[],handles);
 
-
 % --- Outputs from this function are returned to the command line.
 function varargout = PointSelectionGUI_OutputFcn(hObject, eventdata, handles) 
 varargout{1} = handles.output;
@@ -294,6 +296,7 @@ varargout{1} = handles.output;
 function PointSelectionGUI_CloseRequestFcn(hObject, eventdata, handles)
 delete(handles.refPointListener);
 delete(handles.grainMethodListener);
+delete(handles.HROIMMethodListener);
 delete(hObject);
 
 % --- Executes on button press in close.
