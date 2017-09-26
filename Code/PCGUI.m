@@ -43,14 +43,8 @@ else
 end
 % End initialization code - DO NOT EDIT
 
-
 % --- Executes just before PCGUI is made visible.
 function PCGUI_OpeningFcn(hObject, eventdata, handles, varargin)
-% This function has no output args, see OutputFcn.
-% hObject    handle to figure
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-% varargin   command line arguments to PCGUI (see VARARGIN)
 
 handles.output = hObject;
 
@@ -113,6 +107,9 @@ if isempty(Settings.PCList)
 end
 set(handles.PCList,'String',Settings.PCList(:,6));
 
+%Select Current PC
+handles.PCList.Value = Settings.PCInd;
+
 %Load Plots
 if ~handles.Fast
     handles = GenPlots(handles,Settings);
@@ -130,17 +127,6 @@ else
     [Y,X,~] = size(im);
     handles.V = Y/X;
 end
-
-%Select Current PC
-if size(Settings.PCList,2) == 8
-    IndCol = [Settings.PCList{:,8}];
-    Settings.PCList(:,8) = []; %Remove column
-    ListInds = 1:length(IndCol);
-    index = ListInds(logical(IndCol));
-else
-    index = 1;
-end
-set(handles.PCList,'Value',index);
 
 %Set Position
 if ~isempty(handles.MainGUI) && isvalid(handles.MainGUI)
@@ -194,24 +180,13 @@ else
     set(handles.GBaxis.Children,'Visible','Off');
 end
 
-
 % --- Outputs from this function are returned to the command line.
 function varargout = PCGUI_OutputFcn(hObject, eventdata, handles) 
-% varargout  cell array for returning output args (see VARARGOUT);
-% hObject    handle to figure
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
 % Get default command line output from handles structure
 varargout{1} = handles.output;
 
 % --- Executes when user attempts to close PCGUI.
 function PCGUI_CloseRequestFcn(hObject, eventdata, handles)
-% hObject    handle to PCGUI (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: delete(hObject) closes the figure
 if ~isempty(handles.PCEditGUI) && isvalid(handles.PCEditGUI)
     delete(handles.PCEditGUI);
 end
@@ -223,9 +198,6 @@ delete(hObject);
 
 % --- Executes on button press in CloseButton.
 function CloseButton_Callback(hObject, eventdata, handles)
-% hObject    handle to CloseButton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 if ~isempty(handles.MainGUI) && isvalid(handles.MainGUI)
     MainHandles = guidata(handles.MainGUI);
     MainHandles.Settings = handles.Settings;
@@ -236,17 +208,10 @@ guidata(hObject,handles);
 
 PCGUI_CloseRequestFcn(handles.PCGUI, eventdata, handles);
 
-
 % --- Executes on selection change in PCList.
 function PCList_Callback(hObject, eventdata, handles)
-% hObject    handle to PCList (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = cellstr(get(hObject,'String')) returns PCList contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from PCList
 if ~isempty(handles.Settings.PCList)
-    index = GetListIndex(handles);
+    index = hObject.Value;
     xstar = handles.Settings.PCList{index,1};
     ystar = handles.Settings.PCList{index,2};
     zstar = handles.Settings.PCList{index,3};
@@ -254,37 +219,25 @@ if ~isempty(handles.Settings.PCList)
     set(handles.YStarLabel,'String',ystar);
     set(handles.ZStarLabel,'String',zstar);
     type = handles.Settings.PCList{index,4};
+    handles.Settings.PCInd = index;
+    
+    %Do not allow the default PC to be deleted or edited
+    if hObject.Value == 1
+        handles.RemovePC.Enable = 'Off';
+        handles.EditPC.Enable = 'Off';
+    else
+        handles.RemovePC.Enable = 'On';
+        handles.EditPC.Enable = 'On';
+    end
 
+    %Put all non-gui funtionality in a seperate function
     if ~handles.Fast
-        if strcmp(type,'Tiff')||strcmp(type,'Alkorta')
-            handles.Settings.XStar = handles.Settings.PCList{index,7}.XStar;
-            handles.Settings.YStar = handles.Settings.PCList{index,7}.YStar;
-            handles.Settings.ZStar = handles.Settings.PCList{index,7}.ZStar;
-        else
-            if strcmp(handles.Settings.PCList{index,5},'Naive')
-                handles.Settings.XStar = xstar - handles.Settings.XData/handles.Settings.PhosphorSize;
-                detector_angle = pi/2 - handles.Settings.SampleTilt + handles.Settings.CameraElevation;
-                handles.Settings.YStar = ystar + handles.Settings.YData/handles.Settings.PhosphorSize*cos(detector_angle);
-                handles.Settings.ZStar = zstar + handles.Settings.YData/handles.Settings.PhosphorSize*sin(detector_angle);
-            else
-                handles.Settings.XStar(:) = xstar;
-                handles.Settings.YStar(:) = ystar;
-                handles.Settings.ZStar(:) = zstar;
-            end
-        end
         UpdatePlot(handles)
     end
     
-    % Set Boolean
-    index = GetListIndex(handles);
-    IndCol = zeros(size(handles.Settings.PCList,1),1);
-    IndCol(index) = 1;
-    handles.Settings.PCList(:,8) = num2cell(IndCol);
-    UpdateGUIs(handles)
-
     %Edit on Double-click
     SelectionType = get(handles.PCGUI,'SelectionType');
-    if strcmp(SelectionType,'open')
+    if strcmp(SelectionType,'open') && index ~= 1
         set(handles.PCGUI,'SelectionType','normal');
         EditPC_Callback(handles.EditPC, eventdata, handles);
         handles = guidata(handles.PCGUI);
@@ -302,30 +255,11 @@ else
     UpdateGUIs(handles)
 end
 
-
-
-% --- Executes during object creation, after setting all properties.
-function PCList_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to PCList (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: listbox controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
 % --- Executes on button press in NewPC.
 function NewPC_Callback(hObject, eventdata, handles)
-% hObject    handle to NewPC (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 type = GetPopupString(handles.NewPCType);
-index = GetListIndex(handles);
 Settings = handles.Settings;
-canceled = false;
+index = Settings.PCInd;
 if any(index)
     Sel = Settings.PCList(index,:);
     PCinit = Sel(1:3);
@@ -362,20 +296,6 @@ switch type
                 [PCinit 'Strain Minimization' PlaneFit def_name {''}],...
                 handles.V,[],handles.PCGUI,@catchStrainMin);
         end
-        %{
-        PCSettings = PCEdit([PCinit 'Strain Minimization' PlaneFit def_name {''}],handles.V,[]);
-        if ~isempty([PCSettings{1:3}])
-            
-            %Perform Strain Minimization
-            disp('Starting Strain Minimization Pattern Center Calibration...')
-            PCData = PCStrainMinimization(Settings,PCSettings{5});
-            %Add New PC to List
-            Settings.PCList(end+1,:) = {PCData.MeanXStar PCData.MeanYStar PCData.MeanZStar  PCSettings{4:6} PCData 0};
-            set(handles.PCList,'String',Settings.PCList(:,6));
-            handles.Settings = Settings;
-            guidata(handles.PCGUI,handles);
-        end
-        %}
         
     case 'Manual'
         %Setup Initial Params
@@ -389,23 +309,6 @@ switch type
                 [PCinit 'Manual' PlaneFit def_name {''}]...
                 ,handles.V,[],handles.PCGUI,@addManual);
         end
-        %{
-        if ~isempty([PCSettings{1:3}])
-            count = sum(cell2mat(strfind(handles.Settings.PCList(:,6),PCSettings{6}))>0);
-            if count
-                PCSettings{6} = [PCSettings{6} num2str(count)];
-            end
-            
-            %Add to PC List
-            Settings.PCList(end+1,:) = [PCSettings {0}];
-            index = get(handles.PCList,'Value');
-            set(handles.PCList,'String',Settings.PCList(:,6));
-            handles.Settings = Settings;
-            guidata(handles.PCGUI,handles);
-        else
-            canceled = true;
-        end
-        %}
     case 'Grid'
         def_name = 'Grid';
         count = sum(cell2mat(strfind(handles.Settings.PCList(:,6),def_name))>0);
@@ -425,32 +328,7 @@ switch type
         if isempty(handles.PCEditGUI) || ~isvalid(handles.PCEditGUI)
             plots.IQ_map = handles.IQ_map; plots.IPF_map = handles.IPF_map;
             handles.PCEditGUI = PCEdit([PCinit 'Grid' PlaneFit def_name {''}],handles.V,plots,handles.PCGUI,@addGrid);
-        else
-%             disp('PCEdit already open!');
         end
-        %{
-        if ~isempty([PCSettings{1:3}])
-            PCData = PCSettings{7};
-            if isempty(PCData.CalibrationIndices)
-                warndlg('No Calibration Indices Selected. Calibration Aborted')
-            else
-                PCData.xstar = PCSettings{1};
-                PCData.ystar = PCSettings{2};
-                PCData.zstar = PCSettings{3};
-                disp('Starting Grid Pattern Center Calibration...')
-                PCData = PCGrid(Settings,PCData);
-                
-                %Add to PC List
-                Settings.PCList(end+1,:) = {PCData.xstar PCData.ystar PCData.zstar...
-                    'Grid' 'Naive' def_name PCData 0};
-                set(handles.PCList,'String',Settings.PCList(:,6));
-                handles.Settings = Settings;
-                guidata(handles.PCGUI,handles);
-            end
-        else
-            canceled = true;
-        end
-        %}
         
     case 'Tiff'
         def_name = 'TIFF';
@@ -475,9 +353,6 @@ switch type
         end
 end
 guidata(hObject,handles);
-% if ~canceled
-%     doAutoRun(handles)
-% end
 
 function doAutoRun(handles)
 %autoRuns OpenXY after completing PC Calculations
@@ -486,15 +361,20 @@ if autoRun
     PCListString = cellstr(get(handles.PCList,'string'));
     listSize = size(PCListString);
     set(handles.PCList,'value',listSize(1));
-    PCList_Callback = handles.PCList.Callback;
-    PCList_Callback(handles.PCList,handles);
+    PCList_Callback(handles.PCList,[],handles);
     handles = guidata(handles.PCGUI);
     UpdateGUIs(handles);
     UpdatePlot(handles);
     mainHandles = guidata(handles.MainGUI);
-    RunButton_callback = mainHandles.RunButton.Callback;
-    runButton = mainHandles.RunButton;
-    RunButton_callback(runButton,[]);
+    if strcmp(mainHandles.RunButton.Enable,'on')
+        RunButton_callback = mainHandles.RunButton.Callback;
+        runButton = mainHandles.RunButton;
+        RunButton_callback(runButton,[]);
+    else
+        beep;
+        warndlg('Cannot start OpenXY, please check your setup!',...
+            'Cannot AutoRun');
+    end
 end
 
 function catchStrainMin(handles,PCSettings)
@@ -510,13 +390,12 @@ disp('Starting Strain Minimization Pattern Center Calibration...')
 PCData = PCCalAlkorta(Settings,PCSettings{5},inds);
 %Add New PC to List
 Settings.PCList(end+1,:) = {PCData.XStar(1) PCData.YStar(1) PCData.ZStar(1)...
-    'Alkorta' 'None' def_name PCData 0};
+    'Alkorta' 'None' def_name PCData};
 set(handles.PCList,'String',Settings.PCList(:,6));
 handles.Settings = Settings;
 guidata(handles.PCGUI,handles);
 UpdateGUIs(handles);
 doAutoRun(handles);
-
 
 function addManual(handles,PCSettings)
 count = sum(cell2mat(strfind(handles.Settings.PCList(:,6),PCSettings{6}))>0);
@@ -525,13 +404,12 @@ if count
 end
 Settings = handles.Settings;
 %Add to PC List
-Settings.PCList(end+1,:) = [PCSettings {0}];
+Settings.PCList(end+1,:) = PCSettings;
 set(handles.PCList,'String',Settings.PCList(:,6));
 handles.Settings = Settings;
 guidata(handles.PCGUI,handles);
 UpdateGUIs(handles);
 doAutoRun(handles);
-
 
 function addGrid(handles,PCSettings)
 PCData = PCSettings{7};
@@ -547,7 +425,7 @@ else
     
     %Add to PC List
     Settings.PCList(end+1,:) = {PCData.xstar PCData.ystar PCData.zstar...
-        'Grid' 'Naive' def_name PCData 0};
+        'Grid' 'Naive' def_name PCData};
     set(handles.PCList,'String',Settings.PCList(:,6));
     handles.Settings = Settings;
     guidata(handles.PCGUI,handles);
@@ -555,51 +433,27 @@ end
 UpdateGUIs(handles);
 doAutoRun(handles);
 
-
 function addTiff(handles)
 
 % --- Executes on selection change in NewPCType.
 function NewPCType_Callback(hObject, eventdata, handles)
-% hObject    handle to NewPCType (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = cellstr(get(hObject,'String')) returns NewPCType contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from NewPCType
-
-
-% --- Executes during object creation, after setting all properties.
-function NewPCType_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to NewPCType (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
 
 % --- Executes on button press in EditPC.
 function EditPC_Callback(hObject, eventdata, handles)
-% hObject    handle to EditPC (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 if ~isempty(handles.Settings.PCList)
-    index = GetListIndex(handles);
+    index = handles.Settings.PCInd;
     if all(isfield(handles,{'IQ_map','IPF_map'}))
         plots.IQ_map = handles.IQ_map; plots.IPF_map = handles.IPF_map;
     else
         plots = [];
     end
     handles.PCEditGUI = PCEdit(handles.Settings.PCList(index,:),handles.V,plots,...
-        handles.PCGUI,@placeholder);
+        handles.PCGUI,@saveEdits);
 end
 
-function placeholder(handles,EditedPC)
+function saveEdits(handles,EditedPC)
 if ~isempty([EditedPC{1:3}])
-    index = GetListIndex(handles);
+    index = handles.Settings.PCInd;
     XStars = abs([handles.Settings.PCList{:,1}] - EditedPC{1}) < 1e-6;
     YStars = abs([handles.Settings.PCList{:,2}] - EditedPC{2}) < 1e-6;
     ZStars = abs([handles.Settings.PCList{:,3}] - EditedPC{3}) < 1e-6;
@@ -658,40 +512,29 @@ if ~isempty([EditedPC{1:3}])
         end
     end
     
-    handles.Settings.PCList(index,1:end-1) = EditedPC;
+    handles.Settings.PCList(index,:) = EditedPC;
     set(handles.PCList,'String',handles.Settings.PCList(:,6));
+    
     
     guidata(handles.PCGUI,handles);
     PCList_Callback(handles.PCList, [], handles);
+    Settings.updatePC;
     handles = guidata(handles.PCGUI);
     guidata(handles.PCGUI,handles);
 end
 
-
 % --- Executes on button press in RemovePC.
 function RemovePC_Callback(hObject, eventdata, handles)
-% hObject    handle to RemovePC (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-index = GetListIndex(handles);
-handles.Settings.PCList(index,:) = [];
-len = size(handles.Settings.PCList(:,1),1);
-set(handles.PCList,'String',handles.Settings.PCList(:,6));
-if get(handles.PCList,'Value') > len
-    set(handles.PCList,'Value',len)
+index = handles.Settings.PCInd;
+if ~strcmp(handles.Settings.PCList{index,6},'Default')
+    handles.Settings.PCList(index,:) = [];
 end
+set(handles.PCList,'String',handles.Settings.PCList(:,6));
+index = index - 1;
+handles.Settings.PCInd = index;
+handles.PCList.Value = index;
 PCList_Callback(handles.PCList,eventdata,handles);
 guidata(handles.PCGUI,handles);
-
-
-function index = GetListIndex(handles)
-Names = get(handles.PCList,'String');
-if isempty(Names)
-    index = [];
-else
-    Selection = Names{get(handles.PCList,'Value')};
-    index = strcmp(handles.Settings.PCList(:,6),Selection);
-end
 
 function SetPopupValue(Popup,String)
 String = num2str(String);    
@@ -706,16 +549,12 @@ List = get(Popup,'String');
 Value = get(Popup,'Value');
 string = List{Value};
 
-
 % --- Executes when selected object is changed in PlotOptions.
 function PlotOptions_SelectionChangedFcn(hObject, eventdata, handles)
-% hObject    handle to the selected object in PlotOptions 
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 UpdatePlot(handles)
 
 function UpdatePlot(handles)
-cur = GetListIndex(handles);
+cur = handles.Settings.PCInd;
 emptylist = isempty(cur);
 Nx = handles.Settings.Nx;
 Ny = handles.Settings.Ny;
@@ -774,11 +613,6 @@ guidata(handles.PCGUI,handles);
 
 % --- Executes on button press in PlotGB.
 function PlotGB_Callback(hObject, eventdata, handles)
-% hObject    handle to PlotGB (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of PlotGB
 UpdatePlot(handles)
 
 function handles = GenPlots(handles,Settings)
@@ -823,37 +657,22 @@ if ~isempty(handles.MainGUI) && isvalid(handles.MainGUI)
     end
 end
 
-
-
 % --- Executes on key press with focus on PCGUI and none of its controls.
 function PCGUI_KeyPressFcn(hObject, eventdata, handles)
-% hObject    handle to PCGUI (see GCBO)
-% eventdata  structure with the following fields (see MATLAB.UI.FIGURE)
-%	Key: name of the key that was pressed, in lower case
-%	Character: character interpretation of the key(s) that was pressed
-%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
-% handles    structure with handles and user data (see GUIDATA)
 handles = guidata(hObject);
 % Close Figure with CTRL-L
 if strcmp(eventdata.Key,'l') && ~isempty(eventdata.Modifier) && strcmp(eventdata.Modifier,'control')
     CloseButton_Callback(handles.CloseButton, eventdata, handles);
 end
 
-
 % --------------------------------------------------------------------
 function Edit_Callback(hObject, eventdata, handles)
-% hObject    handle to Edit (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 EditPC_Callback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function Copy_Callback(hObject, eventdata, handles)
-% hObject    handle to Copy (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 if ~isempty(handles.Settings.PCList)
-    index = GetListIndex(handles);
+    index = handles.Settings.PCInd;
     indexind = find(index);
     CopyPC = handles.Settings.PCList(index,:);
     CopyPC{6} = [CopyPC{6} '_Copy'];
@@ -863,10 +682,5 @@ if ~isempty(handles.Settings.PCList)
     guidata(hObject,handles);
 end
 
-
-
 % --- Executes on mouse press over figure background.
 function PCGUI_ButtonDownFcn(hObject, eventdata, handles)
-% hObject    handle to PCGUI (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)

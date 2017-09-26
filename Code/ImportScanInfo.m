@@ -132,6 +132,10 @@ if length(Settings.grainID) ~= length(Settings.XData)
     error('Grain file and Scan file have a different number of points')
 end
 
+%Populate PCList
+Settings.PCList = {Settings.ScanParams.xstar,Settings.ScanParams.ystar,Settings.ScanParams.zstar,...
+    'Scan File','Naive','Default',[]};
+
 end
 
 

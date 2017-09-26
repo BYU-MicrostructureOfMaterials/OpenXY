@@ -15,12 +15,15 @@ classdef OXY < matlab.mixin.Copyable
             obj.grainMethodListener = addlistener(obj,{'GrainMethod',...
                 'MisoTol','MinGrainSize'},'PostSet',@(Source,event)...
                 UpdateGrainID(obj));
+            obj.PCListener = addlistener(obj,'PCInd','PostSet',...
+                @(source,event) updatePC(obj));
         end
         
         function delete(obj)
             delete(obj.subScanListener);
             delete(obj.grainRefListener);
             delete(obj.grainMethodListener);
+            delete(obj.PCListener);
         end
         
         function value = trueScanLength(obj)
@@ -31,6 +34,7 @@ classdef OXY < matlab.mixin.Copyable
         
         UpdateGrainID(Settings)
         
+        UpdatePC(Settings)
     end
     
     methods%Getters and Setters
@@ -240,6 +244,8 @@ classdef OXY < matlab.mixin.Copyable
         grainReffEvent
         
         grainMethodEvent
+        
+        PCEvent
     end
     
     properties %General Properties
@@ -293,8 +299,14 @@ classdef OXY < matlab.mixin.Copyable
         DDSMethod@char = 'Nye-Kroner'
         
         EnableProfiler@logical = false
-                
+        
+        %TODO make this a dependant variable
         PlaneFit@char = 'Naive'
+        
+        %A Cell array that contains the various PC Calibrations
+        %   The cell contains the different PC calibrations stored in the
+        %   rows of the cell array in the form:
+        %   {Xstar,Ystar,Zstar,type,plane fit type,name,data}
         PCList@cell matrix
                 
                 
@@ -365,6 +377,8 @@ classdef OXY < matlab.mixin.Copyable
         MinGrainSize@double scalar = 0
         KernelAvgMisoPath@char
         
+        PCInd@double scalar = 1;
+        
     end
     
     properties (SetObservable = true)
@@ -429,11 +443,8 @@ classdef OXY < matlab.mixin.Copyable
         subScanListener
         grainRefListener
         grainMethodListener
+        PCListener
     end
     
-    events
-        
-        
-    end    
 end
 

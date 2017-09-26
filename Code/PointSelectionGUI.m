@@ -124,6 +124,9 @@ handles.grainMethodListener = addlistener(Settings,'grainMethodEvent',...
 handles.HROIMMethodListener = addlistener(Settings,'HROIMMethod',...
     'PostSet',@(Src,evnt) refPointUpdateFunc(evnt,hObject));
 
+handles.PCListener = addlistener(Settings,'PCEvent',...
+    @(src,event) refPointUpdateFunc(event,hObject));
+
 % Excecute HREBSDPrep
 if ~isfield(Settings,'HREBSDPrep') || ~Settings.HREBSDPrep
     Settings = HREBSDPrep(Settings);
@@ -297,6 +300,7 @@ function PointSelectionGUI_CloseRequestFcn(hObject, eventdata, handles)
 delete(handles.refPointListener);
 delete(handles.grainMethodListener);
 delete(handles.HROIMMethodListener);
+delete(handles.PCListener);
 delete(hObject);
 
 % --- Executes on button press in close.

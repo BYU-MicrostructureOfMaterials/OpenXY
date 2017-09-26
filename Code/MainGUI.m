@@ -22,7 +22,7 @@ function varargout = MainGUI(varargin)
 
 % Edit the above text to modify the response to help MainGUI
 
-% Last Modified by GUIDE v2.5 05-Jan-2017 11:28:22
+% Last Modified by GUIDE v2.5 25-Sep-2017 10:35:12
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -415,6 +415,9 @@ if name ~= 0
         handles.Settings.FirstImagePath = fullfile(path,name);
         handles.Settings.PixelSize = x;
         handles.Settings.imsize = [x,y];
+        
+        %Update the PC info now that the image size is known
+        handles.Settings.updatePC;
         
         %Get Image Names
         if handles.ScanFileLoaded && ~handles.Fast
@@ -968,4 +971,22 @@ if ~isempty(handles.TestCalcFGUI) && isvalid(handles.TestCalcFGUI)
     h = guidata(handles.TestCalcFGUI);
     h.Settings = handles.Settings;
     guidata(handles.TestCalcFGUI,h);
+end
+
+% --- Executes on key press with focus on MainGUI or any of its controls.
+function MainGUI_WindowKeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to MainGUI (see GCBO)
+% eventdata  structure with the following fields (see MATLAB.UI.FIGURE)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+
+if strcmp(eventdata.Modifier,'control') && ~strcmp(eventdata.Key,'control')
+    switch eventdata.Key
+        case 'f'
+            SelectScanButton_Callback(handles.SelectScanButton,eventdata,handles);
+            handles = guidata(hObject);
+            SelectImageButton_Callback(handles.SelectImageButton,eventdata,handles);
+    end
 end
