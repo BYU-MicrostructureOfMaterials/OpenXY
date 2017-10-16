@@ -1,11 +1,11 @@
-function [pic]=genEBSDPatternHybrid_fromEMSoft(g,xstar,ystar,zstar,pixsize,mperpix,elevang,Material,Av,ImageInd)
+function [pic]=genEBSDPatternHybrid_fromEMSoft(g,xstar,ystar,zstar,pixsize,mperpix,elevang,sampleTilt,Material,Av,ImageInd)
 
-if nargin < 10
+if nargin < 11
     ImageInd = 0;
 end
 
 L=(zstar*pixsize*mperpix); %define mperpix in original script
-thetac=elevang*180/pi; % in degrees
+thetac=70 + (elevang - sampleTilt)*180/pi; % in degrees
 delta=mperpix;
 numsx=pixsize;
 numsy=numsx;

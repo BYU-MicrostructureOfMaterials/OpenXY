@@ -24,7 +24,7 @@ Settings.DisplayGUI = true;
 %ROI Settings
 Settings.ROISizePercent = 25;
 Settings.NumROIs = 48;
-Settings.ROIStyle = 'Grid'; %{'Grid','Radial','Intensity'}
+Settings.ROIStyle = 'Annular'; %{'Grid','Radial','Intensity'}
 Settings.ROIFilter = [2 50 1 1];
 %Filter Settings
 Settings.ImageFilterType='standard'; %{'standard','localthresh'}
@@ -74,5 +74,6 @@ Settings.PCFilePath = [];
 %Options are: {'Real Sample','Real Crystal','Collin Sample','Collin Crystal'}; 
 Settings.FCalcMethod = 'Collin Crystal';
 
-
+%% HDF5 variables
+Settings.valid = [];
 

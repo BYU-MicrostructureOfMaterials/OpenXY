@@ -275,7 +275,7 @@ if name ~= 0
         else
             nameT = name;
         end
-        if size(name,2) > 50
+        if size(path,2) > 50
             pathT = [path(1:47),'...'];
         else
             pathT = path;
@@ -292,14 +292,35 @@ if name ~= 0
             try
                 handles.Settings = ImportScanInfo(handles.Settings,name,path);
             catch ME
-                set(handles.ScanNameText,'String','Select a Scan');
-                set(handles.ScanFolderText,'String','Select a Scan');
-                set(handles.ScanFolderText,'TooltipString','');
-                set(handles.ScanSizeText,'String','Select a Scan');
-                if (strcmp(ME.message,'No'))
-                    errordlg('You cannot use a .ang file without a grain file!','Grain file required!')
+                if strcmp(ME.identifier,'OpenXY:MissingGrainFile')
+                    set(handles.ScanNameText,'String','Select a Scan');
+                    set(handles.ScanFolderText,'String','Select a Scan');
+                    set(handles.ScanFolderText,'TooltipString','');
+                    set(handles.ScanSizeText,'String','Select a Scan');
+                    if (strcmp(ME.message,'No'))
+                        errordlg('You cannot use an OIM scan without a grain file!','Grain file required!')
+                    end
+                    return
+                elseif strcmp(ME.identifier,'OpenXY:MissingcprFile')
+                    set(handles.ScanNameText,'String','Select a Scan');
+                    set(handles.ScanFolderText,'String','Select a Scan');
+                    set(handles.ScanFolderText,'TooltipString','');
+                    set(handles.ScanSizeText,'String','Select a Scan');
+                    if (strcmp(ME.message,'No'))
+                        errordlg('You cannot use an AZtec scan without a .cpr file!','.cpr file required!')
+                    end
+                    return
+                else
+                    set(handles.ScanNameText,'String','Select a Scan');
+                    set(handles.ScanFolderText,'String','Select a Scan');
+                    set(handles.ScanFolderText,'TooltipString','');
+                    set(handles.ScanSizeText,'String','Select a Scan');
+                    openFiles = fopen('all');
+                    for ii = openFiles
+                        fclose(ii);
+                    end
+                    rethrow(ME);
                 end
-                return
             end
             %Set ScanType
             SetPopupValue(handles.ScanTypePopup,handles.Settings.ScanType);

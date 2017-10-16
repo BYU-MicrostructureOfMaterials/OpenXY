@@ -67,6 +67,6 @@ if ~exist('EMsoftPath','var') || isempty(EMsoftPath)
 end
 tic
 for i = 1:NumRep
-    RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av);
+    RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,sampletilt,curMaterial,Av);
 end
 toc

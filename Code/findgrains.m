@@ -1,14 +1,14 @@
 % find grains and grain boundaries
 % input is angles=(nx,ny,3) for phi1, Phi, phi2 at each point
 % dtf from OIMnoise.m 12/5/10
-function [grains grainsize sizes BOUND]=findgrains(angles, lattice, clean, small,mistol)
+function [grains,grainsize,sizes,BOUND]=findgrains(angles, lattice, clean, small,mistol)
 
 [nx,ny]=size(angles(:,:,1));
 N=nx*ny;
 
-phi1=angles(:,:,1);
-Phi=angles(:,:,2);
-phi2=angles(:,:,3);
+% phi1=angles(:,:,1);
+% Phi=angles(:,:,2);
+% phi2=angles(:,:,3);
 anglesR=circshift(angles,[0 -1 0]);   % shift matrix left
 anglesD=circshift(angles,[-1 0 0]);   % shift matrix up
 angles = reshape(angles,[N 3]);
@@ -24,8 +24,10 @@ indT=ind';
 Q = gmat(angles(:,1),angles(:,2),angles(:,3));
 QRtemp= gmat(anglesR(:,1),anglesR(:,2),anglesR(:,3));
 QDtemp= gmat(anglesD(:,1),anglesD(:,2),anglesD(:,3));
+QR = zeros(N,9);
+QD = QR;
 count=0;
-for jj = 1:3
+for jj = 1:3%preallocate
     for ii =1:3
         count=count+1;
         QR(:,count) = sum(QRtemp(:,ind(ii,:)).*Q(:,indT(:,jj)),2);
@@ -47,29 +49,31 @@ if lattice==1
 else
     nsym=12;
 end
-
+Q_primeR(N,9) = 0;
+Q_primeD = Q_primeR;
 for kk = 1:nsym
     count = 0;
-if lattice==1
-    R = repmat(reshape(CubicTriclinicrot(:,:,kk),1,9),size(Q,1),1);
-else
-    R = repmat(reshape(Hexagonalrot(:,:,kk),1,9),size(Q,1),1);
-end  
+    if lattice==1
+        R = repmat(reshape(CubicTriclinicrot(:,:,kk),1,9),size(Q,1),1);%#ok
+    else
+        R = repmat(reshape(Hexagonalrot(:,:,kk),1,9),size(Q,1),1);%#ok
+    end
+    
     for jj = 1:3
         for ii =1:3
-            count  =count +1;
+            count = count +1;
             Q_primeR(:,count) = sum(R(:,ind(ii,:)).*QR(:,ind(:,jj)),2);
             Q_primeD(:,count) = sum(R(:,ind(ii,:)).*QD(:,ind(:,jj)),2);
         end
     end
-
+    
     MisOr_tempR = acos((sum(Q_primeR(:,diag(ind)),2)-1)/2);
     smaller = find(MisOr_tempR < MisOrR );
     MisOrR(smaller) = MisOr_tempR(smaller);
     MisOr_tempD = acos((sum(Q_primeD(:,diag(ind)),2)-1)/2);
     smaller = find(MisOr_tempD < MisOrD );
     MisOrD(smaller) = MisOr_tempD(smaller);
-
+    
 end
 
 %clear Q QD DR
@@ -92,7 +96,7 @@ grains(2,2)=1;
 flag=0;
 ngrain=1;   %used to enumerate the grains
 
-gsz = 2; %create a window for the smallest grainsize
+% gsz = 2; %create a window for the smallest grainsize
 while flag==0
     flag=1;
     nadds=0;

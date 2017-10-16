@@ -32,6 +32,13 @@ elevang = params{7};
 Fhkl = params{8};
 dhkl = params{9};
 hkl = params{10};
+useeuler = 0;
+if length(params)==13
+    useeuler = 1;
+    camphi1 = params{11};
+    camPHI = params{12};
+    camphi2 = params{13};
+end
 sFhkl = Fhkl.^2;
 Wa = 6.626e-34/sqrt(2*1.602e-19*9.109e-31*Av+(1.602e-19*Av/2.998e8)^2); %calculate wavelength
 
@@ -56,11 +63,22 @@ else
 end
 Qcs=Qsc';
 
-alpha = pi/2 - sampletilt + elevang;
-% Phospher to sample
-Qps=[0 -cos(alpha) -sin(alpha);...
-    -1     0            0;...
-    0   sin(alpha) -cos(alpha)];
+if ~useeuler
+    alpha = pi/2 - sampletilt + elevang;
+    % Phospher to sample
+    Qps=[0 -cos(alpha) -sin(alpha);...
+        -1     0            0;...
+        0   sin(alpha) -cos(alpha)];
+else
+    Qmp = euler2gmat(camphi1,camPHI,camphi2);
+    Qmi = [0 -1 0;1 0 0;0 0 1];
+    Qio = [cos(sampletilt) 0 -sin(sampletilt);0 1 0;sin(sampletilt) 0 cos(sampletilt)];
+    Qpo = Qio*Qmi*Qmp'*[-1 0 0;0 1 0;0 0 -1];
+    
+    Qps = Qpo;
+end
+
+
 
 UsePermHKL = 0; %can't get this working for anything non-cubic, so use old 
 %method for other symmetries. PermuteHKL does speed up cubic symmetries
@@ -208,17 +226,19 @@ addParameter(p,'BlinkSpeed',0.5,@(x) isnumeric(x));
 addParameter(p,'Color','g');
 addParameter(p,'LineWidth',0.5);
 addParameter(p,'MaxSpeed',2)
+addParameter(p,'LineStyle','-')
 parse(p,varargin{:})
 period = p.Results.BlinkSpeed;
 color = p.Results.Color;
 width = p.Results.LineWidth;
 maxspeed = p.Results.MaxSpeed;
+lineStyle = p.Results.LineStyle;
 
 hold on;
 if strcmp(color,'holiday')
     color = 'g';
 end
-h = plot(masterx,mastery,color,'LineWidth',width);
+h = plot(masterx,mastery,color,'LineWidth',width,'LineStyle',lineStyle);
 if period == maxspeed
     set(h,'Visible','off')
 elseif period > 0

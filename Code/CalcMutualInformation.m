@@ -12,8 +12,7 @@ Ib = ConvertToInt8(ImageB);
 pJ = accumarray([uint16(Ia(:))+1 uint16(Ib(:))+1], 1) / numel(Ia);
 
 %Calculate Joint Entropy
-pJ_NZ = pJ;
-pJ_NZ(pJ_NZ==0) = [];
+pJ_NZ = pJ(pJ~=0);
 eJ = -sum(pJ_NZ.*log2(pJ_NZ));
 
 %Get individual Normalized Histograms (Probability)
@@ -21,10 +20,8 @@ pA = sum(pJ,2);
 pB = sum(pJ,1);
 
 %Calculate Individual Entropies
-pA_NZ = pA;
-pB_NZ = pB;
-pA_NZ(pA_NZ==0) = [];
-pB_NZ(pB_NZ==0) = [];
+pA_NZ = pA(pA~=0);
+pB_NZ = pB(pB~=0);
 eA = -sum(pA_NZ.*log2(pA_NZ));
 eB = -sum(pB_NZ.*log2(pB_NZ));
 

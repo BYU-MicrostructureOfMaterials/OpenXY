@@ -384,15 +384,20 @@ width = WidthOptions(val);
 
 % Read Pattern and plot with overlay
 axes(handles.Pattern)
-if get(handles.Filter,'Value')
-    ImageFilter = Settings.ImageFilter;
-    if strcmp(Settings.ImageFilterType,'standard')
-        I2=ReadEBSDImage(Settings.ImageNamesList{ind},ImageFilter);
+if (size(Settings.ImageNamesList,1)  ==  1)%H5 Format
+    H5ImageParams = {Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter,Settings.valid};
+    I2 = ReadH5Pattern(H5ImageParams{:},ind);
+else%.ang/.ctf
+    if get(handles.Filter,'Value')
+        ImageFilter = Settings.ImageFilter;
+        if strcmp(Settings.ImageFilterType,'standard')
+            I2=ReadEBSDImage(Settings.ImageNamesList{ind},ImageFilter);
+        else
+            I2=localthresh(Settings.ImageNamesList{ind});
+        end
     else
-        I2=localthresh(Settings.ImageNamesList{ind});
+        I2=ReadEBSDImage(Settings.ImageNamesList{ind},[0 0 0 0]);
     end
-else
-    I2=ReadEBSDImage(Settings.ImageNamesList{ind},[0 0 0 0]);
 end
 im = imagesc(I2); axis image; xlim([0 pixsize]); ylim([0 pixsize]); colormap('gray'); axis off;
 
@@ -410,7 +415,11 @@ if strcmp(GetPopupString(handles.SimType),'Dynamic')
         blinkline(h);blinkline(h);
     end
 else
-    
+    if isfield(Settings,'camphi1')
+        paramspat{11} = Settings.camphi1;
+        paramspat{12} = Settings.camPHI;
+        paramspat{13} = Settings.camphi2;
+    end
     genEBSDPatternHybridLineOverlay(g,paramspat,eye(3),Material.lattice,Material.a1,Material.b1,Material.c1,Material.axs,...
         'BlinkSpeed',speed,'Color',color,'MaxSpeed',handles.MaxSpeed,...
         'LineWidth',width);

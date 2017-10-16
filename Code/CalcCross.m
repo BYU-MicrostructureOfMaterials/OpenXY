@@ -18,7 +18,7 @@ switch Settings.HROIMMethod
         elevang=cell2mat(params2(7));
         mperpix = Settings.mperpix;
         curMaterial=cell2mat(Settings.Phase(ImageInd)); %****may need updating for material of this point - where is that info?
-        I1 = genEBSDPatternHybrid_fromEMSoft(g,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av);
+        I1 = genEBSDPatternHybrid_fromEMSoft(g,xstar,ystar,zstar,pixsize,mperpix,elevang,sampleTilt,curMaterial,Av);
 
         %Calculate Cross-Correlation Coefficient
         % crop image ********optimize this later

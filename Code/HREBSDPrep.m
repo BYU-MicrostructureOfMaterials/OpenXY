@@ -79,7 +79,7 @@ if strcmp(Settings.HROIMMethod,'Dynamic Simulated')
             end
         else
             ScanImage = ReadH5Pattern(Settings.ScanFilePath,Settings.ImageNamesList,...
-                Settings.imsize,Settings.ImageFilter,Settings.RefImageInd);
+                Settings.imsize,Settings.ImageFilter,Settings.valid,Settings.RefImageInd);
         end
         
         %Extract Variables
@@ -92,13 +92,13 @@ if strcmp(Settings.HROIMMethod,'Dynamic Simulated')
         elevang = Settings.CameraElevation;
         Av = Settings.AccelVoltage*1000; %put it in eV from KeV
         
-        RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av);
+        RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,sampleTilt,curMaterial,Av);
         clear global rs cs Gs
         [F1,~,~] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,Settings.RefImageInd);
         for iq=1:3
             [rr,~]=poldec(F1); % extract the rotation part of the deformation, rr
             gr=rr'*gr; % correct the rotation component of the deformation so that it doesn't affect strain calc
-            RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av);
+            RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,sampleTilt,curMaterial,Av);
             
             clear global rs cs Gs
             [F1,~,~] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,Settings.RefImageInd);
@@ -147,6 +147,33 @@ else
     Settings.subgrainID = Settings.grainID;
     Settings.subRefInd = Settings.RefInd;
 end
+%% Check to see if camera orientation data exists
+
+if Settings.ImageTag
+    button = questdlg('Would you like to read the camera orientation calibration from the first TIFF image?');
+    if strcmp(button,'Yes')
+        info = imfinfo(Settings.ImageNamesList{1});
+        
+        start1 = strfind(info.UnknownTags.Value,'<detector-orientation-euler1-deg>');
+        end1 = strfind(info.UnknownTags.Value,'</detector-orientation-euler1-deg>');
+
+        Settings.camphi1 = str2double(info.UnknownTags.Value(start1+length('<detector-orientation-euler1-deg>'):end1-1))*pi/180;
+        
+        start2 = strfind(info.UnknownTags.Value,'<detector-orientation-euler2-deg>');
+        end2 = strfind(info.UnknownTags.Value,'</detector-orientation-euler2-deg>');
+
+        Settings.camPHI = str2double(info.UnknownTags.Value(start2+length('<detector-orientation-euler2-deg>'):end2-1))*pi/180;
+        
+        start3 = strfind(info.UnknownTags.Value,'<detector-orientation-euler3-deg>');
+        end3 = strfind(info.UnknownTags.Value,'</detector-orientation-euler3-deg>');
+
+        Settings.camphi2 = str2double(info.UnknownTags.Value(start3+length('<detector-orientation-euler1-deg>'):end3-1))*pi/180;
+    else
+        if isfield(Settings,'camphi1')
+            Settings = rmfield(Settings,{'camphi1','camPHI','camphi2'});
+        end
+    end
+end
 
 %% Pattern Center Calibration
 if ~isfield(Settings,'XStar')
@@ -166,9 +193,10 @@ if ~isfield(Settings,'XStar')
     %and Settings.CameraAzimuthal ******
     FullLength = length(Settings.XData);
     if isfield(Settings,'PlaneFit') && strcmp(Settings.PlaneFit,'Naive')
+%         disp('We are in HREBSDPrep')
         Settings.XStar(1:FullLength) = xstar-Settings.XData/Settings.PhosphorSize;
-        Settings.YStar(1:FullLength) = ystar+Settings.YData/Settings.PhosphorSize*sin(Settings.SampleTilt-Settings.CameraElevation);
-        Settings.ZStar(1:FullLength) = zstar+Settings.YData/Settings.PhosphorSize*cos(Settings.SampleTilt-Settings.CameraElevation);
+        Settings.YStar(1:FullLength) = ystar+Settings.YData/Settings.PhosphorSize*cos(pi/2 - Settings.SampleTilt+Settings.CameraElevation);
+        Settings.ZStar(1:FullLength) = zstar+Settings.YData/Settings.PhosphorSize*sin(pi/2 - Settings.SampleTilt+Settings.CameraElevation);
     else
         Settings.XStar(1:FullLength) = xstar;
         Settings.YStar(1:FullLength) = ystar;

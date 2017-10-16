@@ -30,8 +30,8 @@ for loopvar=1:length(getdat)
     zread(loopvar) = str2double(info.UnknownTags.Value(zistart+length('<detector-distance-pu>'):zifinish-1))/VHRatio;
 end
 
-PTX = mod((1:Nx*Ny) - 1,Nx);
-PTY = floor(((1:Nx*Ny) - 1)/Nx);
+PTX = mod((1:Nx*Ny) - 1,Nx)';
+PTY = floor(((1:Nx*Ny) - 1)/Nx)';
 
 xxstep = xread(2) - xread(1);
 xystep = yread(2) - yread(1);

@@ -121,7 +121,7 @@ if ~strcmp(Settings.ScanType,'L')
     if size(Settings.ImageNamesList,1)>1
         ScanImage = ReadEBSDImage(Settings.ImageNamesList{1},Settings.ImageFilter);
     else
-        ScanImage = ReadH5Pattern(Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter,1);
+        ScanImage = ReadH5Pattern(Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter,Settings.valid,1);
     end
     
     [roixc,roiyc]= GetROIs(ScanImage,Settings.NumROIs,Settings.PixelSize,...
@@ -523,8 +523,8 @@ function [AllFa,AllSSEa,AllFc,AllSSEc, misanglea, misanglec] = DDCalc(RefInd,Ref
         image_b = ReadEBSDImage(Settings.ImageNamesList{cnt},ImageFilter);
         image_c = ReadEBSDImage(Settings.ImageNamesList{RefIndC},ImageFilter);
     else
-        H5ImageParams = {Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter};
-        image_a = ReadH5Pattern(H5ImageParams{:},RefIndA);
+        H5ImageParams = {Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter,Settings.valid};
+        image_a = ReadH5Pattern(H5ImageParams{:},RefIndA,Settings.valid);
         image_b = ReadH5Pattern(H5ImageParams{:},cnt);
         image_c = ReadH5Pattern(H5ImageParams{:},RefIndC);
     end
@@ -570,10 +570,10 @@ function [AllFa,AllSSEa,AllFc,AllSSEc, misanglea, misanglec] = DDCalc(RefInd,Ref
 
             clear global rs cs Gs
             if RefIndA2 == 0
-                    [AllFa,AllSSEa] = CalcF(image_b,image_a,g_b,eye(3),cnt,Settings,Settings.Phase{cnt}, RefIndA);
+                    [AllFa,AllSSEa] = CalcFShift(image_b,image_a,g_b,eye(3),RefIndA,Settings,Settings.Phase{cnt}, cnt);%g_b or Amat?
             else
-                [AllFa1,AllSSEa1] = CalcF(image_b,image_a ,g_b,eye(3),cnt,Settings,Settings.Phase{cnt},RefIndA );
-                [AllFa2,AllSSEa2] = CalcF(image_b,image_a2,g_b,eye(3),cnt,Settings,Settings.Phase{cnt},RefIndA2);
+                [AllFa1,AllSSEa1] = CalcFShift(image_b,image_a ,g_b,eye(3),RefIndA,Settings,Settings.Phase{cnt},cnt );
+                [AllFa2,AllSSEa2] = CalcFShift(image_b,image_a2,g_b,eye(3),RefIndA2,Settings,Settings.Phase{cnt},cnt);
                 AllFa=0.5*(AllFa1+AllFa2);
                 AllSSEa=0.5*(AllSSEa1+AllSSEa2);
             end
@@ -585,10 +585,10 @@ function [AllFa,AllSSEa,AllFc,AllSSEc, misanglea, misanglec] = DDCalc(RefInd,Ref
         % then, evaluate point c
         clear global rs cs Gs
         if RefIndC2 == 0
-            [AllFc,AllSSEc] = CalcF(image_b,image_c ,g_b,eye(3),cnt,Settings,Settings.Phase{cnt},RefIndC);
+            [AllFc,AllSSEc] = CalcFShift(image_b,image_c ,g_b,eye(3),RefIndC,Settings,Settings.Phase{cnt},cnt);
         else
-            [AllFc1,AllSSEc1] = CalcF(image_b,image_c ,g_b,eye(3),cnt,Settings,Settings.Phase{cnt},RefIndC );
-            [AllFc2,AllSSEc2] = CalcF(image_b,image_c2,g_b,eye(3),cnt,Settings,Settings.Phase{cnt},RefIndC2);
+            [AllFc1,AllSSEc1] = CalcFShift(image_b,image_c ,g_b,eye(3),RefIndC,Settings,Settings.Phase{cnt},cnt);
+            [AllFc2,AllSSEc2] = CalcFShift(image_b,image_c2,g_b,eye(3),RefIndC2,Settings,Settings.Phase{cnt},cnt);
             AllFc=0.5*(AllFc1+AllFc2);
             AllSSEc=0.5*(AllSSEc1+AllSSEc2);
         end

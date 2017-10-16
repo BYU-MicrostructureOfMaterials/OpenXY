@@ -15,11 +15,7 @@ end
 if ~strcmp(ext,'.h5')
     if ~isfield(Settings,'Angles') || ~strcmp(Settings.ScanFilePath,ScanPath)
         
-        try
-            [ScanFileData,Settings.ScanParams,Settings.GrainVals] = ReadScanFile(ScanPath);
-        catch ME
-            rethrow(ME);
-        end
+        [ScanFileData,Settings.ScanParams,Settings.GrainVals] = ReadScanFile(ScanPath);
         %Initialize Variables
         Settings.ScanLength = size(ScanFileData{1},1);
         Settings.Angles = zeros(Settings.ScanLength,3);
@@ -65,7 +61,6 @@ if ~strcmp(ext,'.h5')
                     if strcmp(choice,ScanP)
                         Nx = NumColsOdd;
                         Ny = NumRows;
-                        set(ScanSizeText,'String',ScanP);
                     else
                         Settings.ScanParams.OriginalSize = [NumColsOdd, NumRows];
                         Settings.ScanParams.NumColsOdd = Nx;

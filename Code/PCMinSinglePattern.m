@@ -11,8 +11,8 @@ if isfield(Settings,'XStar')
 else
     if strcmp(Settings.PlaneFit,'Naive')
         xstar = ScanParams.xstar-Settings.XData(Ind)/Settings.PhosphorSize;
-        ystar = ScanParams.ystar+Settings.YData(Ind)/Settings.PhosphorSize*sin(Settings.SampleTilt-Settings.CameraElevation);
-        zstar = ScanParams.zstar+Settings.YData(Ind)/Settings.PhosphorSize*cos(Settings.SampleTilt-Settings.CameraElevation);
+        ystar = ScanParams.ystar+Settings.YData(Ind)/Settings.PhosphorSize*cos(Settings.SampleTilt-Settings.CameraElevation);
+        zstar = ScanParams.zstar+Settings.YData(Ind)/Settings.PhosphorSize*sin(Settings.SampleTilt-Settings.CameraElevation);
     else
         xstar = ScanParams.xstar;
         ystar = ScanParams.ystar;
@@ -39,7 +39,7 @@ if size(Settings.ImageNamesList,1)>1
     ImagePath = Settings.ImageNamesList{Ind};
     ScanImage = ReadEBSDImage(ImagePath,Settings.ImageFilter);
 else
-    ScanImage = ReadH5Pattern(Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter,Ind);
+    ScanImage = ReadH5Pattern(Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter,Settings.valid,Ind);
 end
 
 [roixc,roiyc]= GetROIs(ScanImage,Settings.NumROIs,pixsize,Settings.ROISize,...
@@ -75,11 +75,12 @@ switch Algorithm
                 zstar=PCprime(3);
                 pixsize=cell2mat(paramspat(4));
                 Av=cell2mat(paramspat(5));
+                sampleTilt = paramspat{6};
                 elevang=cell2mat(paramspat(7));
                 mperpix = Settings.mperpix;
                 curMaterial=cell2mat(Settings.Phase(Ind)); %****may need updating for material of this point - where is that info?
                 for i = 1:3
-                    I1 = genEBSDPatternHybrid_fromEMSoft(g,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av,Ind);
+                    I1 = genEBSDPatternHybrid_fromEMSoft(g,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,sampleTilt,Av,Ind);
                     
                     clear global rs cs Gs
                     %     [F SSE] = CalcF(I1,I0,g,F,ImageInd,Settings,Settings.Material); % old version

@@ -39,6 +39,7 @@ IsSerial = true; %Image names are incrementally serialized
 NameParts = textscan(ImageName,'%s');
 NameParts = NameParts{1};
 rcNaming = false;
+IsUnprocessed = false;
 
 %Looks for pairs of x,y or r,c that have numbers after them
 for i = 1:length(NameParts)
@@ -60,6 +61,13 @@ for i = 1:length(NameParts)
             IsSerial = false;
             break;
         end
+    end
+end
+
+if length(NameParts)==1
+    if strcmp(NameParts{1},'0_0')
+        IsSerial = false;
+        IsUnprocessed = true;
     end
 end
 
@@ -135,7 +143,16 @@ if IsSerial
     for i = 1:ScanLength
         ImageNamesList{i} = fullfile(path,[preStr sprintf(numFormat,Xval+i-1) endStr ext]);
     end
-        
+    
+elseif IsUnprocessed
+    count = 1;
+    for j=0:NumRows-1 %Which is inner, which is outer?
+        for i=0:NumColumns-1
+            ImageNamesList{count} = fullfile(path,[num2str(j) '_' num2str(i) endStr ext]);
+            count = count + 1;
+        end
+    end
+    
 else
     %Break up the Position string around the position numbers
     Xinds = Xinds(end); Yinds = Yinds(end);
@@ -284,7 +301,7 @@ else
                 end
             end
         case 'Hexagonal'
-            NumColsOdd = ceil(Dimensions(1)/2);
+            NumColsOdd = ceil(Dimensions(1)); % settings.Nx is the same as NumColsOdd, so this should not be divided by 2 DTF Jul 27 17
             NumColsEven = NumColsOdd-1;
             i = 1;
             for Y = 0:NumRows-1
