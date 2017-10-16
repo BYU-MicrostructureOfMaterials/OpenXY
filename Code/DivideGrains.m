@@ -11,15 +11,15 @@ subgrains = cell(numGrains0,1);
 plot = false;
 if plot
     figure(1)
-    filename = 'DivideGrains.gif';
-    frame = 1;
-    t = 0.1;
+%     filename = 'DivideGrains.gif';
+%     frame = 1;
+%     t = 0.1;
 end
-progressbar('Dividing Grains');
+waitbar(0,'Dividing Grains');
 for gID = 1:numGrains0
     SplitGrain(gID);
     subgrains(gID) = {unique(grainmap(grainmap0 == gID))};
-    progressbar(gID/numGrains0)
+    waitbar(gID/numGrains0)
 end
 subgrainID = map2vec(grainmap,Settings.ScanType);
 subRefInds = map2vec(RefMap,Settings.ScanType);
@@ -44,16 +44,16 @@ subRefInds = map2vec(RefMap,Settings.ScanType);
             PlotRefImageInds(RefInd,[Settings.Nx,Settings.Ny],Settings.ScanType);
             PlotGBs(grainmap);
             drawnow;
-            RecordGIF(filename,frame,t)
-            frame = frame + 1;
+%             RecordGIF(filename,frame,t)
+%             frame = frame + 1;
         end
         
         percentout = sum(miso*180/pi > Settings.MisoTol)/length(gInds);
         if percentout > 0.001
             stats = regionprops(gmap,'Centroid','Orientation');
-            m = tand(180-stats.Orientation+90);
+            m = tand(180-stats(1).Orientation+90);
             [X,Y] = meshgrid(1:Settings.Nx,1:Settings.Ny);
-            bot = (Y > m*(X-stats.Centroid(1))+stats.Centroid(2)) & gmap;
+            bot = (Y > m*(X-stats(1).Centroid(1))+stats(1).Centroid(2)) & gmap;
             top = ~bot & gmap;
             numGrains = numGrains + 1;
             newGrainNum = numGrains;

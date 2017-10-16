@@ -10,6 +10,8 @@ Code/SystemSettings.mat
 *.asv
 Code/itWorks.mat
 
+*.m~
+
 # Visual studio files
 *.sdf
 *.sln

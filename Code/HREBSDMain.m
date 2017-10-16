@@ -12,7 +12,9 @@ if Settings.EnableProfiler; profile on; end;
 %Sets default color scheme for all figures and axes
 set(0,'DefaultFigureColormap',jet);
 
-Settings = HREBSDPrep(Settings);
+if ~Settings.HREBSDPrep
+    Settings = HREBSDPrep(Settings);
+end
 Inds = Settings.Inds;
         
 %% Run Analysis
@@ -240,5 +242,6 @@ end
 
 %% Output Plotting
 % save([OutputPathWithSlash 'Data_' FileName],'data');
+CorrectGrains
 input{1} = SaveFile;
 OutputPlotting(input); %moved here due to error writing ang file for vaudin files ****

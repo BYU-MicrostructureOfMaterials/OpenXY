@@ -45,7 +45,7 @@ maxmiso = maxmiso*180/pi;
 
 % Get paths from grain reference point to the reference point of each subgrain
 disp('Finding paths')
-progressbar;
+waitbar(0,'Getting Paths');
 tic
 path = cell(numGrains,1);
 for curGrain = 1:numGrains
@@ -143,7 +143,7 @@ for curGrain = 1:numGrains
             PlotGBs(Settings.grainID,mapsize,Settings.ScanType,ax);
             PlotRefImageInds(subRefInds,mapsize,Settings.ScanType,ax);
         end
-        progressbar([],SubGrainIter/length(curSubGrains))
+        waitbar(length(curSubGrains))
     end
     if doplot
         cla(ax)
@@ -152,7 +152,7 @@ for curGrain = 1:numGrains
         PlotRefImageInds(subRefInds,mapsize,type,ax);
     end
     path{curGrain} = subgrainPaths;
-    progressbar(curGrain/numGrains)
+    waitbar(curGrain/numGrains)
 end
 toc
 

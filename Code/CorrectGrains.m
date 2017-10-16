@@ -111,7 +111,7 @@ for j = 1:length(Grains)
 end
 
 q0_old = euler2quat(Settings.Angles);
-q_old = euler2quat(Settings0.NewAngles);
+q_old = euler2quat(Settings.NewAngles);
 q_new = rmat2quat(g);
 q_cor = rmat2quat(g_corr);
 q_symops = rmat2quat(permute(gensymops,[3 2 1]));

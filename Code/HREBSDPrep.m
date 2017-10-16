@@ -140,7 +140,7 @@ if ~strcmp(Settings.HROIMMethod,'Simulated')&& ~isfield(Settings,'RefInd')
 end
 
 %% Split Grains
-if 0
+if true
     [Settings.subgrainPaths, Settings.subgrainID, Settings.subRefInd] = SubGrainPaths(Settings);
 else
     Settings.subGrainPaths = [];
