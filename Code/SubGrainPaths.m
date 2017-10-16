@@ -45,7 +45,7 @@ maxmiso = maxmiso*180/pi;
 
 % Get paths from grain reference point to the reference point of each subgrain
 disp('Finding paths')
-waitbar(0,'Getting Paths');
+h = waitbar(0,'Getting Paths');
 tic
 path = cell(numGrains,1);
 for curGrain = 1:numGrains
@@ -72,6 +72,7 @@ for curGrain = 1:numGrains
     % Loop over all subgrains
     subgrainPaths = cell(length(curSubGrains),2);
     for SubGrainIter = 1:length(curSubGrains)
+        attempts = 1;
         curSubGrain = curSubGrains(SubGrainIter);
         curSubGrainRef = subgrainRefs(curSubGrain);
         subGrain = subgrainID == curSubGrain;
@@ -86,6 +87,10 @@ for curGrain = 1:numGrains
         [vec,success,~] = Astar(curRefXY-1,ind2sub2(mapsize,curSubGrainRef,type)-1,misomap);
         
         while ~success
+            attempts = attempts + 1;
+            if ~mod(attempts,10) || attempts > 60
+                fprintf(1,'%u Attempts\n',attempts)
+            end
             misostep_temp = misostep_temp + misostep_inc;
             misomap = maxmiso/misostep_temp;
             misomap(~grainInds) = 1;
@@ -143,7 +148,7 @@ for curGrain = 1:numGrains
             PlotGBs(Settings.grainID,mapsize,Settings.ScanType,ax);
             PlotRefImageInds(subRefInds,mapsize,Settings.ScanType,ax);
         end
-        waitbar(length(curSubGrains))
+        waitbar((curGrain - 1 + SubGrainIter / length(curSubGrains))/numGrains,h)
     end
     if doplot
         cla(ax)
@@ -152,8 +157,9 @@ for curGrain = 1:numGrains
         PlotRefImageInds(subRefInds,mapsize,type,ax);
     end
     path{curGrain} = subgrainPaths;
-    waitbar(curGrain/numGrains)
+    waitbar(curGrain/numGrains,h)
 end
+close(h)
 toc
 
 

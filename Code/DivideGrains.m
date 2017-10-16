@@ -15,14 +15,15 @@ if plot
 %     frame = 1;
 %     t = 0.1;
 end
-waitbar(0,'Dividing Grains');
+h = waitbar(0,'Dividing Grains');
 for gID = 1:numGrains0
     SplitGrain(gID);
     subgrains(gID) = {unique(grainmap(grainmap0 == gID))};
-    waitbar(gID/numGrains0)
+    waitbar(gID/numGrains0,h)
 end
 subgrainID = map2vec(grainmap,Settings.ScanType);
 subRefInds = map2vec(RefMap,Settings.ScanType);
+close(h);
 
     function SplitGrain(gID)
         gmap = grainmap==gID;
