@@ -45,7 +45,9 @@ maxmiso = maxmiso*180/pi;
 
 % Get paths from grain reference point to the reference point of each subgrain
 disp('Finding paths')
-h = waitbar(0,'Getting Paths');
+prog = 0;
+stepCount = length(vertcat(subgrains{:}));
+h = waitbar(prog,'Getting Paths');
 tic
 path = cell(numGrains,1);
 for curGrain = 1:numGrains
@@ -88,9 +90,9 @@ for curGrain = 1:numGrains
         
         while ~success
             attempts = attempts + 1;
-            if ~mod(attempts,10) || attempts > 60
-                fprintf(1,'%u Attempts\n',attempts)
-            end
+%             if ~mod(attempts,10)
+%                 fprintf(1,'%u Attempts\n',attempts)
+%             end
             misostep_temp = misostep_temp + misostep_inc;
             misomap = maxmiso/misostep_temp;
             misomap(~grainInds) = 1;
@@ -100,6 +102,7 @@ for curGrain = 1:numGrains
                 error('Valid Path Couln''t be found')
             end
         end
+        fprintf('\nSuccess after %u attemps.\n\n',attempts);
         vec = [curRefXY; vec+1];
         vecinds = sub2ind2(mapsize,vec(:,1),vec(:,2),type);
 
@@ -114,7 +117,7 @@ for curGrain = 1:numGrains
         else
             maxstep = misang;
         end
-        if maxstep > misostep && maxstep < Settings.MisoTol
+        if maxstep > misostep %&& maxstep < Settings.MisoTol %commented this out to see if this is the problem %tag
             %warning(['Increasing step size to ' num2str(maxstep) ' degrees'])
             misostep_temp = maxstep;
         elseif maxstep > Settings.MisoTol
@@ -123,7 +126,7 @@ for curGrain = 1:numGrains
             
         endmisang = misang(end);
         steps = 1;
-        while endmisang >= misostep_temp
+        while endmisang >= misostep_temp%this is where the infinite loop is
             % Get the first step outside of the step tolerance
             next = find((misang-misang(steps(end)))<=misostep_temp);
             % Add index of the point to the list
@@ -148,7 +151,8 @@ for curGrain = 1:numGrains
             PlotGBs(Settings.grainID,mapsize,Settings.ScanType,ax);
             PlotRefImageInds(subRefInds,mapsize,Settings.ScanType,ax);
         end
-        waitbar((curGrain - 1 + SubGrainIter / length(curSubGrains))/numGrains,h)
+        prog = prog + 1;
+        waitbar(prog/stepCount,h)
     end
     if doplot
         cla(ax)
@@ -157,7 +161,8 @@ for curGrain = 1:numGrains
         PlotRefImageInds(subRefInds,mapsize,type,ax);
     end
     path{curGrain} = subgrainPaths;
-    waitbar(curGrain/numGrains,h)
+    prog = prog + 1;
+    waitbar(prog/stepCount,h)
 end
 close(h)
 toc

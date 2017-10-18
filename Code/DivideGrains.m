@@ -28,6 +28,7 @@ close(h);
     function SplitGrain(gID)
         gmap = grainmap==gID;
         gInds = find(gmap');
+        if numel(gInds) == 1; return; end
         RefInd = RefMap(gmap);
         if std(RefInd) > 0
             disp('Something went wrong')
