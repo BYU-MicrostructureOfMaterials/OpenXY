@@ -2,8 +2,18 @@ function PCData = PCCalAlkorta(Settings,PlaneFit,Inds)
 
 if nargin < 3
     %Select Calibration Points
-    Inds = SelectCalibrationPoints([Settings.Nx,Settings.Ny],...
-        Settings.IQ,Settings.Angles);
+    button = questdlg('Point selection type?','Select Type','Manual','Grid','Manual');
+    switch button
+        case 'Manual'
+            Inds = SelectCalibrationPoints([Settings.Nx,Settings.Ny],...
+                Settings.IQ,Settings.Angles);
+        case 'Grid'
+            input = inputdlg('Enter Number of Points.\n(will be rounded to the nearest square number)');
+            nPoints = str2num(input{1});
+            [~,~,Inds] = GridPattern([Settings.Nx Settings.Ny],nPoints);
+        otherwise
+            return;
+    end
 end
 
 %I may want to make these adjustable variables in the GUI? ZRC 

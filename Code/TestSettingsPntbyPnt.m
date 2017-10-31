@@ -2,7 +2,7 @@ function TestSettingsPntbyPnt(Settings,MainGUI)
 
 %% Prep
 Settings = HREBSDPrep(Settings);
-
+Settings.doGif = false;
 %% Plot Setup
 n = Settings.Nx;
 m = Settings.Ny;
@@ -52,14 +52,19 @@ while(morepoints)
     end
     
     switch button
-        case 1
-            x = round(x); y = round(y);
-            if x < 0; x = 1; end;
-            if y < 0; y = 1; end;
-            if x > n; x = n; end;
-            if y > m; y = m; end;
-            
-            ind = indi(y,x);
+        case {1,2}
+            if button == 1
+                x = round(x); y = round(y);
+                if x < 0; x = 1; end;
+                if y < 0; y = 1; end;
+                if x > n; x = n; end;
+                if y > m; y = m; end;
+                
+                ind = indi(y,x);
+            else
+                input = inputdlg('Enter an Index Number');
+                ind = str2double(input{1});
+            end
             
             pos = get(figure(99),'Position');
             set(figure(100),'Position',[pos(1)-pos(3)/2-10 pos(2)-pos(4) - 100 pos(3) pos(4)])
@@ -78,8 +83,10 @@ while(morepoints)
             SSE
             
             Settings.ImageNamesList{ind}
+%{
         case 2
             gb = ~gb;
+%}
         otherwise
             morepoints = false;
     end

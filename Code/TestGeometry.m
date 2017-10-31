@@ -287,21 +287,27 @@ function TestGeometryGUI_WindowButtonDownFcn(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 if handles.overicon
-    if handles.ind == 0
-        set(handles.NumFam,'UserData',true);
+    switch hObject.SelectionType
+        case 'normal'
+            if handles.ind == 0
+                set(handles.NumFam,'UserData',true);
+            end
+            Settings = handles.Settings;
+            n = Settings.Nx; m = Settings.Ny;
+            
+            % Get Selected Location
+            pt = get(handles.Map,'currentpoint');
+            x = round(pt(1,1));
+            if m == 1
+                y = 1;
+            else
+                y = round(pt(1,2));
+            end
+            handles.ind = handles.indi(y,x);
+        case {'extend','alt'}
+            input = inputdlg('Enter an Index Number:');
+            handles.ind = str2double(input{1});
     end
-    Settings = handles.Settings;
-    n = Settings.Nx; m = Settings.Ny;
-    
-    % Get Selected Location
-    pt = get(handles.Map,'currentpoint');
-    x = round(pt(1,1));
-    if m == 1
-        y = 1;
-    else
-        y = round(pt(1,2));
-    end
-    handles.ind = handles.indi(y,x);
     guidata(hObject,handles);
     PlotPattern(handles);
 end

@@ -14,7 +14,7 @@ set(0,'DefaultFigureColormap',jet);
 
 Settings = HREBSDPrep(Settings);
 Inds = Settings.Inds;
-        
+
 %% Run Analysis
 %Use a parfor loop if allowed multiple processors.
 if ~isfield(Settings,'DoStrain')
@@ -33,7 +33,7 @@ SSE = zeros(1,Settings.ScanLength);
  XX = zeros(Settings.NumROIs,3,Settings.ScanLength);
 sigma = zeros(3,3,Settings.ScanLength);
 if Settings.DoStrain
-tic
+outerTimer = tic;
 if Settings.DoParallel > 1
     disp('Setting up parallel processing...')
     NumberOfCores = Settings.DoParallel;
@@ -80,7 +80,11 @@ if Settings.DoParallel > 1
     if Settings.DisplayGUI; ppm.delete(); end;
     
 else
-    if Settings.DisplayGUI; h = waitbar(0,'Single Processor Progress'); end;
+    if Settings.DisplayGUI
+        progString = sprintf('Single Processor Progress\nTime Remaining:');
+        h = waitbar(0,progString);
+        innerTimer = tic;
+    end
     
     disp('Running strain cross-correlation...')
     for ImageInd = 1:Settings.ScanLength
@@ -97,7 +101,15 @@ GetDefGradientTensor(Inds(ImageInd),Settings,Settings.Phase{ImageInd});
 %             U{ImageInd} - eye(3)
 %         end
         
-        if Settings.DisplayGUI; waitbar(ImageInd/Settings.ScanLength,h); end;
+        if Settings.DisplayGUI
+            time = toc(innerTimer);
+            avgTime = time / ImageInd;
+            remainingTime = (avgTime * (Settings.ScanLength - ImageInd)) / 60;% In Minutes
+            remainingMins = mod(remainingTime,60);
+            remainingHours = (remainingTime - remainingMins) / 60; % In hours
+            progString = sprintf('Single Processor Progress\nTime Remaining: %u Hours %u minutes',remainingHours,remainingMins);
+            waitbar(ImageInd/Settings.ScanLength,h,progString)
+        end
         %         IterTime(ImageInd) = toc
 %         if ImageInd>50
 %             keyboard
@@ -105,7 +117,7 @@ GetDefGradientTensor(Inds(ImageInd),Settings,Settings.Phase{ImageInd});
     end
     if Settings.DisplayGUI; close(h); end;
 end
-Time = toc/60;
+Time = toc(outerTimer)/60;
 if Settings.DisplayGUI; disp(['Time to finish: ' num2str(Time) ' minutes']); end;
 else
    g = euler2gmat(Settings.Angles);

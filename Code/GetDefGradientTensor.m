@@ -181,6 +181,14 @@ switch Settings.HROIMMethod
         clear global rs cs Gs
         [F1,SSE1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
         
+        %.gif recording stuff
+        if isfield(Settings,'doGif') && Settings.doGif
+            f = getframe(figure(100));
+            [im,map] = rgb2ind(f.cdata,256,'nodither');
+            im(1,1,1,Settings.IterationLimit+5) = 0;
+            frame = 2;
+        end
+%{a
         %%%%New stuff to remove rotation error from strain measurement DTF  7/14/14
         for iq=1:4
             [rr,uu]=poldec(F1); % extract the rotation part of the deformation, rr
@@ -191,9 +199,14 @@ switch Settings.HROIMMethod
             
             clear global rs cs Gs
             [F1,SSE1,XX,sigma] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
+            if isfield(Settings,'doGif') && Settings.doGif
+                f = getframe(figure(100));
+                im(:,:,1,frame) = rgb2ind(f.cdata,map,'nodither');
+                frame = frame + 1;
+            end
         end
         %%%%%
-        
+%}a
         %Improved convergence routine should replace this loop:
         
         for ii = 1:Settings.IterationLimit
@@ -224,11 +237,20 @@ switch Settings.HROIMMethod
             %         keyboard
             clear global rs cs Gs
             [F1,SSE1,XX,sigma] = CalcF(NewRefImage,ScanImage,gr,FTemp,ImageInd,Settings,curMaterial,0);
-            
+            if isfield(Settings,'doGif') && Settings.doGif
+                f = getframe(figure(100));
+                im(:,:,1,frame) = rgb2ind(f.cdata,map,'nodither');
+                frame = frame + 1;
+            end
         end
-        
-        
-        
+        if isfield(Settings,'doGif') && Settings.doGif
+            button = questdlg('Keep this as a gif?');
+            if strcmp(button,'Yes')
+                [~,gifName,~] = fileparts(ImagePath);
+                gifName = ['D:\Katherine\GIFS\' gifName '.gif'];
+                imwrite(im,map,gifName,'DelayTime',0.5,'LoopCount',inf)
+            end
+        end
     case 'Real'
         %Find the grain of scan image and get the reference image for that
         %grain
