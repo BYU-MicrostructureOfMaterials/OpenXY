@@ -8,16 +8,28 @@ n = Settings.Nx;
 m = Settings.Ny;
 [im,PlotType] = ChoosePlot([n m],Settings.IQ(Settings.Inds),Settings.Angles(Settings.Inds,:));
 
-if strcmp(Settings.ScanType,'Square')
-    indi = 1:1:m*n;
-    indi = reshape(indi, n,m)';
-    if m == 1 %Lines Scans
-        im = repmat(im,floor(Settings.ScanLength/4),1);
+if ~isfield(Settings,'Resize')
+    if strcmp(Settings.ScanType,'Square')
+        indi = 1:1:m*n;
+        indi = reshape(indi, n,m)';
+        if m == 1 %Lines Scans
+            im = repmat(im,floor(Settings.ScanLength/4),1);
+        end
+    elseif strcmp(Settings.ScanType,'Hexagonal')
+        NumColsOdd = n;
+        indi = 1:length(Settings.Inds);
+        indi = Hex2Array(indi,NumColsOdd);
     end
-elseif strcmp(Settings.ScanType,'Hexagonal')
-    NumColsOdd = n;
-    indi = 1:length(Settings.Inds);
-    indi = Hex2Array(indi,NumColsOdd);
+else
+    if strcmp(Settings.ScanType,'Square')
+        indi = reshape(Settings.Inds, n,m)';
+        if m == 1 %Lines Scans
+            im = repmat(im,floor(Settings.ScanLength/4),1);
+        end
+    elseif strcmp(Settings.ScanType,'Hexagonal')
+        error('TestSettingsPntbyPnt:UnfinishedFeature',...
+        'Test feature not currently implemented for subscans of hexagonal scans')
+    end
 end
 
 StdDev = std(im(:));
@@ -39,7 +51,7 @@ while(morepoints)
     figure(99);
     PlotScan(im,PlotType);
     caxis(Limits)
-    title({'\fontsize{14} Select a point to calculate the deformation tensor';'\fontsize{10}Scroll-click to toggle grain boundaries';'\fontsize{10} Right-click to exit'},'HorizontalAlignment','center')
+    title({'\fontsize{14} Select a point to calculate the deformation tensor';'\fontsize{10}Scroll-click to select by index number';'\fontsize{10} Right-click to exit'},'HorizontalAlignment','center')
     if gb
         GrainMap = vec2map(Settings.grainID,Settings.Nx,Settings.ScanType);
         PlotGBs(GrainMap);

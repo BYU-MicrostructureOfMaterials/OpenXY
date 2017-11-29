@@ -22,7 +22,7 @@ function varargout = ROISettingsGUI(varargin)
 
 % Edit the above text to modify the response to help ROISettingsGUI
 
-% Last Modified by GUIDE v2.5 04-Jan-2017 15:41:45
+% Last Modified by GUIDE v2.5 14-Nov-2017 12:13:55
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -115,8 +115,7 @@ colormap gray;
 set(handles.ROISizeEdit,'String',num2str(Settings.ROISizePercent));
 %NumROI Popup
 MaxROINum = 50;
-set(handles.NumROIPopup,'String',num2cell(1:MaxROINum));
-SetPopupValue(handles.NumROIPopup,Settings.NumROIs);
+set(handles.NumROIPopup,'String',num2str(Settings.NumROIs));
 %ROI Style Popup
 ROIStyleList = {'Grid','Radial','Intensity','Annular'};
 set(handles.ROIStylePopup, 'String', ROIStyleList);
@@ -403,7 +402,7 @@ function NumROIPopup_Callback(hObject, eventdata, handles)
 % Hints: contents = cellstr(get(hObject,'String')) returns NumROIPopup contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from NumROIPopup
 contents = cellstr(get(hObject,'String'));
-handles.Settings.NumROIs = str2double(contents{get(hObject,'Value')});
+handles.Settings.NumROIs = str2double(contents);
 UpdateImage(handles);
 if ValChanged(handles,'NumROIs')
     handles.edited = true;
@@ -435,6 +434,7 @@ function ROIStylePopup_Callback(hObject, eventdata, handles)
 contents = cellstr(get(hObject,'String'));
 ROIStyle = contents{get(hObject,'Value')};
 handles.Settings.ROIStyle = ROIStyle;
+%{
 if strcmp(ROIStyle,'Grid')
     SetPopupValue(handles.NumROIPopup,num2str(48));
     handles.Settings.NumROIs = 48;
@@ -442,6 +442,7 @@ if strcmp(ROIStyle,'Grid')
 else
     set(handles.NumROIPopup,'Enable','on')
 end
+%}
 UpdateImage(handles)
 if ValChanged(handles,'ROIStyle')
     handles.edited = true;

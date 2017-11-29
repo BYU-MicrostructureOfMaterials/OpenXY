@@ -98,6 +98,7 @@ switch ROImethod
             end
         end
     case 'Grid'
+%{
         roixc = [round(pixsize/4)*1.5 round(pixsize/4)*2 round(pixsize/4)*2.5...
             round(pixsize/5) round(pixsize/5)*1.5 round(pixsize/5)*2 round(pixsize/5)*2.5 round(pixsize/5)*3 round(pixsize/5)*3.5 round(pixsize/5)*4.0...
             round(pixsize/5) round(pixsize/5)*1.5 round(pixsize/5)*2 round(pixsize/5)*2.5 round(pixsize/5)*3 round(pixsize/5)*3.5 round(pixsize/5)*4.0...
@@ -114,7 +115,14 @@ switch ROImethod
             round(pixsize/6)*4 round(pixsize/6)*4 round(pixsize/6)*4 round(pixsize/6)*4 round(pixsize/6)*4 round(pixsize/6)*4 round(pixsize/6)*4.0...
             round(pixsize/6)*4.5 round(pixsize/6)*4.5 round(pixsize/6)*4.5 round(pixsize/6)*4.5 round(pixsize/6)*4.5 round(pixsize/6)*4.5 round(pixsize/6)*4.5...
             round(pixsize/6)*5 round(pixsize/6)*5 round(pixsize/6)*5];
-
+%}
+        edgeCount = round(sqrt(ROInum));
+        edgeSpacing = round(roisize/2 + (0.1)*pixsize);
+        edgePoints = linspace(edgeSpacing,pixsize - edgeSpacing,edgeCount);
+        
+        [roixc,roiyc] = meshgrid(edgePoints);
+        roixc = roixc(:)';
+        roiyc = roiyc(:)';
 
 % bottom row removed
 % roixc = [round(pixsize/4)*1.5 round(pixsize/4)*2 round(pixsize/4)*2.5...
