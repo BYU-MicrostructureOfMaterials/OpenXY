@@ -16,7 +16,11 @@ if ~exist('EMsoftPath','var') || isempty(EMsoftPath)
     end
 end
 %Check if EMEBSD command exists
-if ~exist(fullfile(EMsoftPath,'bin','EMEBSD'),'file')
+commandName = fullfile(EMsoftPath,'bin','EMEBSD');
+if ispc
+    commandName = [commandName '.exe'];
+end
+if ~exist(commandName,'file')
     warndlgpause({['EMEBSD command not found in ' fullfile(EMsoftPath,'bin') ','],'Resetting to kinematic simulation.'},'EMsoft not found');
     EMsoftPath = '';
 end

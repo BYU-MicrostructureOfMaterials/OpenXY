@@ -4,13 +4,21 @@ if nargin < 11
     ImageInd = 0;
 end
 
-L=(zstar*pixsize*mperpix); %define mperpix in original script
-thetac=70 + (elevang - sampleTilt)*180/pi; % in degrees
-delta=mperpix;
-numsx=pixsize;
-numsy=numsx;
-xpc=(xstar-0.5)*pixsize; % in pixels measured from center of phosphor
-ypc=(ystar-0.5)*pixsize;
+%Initialize variables for EMEBSD
+L=(zstar*pixsize*mperpix); %define mperpix in original script TODO Grab real working distance from ang file
+thetac = elevang * 180 / pi; % in degrees
+delta = mperpix;
+numsx = pixsize;
+numsy = numsx;
+xpc = (xstar-0.5)*pixsize; % in pixels measured from center of phosphor
+ypc = (ystar-0.5)*pixsize;
+omega = 0;
+alphaBD = 0;
+energymin = 5.0;
+energymax = 20.0;
+includebackground = '''y''';
+anglefile = ['OpenXY_euler' num2str(ImageInd) '.txt'];  %fullfile(OpenXYPath,'temp','testeuler.txt');%['temp' filesep 'testeuler.txt'];
+eulerconvention = '''tsl''';
 
 %Get EMsoft Path
 if exist('SystemSettings.mat','file')
@@ -20,21 +28,27 @@ end
 
 %added masterfile and energyfile to the code folder.  Is that right?
 if ~exist(fullfile(EMdataPath,sprintf('%s_EBSDmaster.h5',Material)),'file')
-    masterfile=(sprintf('%s_EBSDmasterout.h5',Material));
+    masterfile = (sprintf('%s_EBSDmasterout.h5',Material));
 else
-    masterfile=(sprintf('%s_EBSDmaster.h5',Material)); 
+    masterfile = (sprintf('%s_EBSDmaster.h5',Material)); 
 end
-energyfile=(sprintf('%s_MCoutput.h5',Material));
-datafile=['EBSDout_' num2str(ImageInd) '.h5'];    
-datafilepath= fullfile(EMdataPath,datafile);%['temp' filesep 'EBSDout.h5'];
-inputfile = fullfile(EMdataPath,['OpenXY_' num2str(ImageInd) '.nml']);
-beamcurrent=15; %Make variable later
-dwelltime=100;   %Make variable later
-binning=1;       %Make variable later
-gammavalue=.4;   %Make variable later
-anglefile= ['OpenXY_euler' num2str(ImageInd) '.txt'];  %fullfile(OpenXYPath,'temp','testeuler.txt');%['temp' filesep 'testeuler.txt'];
+energyfile = masterfile;%EMsoft now uses the master output for both the master file and energy file(sprintf('%s_MCoutput.h5',Material));
+datafile = ['EBSDout_' num2str(ImageInd) '.h5'];
+bitdepth = '''8bit''';
+beamcurrent = 15; %Make variable later
+dwelltime = 100;   %Make variable later
+binning = 1;       %Make variable later
+applyDeformation = '''n''';
+Ftensor = '1.D0, 0.D0, 0.D0, 0.D0, 1.D0, 0.D0, 0.D0, 0.D0, 1.D0,';
+scalingmode = '''not''';
+gammavalue = .4;   %Make variable later
+maskpattern = '''y''';
+nthreads = 1;
 
-[phi1,PHI,phi2]=gmat2euler(g); % in radians
+[phi1,PHI,phi2] = gmat2euler(g); % in radians
+
+datafilepath = fullfile(EMdataPath,datafile);%['temp' filesep 'EBSDout.h5'];
+inputfile = fullfile(EMdataPath,['OpenXY_' num2str(ImageInd) '.nml']);
 
 %Write testeuler.txt file
 fid=fopen(fullfile(EMdataPath,anglefile),'w');
@@ -46,8 +60,76 @@ fclose(fid);
 
 %Write EMEBSDexample.nml file
 fid=fopen(inputfile,'w');
+formatString = [
+' &EBSDdata\n'...
+... template file for the EMEBSD program
+...
+... distance between scintillator and illumination point [microns]
+' L = %g\n'...
+... tilt angle of the camera (positive below horizontal, [degrees])
+' thetac = %g,\n'...
+... CCD pixel size on the scintillator surface [microns]
+' delta = %g,\n'...50.0
+... number of CCD pixels along x and y
+' numsx = %g,\n'...
+' numsy = %g,\n'...
+... pattern center coordinates in units of pixels
+' xpc = %g,\n'...
+' ypc = %g,\n'...
+... angle between normal of sample and detector
+' omega = %g,\n'...
+... transfer lens barrel distortion parameter
+' alphaBD = %g,\n'...0.0
+... energy range in the intensity summation [keV]
+' energymin = %g,\n'...5.0
+' energymax = %g,\n'...20.0
+... include a realistic intensity background or not ...
+' includebackground = %s,\n'...'y'
+... name of angle file (euler angles or quaternions); path relative to EMdatapathname
+' anglefile = %s,\n'...'testeuler.txt'
+... 'tsl' or 'hkl' Euler angle convention parameter
+' eulerconvention = %s,\n'...'tsl'
+... name of EBSD master output file; path relative to EMdatapathname
+' masterfile = %s,\n'...'master.h5'
+... name of Monte Carlo output file; path relative to EMdatapathname
+' energyfile = %s,\n'...'MC.h5'
+... name of output file; path relative to EMdatapathname
+' datafile = %s,\n'...'EBSDout.h5'
+... bitdepth '8bit' for [0..255] bytes; 'float' for 32-bit reals; '##int' for 32-bit integers with ##-bit dynamic range
+... e.g., '9int' will get you 32-bit integers with intensities scaled to the range [ 0 .. 2^(9)-1 ];
+... '17int' results in the intensity range [ 0 .. 2^(17)-1 ]
+' bitdepth = %s,\n'...'8bit'
+ ... incident beam current [nA]
+' beamcurrent = %g,\n'...'150.0'
+... beam dwell time [micro s]
+' dwelltime = %g,\n'...'100.0'
+... binning mode (1, 2, 4, or 8)
+' binning = %u,\n'...'1'
+... should we perform an approximate computation that includes a lattice distortion? ('y' or 'n')
+... This uses a polar decomposition of the deformation tensor Fmatrix which results in
+... an approcimation of the pattern for the distorted lattice; the bands will be very close
+... to the correct position in each pattern, but the band widths will likely be incorrect.
+' applyDeformation = %s\n'...'n'
+... if applyDeformation='y' then enter the 3x3 deformation tensor in column-major form
+... the default is the identity tensor, i.e., no deformation
+' Ftensor = %s\n'...1.D0, 0.D0, 0.D0, 0.D0, 1.D0, 0.D0, 0.D0, 0.D0, 1.D0,
+... intensity scaling mode 'not' = no scaling, 'lin' = linear, 'gam' = gamma correction
+' scalingmode = %s,\n'...'not',
+... gamma correction factor
+' gammavalue = %g,\n'...1.0,
+... should a circular mask be applied to the data? 'y', 'n'
+' maskpattern = %s,\n'...'n',
+... number of threads (default = 1)
+' nthreads = %u,\n'...1
+' /\n'];
 
-fprintf(fid,'&EBSDdata\n');
+fprintf(fid,formatString,L,thetac,delta,numsx,numsy,xpc,ypc,omega,...
+    alphaBD,energymin,energymax,includebackground,anglefile,...
+    eulerconvention,masterfile,energyfile,datafile,bitdepth,...
+    beamcurrent,dwelltime,binning,applyDeformation,Ftensor,...
+    scalingmode,gammavalue,maskpattern,nthreads);
+%{
+fprintf(fid,'&EBSDdataERROR\n');
 fprintf(fid,'! template file for the CTEMEBSD program\n');
 fprintf(fid,'!\n');
 fprintf(fid,'! distance between scintillator and illumination point [microns]\n');
@@ -92,7 +174,7 @@ fprintf(fid,'energymin = 10.0\n'); % these extra 3 lines from Marc de Graef in e
 fprintf(fid,'energymax =%f\n', Av/1000); %beam voltage in kV
 fprintf(fid,'energyaverage = 0\n');
 fprintf(fid,'/\n');
-
+%}
 fclose(fid);
 
 %run EMsoft
@@ -104,7 +186,7 @@ cd(OpenXYPath);
 disp(cmdout)
 %generate pic
 h5infostruct=h5info(datafilepath);
-data1=h5read(h5infostruct.Filename,'/EMData/EBSDpatterns');
+data1=h5read(h5infostruct.Filename,'/EMData/EBSD/EBSDPatterns');
 pic=zeros(numsx,numsy);
 pic(:,:)=data1(:,:,1);
 pic=flipud(pic');   % flip to correct OIM reference frame (swap TD and RD)
