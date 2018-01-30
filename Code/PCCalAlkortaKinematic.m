@@ -14,7 +14,7 @@ elevang = Settings.CameraElevation;
 
 pixsize = Settings.PixelSize;
 
-iterCalcF = 4;
+iterCalcF = 6;
 
 doShowPlot = false;
 
@@ -473,6 +473,16 @@ else
     ppm.delete();
     pause(1)
 end
+
+%Filter outliers from the data
+xOutliers = isoutlier(CalibrationPointsPC(:,1));
+yOutliers = isoutlier(CalibrationPointsPC(:,2));
+zOutliers = isoutlier(CalibrationPointsPC(:,3));
+outliers = xOutliers|yOutliers|zOutliers;
+
+CalibrationPointsPC(outliers,:) = [];
+Inds(outliers) = [];
+npoints = npoints - sum(outliers);
 
 %Calculate Mean Pattern Center
 if strcmp(PlaneFit,'Naive')
