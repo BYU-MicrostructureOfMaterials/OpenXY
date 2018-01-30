@@ -53,6 +53,7 @@ if Settings.DoParallel == 1
     for i=1:npoints
         
         Ind = Inds(i);
+        ImageInd = Ind;
         
         if isfield(Settings,'XStar')
             xstar = Settings.XStar(Ind);
@@ -83,6 +84,7 @@ if Settings.DoParallel == 1
         zs(1) = zstar;
         
         Material = ReadMaterial(Settings.Phase{Ind});
+        curMaterial = Material.Material;
         
         if size(Settings.ImageNamesList,1)>1
             ImagePath = Settings.ImageNamesList{Ind};
@@ -114,7 +116,7 @@ if Settings.DoParallel == 1
                 clear global rs cs Gs
                 [F1,SSE1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,Settings.RefImageInd);
             else
-                RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av,ImageInd);
+                RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,sampletilt,curMaterial,Av,ImageInd);
                 
                 clear global rs cs Gs
                 [F1,SSE1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
@@ -122,7 +124,7 @@ if Settings.DoParallel == 1
                 for iq=1:5
                     [rr,uu]=poldec(F1); % extract the rotation part of the deformation, rr
                     gr=rr'*gr; % correct the rotation component of the deformation so that it doesn't affect strain calc
-                    RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av,ImageInd);
+                    RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,sampletilt,curMaterial,Av,ImageInd);
                     
                     clear global rs cs Gs
                     [F1,SSE1,XX,sigma] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
@@ -209,9 +211,10 @@ else
     ppm =...
         ParforProgMon('Point Calibration ',npoints*(1+iterCalcF),1,400,50);
     
-    parfor i=1:npoints
+    for i=1:npoints
         
         Ind = Inds(i);
+        ImageInd = Ind;
         
         if isfield(Settings,'XStar')
             xstar = Settings.XStar(Ind);
@@ -242,6 +245,7 @@ else
         zs(1) = zstar;
         
         Material = ReadMaterial(Settings.Phase{Ind});
+        curMaterial = Material.Material;
         
         if size(Settings.ImageNamesList,1)>1
             ImagePath = Settings.ImageNamesList{Ind};
@@ -273,7 +277,7 @@ else
                 clear global rs cs Gs
                 [F1,SSE1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,Settings.RefImageInd);
             else
-                RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av,ImageInd);
+                RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,sampletilt,curMaterial,Av,ImageInd);
                 
                 clear global rs cs Gs
                 [F1,SSE1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
@@ -281,7 +285,7 @@ else
                 for iq=1:5
                     [rr,uu]=poldec(F1); % extract the rotation part of the deformation, rr
                     gr=rr'*gr; % correct the rotation component of the deformation so that it doesn't affect strain calc
-                    RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,curMaterial,Av,ImageInd);
+                    RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,sampletilt,curMaterial,Av,ImageInd);
                     
                     clear global rs cs Gs
                     [F1,SSE1,XX,sigma] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
