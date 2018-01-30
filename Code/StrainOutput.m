@@ -52,7 +52,8 @@ end
 %Ignore obviously bad points
 SSE = Settings.SSE;
 BadIndex = 1:length(SSE);
-BadIndex = BadIndex(SSE > (mean(SSE) + std(SSE)));
+cuttoff = (mean(SSE(SSE ~= inf)) + std(SSE(SSE ~= inf)));
+BadIndex = BadIndex(SSE > cuttoff);
 for j = 1:length(BadIndex)
     data.F(:,:,BadIndex(j)) = eye(3); 
 end
@@ -68,11 +69,27 @@ U = zeros(size(FArray));
 for i=1:length(FArray(1,1,:))
     g=euler2gmat(angles(i,1),angles(i,2),angles(i,3));% this give g(sample to crystal)
     thisF(:,:)=FArray(:,:,i);
-    [R U(1:3,1:3,i)]=poldec(thisF);
+    %[R,U(1:3,1:3,i)]=poldec(thisF);
     FSample(:,:,i)=g'*thisF*g; %check this is crystal to sample
 end
 FSampleTransp=permute(FSample,[2,1,3]); % sample frame
 strain=(FSample+FSampleTransp)/2;
+%{
+min11 = min(strain(1,1,:));
+min12 = min(strain(1,2,:));
+min13 = min(strain(1,3,:));
+min22 = min(strain(2,2,:));
+min23 = min(strain(2,3,:));
+min33 = min(strain(3,3,:));
+for j = BadIndex
+    strain(1,1,j) = min11;
+    strain(1,2,j) = min12;
+    strain(1,3,j) = min13;
+    strain(2,2,j) = min22;
+    strain(2,3,j) = min23;
+    strain(3,3,j) = min33;
+end
+%}
 %%
 % strain = U;
 % FArrayTransp=permute(FArray,[2,1,3]); % crystal frame
@@ -126,6 +143,10 @@ for i=1:3
         end
         
         AverageStrain = mean(epsij(:));
+        %cMap = [[0 0 0];parula(126);[0 0 0]];
+        cMap = parula(128);
+        cMap(1,:) = cMap(1,:)./3;
+        cMap(end,:) = cMap(end,:)./3;
         if any(strcmp(['e' num2str(i) num2str(j)],Components))
             figure;
             imagesc(epsij)
@@ -134,6 +155,7 @@ for i=1:3
             axis equal tight
             % view(2)
             colorbar
+            colormap(cMap)
             caxis([smin smax])
             
             if r == 1
