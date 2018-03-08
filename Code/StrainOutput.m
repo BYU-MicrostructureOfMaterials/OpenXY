@@ -142,7 +142,7 @@ for i=1:3
             epsij = repmat(epsij,Settings.ScanLength,1);
         end
         
-        AverageStrain = mean(epsij(:));
+        AverageStrain = mean(epsij(~BadIndex));
         %cMap = [[0 0 0];parula(126);[0 0 0]];
         cMap = parula(128);
         cMap(1,:) = cMap(1,:)./3;
