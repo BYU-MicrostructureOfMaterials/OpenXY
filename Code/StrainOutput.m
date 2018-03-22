@@ -97,7 +97,8 @@ end
 strain(1,1,:)=strain(1,1,:)-1;
 strain(2,2,:)=strain(2,2,:)-1;
 strain(3,3,:)=strain(3,3,:)-1;
-
+lines = [];
+oldLines = [];
 for i=1:3
     for j=i:3
         epsij=strain(i,j,:);
@@ -164,18 +165,15 @@ for i=1:3
             end
             
             if DoShowGB && ~strcmp(Settings.ScanType,'Hexagonal')
-%{
-                if ~strcmp(Settings.Material,'Scan File')
-                    h=gcf;set(h,'Position',[50 50 750 750])
-                    hold on
-                    plot(Y(BOUND==1),X(BOUND==1),'k.','MarkerSize',5); % subtract 1/2 from Y and X if you want the middle of the band
-                    axis equal
-                    axis off
-                    shading interp
+                if isempty(lines)% Cobbled together way to speed things up
+                    lines = PlotGBs(Settings.grainID,[Settings.Nx Settings.Ny],Settings.ScanType);
                 else
-%}
-                    PlotGBs(Settings.grainID,[Settings.Nx Settings.Ny],Settings.ScanType)
-%                 end
+                    hold on
+                    for ii = 1:size(lines,1)
+                        plot(lines{ii,1},lines{ii,2},'LineWidth',1,'Color','k')
+                    end%ii = 1:size(lines,1)
+                    hold off
+                end
             end
         end
         
