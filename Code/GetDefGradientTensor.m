@@ -281,8 +281,67 @@ switch Settings.HROIMMethod
     case 'Hybrid'
         %Use simulated pattern method on one reference image then use
         %Real for all others in that grain.
+    
+    case 'Remapping'
+        RefImageInd = Settings.RefInd(ImageInd);
+        if H5Images
+            RefImage = ReadH5Pattern(H5ImageParams{:},RefImageInd);
+        else
+            RefImagePath = Settings.ImageNamesList{RefImageInd}; % original line
+            if strcmp(Settings.ImageFilterType,'standard')
+                RefImage = ReadEBSDImage(RefImagePath,Settings.ImageFilter);
+            else
+                RefImage = localthresh(RefImagePath);
+            end
+        end
         
+        clear global rs cs Gs
+%         disp(RefImagePath);
+        gr = euler2gmat(Settings.Angles(RefImageInd,:));
         
+        % Cast images into double format to support gridfit
+        if ~isa(RefImage,'double')
+            RefImage = double(RefImage);
+        end
+        if ~isa(ScanImage,'double')
+            ScanImage = double(ScanImage);
+        end
+        
+        [F1,SSE1,XX,sigma] = CalcFShift(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,RefImageInd);
+        if Settings.DoShowPlot
+            drawnow
+        end
+        
+        % TODO Try just comparing scan angles to get the rotation
+        % rr = poldec(F1);
+        omega = (F1 - F1')/2;
+        
+        rot1 = [
+            cos(omega(1,2)) sin(omega(1,2)) 0
+           -sin(omega(1,2)) cos(omega(1,2)) 0
+            0               0               1
+        ];
+        rot2 = [
+            1  0               0
+            0  cos(omega(2,3)) sin(omega(2,3))
+            0 -sin(omega(2,3)) cos(omega(2,3))
+        ];
+        rot3 = [
+            cos(omega(3,1)) 0 -sin(omega(3,1))
+            0               1  0
+            sin(omega(3,1)) 0  cos(omega(3,1))
+        ];
+        
+        rr = rot1 * rot2 * rot3;
+%         rr = gr*g';
+        
+        refXStar = Settings.XStar(RefImageInd);
+        refYStar = Settings.YStar(RefImageInd);
+        refZStar = Settings.ZStar(RefImageInd);
+        RefImage = rotateImage(RefImage,rr,refXStar,refYStar,refZStar);
+        [F1,SSE1,XX,sigma] = CalcFShift(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,RefImageInd);
+
+
 end
 
 %Calculate Mutual Information over entire Image

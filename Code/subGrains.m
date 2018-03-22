@@ -1,9 +1,9 @@
-function [grainID refInd] = subGrains(Settings,tolerance)
-
-if ~nargin
-    load TESTING.mat Settings
-    tolerance = 1;
-end
+function [grainID,refInd] = subGrains(Settings,tolerance)
+%SUBGRAINS Divide the grains of and EBSD scan  into subgrains
+%   [grainID,refInd] = subGrains(Settings,tolerance) returns the vector
+%   grainID containing the grain number for each point within the scan such
+%   that no point in each grain is more than tolerance degrees from the
+%   point refInd within each grain
 
 %Get Quaternion symmetry operators
 if length(unique(Settings.Phase)) > 1
@@ -23,7 +23,13 @@ IQ = Settings.IQ;
 CI = Settings.CI;
 Fit = Settings.Fit;
 grainID = Settings.grainID;
+
+if min(grainID) == 0
+    grainID = grainID + 1;
+end
     function newID = getNewRefInd(newGrainIDIn)
+        %GETNEWREFIND Find the best reference point for the given grain
+        %   Code adapted from GetRefImageInds
         indVec = find(grainID == newGrainIDIn);
         [MaxCI,CIInd] = max(CI(indVec));
         [MinFit,FitInd] = min(Fit(indVec));
@@ -51,16 +57,19 @@ if doGIF
     [im,map] = rgb2ind(f.cdata,256,'nodither');
 end
 
-%The PixleIdxList produced by bwconncomp follows Matlab's matrix indexing
-%style of indexing the entire collumn, then row. OpenXY, howerver, does the
-%opposite, going row first, then column. This vector is to change between
-%the two indexing styles.
+% The PixleIdxList produced by bwconncomp follows Matlab's matrix indexing
+%   style of indexing the entire collumn, then row. OpenXY, howerver, does 
+%   the opposite, going row first, then column. This vector is to convert 
+%   between the two indexing styles.
 IDChangeVec = 1:Settings.ScanLength;
 tempMap = vec2map(IDChangeVec',Settings.Ny,Settings.ScanType);
 IDChangeVec = map2vec(tempMap');
 
-misoThresh = deg2rad(tolerance);%PLACEHOLDER VALUE
+% Convert the tolerance value to radians, the return type of quatMisoSym
+misoThresh = deg2rad(tolerance);
 
+
+% Find the best refference points for the current grains
 refInds = zeros(max(grainID),1);
 currentGrainNumber = min(grainID);
 for ii = currentGrainNumber:max(grainID)
@@ -68,51 +77,71 @@ for ii = currentGrainNumber:max(grainID)
 end
 
 while currentGrainNumber <= max(grainID)
+    % Find the refference point for the current grain and its oreintation
     currentRefInd = refInds(currentGrainNumber);
     referenceOreintation = euler2quat(Settings.Angles(currentRefInd,:));
     
+    % Create a logical vector for all the points in the current grain
     currentGrainBool = grainID == currentGrainNumber;
     
+    % Get the oreintations of each point
     grainOreintations = euler2quat(Settings.Angles(currentGrainBool,:));
     
+    % Find all of the points that are within the threshold misoreintation
     goodPoints = false(Settings.ScanLength,1);
+    goodPoints(currentGrainBool) = quatMisoSym(referenceOreintation,grainOreintations,q_symops,'default') < misoThresh;
     
-    goodPoints(currentGrainBool) = quatMisoSym(referenceOreintation,grainOreintations,q_symops) < misoThresh;
-    
+    % Transform the vector into an array to use the bwconncomp function to
+    %   find the continuous regions of the points within the threshold
     goodPointsMap = vec2map(goodPoints,Settings.Nx,Settings.ScanType);
     CC = bwconncomp(goodPointsMap,4);
     
+    % If there are multiple continuous areas, break them up
     if CC.NumObjects > 1
         changedRefInd = IDChangeVec(currentRefInd);
         for ii = 1:CC.NumObjects
             if ismember(changedRefInd,CC.PixelIdxList{ii})
+                % If the area is the part containing the original
+                % refference point continue
                 break;
             end
-        end
+        end% ii = 1:CC.NumObjects
+        
+        % Use the previous loop to find all the new subgrains
         tempInd = find(1:CC.NumObjects ~= ii);
         for jj = tempInd
+            % Remove all of the points from the new subgrains
             goodPointsMap(CC.PixelIdxList{jj}) = false;
-        end
+        end% jj = tempInd
+        
+        % Transform the map back into a vector
         goodPoints = map2vec(goodPointsMap);
-    end
+    end% CC.NumObjects > 1
+    
+    % Create a logical vector corresponding to all of the points not in the
+    %   new subgrain that were in the old grain
     newGrainsBool = currentGrainBool & ~goodPoints;
     if any(newGrainsBool)
+        % Create another map for bwconncomp to seperate the discontinuous
+        %   areas into seperate subgrains
         newGrainsBoolMap = vec2map(newGrainsBool,Settings.Nx,Settings.ScanType);
-        
         CC = bwconncomp(newGrainsBoolMap);
+        
+        % Seperate the new subgrains by continuity, and find their best
+        %   refference points
         if CC.NumObjects > 1
             L = labelmatrix(CC);
             for ii = 1:CC.NumObjects
                 newGrainID = max(grainID) + 1;
                 grainID(map2vec(L == ii)) = newGrainID;
                 refInds(end + 1) = getNewRefInd(newGrainID);
-            end
+            end% ii = 1:CC.NumObjects
         else
             newGrainID = max(grainID) + 1;
             grainID(newGrainsBool) = newGrainID;
             refInds(end + 1) = getNewRefInd(newGrainID);
-        end
-    end
+        end% CC.NumObjects > 1
+    end% any(newGrainsBool)
     
     currentGrainNumber = currentGrainNumber + 1;
     if doGIF
@@ -121,7 +150,7 @@ while currentGrainNumber <= max(grainID)
         f = getframe(figure(314));
         im(:,:,1,currentGrainNumber) = rgb2ind(f.cdata,map,'nodither');
     end
-end
+end% currentGrainNumber <= max(grainID)
 if doGIF
     gifName = 'testing.gif';
     imwrite(im,map,gifName,'DelayTime',0.25,'LoopCount',inf)
@@ -135,10 +164,3 @@ if nargout >= 2
 end
 
 end
-
-%for each grain in Scan
-%   find all points whos misorientation from refference point is within a certain tolerance
-%   find all of those points that are continuously connected to the refference point
-%   append all points not in this new set of points to the end of the Scan as a new grain
-%   select reference point in new grain
-
