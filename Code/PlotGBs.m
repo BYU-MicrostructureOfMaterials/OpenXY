@@ -1,4 +1,4 @@
-function PlotGBs(GrainMap,mapsize,Type,ax)
+function outPut = PlotGBs(GrainMap,mapsize,Type,ax)
 %PLOTGBS 
 %PlotGBs(GrainMap,mapsize,Type)
 %Plots the grain boundaries on any map of the scan, using the grainIDs
@@ -21,8 +21,8 @@ if nargin < 4;
 end
 
 %Line Properties
-lineWidth = 1;
-color = 'k';
+lineWidth = 1.5;
+color = 'r';
 
 %Horizontal Boundaries
 diffMap = diff(GrainMap,1,1);
@@ -103,13 +103,17 @@ if ~(isempty(row) || isempty(col))
     vX = newX(1:jj-1,:);
     vY = newY(1:jj-1,:);
         
-    lines = combineLines(hX,hY,vX,vY);
+     lines = combineLines(hX,hY,vX,vY);
     
     hold(ax,'on')
     for ii = 1:size(lines,1)
         plot(ax,lines{ii,1},lines{ii,2},'LineWidth',lineWidth,'Color',color)
     end%ii = 1:size(lines,1)
     hold(ax,'off')
+    
+    if nargout == 1
+       outPut = lines; 
+    end
 
 end%if ~(isempty(row) || isempty(col))
 end%PlotGBS

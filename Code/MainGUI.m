@@ -952,10 +952,26 @@ function MainGUI_KeyPressFcn(hObject, eventdata, handles)
 %	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
 % handles    structure with handles and user data (see GUIDATA)
 
-if any(strcmp(eventdata.Modifier,'shift')) && strcmp(eventdata.Key,'s')
+if any(strcmp(eventdata.Modifier,'shift')) && strcmp(eventdata.Key,'b')
     Settings = HREBSDPrep(handles.Settings);
-    [Settings.grainID,Settings.RefInds,~,~] = DivideGrains(Settings);
-    handles.Settings = HREBSDPrep(Settings);
+    if isfield(Settings,'grainsHaveBeenSplit') && Settings.grainsHaveBeenSplit
+        Settings.grainID = Settings.oldGrains.grainID;
+        Settings.RefInd = Settings.oldGrains.RefInd;
+        Settings.oldGrains = [];
+        Settings.grainsHaveBeenSplit = false;
+    else
+        tolerance = inputdlg('input tolerance (degrees)','Tolerance');
+        tolerance = str2double(tolerance);
+        if isempty(tolerance) || isnan(tolerance) || tolerance < 0
+            disp('Enter a valid tolerance')
+            return
+        end
+        Settings.grainsHaveBeenSplit = true;
+        Settings.oldGrains.grainID = Settings.grainID;
+        Settings.oldGrains.RefInd = Settings.RefInd;
+        [Settings.grainID,Settings.RefInd] = subGrains(Settings,tolerance);
+    end
+    handles.Settings = Settings;
     guidata(hObject,handles);
 end
     

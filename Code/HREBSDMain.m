@@ -107,8 +107,17 @@ GetDefGradientTensor(Inds(ImageInd),Settings,Settings.Phase{ImageInd});
             remainingTime = (avgTime * (Settings.ScanLength - ImageInd)) / 60;% In Minutes
             remainingMins = mod(remainingTime,60);
             remainingHours = (remainingTime - remainingMins) / 60; % In hours
-            progString = sprintf('Single Processor Progress\nTime Remaining: %u Hours %u minutes',remainingHours,remainingMins);
-            waitbar(ImageInd/Settings.ScanLength,h,progString)
+            progString = sprintf('Single Processor Progress\nTime Remaining: %u Hours %u minutes',remainingHours,round(remainingMins));
+            try
+                waitbar(ImageInd/Settings.ScanLength,h,progString)
+            catch ME
+                if strcmp(ME.identifier, 'MATLAB:waitbar:InvalidSecondInput')
+                    h = waitbar(ImageInd/Settings.ScanLength,progString);
+
+                else
+                    ME.rethrow;
+                end
+            end
         end
         %         IterTime(ImageInd) = toc
 %         if ImageInd>50

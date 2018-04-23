@@ -83,18 +83,21 @@ if ~isfield(Settings,'DoStrain')
 end
 set(handles.DoStrain,'Value',Settings.DoStrain);
 
-HROIMMethodList = {'Simulated-Kinematic','Simulated-Dynamic','Real-Grain Ref','Real-Single Ref'};
+HROIMMethodList = {'Simulated-Kinematic','Simulated-Dynamic','Real-Grain Ref','Real-Single Ref','Remapping'};
 set(handles.HROIMMethod, 'String', HROIMMethodList);
-if strcmp(Settings.HROIMMethod,'Simulated')
-    SetPopupValue(handles.HROIMMethod,'Simulated-Kinematic');
-elseif strcmp(Settings.HROIMMethod,'Dynamic Simulated')
-    SetPopupValue(handles.HROIMMethod,'Simulated-Dynamic');
-else
-    if Settings.RefImageInd == 0
-        SetPopupValue(handles.HROIMMethod,'Real-Grain Ref');
-    else
-        SetPopupValue(handles.HROIMMethod,'Real-Single Ref');
-    end
+switch Settings.HROIMMethod
+    case 'Simulated'
+        SetPopupValue(handles.HROIMMethod,'Simulated-Kinematic');
+    case 'Dynamic Simulated'
+        SetPopupValue(handles.HROIMMethod,'Simulated-Dynamic');
+    case 'Remapping'
+        SetPopupValue(handles.HROIMMethod,'Remapping');
+    case 'Real'
+        if Settings.RefImageInd == 0
+            SetPopupValue(handles.HROIMMethod,'Real-Grain Ref');
+        else
+            SetPopupValue(handles.HROIMMethod,'Real-Single Ref');
+        end
 end
 
 %Standard Deviation
@@ -337,14 +340,18 @@ switch HROIMMethod
                 ToggleGrainMap_Callback(handles.ToggleGrainMap,eventdata,handles);
             end
         end
-    case 'Real-Grain Ref'
+    case {'Real-Grain Ref','Remapping'}
         set(handles.HROIMlabel,'String','Ref Image Index');
         handles.Settings.RefImageInd = 0;
         set(handles.HROIMedit,'String',num2str(handles.Settings.RefImageInd));
         set(handles.HROIMedit,'Enable','off');
         set(handles.GrainRefType,'Enable','on');
         if ~handles.Fast, set(handles.EditRefPoints,'Enable','on'), end
-        handles.Settings.HROIMMethod = 'Real';
+        if strcmp(HROIMMethod,'Remapping')
+            handles.Settings.HROIMMethod = HROIMMethod;
+        else
+            handles.Settings.HROIMMethod = 'Real';
+        end
         if nargin == 3
             GrainRefType_Callback(handles.GrainRefType, eventdata, handles);
         end
@@ -368,6 +375,8 @@ switch HROIMMethod
         handles.Settings.GrainRefImageType = 'Manual';
         SetPopupValue(handles.GrainRefType,'Manual');
         set(handles.GrainRefType,'Enable','off');
+    otherwise
+        error('No matchin method')
 end
 if ValChanged(handles,'HROIMMethod')
     handles.edited = true;
