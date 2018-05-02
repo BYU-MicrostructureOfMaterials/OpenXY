@@ -149,19 +149,32 @@ switch Settings.HROIMMethod
             [F1,SSE1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,Settings.RefImageInd);
         else
             try
-                RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,sampletilt,curMaterial,Av,ImageInd);
-                
-                clear global rs cs Gs
-                [F1,SSE1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
-                % some catch on SSE as for simulated pattern approach below?
-                for iq=1:Settings.IterationLimit-1
-                    [rr,uu]=poldec(F1); % extract the rotation part of the deformation, rr
-                    gr=rr'*gr; % correct the rotation component of the deformation so that it doesn't affect strain calc
-                    RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,sampletilt,curMaterial,Av,ImageInd);
+                results = cell(1,3);
+                for ii = 0:2
+                    transformation_g = circshift(eye(3),ii,2);
+                    current_g = transformation_g * gr * transformation_g';
+                    RefImage = genEBSDPatternHybrid_fromEMSoft(current_g,xstar,ystar,zstar,pixsize,mperpix,elevang,sampletilt,curMaterial,Av,ImageInd);
                     
                     clear global rs cs Gs
-                    [F1,SSE1,XX,sigma] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
+                    [F1,SSE1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
+                    % some catch on SSE as for simulated pattern approach below?
+                    for iq=1:Settings.IterationLimit-1
+                        [rr,uu]=poldec(F1); % extract the rotation part of the deformation, rr
+                        gr=rr'*gr; % correct the rotation component of the deformation so that it doesn't affect strain calc
+                        RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,sampletilt,curMaterial,Av,ImageInd);
+                        
+                        clear global rs cs Gs
+                        [F1,SSE1,XX,sigma] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
+                    end
+                    results{ii + 1} = {F1,SSE1,XX,sigma};
                 end
+                sizes = cellfun(@(x) sum(sum((x{1} - eye(3)).^2)),results)
+                [~, minInd] = min(sizes);
+                keeper = results{minInd(1)};
+                F1 = keeper{1};
+                sigma = keeper{2};
+                XX = keeper{3};
+                SSE1 = keeper{4};
             catch ME
                 F1 = eye(3);
                 sigma = eye(3);
