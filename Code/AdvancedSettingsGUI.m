@@ -83,7 +83,14 @@ if ~isfield(Settings,'DoStrain')
 end
 set(handles.DoStrain,'Value',Settings.DoStrain);
 
-HROIMMethodList = {'Simulated-Kinematic','Simulated-Dynamic','Real-Grain Ref','Real-Single Ref','Remapping'};
+HROIMMethodList = {
+    'Simulated-Kinematic'
+    'Simulated-Dynamic'
+    'Real-Grain Ref'
+    'Real-Single Ref'
+    'Remapping'
+    'Multi-simulated'
+    }';
 set(handles.HROIMMethod, 'String', HROIMMethodList);
 switch Settings.HROIMMethod
     case 'Simulated'
@@ -271,6 +278,11 @@ function HROIMMethod_Callback(hObject, eventdata, handles,~)
 %        contents{get(hObject,'Value')} returns selected item from HROIMMethod
 contents = cellstr(get(hObject,'String'));
 HROIMMethod = contents{get(hObject,'Value')};
+if strcmp(HROIMMethod, 'Multi-simulated')
+    handles.Settings.multiSim = true;
+else
+    handles.Settings.multiSim = false;
+end
 switch HROIMMethod
     case 'Simulated-Kinematic'
         set(handles.HROIMlabel,'String','Iteration Limit');
@@ -286,7 +298,7 @@ switch HROIMMethod
         end
         handles.Settings.RefInd = [];
         ToggleGrainMap_Callback(handles.ToggleGrainMap,eventdata,handles);
-    case 'Simulated-Dynamic'
+    case {'Simulated-Dynamic', 'Multi-simulated'}
         %Check for EMsoft
         EMsoftPath = GetEMsoftPath;
         if isempty(EMsoftPath)
@@ -296,7 +308,7 @@ switch HROIMMethod
         end
         
         %Validate EMsoft setup
-        if ~isempty(EMsoftPath)  && strcmp(HROIMMethod,'Simulated-Dynamic')
+        if ~isempty(EMsoftPath)
             %Check if Monte-Carlo Simulation data has been generated
             valid = 1;
             if isfield(handles.Settings,'Phase')
@@ -340,6 +352,7 @@ switch HROIMMethod
                 ToggleGrainMap_Callback(handles.ToggleGrainMap,eventdata,handles);
             end
         end
+        
     case {'Real-Grain Ref','Remapping'}
         set(handles.HROIMlabel,'String','Ref Image Index');
         handles.Settings.RefImageInd = 0;

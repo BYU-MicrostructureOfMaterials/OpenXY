@@ -524,21 +524,54 @@ set(handles.RunButton,'BackgroundColor',[1 0 0]);
 drawnow
 
 % Run HREBSD Main with error catching
-try
-    SaveSettings(handles);
-    Settings = HREBSDMain(Settings);
-catch ME
-    handles.ScanFileLoaded = false;
-    Reset_RunButton(handles);
-    enableRunButton(handles);
-    save('temp/ErrorSettings.mat');
-    msg = 'OpenXY encountered an error. Re-select the scan file to reset.';
-    cause = MException('MATLAB:OpenXY',msg);
-    ME = addCause(ME,cause);
-    rethrow(ME)
-    clear java
+if isfield(Settings, 'multiSim') && Settings.multiSim
+    load('SystemSettings.mat','EMsoftPath')
+    EMdataPath = fullfile(fileparts(EMsoftPath),'EMdata');
+    contents = dir(EMdataPath);
+    contents = {contents.name}';
+    searchedContents = regexpi(contents,'(\w+)_EBSDMaster.h5','tokens');
+    emptyInds = cellfun(@isempty,searchedContents);
+    goodInds = find(~emptyInds);
+    listItems = cellfun(@(x) x{1}, searchedContents(~emptyInds));
+    [selInds, tf] = listdlg('ListString',listItems);
+    masterFiles = listItems(selInds);
+    [outPath, outName, outExt] = fileparts(Settings.OutputPath);
+    for master = masterFiles'
+        master = master{1};
+        try
+            Settings.Material = master;
+            Settings.OutputPath = fullfile(outPath, [master '_' outName, outExt]);
+            SaveSettings(handles);
+            Settings = HREBSDMain(Settings);
+        catch ME
+            handles.ScanFileLoaded = false;
+            Reset_RunButton(handles);
+            enableRunButton(handles);
+            save('temp/ErrorSettings.mat');
+            msg = 'OpenXY encountered an error. Re-select the scan file to reset.';
+            cause = MException('MATLAB:OpenXY',msg);
+            ME = addCause(ME,cause);
+            rethrow(ME)
+            clear java
+        end
+    end
+    
+else
+    try
+        SaveSettings(handles);
+        Settings = HREBSDMain(Settings);
+    catch ME
+        handles.ScanFileLoaded = false;
+        Reset_RunButton(handles);
+        enableRunButton(handles);
+        save('temp/ErrorSettings.mat');
+        msg = 'OpenXY encountered an error. Re-select the scan file to reset.';
+        cause = MException('MATLAB:OpenXY',msg);
+        ME = addCause(ME,cause);
+        rethrow(ME)
+        clear java
+    end
 end
-
 %Check if terminated
 if Settings.Exit
     msgbox('Open XY did not finish calculation');

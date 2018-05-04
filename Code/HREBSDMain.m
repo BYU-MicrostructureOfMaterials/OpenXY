@@ -261,5 +261,7 @@ end
 
 %% Output Plotting
 % save([OutputPathWithSlash 'Data_' FileName],'data');
-input{1} = SaveFile;
-OutputPlotting(input); %moved here due to error writing ang file for vaudin files ****
+if isfield(Settings, 'multiSim') && ~Settings.multiSim
+    input{1} = SaveFile;
+    OutputPlotting(input); %moved here due to error writing ang file for vaudin files ****
+end
