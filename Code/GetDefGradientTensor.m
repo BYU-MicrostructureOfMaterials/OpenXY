@@ -149,7 +149,7 @@ switch Settings.HROIMMethod
             [F1,SSE1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,Settings.RefImageInd);
         else
             try
-                results = cell(1,4);
+                results = cell(1,3);
                 for ii = 0:2
                     transformation_g = circshift(eye(3),ii,2);
                     current_g = transformation_g * gr * transformation_g';
