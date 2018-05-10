@@ -87,6 +87,11 @@ formatString = [
 ' includebackground = %s,\n'...'y'
 ... name of angle file (euler angles or quaternions); path relative to EMdatapathname
 ' anglefile = %s,\n'...'testeuler.txt'
+... does this file have only orientations ('orientations') or does it also have pattern center and deformation tensor ('orpcdef')
+... if anglefiletype = 'orpcdef' then each line in the euler input file should look like this: (i.e., 15 floats)
+...   55.551210  58.856774  325.551210  0.0  0.0  15000.0  1.00 0.00 0.00 0.00 1.00 0.00 0.00 0.00 1.00
+...   <-   Euler angles  (degrees)  ->  <- pat. ctr.   ->  <- deformation tensor in column-major form->
+' anglefiletype = ''orientations'','...
 ... 'tsl' or 'hkl' Euler angle convention parameter
 ' eulerconvention = %s,\n'...'tsl'
 ... name of EBSD master output file; path relative to EMdatapathname
@@ -103,6 +108,8 @@ formatString = [
 ' beamcurrent = %g,\n'...'150.0'
 ... beam dwell time [micro s]
 ' dwelltime = %g,\n'...'100.0'
+... include Poisson noise ? (y/n) (noise will be applied *before* binning and intensity scaling)
+' poisson = ''n'','...
 ... binning mode (1, 2, 4, or 8)
 ' binning = %u,\n'...'1'
 ... should we perform an approximate computation that includes a lattice distortion? ('y' or 'n')
@@ -117,8 +124,20 @@ formatString = [
 ' scalingmode = %s,\n'...'not',
 ... gamma correction factor
 ' gammavalue = %g,\n'...1.0,
+... if the 'makedictionary' parameter is 'n', then we have the normal execution of the program
+... if set to 'y', then all patterns are pre-processed using the other parameters below, so that
+... the resulting dictionary can be used for static indexing in the EMEBSDDI program...
+... these parameters must be taken identical to the ones in the EMEBSDDI.nml input file to have
+... optimal indexing...
+' makedictionary = ''n'','...
 ... should a circular mask be applied to the data? 'y', 'n'
 ' maskpattern = %s,\n'...'n',
+... mask radius (in pixels, AFTER application of the binning operation)
+' maskradius = %u,\n'...
+... hi pass filter w parameter; 0.05 is a reasonable value
+' hipassw = 0.05,\n'...
+... number of regions for adaptive histogram equalization
+' nregions = 10,\n'...
 ... number of threads (default = 1)
 ' nthreads = %u,\n'...1
 ' /\n'];
@@ -127,7 +146,7 @@ fprintf(fid,formatString,L,thetac,delta,numsx,numsy,xpc,ypc,omega,...
     alphaBD,energymin,energymax,includebackground,anglefile,...
     eulerconvention,masterfile,energyfile,datafile,bitdepth,...
     beamcurrent,dwelltime,binning,applyDeformation,Ftensor,...
-    scalingmode,gammavalue,maskpattern,nthreads);
+    scalingmode,gammavalue,maskpattern,floor(numsx/2),nthreads);
 %{
 fprintf(fid,'&EBSDdataERROR\n');
 fprintf(fid,'! template file for the CTEMEBSD program\n');
