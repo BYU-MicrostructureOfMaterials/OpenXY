@@ -529,16 +529,18 @@ if isfield(Settings, 'multiSim') && Settings.multiSim
     EMdataPath = fullfile(fileparts(EMsoftPath),'EMdata');
     contents = dir(EMdataPath);
     contents = {contents.name}';
-    searchedContents = regexpi(contents,'(\w+)_EBSDMaster.h5','tokens');
+    searchedContents = regexpi(contents,'(\S+)_EBSDMaster.h5','tokens');
     emptyInds = cellfun(@isempty,searchedContents);
     goodInds = find(~emptyInds);
     listItems = cellfun(@(x) x{1}, searchedContents(~emptyInds));
     [selInds, tf] = listdlg('ListString',listItems);
     masterFiles = listItems(selInds);
     [outPath, outName, outExt] = fileparts(Settings.OutputPath);
+    blankSettings = Settings;
     for master = masterFiles'
         master = master{1};
         try
+            Settings = blankSettings;
             Settings.Material = master;
             Settings.OutputPath = fullfile(outPath, [master '_' outName, outExt]);
             SaveSettings(handles);
