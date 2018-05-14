@@ -8,6 +8,8 @@ function [F, g, U, SSE, XX, sigma] = GetDefGradientTensor(ImageInd,Settings,curM
 %Jay Basinger, March 24 2011
 
 %ImageInd is the index of the image(s) to use for comparison.
+
+fprintf(1,'Running GetDefGradientTensor for ponit %u\n', ImageInd)
 %% Read in the scan point's image. If L grid, read in legs as well.
 DoLGrid = strcmp(Settings.ScanType,'L');
 % fftw('wisdom',Settings.largefftmeth);

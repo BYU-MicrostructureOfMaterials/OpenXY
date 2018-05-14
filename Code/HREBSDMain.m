@@ -5,6 +5,7 @@
 %
 
 function Settings = HREBSDMain(Settings)
+disp('Entering HREBSDMain')
 % tic
 if Settings.EnableProfiler; profile on; end;
 %if Settings.DisplayGUI; disp('Dont forget to change PC if the image is cropped by ReadEBSDImage.m'); end;
@@ -12,6 +13,7 @@ if Settings.EnableProfiler; profile on; end;
 %Sets default color scheme for all figures and axes
 set(0,'DefaultFigureColormap',jet);
 
+disp('Running HREBSDPrep')
 Settings = HREBSDPrep(Settings);
 Inds = Settings.Inds;
 
@@ -42,7 +44,8 @@ if Settings.DoParallel > 1
         if isempty(ppool)
             parpool(NumberOfCores);
         end
-    catch
+    catch ME
+        disp(ME.getReport)
         ppool = matlabpool('size');
         if ~ppool
             matlabpool('local',NumberOfCores); 
