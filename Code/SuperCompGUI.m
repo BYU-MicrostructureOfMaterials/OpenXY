@@ -22,7 +22,7 @@ function varargout = SuperCompGUI(varargin)
 
 % Edit the above text to modify the response to help SuperCompGUI
 
-% Last Modified by GUIDE v2.5 14-May-2018 10:24:04
+% Last Modified by GUIDE v2.5 16-May-2018 11:56:47
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -50,6 +50,9 @@ function SuperCompGUI_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for SuperCompGUI
 handles.output = hObject;
 
+% Save a handle to the MainGUI
+handles.mainHandles = varargin{1};
+
 % Update handles structure
 guidata(hObject, handles);
 
@@ -64,10 +67,61 @@ varargout{1} = handles.output;
 
 % --- Executes on button press in submitButton.
 function submitButton_Callback(hObject, eventdata, handles)
-userName = handles.userNameEditText.String;
-password = handles.passwordEditText.String;
+batch = initBatch(handles);
+%TODO Add a try catch for bad connections
+batch.run();
+
+
+function batch = initBatch(handles)
+batch = superComp.Batch();
+options = batch.options;
+options.hostName = handles.hostNameEditText.String;
+options.userName = handles.userNameEditText.String;
+options.password = handles.passwordEditText.UserData;
+% TODO Add checkboxes for these two variables
+options.sendSource = true;
+options.sendImages = true;
+batch.options = options;
 
 
 % --- Executes on button press in cancelButton.
 function cancelButton_Callback(hObject, eventdata, handles)
 keyboard
+
+
+% --- Executes on key press with focus on passwordEditText and none of its controls.
+function passwordEditText_KeyPressFcn(hObject, eventdata, handles)
+% Function to replace all characters in the password edit box with
+% asterisks
+password = get(hObject,'Userdata');
+key = eventdata.Key;
+
+switch key
+    case 'backspace'
+        password = password(1:end-1); % Delete the last character in the password
+    case 'return'  % This cannot be done through callback without making tab to the same thing
+        submitButton_Callback(hObject, eventdata, handles);
+    case 'tab'  % Avoid tab triggering the OK button
+        gui = getappdata(0,'logindlg');
+        uicontrol(gui.OK);
+    case 'escape'
+    otherwise
+        password = [password eventdata.Character]; % Add the typed character to the password
+end
+
+SizePass = size(password); % Find the number of asterisks
+if SizePass(2) > 0
+    asterisk(1,1:SizePass(2)) = '*'; % Create a string of asterisks the same size as the password
+    set(hObject,'String',asterisk) % Set the text in the password edit box to the asterisk string
+else
+    set(hObject,'String','')
+end
+
+set(hObject,'Userdata',password) % Store the password in its current state
+
+% hObject    handle to passwordEditText (see GCBO)
+% eventdata  structure with the following fields (see MATLAB.UI.CONTROL.UICONTROL)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)

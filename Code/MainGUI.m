@@ -22,7 +22,7 @@ function varargout = MainGUI(varargin)
 
 % Edit the above text to modify the response to help MainGUI
 
-% Last Modified by GUIDE v2.5 31-Oct-2017 12:38:13
+% Last Modified by GUIDE v2.5 17-May-2018 11:48:35
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -219,6 +219,7 @@ handles.AdvancedGUI = [];
 handles.ROIGUI = [];
 handles.TestGeomGUI = [];
 handles.PCGUI = [];
+handles.superCompGUI = [];
 
 % Update handles structure
 guidata(hObject, handles);
@@ -814,10 +815,14 @@ PCCalSettings_Callback(handles.PCCalSettings, eventdata, handles); handles = gui
 
 
 function enableRunButton(handles)
-if handles.ScanFileLoaded && (handles.ImageLoaded || handles.SkipImageLoad) && handles.OutputLoaded
-    set(handles.RunButton,'Enable','on');
+if handles.ScanFileLoaded &&...
+        (handles.ImageLoaded || handles.SkipImageLoad) &&...
+        handles.OutputLoaded
+    handles.RunButton.Enable = 'on';
+    handles.superCompButton.Enable = 'on';
 else
-    set(handles.RunButton,'Enable','off');
+    handles.RunButton.Enable = 'off';
+    handles.superCompButton.Enable = 'off';
 end
 
 function string = GetPopupString(Popup)
@@ -901,6 +906,9 @@ end
 if ~isempty(handles.TestGeomGUI) && isvalid(handles.TestGeomGUI)
     close(handles.TestGeomGUI)
 end
+if ~isempty(handles.superCompGUI) && isvalid(handles.superCompGUI)
+    close(handles.superCompGUI)
+end
 
 
 % --- If Enable == 'on', executes on mouse press in 5 pixel border.
@@ -975,3 +983,8 @@ if any(strcmp(eventdata.Modifier,'shift')) && strcmp(eventdata.Key,'b')
     guidata(hObject,handles);
 end
     
+function superCompButton_Callback(hObject, eventdata, handles)
+
+handles.superCompGUI = SuperCompGUI(handles.MainGUI);
+
+guidata(hObject, handles);
