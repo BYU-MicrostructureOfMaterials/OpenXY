@@ -57,7 +57,11 @@ obj.connection = ssh2_config(...
     );
 
 % Set up an onCleanup to close the conection when the function exits
-finishUp = onCleanup(@() ssh2_close(obj.connection));
+    function closeConection(obj)
+        ssh2_close(obj.connection);
+        obj.connection = [];
+    end
+connectionCleanup = onCleanup( @() closeConection(obj) );
 
 % Send data to the supercomputer
 if obj.options.sendImages
@@ -67,4 +71,6 @@ if obj.options.sendSource
     obj.sendSource()
 end
 
+obj.sendBathScript
 
+end

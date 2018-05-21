@@ -12,11 +12,25 @@ classdef Options
         % The password used to connect to the supercomputer
         password
         
+        % The email that notifications will be sent to
+        email
+        
+        % Should email be sent on job start
+        sendStart
+        
+        % Should email be sent on job finish
+        sendEnd
+        
+        % Should email be sent on job fail
+        sendFail
+        
         % Should the OpenXY source code be sent or not
         sendSource
         
         % Should the images be sent?
         sendImages
+        
+        % 
     end
     
 end

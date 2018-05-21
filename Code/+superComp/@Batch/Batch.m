@@ -25,6 +25,8 @@ classdef Batch < handle
         
         sendSource(obj)
         
+        sendBatchResources(obj)
+        
         list = getSourceList(obj)
 
     end
