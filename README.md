@@ -19,8 +19,8 @@ OR clone the whole repository at once with the --recursive argument
 git clone --recursive https://github.com/BYU-MicrostructureOfMaterials/OpenXY.git
 
 In case of an error:
-Write an email to BYUOpenXY@gmail.com with "Error Report" in subject. 
-Be specific and copy the error message into the body of the email, including any applicable screenshots.
+Please open an issue on this repository detailing your error, or write an email to BYUOpenXY@gmail.com with "Error Report" in subject. 
+Be specific and copy the error message into the body of the email or issue report, including any applicable screenshots.
 Attach the Settings.mat file immediately after the error has occured to include the settings used for the analysis.
 
 Acknowledgement:
