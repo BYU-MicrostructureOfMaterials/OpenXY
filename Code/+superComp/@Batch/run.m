@@ -71,6 +71,11 @@ if obj.options.sendSource
     obj.sendSource()
 end
 
-obj.sendBathScript
+obj.sendBatchResources()
 
+% run_command = 'sbatch ~/compute/OpenXY/OpenXY.sh';
+run_command = 'cd compute/OpenXY; sbatch ./OpenXY.sh';
+obj.connection = ssh2_command(obj.connection, run_command, 1);
+% out = ssh2_command_response(obj.connection);
+% disp(out)
 end

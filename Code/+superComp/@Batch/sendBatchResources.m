@@ -5,7 +5,7 @@ fid = fopen('Temp/OpenXY.sh','w');
 Settings = obj.Settings;
 [~, jobName, ~] = fileparts(Settings.OutputPath);
 [path, imName, imExt] = fileparts(Settings.FirstImagePath);
-pathComponents = strsep(path,filesep);
+pathComponents = strsplit(path,filesep);
 folderName = strrep(pathComponents{end}, ' ', '\ ');
 
 firstImagePath = fullfile(folderName, imName, imExt);
@@ -27,7 +27,7 @@ fprintf(fid,'#SBATCH --ntasks=1\n');
 fprintf(fid,'#SBATCH --nodes=1\n');
 fprintf(fid,'#SBATCH --mem-per-cpu=1024M\n');
 fprintf(fid,'#SBATCH -J "%s"\n',jobName);
-fprintf(fid,'#sbatch --mail-user=%s\n',obj.options.email);
+fprintf(fid,'#SBATCH --mail-user=%s\n\n',obj.options.email);
 if sendStart
     fprintf(fid,'#SBATCH --mail-type=BEGIN\n');
 end
@@ -54,10 +54,14 @@ save('Temp/Settings.mat','Settings');
 
 obj.connection = scp_put(obj.connection, 'Temp/Settings.mat',...
     '~/compute/OpenXY');
+
+obj.connection = scp_put(obj.connection, '+superComp/EBSDBatch.m',...
+    '~/compute/OpenXY');
 end
 
 
 function cleanUp
+fclose('all');
 if exist('Temp/OpenXY.sh','file')
     delete Temp/OpenXY.sh
 end
