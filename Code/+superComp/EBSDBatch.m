@@ -1,11 +1,13 @@
 function EBSDBatch(settingsPath,firstImagePath)
 
 load(settingsPath,'Settings')
-[~, outName, outExt] = fileparts(Settings.OutputPath);
+outputPath = strrep(Settings.OutputPath, '\', '/');
+[~, outName, outExt] = fileparts(outputPath);
 Settings.OutputPath = [outName, outExt];
 disp(Settings.OutputPath)
+disp(firstImagePath)
 
-cd('SuperOpenXY')
+cd('Code')
 
 Settings.FirstImagePath = firstImagePath;
 Settings.ImageNamesList = ImportImageNamesList(Settings);

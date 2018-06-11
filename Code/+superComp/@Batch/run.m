@@ -9,8 +9,11 @@ function run(obj)
 %   
 %   Written by Zach Clayburn, May 15, 2018
 %
-%   Requires David Freedman's <a href="matlab:web('https://www.mathworks.com/matlabcentral/fileexchange/35409-ssh-sftp-scp-for-matlab--v2-')">SSH/SFTP/SCP For Matlab (v2)</a>
-%   See also supercomp.BatchData
+%   Requires David Freedman's <a href="matlab:web...
+%   (['https://www.mathworks.com/matlabcentral/fileexchange/'...'
+%   '35409-ssh-sftp-scp-for-matlab--v2-')">SSH/SFTP/SCP For Matlab (v2)</a>
+%
+%   See also supercomp.Options
 
 
 try
@@ -74,7 +77,7 @@ end
 obj.sendBatchResources()
 
 % run_command = 'sbatch ~/compute/OpenXY/OpenXY.sh';
-run_command = 'cd compute/OpenXY; sbatch ./OpenXY.sh';
+run_command = 'bash;cd compute/OpenXY; sbatch ./OpenXY.sh;exit';
 obj.connection = ssh2_command(obj.connection, run_command, 1);
 % out = ssh2_command_response(obj.connection);
 % disp(out)

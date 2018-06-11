@@ -4,11 +4,17 @@ fid = fopen('Temp/OpenXY.sh','w');
 
 Settings = obj.Settings;
 [~, jobName, ~] = fileparts(Settings.OutputPath);
+
+if isempty(jobName)
+    error('OpenXY:sendBatchResources:NoOutputName',...
+        'No output path specified!')
+end
+
 [path, imName, imExt] = fileparts(Settings.FirstImagePath);
 pathComponents = strsplit(path,filesep);
-folderName = strrep(pathComponents{end}, ' ', '\ ');
+folderName = pathComponents{end};
 
-firstImagePath = fullfile(folderName, imName, imExt);
+firstImagePath = fullfile(folderName, [imName, imExt]);
 
 if ~isempty(obj.options.email)
     sendStart = obj.options.sendStart;
@@ -39,7 +45,7 @@ if sendFail
 end
 fprintf(fid,'module add matlab/r2017b\n');
 fprintf(fid,...
-    'matlab -nodisplay -nojvm -r EBSDBatch(''./Settings.mat'', ''%s'')\n',...
+    'matlab -nodisplay -nojvm -r "EBSDBatch(''./Settings.mat'', ''%s'')"\n',...
     firstImagePath);
 
 fclose(fid);
