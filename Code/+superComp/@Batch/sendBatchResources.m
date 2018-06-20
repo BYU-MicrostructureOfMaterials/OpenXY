@@ -26,7 +26,7 @@ else
     sendFail = false;
 end
 
-fprintf(fid,'#!/bin/bash\n');
+fprintf(fid,'#!/bin/tcsh\n');
 %TODO Adjust the time to match the scan size
 fprintf(fid,'#SBATCH --time=00:10:00\n');
 fprintf(fid,'#SBATCH --ntasks=1\n');
@@ -52,9 +52,31 @@ fclose(fid);
 
 clean = onCleanup(@() cleanUp() );
 
+if strcmpi(Settings.Material, 'Scan File')
+    phases = unique(Settings.Phase(:)');
+else
+    phases = {Settings.Material};
+end
+material_files = cell(size(phases));
+ind = 1;
+for material = phases
+    [~, material_files{ind}] = ReadMaterial(material);
+    ind = ind + 1;
+end
+material_files = cellfun(@(x) strrep(x,pwd,''), material_files, 'UniformOutput', false);
+[scan_path, scan_file, scan_ext] = fileparts(Settings.ScanFilePath);
+
 obj.connection = ssh2_command(obj.connection, 'mkdir ~/compute/OpenXY');
+obj.connection = ssh2_command(obj.connection, 'mkdir ~/compute/OpenXY/Code');
+obj.connection = ssh2_command(obj.connection, 'mkdir ~/compute/OpenXY/Code/Materials');
+
+obj.connection = scp_put(obj.connection, material_files,...
+    '~/compute/OpenXY/Code/Materials/');
+obj.connection = scp_put(obj.connection, [scan_file scan_ext],...
+    '~/compute/OpenXY/', scan_path);
 obj.connection = scp_put(obj.connection, 'Temp/OpenXY.sh',...
     '~/compute/OpenXY/');
+
 
 save('Temp/Settings.mat','Settings');
 

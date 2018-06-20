@@ -1,4 +1,4 @@
-function M = ReadMaterial(Material)
+function [M, filename] = ReadMaterial(Material)
 % Reads material data from text file in /Materials subfolder into a
 % structure
 if strcmp(Material,'newphase')

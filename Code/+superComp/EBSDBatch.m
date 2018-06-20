@@ -1,14 +1,19 @@
-function EBSDBatch(settingsPath,firstImagePath)
+function EBSDBatch(settingsPath, firstImagePath)
 
 load(settingsPath,'Settings')
+
 outputPath = strrep(Settings.OutputPath, '\', '/');
 [~, outName, outExt] = fileparts(outputPath);
-Settings.OutputPath = [outName, outExt];
-disp(Settings.OutputPath)
-disp(firstImagePath)
+
+firstImagePath = fullfile(pwd, strrep(firstImagePath, '\', '/'));
+
+scanFilePath = strrep(Settings.ScanFilePath, '\', '/');
+[~, scanName, scanExt] = fileparts(scanFilePath);
 
 cd('Code')
 
+Settings.ScanFilePath = ['~/compute/OpenXY/' scanName scanExt];
+Settings.OutputPath = ['~/compute/OpenXY/' outName, outExt];
 Settings.FirstImagePath = firstImagePath;
 Settings.ImageNamesList = ImportImageNamesList(Settings);
 Settings.OutputPath = './Out.ang';

@@ -265,4 +265,6 @@ end
 %% Output Plotting
 % save([OutputPathWithSlash 'Data_' FileName],'data');
 input{1} = SaveFile;
-OutputPlotting(input); %moved here due to error writing ang file for vaudin files ****
+if Settings.DisplayGUI
+    OutputPlotting(input); %moved here due to error writing ang file for vaudin files ****
+end
