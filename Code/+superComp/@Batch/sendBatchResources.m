@@ -77,7 +77,7 @@ obj.connection = scp_put(obj.connection, [scan_file scan_ext],...
 obj.connection = scp_put(obj.connection, 'Temp/OpenXY.sh',...
     '~/compute/OpenXY/');
 
-
+Settings = splitScan(Settings, obj.options.numJobs);
 save('Temp/Settings.mat','Settings');
 
 obj.connection = scp_put(obj.connection, 'Temp/Settings.mat',...
@@ -85,6 +85,24 @@ obj.connection = scp_put(obj.connection, 'Temp/Settings.mat',...
 
 obj.connection = scp_put(obj.connection, '+superComp/EBSDBatch.m',...
     '~/compute/OpenXY');
+end
+
+
+function Settings = splitScan(Settings, numJobs)
+% SPLITSCAN divides a scan into a given number of jobs.
+% Creates a field in Settings called indVectors that has the point indicies
+% for each of the numJobs jobs
+
+jobInds = discretize(1:Settings.ScanLength, numJobs);
+indVectors = cell(1, jobInds(end));
+
+for ii = 1:Settings.ScanLength
+    temp = indVectors{jobInds(ii)};
+    temp(end+1) = ii;
+    indVectors{jobInds(ii)} = temp;
+end
+
+Settings.indVectors = indVectors;
 end
 
 

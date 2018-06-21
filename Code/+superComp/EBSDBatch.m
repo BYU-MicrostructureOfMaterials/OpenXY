@@ -1,4 +1,4 @@
-function EBSDBatch(settingsPath, firstImagePath)
+function EBSDBatch(settingsPath, firstImagePath, jobInd)
 
 load(settingsPath,'Settings')
 

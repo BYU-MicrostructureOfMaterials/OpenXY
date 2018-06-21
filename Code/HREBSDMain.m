@@ -4,8 +4,11 @@
 %Jay Basinger 3/11/2011
 %
 
-function Settings = HREBSDMain(Settings)
+function Settings = HREBSDMain(Settings, indVect)
 disp('Entering HREBSDMain')
+if nargin < 2
+    indVect = 1:Settings.ScanLength;
+end
 % tic
 if Settings.EnableProfiler; profile on; end;
 %if Settings.DisplayGUI; disp('Dont forget to change PC if the image is cropped by ReadEBSDImage.m'); end;
@@ -52,7 +55,7 @@ if Settings.DoParallel > 1
         end
     end
     
-    N = Settings.ScanLength;
+    N = length(indVect);
     pctRunOnAll javaaddpath('java')
     if Settings.DisplayGUI
         disp('Starting cross-correlation');
@@ -60,7 +63,7 @@ if Settings.DoParallel > 1
     end
     
     disp('Running strain cross-correlation...')
-    parfor(ImageInd = 1:N,NumberOfCores)
+    parfor(ImageInd = indVect,NumberOfCores)
 %         disp(ImageInd)
         %Returns F as either a cell array of deformation gradient tensors
         %or a structure F.a F.b F.c of deformation gradient tensors for
@@ -90,7 +93,7 @@ else
     end
     
     disp('Running strain cross-correlation...')
-    for ImageInd = 1:Settings.ScanLength
+    for ImageInd = indVect
         %         tic
 %         disp(ImageInd)
         
@@ -105,17 +108,18 @@ GetDefGradientTensor(Inds(ImageInd),Settings,Settings.Phase{ImageInd});
 %         end
         
         if Settings.DisplayGUI
+            N = length(indVect);
             time = toc(innerTimer);
             avgTime = time / ImageInd;
-            remainingTime = (avgTime * (Settings.ScanLength - ImageInd)) / 60;% In Minutes
+            remainingTime = (avgTime * (N - ImageInd)) / 60;% In Minutes
             remainingMins = mod(remainingTime,60);
             remainingHours = (remainingTime - remainingMins) / 60; % In hours
             progString = sprintf('Single Processor Progress\nTime Remaining: %u Hours %u minutes',remainingHours,round(remainingMins));
             try
-                waitbar(ImageInd/Settings.ScanLength,h,progString)
+                waitbar(ImageInd/N,h,progString)
             catch ME
                 if strcmp(ME.identifier, 'MATLAB:waitbar:InvalidSecondInput')
-                    h = waitbar(ImageInd/Settings.ScanLength,progString);
+                    h = waitbar(ImageInd/N,progString);
 
                 else
                     ME.rethrow;
@@ -143,7 +147,7 @@ if ~isfield(Settings,'data') || Settings.DoStrain
     data.rows = Settings.Ny;
     
     Settings.NewAngles = Settings.Angles;
-    for jj = 1:Settings.ScanLength
+    for jj = indVect
         
         data.IQ{jj} = Settings.IQ(jj);
         

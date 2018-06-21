@@ -24,13 +24,14 @@ classdef Options
         % Should email be sent on job fail
         sendFail
         
-        % Should the OpenXY source code be sent or not
+        % Should the OpenXY source code be sent
         sendSource
         
-        % Should the images be sent?
+        % Should the images be sent
         sendImages
         
-        % 
+        % The ammount of jobs the batch should be spilt into
+        numJobs
     end
     
 end
