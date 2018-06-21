@@ -1,6 +1,11 @@
 function sendBatchResources(obj)
+% SENDBATCHRESOURCES Send resources needed for every job.
+%   SENDBATCHRESOURCES Sends the Settings struct, scan file (.ang or .ctf),
+%   the material file and the job script to the supercomputer. This step is
+%   not optional, as this information is unique to every scan run.
 
-fid = fopen('Temp/OpenXY.sh','w');
+%   See also BATCH.SENDIMAGES, BATCH.SENDSOURCE
+fid = fopen('temp/OpenXY.sh','w');
 
 Settings = obj.Settings;
 [~, jobName, ~] = fileparts(Settings.OutputPath);
@@ -52,35 +57,13 @@ fclose(fid);
 
 clean = onCleanup(@() cleanUp() );
 
-if strcmpi(Settings.Material, 'Scan File')
-    phases = unique(Settings.Phase(:)');
-else
-    phases = {Settings.Material};
-end
-material_files = cell(size(phases));
-ind = 1;
-for material = phases
-    [~, material_files{ind}] = ReadMaterial(material);
-    ind = ind + 1;
-end
-material_files = cellfun(@(x) strrep(x,pwd,''), material_files, 'UniformOutput', false);
-[scan_path, scan_file, scan_ext] = fileparts(Settings.ScanFilePath);
-
-obj.connection = ssh2_command(obj.connection, 'mkdir ~/compute/OpenXY');
-obj.connection = ssh2_command(obj.connection, 'mkdir ~/compute/OpenXY/Code');
-obj.connection = ssh2_command(obj.connection, 'mkdir ~/compute/OpenXY/Code/Materials');
-
-obj.connection = scp_put(obj.connection, material_files,...
-    '~/compute/OpenXY/Code/Materials/');
-obj.connection = scp_put(obj.connection, [scan_file scan_ext],...
-    '~/compute/OpenXY/', scan_path);
-obj.connection = scp_put(obj.connection, 'Temp/OpenXY.sh',...
-    '~/compute/OpenXY/');
+sendMaterial(obj)
+sendScanFile(obj)
 
 Settings = splitScan(Settings, obj.options.numJobs);
-save('Temp/Settings.mat','Settings');
+save('temp/Settings.mat','Settings');
 
-obj.connection = scp_put(obj.connection, 'Temp/Settings.mat',...
+obj.connection = scp_put(obj.connection, 'temp/Settings.mat',...
     '~/compute/OpenXY');
 
 obj.connection = scp_put(obj.connection, '+superComp/EBSDBatch.m',...
@@ -105,13 +88,47 @@ end
 Settings.indVectors = indVectors;
 end
 
+function sendMaterial(obj)
+Settings = obj.Settings;
+if strcmpi(Settings.Material, 'Scan File')
+    phases = unique(Settings.Phase(:)');
+else
+    phases = {Settings.Material};
+end
+material_files = cell(size(phases));
+ind = 1;
+for material = phases
+    [~, material_files{ind}] = ReadMaterial(material);
+    ind = ind + 1;
+end
+material_files = cellfun(@(x) strrep(x,pwd,''), material_files, 'UniformOutput', false);
+
+obj.connection = ssh2_command(obj.connection,...
+    'mkdir ~/compute/OpenXY/Materials');
+
+obj.connection = scp_put(obj.connection, material_files,...
+    '~/compute/OpenXY/Materials/');
+end
+
+
+function sendScanFile(obj)
+[scan_path, scan_file, scan_ext] = fileparts(obj.Settings.ScanFilePath);
+
+obj.connection = ssh2_command(obj.connection, 'mkdir ~/compute/OpenXY');
+obj.connection = scp_put(obj.connection, [scan_file scan_ext],...
+    '~/compute/OpenXY/', scan_path);
+obj.connection = scp_put(obj.connection, 'temp/OpenXY.sh',...
+    '~/compute/OpenXY/');
+
+end
+
 
 function cleanUp
 fclose('all');
-if exist('Temp/OpenXY.sh','file')
-    delete Temp/OpenXY.sh
+if exist('temp/OpenXY.sh','file')
+    delete temp/OpenXY.sh
 end
-if exist('Temp/Settings.mat','file')
+if exist('temp/Settings.mat','file')
     delete temp/Settings.mat
 end
 end

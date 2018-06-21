@@ -125,3 +125,7 @@ list = {'AnalyzeLineScan.m'
     'subpixshift.m'
     'vec2map.m'
     'xdotyMex.mexw64'};
+if ~ispc
+    list = cellfun(@(file) strrep(file, '\', '/'), list,...
+        'UniformOutput', false);
+end

@@ -1,4 +1,5 @@
 classdef Batch < handle
+    %SUPERCOMP.BATCH Handle submitting EBSD batches to a supercomputer
     properties (Access = public)
         % The data to control the batch job
         options @superComp.Options

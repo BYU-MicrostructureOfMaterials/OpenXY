@@ -1,4 +1,5 @@
 function EBSDBatch(settingsPath, firstImagePath, jobInd)
+%EBSDBATCH Starts a batch on a supercomputer.
 
 load(settingsPath,'Settings')
 
@@ -10,7 +11,7 @@ firstImagePath = fullfile(pwd, strrep(firstImagePath, '\', '/'));
 scanFilePath = strrep(Settings.ScanFilePath, '\', '/');
 [~, scanName, scanExt] = fileparts(scanFilePath);
 
-cd('Code')
+addpath('Code')
 
 Settings.ScanFilePath = ['~/compute/OpenXY/' scanName scanExt];
 Settings.OutputPath = ['~/compute/OpenXY/' outName, outExt];
