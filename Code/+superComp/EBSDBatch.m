@@ -3,6 +3,8 @@ function EBSDBatch(settingsPath, firstImagePath, jobInd)
 
 load(settingsPath,'Settings')
 
+job_inds = Settings.indVectors{jobInd};
+
 outputPath = strrep(Settings.OutputPath, '\', '/');
 [~, outName, outExt] = fileparts(outputPath);
 
@@ -14,14 +16,14 @@ scanFilePath = strrep(Settings.ScanFilePath, '\', '/');
 addpath('Code')
 
 Settings.ScanFilePath = ['~/compute/OpenXY/' scanName scanExt];
-Settings.OutputPath = ['~/compute/OpenXY/' outName, outExt];
+Settings.OutputPath = ...
+    ['~/compute/OpenXY/' outName, '_', num2str(jobInd), outExt];
 Settings.FirstImagePath = firstImagePath;
 Settings.ImageNamesList = ImportImageNamesList(Settings);
-Settings.OutputPath = './Out.ang';
 Settings.DisplayGUI = false;
 Settings.DoParallel = 1;
 try
-HREBSDMain(Settings);
+HREBSDMain(Settings, job_inds);
 catch ME
     disp(ME.getReport)
 end

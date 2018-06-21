@@ -76,8 +76,11 @@ end
 
 obj.sendBatchResources()
 
-% run_command = 'sbatch ~/compute/OpenXY/OpenXY.sh';
-run_command = 'cd compute/OpenXY; sbatch ./OpenXY.sh';
+
+
+
+run_command = ['cd compute/OpenXY; sbatch --array=1-'...
+    num2str(obj.options.numJobs) ' ./OpenXY.sh'];
 obj.connection = ssh2_command(obj.connection, run_command, 1);
 % out = ssh2_command_response(obj.connection);
 % disp(out)
