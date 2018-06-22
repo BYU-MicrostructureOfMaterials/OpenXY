@@ -96,10 +96,10 @@ else
     for ImageInd = indVect
         %         tic
 %         disp(ImageInd)
-        
+        tic
         [F(:,:,ImageInd), g(:,:,ImageInd), U(:,:,ImageInd), SSE(ImageInd), XX(:,:,ImageInd), sigma(:,:,ImageInd)] = ...
 GetDefGradientTensor(Inds(ImageInd),Settings,Settings.Phase{ImageInd});
-        
+        toc
         % commented out this (outputs strain matrix - I think - DTF 5/15/14)
 %         if strcmp(Settings.ScanType,'L')
 %             U{ImageInd}.b - eye(3)
@@ -147,11 +147,9 @@ if ~isfield(Settings,'data') || Settings.DoStrain
     data.rows = Settings.Ny;
     
     Settings.NewAngles = Settings.Angles;
-    for jj = indVect
-        
-        data.IQ{jj} = Settings.IQ(jj);
-        
-        if strcmp(Settings.ScanType,'L')
+    if strcmp(Settings.ScanType, 'L')
+        for jj = indVect
+            data.IQ{jj} = Settings.IQ(jj);
             [phi1 PHI phi2] = gmat2euler(g{jj}.b);
             Settings.g{jj} = g{jj}.b;
             Settings.F{jj} = F{jj}.b;
@@ -169,8 +167,21 @@ if ~isfield(Settings,'data') || Settings.DoStrain
             data.F{jj} = F{jj}.b;
             data.Fa{jj} = F{jj}.a;
             data.Fc{jj} = F{jj}.c;
-        else
-            
+            data.g{jj} = [phi1 PHI phi2];
+            Settings.NewAngles(jj,1:3) = [phi1 PHI phi2];
+        end
+    else
+        data.IQ = cell(1,Settings.ScanLength);
+        Settings.SSE = zeros(1, Settings.ScanLength);
+        data.SSE = zeros(1, Settings.ScanLength);
+        data.F = zeros(3, 3, Settings.ScanLength);
+        data.phi1rn = zeros(1, Settings.ScanLength);
+        data.PHIrn = zeros(1, Settings.ScanLength);
+        data.phi2rn = zeros(1, Settings.ScanLength);
+        data.g = cell(1, Settings.ScanLength);
+        Settings.NewAngles = zeros(Settings.ScanLength, 3);
+        for jj = indVect
+            data.IQ{jj} = Settings.IQ(jj);
             [phi1 PHI phi2] = gmat2euler(g(:,:,jj));
             Settings.SSE(jj) = SSE(jj);
             data.SSE(jj) = SSE(jj);
@@ -178,14 +189,9 @@ if ~isfield(Settings,'data') || Settings.DoStrain
             data.phi1rn(jj) = phi1;
             data.PHIrn(jj) = PHI;
             data.phi2rn(jj) = phi2;
-            
-            
+            data.g{jj} = [phi1 PHI phi2];
+            Settings.NewAngles(jj,1:3) = [phi1 PHI phi2];
         end
-        
-        
-        data.g{jj} = [phi1 PHI phi2];
-        Settings.NewAngles(jj,1:3) = [phi1 PHI phi2];
-        
     end
     Settings.XX = XX;
     if strcmp(Settings.ScanType,'L')
