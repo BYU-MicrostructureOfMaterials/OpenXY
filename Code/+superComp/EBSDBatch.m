@@ -1,7 +1,7 @@
-function EBSDBatch(settingsPath, firstImagePath, jobInd)
+function EBSDBatch(jobInd)
 %EBSDBATCH Starts a batch on a supercomputer.
 
-loaded = load(settingsPath,'Settings');
+loaded = load('./Settings.mat', 'Settings');
 Settings = loaded.Settings;
 
 job_inds = Settings.indVectors{jobInd};
@@ -9,7 +9,7 @@ job_inds = Settings.indVectors{jobInd};
 outputPath = strrep(Settings.OutputPath, '\', '/');
 [~, outName, outExt] = fileparts(outputPath);
 
-firstImagePath = fullfile(pwd, strrep(firstImagePath, '\', '/'));
+firstImagePath = fullfile(pwd, Settings.FirstImagePath);
 
 scanFilePath = strrep(Settings.ScanFilePath, '\', '/');
 [~, scanName, scanExt] = fileparts(scanFilePath);

@@ -1,8 +1,7 @@
 function compileOutput(dirName)
 
-
-currentDir = pwd;
-cd(dirName)
+disp(dirName)
+currentDir = cd(dirName);
 
 cleanup = onCleanup(@() cd(currentDir));
 
@@ -11,7 +10,9 @@ files = dir;
 files(strcmp({files.name}, '.') | strcmp({files.name}, '..')) = [];
 fileNames = {files.name};
 jobName = regexp(fileNames{1}, 'AnalysisParams_(.+)_\d+.mat', 'tokens');
-jobName = jobName{1}{1};
+while iscell(jobName)
+    jobName = jobName{1};
+end
 
 searchString = ['AnalysisParams_' jobName '_(\d+).mat'];
 nums = regexp(fileNames, searchString, 'tokens');

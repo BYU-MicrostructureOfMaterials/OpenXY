@@ -5,7 +5,6 @@ function sendBatchResources(obj)
 %   not optional, as this information is unique to every scan run.
 
 %   See also BATCH.SENDIMAGES, BATCH.SENDSOURCE
-fid = fopen('temp/OpenXY.sh','w');
 
 Settings = obj.Settings;
 [~, jobName, ~] = fileparts(Settings.OutputPath);
@@ -20,44 +19,24 @@ pathComponents = strsplit(path,filesep);
 folderName = pathComponents{end};
 
 firstImagePath = fullfile(folderName, [imName, imExt]);
+Settings.FirstImagePath = strrep(firstImagePath, '\', '/');
 
-if ~isempty(obj.options.email)
-    sendStart = obj.options.sendStart;
-    sendEnd = obj.options.sendEnd;
-    sendFail = obj.options.sendFail;
-else
-    sendStart = false;
-    sendEnd = false;
-    sendFail = false;
-end
 
-fprintf(fid,'#!/bin/tcsh\n');
-%TODO Adjust the time to match the scan size
-fprintf(fid,'#SBATCH --time=00:10:00\n');
-fprintf(fid,'#SBATCH --ntasks=1\n');
-fprintf(fid,'#SBATCH --nodes=1\n');
-fprintf(fid,'#SBATCH --mem-per-cpu=1024M\n');
-fprintf(fid,'#SBATCH -J "%s"\n',jobName);
-fprintf(fid,'#SBATCH --mail-user=%s\n\n',obj.options.email);
-if sendStart
-    fprintf(fid,'#SBATCH --mail-type=BEGIN\n');
-end
-if sendEnd
-    fprintf(fid,'#SBATCH --mail-type=END\n');
-end
-if sendFail
-    fprintf(fid,'#SBATCH --mail-type=FAIL\n');
-end
-fprintf(fid,'module add matlab/r2017b\n');
-fprintf(fid, ['matlab -nodisplay -nojvm -r '...
-    '"EBSDBatch(''./Settings.mat'', ''%s'', $SLURM_ARRAY_TASK_ID)"\n'],...
-    firstImagePath);
+obj.connection = scp_put(obj.connection, '+superComp/jobScript.sh',...
+    '~/compute/OpenXY/');
 
-fclose(fid);
+obj.connection = scp_put(obj.connection, '+superComp/OpenXY.sh',...
+    '~/compute/OpenXY/');
+
+obj.connection = scp_put(obj.connection, '+superComp/compileOutput.m',...
+    '~/compute/OpenXY/');
+
+obj.connection = scp_put(obj.connection, '+superComp/compile.sh',...
+    '~/compute/OpenXY/');
 
 clean = onCleanup(@() cleanUp() );
 
-sendMaterial(obj)
+sendMaterialFile(obj)
 sendScanFile(obj)
 
 Settings = splitScan(Settings, obj.options.numJobs);
@@ -88,7 +67,7 @@ end
 Settings.indVectors = indVectors;
 end
 
-function sendMaterial(obj)
+function sendMaterialFile(obj)
 Settings = obj.Settings;
 if strcmpi(Settings.Material, 'Scan File')
     phases = unique(Settings.Phase(:)');
@@ -117,17 +96,10 @@ function sendScanFile(obj)
 obj.connection = ssh2_command(obj.connection, 'mkdir ~/compute/OpenXY');
 obj.connection = scp_put(obj.connection, [scan_file scan_ext],...
     '~/compute/OpenXY/', scan_path);
-obj.connection = scp_put(obj.connection, 'temp/OpenXY.sh',...
-    '~/compute/OpenXY/');
-
 end
 
 
 function cleanUp
-fclose('all');
-if exist('temp/OpenXY.sh','file')
-    delete temp/OpenXY.sh
-end
 if exist('temp/Settings.mat','file')
     delete temp/Settings.mat
 end

@@ -75,13 +75,37 @@ if obj.options.sendSource
 end
 
 obj.sendBatchResources()
+[~, jobName, ~] = fileparts(obj.Settings.OutputPath);
+% TODO Adjust these according the the size of the scan
+jobTime = '00:10:00';
+jobMemory = '1024MB';
 
+command = 'source /etc/profile > /dev/null; ';
+command = [command 'cd compute/OpenXY; '];
+command = [command 'chmod 766 OpenXY.sh; '];
+command = [command './OpenXY.sh '];
+command = [command obj.options.email ' '];
+command = [command '"' jobName '" '];
+if obj.options.sendStart
+    command = [command 'y '];
+else
+    command = [command 'n '];
+end
+if obj.options.sendEnd
+    command = [command 'y '];
+else
+    command = [command 'n '];
+end
+if obj.options.sendFail
+    command = [command 'y '];
+else
+    command = [command 'n '];
+end
+command = [command num2str(obj.options.numJobs) ' '];
+command = [command jobTime ' '];
+command = [command jobMemory ' '];
 
-
-
-run_command = ['cd compute/OpenXY; sbatch --array=1-'...
-    num2str(obj.options.numJobs) ' ./OpenXY.sh'];
-obj.connection = ssh2_command(obj.connection, run_command, 1);
+obj.connection = ssh2_command(obj.connection, command, 1);
 % out = ssh2_command_response(obj.connection);
 % disp(out)
 end
