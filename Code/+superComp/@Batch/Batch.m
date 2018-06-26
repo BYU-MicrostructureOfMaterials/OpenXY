@@ -10,6 +10,14 @@ classdef Batch < handle
     
     properties (Access = private)
         connection
+                maxJobLength_priv = []
+
+    end
+    
+    properties (Access = private, Dependent)
+        time
+        
+        maxJobLength
     end
     
     methods
@@ -29,7 +37,30 @@ classdef Batch < handle
         sendBatchResources(obj)
         
         list = getSourceList(obj)
+        
+    end
+    
+    methods 
+        function time = get.time(obj)
+            start_time = duration(0,0,60);
+            point_time = duration(0,0,0.4);
+            
+            job_time = start_time + point_time * obj.maxJobLength;
+            
+            time = char(job_time);
+        end
 
+        function len = get.maxJobLength(obj)
+            if isempty(obj.maxJobLength_priv)
+                len = obj.Settings.ScanLength;
+            else
+                len = obj.maxJobLength_priv;
+            end
+        end
+        
+        function set.maxJobLength(obj,maxJobLength)
+            obj.maxJobLength_priv = maxJobLength;
+        end
     end
     
   

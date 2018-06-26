@@ -77,7 +77,7 @@ end
 obj.sendBatchResources()
 [~, jobName, ~] = fileparts(obj.Settings.OutputPath);
 % TODO Adjust these according the the size of the scan
-jobTime = '00:10:00';
+jobTime = obj.time;
 jobMemory = '1024MB';
 
 command = 'source /etc/profile > /dev/null; ';
@@ -106,6 +106,4 @@ command = [command jobTime ' '];
 command = [command jobMemory ' '];
 
 obj.connection = ssh2_command(obj.connection, command, 1);
-% out = ssh2_command_response(obj.connection);
-% disp(out)
 end

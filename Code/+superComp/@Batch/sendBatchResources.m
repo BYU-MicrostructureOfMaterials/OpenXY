@@ -40,6 +40,7 @@ sendMaterialFile(obj)
 sendScanFile(obj)
 
 Settings = splitScan(Settings, obj.options.numJobs);
+obj.maxJobLength = max(cellfun(@length, Settings.indVectors));
 save('temp/Settings.mat','Settings');
 
 obj.connection = scp_put(obj.connection, 'temp/Settings.mat',...
