@@ -1,4 +1,4 @@
-function outPut = PlotGBs(GrainMap,mapsize,Type,ax)
+function outPut = PlotGBs(GrainMap,mapsize,Type,ax, lineWidth, color)
 %PLOTGBS 
 %PlotGBs(GrainMap,mapsize,Type)
 %Plots the grain boundaries on any map of the scan, using the grainIDs
@@ -16,13 +16,15 @@ function outPut = PlotGBs(GrainMap,mapsize,Type,ax)
 if nargin > 1
     GrainMap = vec2map(GrainMap,mapsize(1),Type);
 end
-if nargin < 4;
+if nargin < 4
     ax = gca;
 end
+if nargin < 6
+    %Line Properties
+lineWidth = 1;
+color = 'k';
+end
 
-%Line Properties
-lineWidth = 1.5;
-color = 'r';
 
 %Horizontal Boundaries
 diffMap = diff(GrainMap,1,1);

@@ -20,5 +20,8 @@ switch PlotType
     case 'IPF'
         im = image(im);
         colormap(gca,jet)
+    case 'Misorientation'
+        im = imagesc(im);
+        colormap(hot)
 end
 axis image

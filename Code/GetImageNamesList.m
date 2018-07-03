@@ -16,15 +16,6 @@ function [ImageNamesList] = GetImageNamesList(ScanFormat, ScanLength, Dimensions
 %Read EBSD images
 %Determine the number of characters in the file extension
 [path, ImageName, ext] = fileparts(FirstImagePath);
-DotPosition = find(FirstImagePath=='.');
-if length(DotPosition) > 1
-    DotPosition = DotPosition(length(DotPosition));
-end
-
-DistFromEnd = length(FirstImagePath) - DotPosition;
-if DistFromEnd ~= 3 && DistFromEnd ~= 4
-    error('Had trouble reading in the file names')
-end
 
 %Split up input data
 NumColumns = Dimensions(1);
@@ -33,72 +24,38 @@ X0 = StartLocation(1);
 Y0 = StartLocation(2);
 XStepData = Steps(1);
 YStepData = Steps(2);
-
-%Set up parameters
-IsSerial = true; %Image names are incrementally serialized
-NameParts = textscan(ImageName,'%s');
-NameParts = NameParts{1};
-rcNaming = false;
-IsUnprocessed = false;
-
-%Looks for pairs of x,y or r,c that have numbers after them
-for i = 1:length(NameParts)
-    Xinds = strfind(NameParts{i},'x');
-    Yinds = strfind(NameParts{i},'y');
-    Rinds = strfind(NameParts{i},'r');
-    Cinds = strfind(NameParts{i},'c');
-    if (~isempty(Xinds) && ~isempty(Yinds))
-        if (isstrprop(NameParts{i}(Xinds(end)+1),'digit')) && (isstrprop(NameParts{i}(Yinds(end)+1),'digit'))
-            rcNaming = false;
-            IsSerial = false;
-            break;
-        end
-    elseif (~isempty(Rinds) && ~isempty(Cinds))
-        if (isstrprop(NameParts{i}(Rinds(end)+1),'digit')) && (isstrprop(NameParts{i}(Cinds(end)+1),'digit'))
-            Xinds = Rinds;
-            Yinds = Cinds;
-            rcNaming = true;
-            IsSerial = false;
-            break;
-        end
-    end
-end
-
-if length(NameParts)==1
-    if strcmp(NameParts{1},'0_0')
-        IsSerial = false;
-        IsUnprocessed = true;
-    end
-end
-
-preStr = '';
-midStr = '';
-endStr = '';
-for ii = 1:i-1
-    preStr = [preStr NameParts{ii} ' '];
-end
 ImageNamesList = cell(ScanLength,1);
 
-if IsSerial
-    %Break up the Position string around the position numbers
-    PositionPart = NameParts{end};
-    i = length(PositionPart);
-    if isempty(str2num(PositionPart(i)))
-        while isempty(str2num(PositionPart(i)))
-            i = i - 1;
+% Recognize & parse unprocessed images from AZtec
+if strcmp(ImageName, '0_0')
+    count = 1;
+    for j=0:NumRows-1 %Which is inner, which is outer?
+        for i=0:NumColumns-1
+            ImageNamesList{count} = fullfile(path,[num2str(j) '_' num2str(i) ext]);
+            count = count + 1;
         end
-        endStr = PositionPart(i:end);
-    end    
-    ii = i;
-    while ~isempty(str2num(PositionPart(ii)))
-        if ii <= 1, break; end;
-        ii = ii - 1;
     end
-    preStr = [preStr PositionPart(1:ii)];
+    return;
+end
+
+%Capture the parts of the image with a regular expression
+pattern = ['^(?<namePart>.+)_'...
+    '(?<numberPart>x\d+y\d+|r\d+c\d+|\d+)$'];
+matches = regexp(ImageName, pattern, 'names');
+namePart = matches.namePart;
+numberPart = matches.numberPart;
+if isempty(namePart) || isempty(numberPart)
+    % Throw descriptive error
+end
+
+preStr = [namePart '_'];
+endStr = '';
+
+if isstrprop(numberPart(1), 'digit') % Serial naming convention
     
     %Get number info
-    numberLength = i-ii;
-    Xval = str2double(PositionPart(ii+1:i));
+    numberLength = length(numberPart);
+    Xval = str2double(numberPart);
     numFormat = ['%0' num2str(numberLength) 'd'];
     
     %Check Starting number for resized scans (not finished)
@@ -144,37 +101,23 @@ if IsSerial
         ImageNamesList{i} = fullfile(path,[preStr sprintf(numFormat,Xval+i-1) endStr ext]);
     end
     
-elseif IsUnprocessed
-    count = 1;
-    for j=0:NumRows-1 %Which is inner, which is outer?
-        for i=0:NumColumns-1
-            ImageNamesList{count} = fullfile(path,[num2str(j) '_' num2str(i) endStr ext]);
-            count = count + 1;
-        end
-    end
     
-else
-    %Break up the Position string around the position numbers
-    Xinds = Xinds(end); Yinds = Yinds(end);
-    PositionPart = NameParts{i};
+else %xy or rc naming
+    if strcmp(numberPart(1), 'x')
+        rcNaming = false;
+        pattern = '^x(?<x>\d+)y(?<y>\d+)$';
+        preStr = [preStr 'x'];
+        midStr = 'y';
+    else
+        rcNaming = true;
+        pattern = '^r(?<x>\d+)c(?<y>\d+)$';
+        preStr = [preStr 'r'];
+        midStr = 'c';
+    end
+    matches = regexp(numberPart, pattern, 'names');
     
-    preStr = [preStr PositionPart(1:Xinds)];
-    i = Xinds + 1;
-    while isstrprop(PositionPart(i),'digit') || strcmp(PositionPart(i),'.')
-        i = i + 1;
-    end
-    Xval = str2num(PositionPart(Xinds+1:i-1));
-    midStr = PositionPart(i:Yinds);
-    i = Yinds + 1;
-    while isstrprop(PositionPart(i),'digit') || strcmp(PositionPart(i),'.')
-        i = i + 1;
-        if i > length(PositionPart)
-            i = i - 1;
-            break; 
-        end
-    end
-    Yval = str2num(PositionPart(Yinds+1:i));
-    endStr = PositionPart(i+1:end);
+    Xval = str2double(matches.x);
+    Yval = str2double(matches.y);
     
     %%% Determine Naming Scheme
     

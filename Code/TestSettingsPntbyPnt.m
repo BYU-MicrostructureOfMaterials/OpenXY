@@ -6,8 +6,13 @@ Settings.doGif = false;
 %% Plot Setup
 n = Settings.Nx;
 m = Settings.Ny;
-[im,PlotType] = ChoosePlot([n m],Settings.IQ(Settings.Inds),Settings.Angles(Settings.Inds,:));
-
+try
+[im,PlotType] = ChoosePlot(Settings);
+catch ME
+    if strcmp(ME.identifier, 'OpenXY:ChoosePlot:NoSelectionMade')
+        return
+    end
+end
 if ~isfield(Settings,'Resize')
     if strcmp(Settings.ScanType,'Square')
         indi = 1:1:m*n;

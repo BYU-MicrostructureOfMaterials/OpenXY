@@ -52,8 +52,9 @@ end
 %Ignore obviously bad points
 SSE = Settings.SSE;
 BadIndex = 1:length(SSE);
-cuttoff = (mean(SSE(SSE ~= inf)) + std(SSE(SSE ~= inf)));
-BadIndex = BadIndex(SSE > cuttoff);
+cutoff = (mean(SSE(SSE ~= inf)) + std(SSE(SSE ~= inf)));
+BadPoints = SSE > cutoff;
+BadIndex = BadIndex(BadPoints);
 for j = 1:length(BadIndex)
     data.F(:,:,BadIndex(j)) = eye(3); 
 end
@@ -144,7 +145,7 @@ for i=1:3
         end
         
         epsijvec = map2vec(epsij);
-        AverageStrain = epsijvec(~BadIndex);
+        AverageStrain = mean(epsijvec(~BadPoints));
         %cMap = [[0 0 0];parula(126);[0 0 0]];
         cMap = parula(128);
         cMap(1,:) = cMap(1,:)./3;
@@ -168,11 +169,19 @@ for i=1:3
             if DoShowGB && ~strcmp(Settings.ScanType,'Hexagonal')
                 if isempty(lines)% Cobbled together way to speed things up
                     lines = PlotGBs(Settings.grainID,[Settings.Nx Settings.Ny],Settings.ScanType);
+                    if Settings.grainsHaveBeenSplit
+                        redlines = PlotGBs(Settings.oldGrains.grainID, [Settings.Nx Settings.Ny], Settings.ScanType,gca,1.5,'r');
+                    end
                 else
                     hold on
                     for ii = 1:size(lines,1)
                         plot(lines{ii,1},lines{ii,2},'LineWidth',1,'Color','k')
                     end%ii = 1:size(lines,1)
+                    if Settings.grainsHaveBeenSplit
+                        for ii = 1:size(redlines,1)
+                        plot(redlines{ii,1},redlines{ii,2},'LineWidth',1.5,'Color','r')
+                    end%ii = 1:size(redlines,1)
+                    end
                     hold off
                 end
             end
