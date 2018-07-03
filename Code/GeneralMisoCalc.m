@@ -1,10 +1,15 @@
-function [angle,Axis,deltaG]=GeneralMisoCalc(A,B,lattice)
+function [angle, Axis, deltaG] =...
+    GeneralMisoCalc(A, B, lattice, flipAxis)
 % GENERALMISOCALC - calculates the minimum misorientation for two given
 %   g-matrices created by Bunge's G-Matrix.  
 %   This function returns the minimum angle of rotation about a given axis
 %   along with the matrix representing the misorientation.
 %
 %
+
+if nargin < 4
+    flipAxis = false;
+end
 
 %Convert from euler to gmat if necessary
 if all(size(A)==[1,3]) && all(size(B)==[1,3])
@@ -43,10 +48,11 @@ for i = 1:length(SymOps(:,1,1))
     sym(:,:) = SymOps(i,:,:);
     Bdg = sym*deltaG;
     trace = Bdg(1,1) + Bdg(2,2) + Bdg(3,3);
-    if (trace >= 3)
+    if abs(trace - 3) <= 1E-10
         angle=0;
         return;
     elseif (trace > maxtrace)
+        selectedSym = i;
         maxtrace = trace;
         gMx = Bdg;
     end
@@ -64,3 +70,7 @@ Axis(1) = gMx(3,2) - gMx(2,3);
 Axis(2) = gMx(1,3) - gMx(3,1);
 Axis(3) = gMx(2,1) - gMx(1,2);
 Axis = Axis/norm(Axis);
+if flipAxis
+    Axis = Axis*squeeze(SymOps(selectedSym, :, :));
+end
+

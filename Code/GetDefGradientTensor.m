@@ -294,53 +294,29 @@ switch Settings.HROIMMethod
                 RefImage = localthresh(RefImagePath);
             end
         end
-        
+        %{
+        % Uncomment to compare unrotated refference to rotated one
         clear global rs cs Gs
-%         disp(RefImagePath);
+        [F1,SSEPre,XX,sigma] = CalcFShift(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,RefImageInd);
+        clear global rs cs Gs
+        %}
         gr = euler2gmat(Settings.Angles(RefImageInd,:));
-        
-        % Cast images into double format to support gridfit
-        if ~isa(RefImage,'double')
-            RefImage = double(RefImage);
-        end
-        if ~isa(ScanImage,'double')
-            ScanImage = double(ScanImage);
-        end
-        
-        [F1,SSE1,XX,sigma] = CalcFShift(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,RefImageInd);
-        if Settings.DoShowPlot
-            drawnow
-        end
-        
-        % TODO Try just comparing scan angles to get the rotation
-        % rr = poldec(F1);
-        omega = (F1 - F1')/2;
-        
-        rot1 = [
-            cos(omega(1,2)) sin(omega(1,2)) 0
-           -sin(omega(1,2)) cos(omega(1,2)) 0
-            0               0               1
-        ];
-        rot2 = [
-            1  0               0
-            0  cos(omega(2,3)) sin(omega(2,3))
-            0 -sin(omega(2,3)) cos(omega(2,3))
-        ];
-        rot3 = [
-            cos(omega(3,1)) 0 -sin(omega(3,1))
-            0               1  0
-            sin(omega(3,1)) 0  cos(omega(3,1))
-        ];
-        
-        rr = rot1 * rot2 * rot3;
-%         rr = gr*g';
         
         refXStar = Settings.XStar(RefImageInd);
         refYStar = Settings.YStar(RefImageInd);
         refZStar = Settings.ZStar(RefImageInd);
-        RefImage = rotateImage(RefImage,rr,refXStar,refYStar,refZStar);
-        [F1,SSE1,XX,sigma] = CalcFShift(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,RefImageInd);
-
+        RefImage = ...
+            rotateImage(RefImage, gr, g, [refXStar refYStar refZStar],...
+             Material.lattice, sampletilt, elevang);
+        
+        clear global rs cs Gs
+        [F1,SSE1,XX,sigma] = CalcFShift(RefImage, ScanImage, gr, eye(3),...
+            ImageInd, Settings, curMaterial, RefImageInd);
+        clear global rs cs Gs
+        
+        if Settings.DoShowPlot
+            drawnow
+        end
 
 end
 
