@@ -78,11 +78,12 @@ obj.sendBatchResources()
 [~, jobName, ~] = fileparts(obj.Settings.OutputPath);
 % TODO Adjust these according the the size of the scan
 jobTime = obj.time;
-jobMemory = '1024MB';
+jobMemory = '2048MB';
 
 command = 'source /etc/profile > /dev/null; ';
 command = [command 'cd compute/OpenXY; '];
-command = [command 'chmod 766 OpenXY.sh; '];
+command = [command 'chmod 744 OpenXY.sh jobScript.sh compile.sh; '];
+command = [command 'dos2unix OpenXY.sh jobScript.sh compile.sh; '];
 command = [command './OpenXY.sh '];
 command = [command obj.options.email ' '];
 command = [command '"' jobName '" '];

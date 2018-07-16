@@ -10,14 +10,14 @@ classdef Batch < handle
     
     properties (Access = private)
         connection
-                maxJobLength_priv = []
+        maxJobLength_priv = []
 
     end
     
     properties (Access = private, Dependent)
         time
-        
         maxJobLength
+        pointTime
     end
     
     methods
@@ -42,12 +42,11 @@ classdef Batch < handle
     
     methods 
         function time = get.time(obj)
-            start_time = duration(0,0,60);
-            point_time = duration(0,0,0.4);
+            startUpTime = duration(0,0,60);
             
-            job_time = start_time + point_time * obj.maxJobLength;
+            jobTime = startUpTime + obj.pointTime * obj.maxJobLength;
             
-            time = char(job_time);
+            time = char(jobTime);
         end
 
         function len = get.maxJobLength(obj)
@@ -60,6 +59,22 @@ classdef Batch < handle
         
         function set.maxJobLength(obj,maxJobLength)
             obj.maxJobLength_priv = maxJobLength;
+        end
+        
+        function time = get.pointTime(obj)
+            switch obj.Settings.HROIMMethod
+                case 'Simulated-Kinematic'
+                    % TODO Validate this value
+                    time = duration(0,0,1);
+                case 'Simulated-Dynamic'
+                    error('OpenXY:superComp:UnsupportedMethod',...
+                        ['Dynamic pattern simulation not supported '...
+                        'on the supercomputer!'])
+                case {'Real-Grain Ref', 'Real-Single Ref'}
+                    time = duration(0,0,0.4);
+                case 'Remapping'
+                    time = duration(0,0,5.7);
+            end
         end
     end
     

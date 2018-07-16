@@ -78,7 +78,7 @@ end
 material_files = cell(size(phases));
 ind = 1;
 for material = phases
-    [~, material_files{ind}] = ReadMaterial(material);
+    [~, material_files{ind}] = ReadMaterial(material{1});
     ind = ind + 1;
 end
 material_files = cellfun(@(x) strrep(x,pwd,''), material_files, 'UniformOutput', false);

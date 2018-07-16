@@ -22,7 +22,7 @@ function varargout = SuperCompGUI(varargin)
 
 % Edit the above text to modify the response to help SuperCompGUI
 
-% Last Modified by GUIDE v2.5 16-May-2018 11:56:47
+% Last Modified by GUIDE v2.5 03-Jul-2018 13:47:27
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -51,7 +51,7 @@ function SuperCompGUI_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.output = hObject;
 
 % Save a handle to the MainGUI
-handles.mainHandles = varargin{1};
+handles.mainGUIHandle = varargin{1};
 
 % Update handles structure
 guidata(hObject, handles);
@@ -67,26 +67,33 @@ varargout{1} = handles.output;
 
 % --- Executes on button press in submitButton.
 function submitButton_Callback(hObject, eventdata, handles)
-batch = initBatch(handles);
-%TODO Add a try catch for bad connections
-batch.run();
-
-
-function batch = initBatch(handles)
 batch = superComp.Batch();
 options = batch.options;
 options.hostName = handles.hostNameEditText.String;
 options.userName = handles.userNameEditText.String;
 options.password = handles.passwordEditText.UserData;
-% TODO Add checkboxes for these two variables
-options.sendSource = true;
-options.sendImages = true;
+options.email = handles.emailEditText.String;
+options.sendStart = logical(handles.sendStartCheckbox.Value);
+options.sendEnd = logical(handles.sendEndCheckbox.Value);
+options.sendFail = logical(handles.sendFailCheckbox.Value);
+options.sendSource = logical(handles.sendSourceCheckbox.Value);
+options.sendImages = logical(handles.sendImagesCheckbox.Value);
+options.numJobs = str2double(handles.numJobsEditText.String);
 batch.options = options;
+mainHandles = guidata(handles.mainGUIHandle);
+batch.Settings = mainHandles.Settings;
+%TODO Add a try catch for bad connections
+try
+    batch.run();
+catch ME
+    switch ME.identifier
+        case 'OpenXY:SSHFailure'
+            errordlg(ME.message)
+        otherwise
+            ME.rethrow
+    end
+end
 
-
-% --- Executes on button press in cancelButton.
-function cancelButton_Callback(hObject, eventdata, handles)
-keyboard
 
 
 % --- Executes on key press with focus on passwordEditText and none of its controls.
@@ -119,9 +126,12 @@ end
 
 set(hObject,'Userdata',password) % Store the password in its current state
 
-% hObject    handle to passwordEditText (see GCBO)
-% eventdata  structure with the following fields (see MATLAB.UI.CONTROL.UICONTROL)
-%	Key: name of the key that was pressed, in lower case
-%	Character: character interpretation of the key(s) that was pressed
-%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
-% handles    structure with handles and user data (see GUIDATA)
+
+
+
+function numJobsEditText_Callback(hObject, eventdata, handles)
+val = str2double(hObject.String);
+if isnan(val) || floor(val) ~= val || ~isreal(val)
+    beep
+    hObject.String = '1';
+end
