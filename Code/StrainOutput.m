@@ -169,7 +169,8 @@ for i=1:3
             if DoShowGB && ~strcmp(Settings.ScanType,'Hexagonal')
                 if isempty(lines)% Cobbled together way to speed things up
                     lines = PlotGBs(Settings.grainID,[Settings.Nx Settings.Ny],Settings.ScanType);
-                    if Settings.grainsHaveBeenSplit
+                    if isfield(Settings, 'grainsHaveBeenSplit') && ...
+                            Settings.grainsHaveBeenSplit
                         redlines = PlotGBs(Settings.oldGrains.grainID, [Settings.Nx Settings.Ny], Settings.ScanType,gca,1.5,'r');
                     end
                 else
@@ -177,7 +178,8 @@ for i=1:3
                     for ii = 1:size(lines,1)
                         plot(lines{ii,1},lines{ii,2},'LineWidth',1,'Color','k')
                     end%ii = 1:size(lines,1)
-                    if Settings.grainsHaveBeenSplit
+                    if isfield(Settings, 'grainsHaveBeenSplit') && ...
+                            Settings.grainsHaveBeenSplit
                         for ii = 1:size(redlines,1)
                         plot(redlines{ii,1},redlines{ii,2},'LineWidth',1.5,'Color','r')
                     end%ii = 1:size(redlines,1)

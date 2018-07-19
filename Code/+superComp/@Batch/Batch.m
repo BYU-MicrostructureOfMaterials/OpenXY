@@ -73,7 +73,7 @@ classdef Batch < handle
                 case {'Real-Grain Ref', 'Real-Single Ref'}
                     time = duration(0,0,0.4);
                 case 'Remapping'
-                    time = duration(0,0,5.7);
+                    time = duration(0,0,6);
             end
         end
     end

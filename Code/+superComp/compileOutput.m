@@ -19,9 +19,11 @@ nums = regexp(fileNames, searchString, 'tokens');
 nums(cellfun(@isempty, nums)) = [];
 nums = cellfun(@(x) str2double(x{:}), nums);
 
+numsLength = length(nums);
 Settings = [];
 
 for job = nums
+    fprintf('Compiling point %u of %u\n', job, numsLength);
     currentFile = ['AnalysisParams_' jobName '_' num2str(job) '.mat'];
     f = load(currentFile);
     if isempty(Settings)
@@ -40,7 +42,6 @@ for job = nums
         Settings.data.U(:,:,jobInds) = f.Settings.data.U(:,:,jobInds);
         Settings.XX(:,:,jobInds) = f.Settings.XX(:,:,jobInds);
     end
-    delete(currentFile)
 end
 Settings.SSE = Settings.data.SSE;
 Settings.AverageSSE = mean(Settings.SSE);
