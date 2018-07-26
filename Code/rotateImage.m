@@ -91,8 +91,8 @@ function rprime = transform(r, R, zStar, ang)
 % Maurice et. al.
 % https://doi.org/10.1016/j.ultramic.2011.10.013
 k = [0;-sin(ang);-cos(ang)];
-k=k/norm(k);
 R_times_r = (R * r);
-denom = dot(R_times_r, k);
+% Equivalent to denom = dot(R_times_r, k), but faster
+denom = sum(R_times_r(:) .* k(:));
 rprime = (zStar / denom) * R_times_r;
 end

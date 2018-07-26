@@ -6,9 +6,6 @@
 
 function Settings = HREBSDMain(Settings, indVect)
 disp('Entering HREBSDMain')
-if nargin < 2
-    indVect = 1:Settings.ScanLength;
-end
 % tic
 if Settings.EnableProfiler; profile on; end;
 %if Settings.DisplayGUI; disp('Dont forget to change PC if the image is cropped by ReadEBSDImage.m'); end;
@@ -19,6 +16,9 @@ set(0,'DefaultFigureColormap',jet);
 disp('Running HREBSDPrep')
 Settings = HREBSDPrep(Settings);
 Inds = Settings.Inds;
+if nargin < 2
+    indVect = 1:Settings.ScanLength;
+end
 
 %% Run Analysis
 %Use a parfor loop if allowed multiple processors.
@@ -259,11 +259,11 @@ end
 [~,~,ext] = fileparts(Settings.ScanFilePath);
 if strcmp(ext,'.ang')
     WriteHROIMAngFile(Settings.ScanFilePath,fullfile(OutputPath, ['Corr_' FileName '.ang']),...
-        Settings.NewAngles(Inds,1),Settings.NewAngles(Inds,2),Settings.NewAngles(Inds,3)...
+        Settings.NewAngles(:,1),Settings.NewAngles(:,2),Settings.NewAngles(:,3)...
         ,Settings.SSE);
 elseif strcmp(ext,'.ctf')
     WriteHROIMCtfFile(Settings.ScanFilePath,fullfile(OutputPath, ['Corr_' FileName '.ctf']),...
-        Settings.NewAngles(Inds,1),Settings.NewAngles(Inds,2),Settings.NewAngles(Inds,3)...
+        Settings.NewAngles(:,1),Settings.NewAngles(:,2),Settings.NewAngles(:,3)...
         ,Settings.SSE);
 end
 

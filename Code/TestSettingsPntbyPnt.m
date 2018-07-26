@@ -12,6 +12,7 @@ catch ME
     if strcmp(ME.identifier, 'OpenXY:ChoosePlot:NoSelectionMade')
         return
     end
+    rethrow(ME);
 end
 if ~isfield(Settings,'Resize')
     if strcmp(Settings.ScanType,'Square')
