@@ -159,7 +159,7 @@ for i=1:length(roixc)
     %Perform Cross-Correlation
 %     clear global rs cs Gs
     [rimage, dxshift, dyshift] = custfftxc((RefROI),...
-        (ScanROI),0,RefImage,rc,cc,custfilt,windowfunc);%this is the screen shift in the F(i-1) frame
+        (ScanROI),rc,cc,custfilt,windowfunc);%this is the screen shift in the F(i-1) frame
     
     
     RefROI = RefROI - mean(RefROI(:));

@@ -187,7 +187,7 @@ for i=1:length(roixc)
     
     %Perform Cross-Correlation
     [rimage, dxshift, dyshift] = custfftxc((RefImage(rrange,crange)),...
-        (ScanImage(rrange,crange)),0,RefImage,rc,cc,custfilt,windowfunc);%this is the screen shift in the F(i-1) frame
+        (ScanImage(rrange,crange)),rc,cc,custfilt,windowfunc);%this is the screen shift in the F(i-1) frame
     
     
     if nargout >= 3

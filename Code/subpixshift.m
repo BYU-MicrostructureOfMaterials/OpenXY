@@ -1,28 +1,30 @@
 function [qx,qy]=subpixshift(rimage)
+%SUBPIXSHIFT Find the sub-pixel value of the shift in a xcorr image.
+%   SUBPIXSHIFT(rimage) computes the shift from the center of the maximum
+%   value of the give cross corelation image rimage, and returns the x and
+%   y components of that shift, qx and qy
+[~, ind] = max(rimage(:));
+[row, col] = ind2sub(size(rimage), ind);
 
-% [r c] = size(rimage);
-x = [-1:1]';
-y = [-1:1]';
-
-[C00 ind] = max(rimage([1:end]));
-l = length(rimage(:,1));
-%find the row column location of max
 cent = round((length(rimage(:,1))+1)/2);
-row = mod(ind-1,l)+1;
-col = (ind-row)/l+1;
 if abs(row-cent) >  cent-3 || abs(col-cent) >  cent-3
     qx = cent-col;
     qy = cent-row;
 else
     xdat = rimage(row,col-1:col+1)';
     ydat = rimage(row-1:row+1,col);
-    Ax = [x.^2 x ones(length(x),1)]\xdat;
-    Ay = [y.^2 y ones(length(y),1)]\ydat;
+    A = [
+        1 -1  1
+        0  0  1
+        1  1  1
+    ];
+    Ax = A\xdat;
+    Ay = A\ydat;
+    
     %set derivative equal to zero and solve for x or y
     xc = -Ax(2)/(2*Ax(1));
     yc = -Ay(2)/(2*Ay(1));
     
-    %
     qx = -(col+xc)+cent;
     qy = -(row+yc)+cent;
     
