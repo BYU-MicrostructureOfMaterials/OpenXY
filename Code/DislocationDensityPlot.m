@@ -4,13 +4,22 @@ function DislocationDensityPlot(Settings, alpha_data, cmin, cmax, doShowGB)
 %code bits for this function taken from Step2_DisloDens_Lgrid_useF_2.m
 %authors include: Collin Landon, Josh Kacher, Sadegh Ahmadi, and Travis Rampton
 %modified for use with HROIM GUI code, Jay Basinger 4/20/2011
-format compact
-tic
+% format compact
+% tic
 
 %Calculate Dislocation Density
+cmap = parula;
+cmap = [0 0 0; cmap];
 data = Settings.data;
+
+crange = cmax - cmin;
+cOffset = crange / length(cmap);
+
 r = data.rows;%
 c = data.cols;%
+
+isLineScan = r == 1;
+
 NColsOdd=[];
 NColsEven=[];
 if strcmp(Settings.ScanType,'Hexagonal')
@@ -27,13 +36,21 @@ alpha_total3 = alpha_data.alpha_total3;
 alpha_total9 = alpha_data.alpha_total9;
 alpha = alpha_data.alpha;
 
-% figure;hist(log10(alpha_data.alpha_total3),10:.1:17);xlim([11 17])
-% disp(['median3: ',num2str((median(alpha_data.alpha_total3)))]);
-% disp(['stdev3: 10e',num2str(log10(std(alpha_data.alpha_total3)))]);
-% 
-%cmin=MinCutoff;
-%cmax=UpperCutoff;
-
+    function drawPlot(map, plotTitle)
+        if isLineScan
+            map=repmat(map,length(map)/4,1); 
+        end
+        figure;imagesc(log10(abs(map)))
+        title(plotTitle ,'fontsize', 14)
+        axis image
+        colormap(cmap)
+        colorbar
+        caxis([cmin - cOffset, cmax])
+        if doShowGB
+            PlotGBs(Settings.grainID, ...
+                [Settings.Nx Settings.Ny], Settings.ScanType)
+        end
+    end
 
 if strcmp(Settings.ScanType,'Square') ||  strcmp(Settings.ScanType,'LtoSquare')
     if isfield(alpha_data,'misang')        
@@ -43,67 +60,12 @@ if strcmp(Settings.ScanType,'Square') ||  strcmp(Settings.ScanType,'LtoSquare')
     end
     ind = reshape(ind,[c r])';
     
-    alpha_total3=reshape(alpha_total3, [c r])';
+    drawPlot(reshape(alpha(1,3,:),[c r])' .* ind, 'Alpha_1_3');
+    drawPlot(reshape(alpha(2,3,:),[c r])' .* ind, 'Alpha_2_3');
+    drawPlot(reshape(alpha(3,3,:),[c r])' .* ind, 'Alpha_3_3');
+    drawPlot(reshape(alpha_total3, [c r])' .* ind, 'Alpha Total');
     
-    % alphare=reshape(alpha,[3,3,r,c]);
-
-    qq=reshape(alpha(1,3,:),[c r])';
-    if r == 1; qq=repmat(qq,floor(Settings.ScanLength/4),1); end;
-    figure;imagesc(log10(abs(qq.*ind)))
-    title('Alpha_1_3','fontsize',14)
-    shading flat
-    axis equal tight
-    % view(2)
-    colorbar
-    caxis([cmin cmax])
-    if doShowGB
-        PlotGBs(Settings.grainID,[Settings.Nx Settings.Ny],Settings.ScanType)
-    end
-
-    qq=reshape(alpha(2,3,:),[c r])';
-    if r == 1; qq=repmat(qq,floor(Settings.ScanLength/4),1); end;
-    figure;imagesc(log10(abs(qq.*ind)))
-    title('Alpha_2_3','fontsize',14)
-    shading flat
-    axis equal tight
-    % view(2)
-    colorbar
-    caxis([cmin cmax])
-    if doShowGB
-        PlotGBs(Settings.grainID,[Settings.Nx Settings.Ny],Settings.ScanType)
-    end
-
-    qq=reshape(alpha(3,3,:),[c r])';
-    if r == 1; qq=repmat(qq,floor(Settings.ScanLength/4),1); end;
-    figure;imagesc(log10(abs(qq.*ind)))
-    title('Alpha_3_3','fontsize',14)
-    shading flat
-    axis equal tight
-    % view(2)
-    colorbar
-    caxis([cmin cmax])
-    if doShowGB
-        PlotGBs(Settings.grainID,[Settings.Nx Settings.Ny],Settings.ScanType)
-    end
-
-    % colormapeditor % change scaling of colorbar
-    qq = alpha_total3;
-    if r == 1; qq=repmat(qq,floor(Settings.ScanLength/4),1); end;
-    figure;imagesc(log10(abs(qq.*ind)))
-    title('Alpha Total','fontsize',14)
-    shading flat
-    axis equal tight
-    view(2)
-    colorbar
-    caxis([cmin cmax+1])
-    if doShowGB
-        PlotGBs(Settings.grainID,[Settings.Nx Settings.Ny],Settings.ScanType)
-    end
-    drawnow
-    
-    toc
-end
-if strcmp(Settings.ScanType,'Hexagonal')
+elseif strcmp(Settings.ScanType,'Hexagonal')
     Newdd = zeros(r,NColsEven);
     New13=Newdd;
     New23=Newdd;
@@ -134,89 +96,16 @@ if strcmp(Settings.ScanType,'Hexagonal')
         end
     end
     
-    % alphare=reshape(alpha,[3,3,r,c]);
-
-    figure;imagesc(log10(abs(New13)))
-    title('Alpha_1_3','fontsize',14)
-    shading flat
-    axis equal tight
-    % view(2)
-    colorbar
-    caxis([cmin cmax])
-
-    figure;imagesc(log10(abs(New23)))
-    title('Alpha_2_3','fontsize',14)
-    shading flat
-    axis equal tight
-    % view(2)
-    colorbar
-    caxis([cmin cmax])
-
-    figure;imagesc(log10(abs(New33)))
-    title('Alpha_3_3','fontsize',14)
-    shading flat
-    axis equal tight
-    % view(2)
-    colorbar
-    caxis([cmin cmax])
-
-    figure;imagesc(log10((abs(New13)+abs(New23)+abs(New33))*3))
-    title('Alpha 3 Term','fontsize',14)
-    shading flat
-    axis equal tight
-    % view(2)
-    colorbar
-    caxis([cmin cmax+1])
+    drawPlot(New13, 'Alpha_1_3');
+    drawPlot(New23, 'Alpha_2_3');
+    drawPlot(New33, 'Alpha_33');
+    drawPlot((abs(New13)+abs(New23)+abs(New33))*3, 'Alpha 3 Term')
+    drawPlot(Newdd, 'Alpha Total');
     
-    % colormapeditor % change scaling of colorbar
-    figure;imagesc(log10(abs(Newdd)))
+elseif strcmp(Settings.ScanType,'L')
     
-    title('Alpha Total','fontsize',14)
-    shading flat
-    axis equal tight
-    view(2)
-    colorbar
-    caxis([cmin cmax+1])
-    drawnow
-    
-    toc
+    drawPlot(reshape(alpha(1,3,:),[c r])', 'Alpha_1_3');
+    drawPlot(reshape(alpha(3,3,:),[c r])', 'Alpha_3_3');
+    drawPlot(reshape(alpha_total3, [c r])', 'Alpha Total');
 end
-if strcmp(Settings.ScanType,'L')
-    alpha_total3=reshape(alpha_total3, [c r])';
-    
-    qq=reshape(alpha(1,3,:),[c r])';
-    figure;imagesc(log10(abs(qq)))
-    title('Alpha_1_3','fontsize',14)
-    shading flat
-    axis equal tight
-    % view(2)
-    colorbar
-    caxis([cmin cmax])
-
-    qq=reshape(alpha(2,3,:),[c r])';
-    figure;imagesc(log10(abs(qq)))
-    title('Alpha_2_3','fontsize',14)
-    shading flat
-    axis equal tight
-    % view(2)
-    colorbar
-    caxis([cmin cmax])
-
-    qq=reshape(alpha(3,3,:),[c r])';
-    figure;imagesc(log10(abs(qq)))
-    title('Alpha_3_3','fontsize',14)
-    shading flat
-    axis equal tight
-    % view(2)
-    colorbar
-    caxis([cmin cmax])
-
-    % colormapeditor % change scaling of colorbar
-    figure;imagesc(log10(abs(alpha_total3)))
-    title('Alpha Total','fontsize',14)
-    shading flat
-    axis equal tight
-    view(2)
-    colorbar
-    caxis([cmin cmax+1])
 end
