@@ -1,6 +1,6 @@
 % dislocation systems of Ferrite
 % DTF Mar 24 2016
-function [bedge,ledge, bscrew,lscrew,v,normals, crssfactor, type]=tasystems
+function [bedge,ledge, bscrew,lscrew,v,normals, crssfactor, type]=ferritesystems
 a = 2.87e-10; % lattice parameter for Ferrite: Scripta Materialia 52 (2005) 973?976
 v=0.275; %Poisson's ratio: http://www.ductile.org/didata/Section3/3part1.htm#Poisson's Ratio
 slip=[1 1 1; 1 1 1; 1 1 1;

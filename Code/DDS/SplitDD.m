@@ -1,4 +1,4 @@
-function [rhos,DDSettings] = SplitDD( Settings, alpha_data, alphaorbeta)
+function [rhos,DDSettings] = SplitDD( Settings, alpha_data, splittingMethod)
 % Written by Tim Ruggles
 % Implemented by Brian Jackson March 2015
 allMaterials = unique(Settings.Phase);
@@ -24,11 +24,11 @@ end
 % else
 %     matchoose = 1;
 % end
-matchoose = 1;
+matchoose = 1; %TODO Add a way to choose which phase is selected.
 matchoice = matList{matchoose};
 [bedge,ledge, bscrew,lscrew,v, normals, crssfactor, type] = choosemat(matchoice);
 
-if (matchoose==1)||(matchoose==3)||(matchoose==6)
+if (matchoose==1)||(matchoose==3)||(matchoose==6) %TODO This is garbage, actually get the real lattice type
     lattype = 'hexagonal';
 else
     lattype = 'cubic';
@@ -42,8 +42,8 @@ DDSettings.matchoice = matchoice;
 force = 0;
 stress = 0;
 minscheme_list = {'Min. density','Min. energy','CRSSfactor','Schmid+CRSS', 'CRSS + l'};
-[minscheme,vv] = listdlg('PromptString','Select minimization scheme','SelectionMode','single','ListString',minscheme_list,'InitialValue',2);
-if vv==0
+[minscheme,selectionMade] = listdlg('PromptString','Select minimization scheme','SelectionMode','single','ListString',minscheme_list,'InitialValue',2);
+if ~selectionMade
     warndlg('Nothing selected: skipping split dislocation density calculation','Split Dislocation Density')
     rhos = [];
     return;
@@ -54,8 +54,8 @@ DDSettings.minscheme = minscheme;
 
 op_list = {'Least squares','Origin'};
 
-[x0type,vv] = listdlg('PromptString','Select optimization startpoint','SelectionMode','single','ListString',op_list,'InitialValue',2);
-if vv==0
+[x0type,selectionMade] = listdlg('PromptString','Select optimization startpoint','SelectionMode','single','ListString',op_list,'InitialValue',2);
+if ~selectionMade
     warndlg('Nothing selected: skipping split dislocation density calculation','Split Dislocation Density')
     rhos = [];
     return;
@@ -65,10 +65,10 @@ DDSettings.Opt_Start = op_list{x0type};
 DDSettings.x0type = x0type;
 
 if minscheme == 4
-    [loadtype,vv] = listdlg('PromptString','Select load type','SelectionMode','single','ListString',{'Axial','Plane strain','Plane stress'});
-    if vv==0; error('Exited by user'); end
-    [loaddirec,vv] = listdlg('PromptString','Select load direction','SelectionMode','single','ListString',{'X','Y','Z'});
-    if vv==0; error('Exited by user'); end
+    [loadtype,selectionMade] = listdlg('PromptString','Select load type','SelectionMode','single','ListString',{'Axial','Plane strain','Plane stress'});
+    if selectionMade==0; error('Exited by user'); end
+    [loaddirec,selectionMade] = listdlg('PromptString','Select load direction','SelectionMode','single','ListString',{'X','Y','Z'});
+    if selectionMade==0; error('Exited by user'); end
     switch loadtype
         case 1
             stress = [1 0 0;0 0 0;0 0 0];
@@ -91,15 +91,11 @@ if minscheme == 4
     
     stress = (rot')*stress*rot;
 end
-% if vv==0; error('Exited by user'); end
-
-
-
 
 %% Work out beta derivatives and/or alpha
 
-n = Settings.Nx;
-m = Settings.Ny;
+Nx = Settings.Nx;
+Ny = Settings.Ny;
 if isfield(alpha_data,'stepsize')
     stepsize = alpha_data.stepsize;
 elseif isfield(alpha_data,'stepsizea')
@@ -112,7 +108,7 @@ if isfield(Settings,'NewAngles')
     phi1rn = real(Settings.NewAngles(:,1));
     PHIrn = real(Settings.NewAngles(:,2));
     phi2rn = real(Settings.NewAngles(:,3));
-elseif iscell(Settings.data.phi1rn)==1
+elseif iscell(Settings.data.phi1rn)
     phi1rn = real(cell2mat(Settings.data.phi1rn));
     PHIrn =  real(cell2mat(Settings.data.PHIrn));
     phi2rn =  real(cell2mat(Settings.data.phi2rn));
@@ -121,11 +117,11 @@ else
     PHIrn =  real((Settings.data.PHIrn));
     phi2rn =  real((Settings.data.phi2rn));
 end
-if length(phi1rn)==3*n*m % if L-grid, just use values for center point
-    temp1 = zeros(n*m,1);
-    temp2 = zeros(n*m,1);
-    temP = zeros(n*m,1);
-    for i=1:n*m
+if length(phi1rn)==3*Settings.ScanLength % if L-grid, just use values for center point
+    temp1 = zeros(Settings.ScanLength,1);
+    temp2 = zeros(Settings.ScanLength,1);
+    temP = zeros(Settings.ScanLength,1);
+    for i=1:Settings.ScanLength
         temp1(i) = phi1rn((3*i-1));
         temp2(i) = phi2rn((3*i-1));
         temP(i) = PHIrn((3*i-1));
@@ -140,29 +136,30 @@ end
 % reorient the reference orientation for each grain as close as possible to
 % origin, and then each point in the grain as close as possible to this to
 % make the reference frames for slip systems consistent
+%TODO Check on the eficiency of this algorithm.
 if isfield(Settings,'Resize')
     bestgmat=zeros(3,3,prod(Settings.Resize));
 else
-    bestgmat=zeros(3,3,n*m);
+    bestgmat=zeros(3,3,Settings.ScanLength);
 end
-for i=1:m*n
-    if bestgmat(:,:,Settings.RefInd(i))==0
+for i=1:Settings.ScanLength
+    if bestgmat(:,:,Settings.RefInd(i)) == 0
         gmat = euler2gmat(phi1rn(Settings.RefInd(i)),PHIrn(Settings.RefInd(i)), phi2rn(Settings.RefInd(i)));
-        [angle,Axis,deltaG, symclose]=GeneralMisoCalcSym(gmat,eye(3),lattype);
+        [~, ~, ~, symclose]=GeneralMisoCalcSym(gmat,eye(3),lattype);
         newgmat = symclose*gmat;
         bestgmat(:,:,Settings.RefInd(i))=newgmat(:,:);
     end
-    if bestgmat(:,:,i)==0
+    if bestgmat(:,:,i) == 0
         gmat = euler2gmat(phi1rn(i),PHIrn(i), phi2rn(i));
-        [angle,Axis,deltaG, symclose]=GeneralMisoCalcSym(gmat,squeeze(bestgmat(:,:,Settings.RefInd(i))),lattype);
+        [~, ~, ~, symclose]=GeneralMisoCalcSym(gmat,squeeze(bestgmat(:,:,Settings.RefInd(i))),lattype);
         newgmat = symclose*gmat;
         bestgmat(:,:,i)=newgmat(:,:);
     end
 end
 
-alphaorbeta
-alphaorbeta = 'Nye-Kroner (Pantleon)';
-if (alphaorbeta==11) | (strcmp(alphaorbeta, 'Distortion Matching'))
+
+splittingMethod = 'Nye-Kroner (Pantleon)';%TODO Choice is ignored, only one method is ever used, either stop ignoring the choice or dont give it
+if (strcmp(splittingMethod, 'Distortion Matching'))
     Fatemp = alpha_data.Fa;
     Fctemp = alpha_data.Fc;
     Fatemp2 = zeros(3,3,length(Fatemp));
@@ -198,12 +195,12 @@ if (alphaorbeta==11) | (strcmp(alphaorbeta, 'Distortion Matching'))
     alphavecp(6,:)=-betaderiv2(1,3,:) - betaderiv1(2,3,:);%.5*(betaderiv1(3,2,:,:) - betaderiv1(2,3,:,:) - betaderiv2(1,3,:,:) + betaderiv2(3,1,:,:));
 else
     beta=[];
-    if isfield(alpha_data,'alpha_filt')
+    if isfield(alpha_data,'alpha_filt')%TODO Why the real function?
         alpha=real(alpha_data.alpha_filt);
     else
         alpha=real(alpha_data.alpha);
     end
-    if isfield(alpha_data,'b')
+    if isfield(alpha_data,'b')%TODO Find out what alpha_data.b is
         alphavecp(1,:)=squeeze(alpha(1,3,:)).*alpha_data.b;
         alphavecp(2,:)=squeeze(alpha(2,3,:)).*alpha_data.b;
         alphavecp(3,:)=squeeze(alpha(3,3,:)).*alpha_data.b;
@@ -221,7 +218,7 @@ else
 end
 
 %% Resolving slip, parallel processing
-rhos = zeros(length(bedge) + length(bscrew),m*n);
+rhos = zeros(length(bedge) + length(bscrew),Settings.ScanLength);
 warning off;
 
 NumberOfCores = Settings.DoParallel;
@@ -241,15 +238,15 @@ if NumberOfCores>1 %if parallel processing
 %         pctRunOnAll javaaddpath('java')
 %     end
     
-    disp(['Starting cross-correlation: ' num2str(m*n) ' points']);
+    disp(['Starting cross-correlation: ' num2str(Settings.ScanLength) ' points']);
 %     ppm = ParforProgMon( 'Split Dislocation Density ', m*n,1,400,50 );
     
-    parfor i = 1:m*n
+    parfor i = 1:Settings.ScanLength
         gmat = squeeze(bestgmat(:,:,i));
         
-        switch alphaorbeta
+        switch splittingMethod
             case 'Nye-Kroner'
-                if alphavecp(1:3,i)==0;
+                if alphavecp(1:3,i)==0
                     rhos(:,i)=0;
                 else
                     merp = alphavecp(1:3,i);
@@ -260,14 +257,14 @@ if NumberOfCores>1 %if parallel processing
                     end
                 end
             case 'Distortion Matching'
-                if beta(:,i)==0;
+                if beta(:,i)==0
                     rhos(:,i)=0;
                 else
                     merp = beta(:,i);
                     rhos(:,i)=resolvedisloc(merp,2,minscheme,matchoice,gmat,stress, stepsize^2, x0type); %CHANGE BACK TO 2
                 end
             case 'Nye-Kroner (Pantleon)'
-                if alphavecp(:,i)==0;
+                if alphavecp(:,i)==0
                     rhos(:,i)=0;
                 else
                     merp = alphavecp(:,i);
@@ -295,34 +292,34 @@ if NumberOfCores>1 %if parallel processing
     end
 else
     h = waitbar(0.1,'splitting');
-    for i = 1:m*n
+    for i = 1:Settings.ScanLength
         
         gmat = squeeze(bestgmat(:,:,i));
         
-        switch alphaorbeta
+        switch splittingMethod
             case 'Nye-Kroner'
-                if alphavecp(1:3,i)==0;
+                if alphavecp(1:3,i)==0
                     rhos(:,i)=0;
                 else
                     merp = alphavecp(1:3,i);
                     rhos(:,i)=resolvedislocB(merp,0,minscheme,matchoice,gmat,1, x0type);
                 end
             case 'Distortion Matching'
-                if beta(:,i)==0;
+                if beta(:,i)==0
                     rhos(:,i)=0;
                 else
                     merp = beta(:,i);
                     rhos(:,i)=resolvedisloc(merp,2,minscheme,matchoice,gmat,stress, stepsize^2, x0type); %CHANGE BACK TO 2
                 end
             case 'Nye-Kroner (Pantleon)'
-                if alphavecp(:,i)==0;
+                if alphavecp(:,i)==0
                     rhos(:,i)=0;
                 else
                     merp = alphavecp(:,i);
                     rhos(:,i)=resolvedislocB(merp,1,minscheme,matchoice,gmat,1, x0type);
                 end
             case 11
-                if beta(:,i)==0;
+                if beta(:,i)==0
                     rhos(:,i)=0;
                 else
                     merp = zeros(6,1);
@@ -335,9 +332,11 @@ else
                     rhos(:,i)=resolvedisloc(merp,11,minscheme,matchoice,gmat,stress, stepsize^2, x0type);
                 end
         end
-        waitbar(i/m/n);
+        waitbar(i/Ny/Nx);
     end
     close(h);
 end
+
+
 end
 
