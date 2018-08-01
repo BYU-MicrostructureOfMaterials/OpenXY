@@ -22,30 +22,31 @@ ImageFilter = Settings.ImageFilter;
 EasyDD = isfield(Settings,'GNDMethod') &&...
     strcmp(Settings.GNDMethod,'Partial');
 
-
+%As of now, it is imposible for VaryStepSizeI to have a non-numeric value,
+%consider removing the runtime loop entirely for clarity. Zach C, 8/1/2018
 if strcmp(VaryStepSizeI,'a')
-    numruntimes=floor(min(r,c)/2)-1;
-    VaryStepSize=0;
+    numruntimes = floor(min(r,c)/2)-1;
+    VaryStepSize = 0;
     disp('run all step sizes')
 elseif strcmp(VaryStepSizeI,'t')
-    numruntimes=1+floor(log2(min(r,c)/2))+ceil(mod(log2(min(r,c)/2),1));
-    VaryStepSize=0;
+    numruntimes = 1+floor(log2(min(r,c)/2))+ceil(mod(log2(min(r,c)/2),1));
+    VaryStepSize = 0;
     disp('run step sizes of two')
 else
-    numruntimes=1;
+    numruntimes = 1;
     if isnumeric(VaryStepSizeI)
         VaryStepSize = VaryStepSizeI;
     else
-        VaryStepSize=str2double(VaryStepSizeI);
+        VaryStepSize = str2double(VaryStepSizeI);
     end
 end
 fprintf('Startting dislocation density calulations with %u runtimes\n',...
     numruntimes)
 
 
-for run=1:numruntimes
-    % let b=1 direction related to Fc
-    % let c=2 direction related to Fa
+for run = 1:numruntimes
+    % let b = 1 direction related to Fc
+    % let c = 2 direction related to Fa
     
     if strcmp(Settings.ScanType,'L') && run == 1 
         if VaryStepSize>0
@@ -53,50 +54,50 @@ for run=1:numruntimes
             %change stepsize
             stepsize_orig = abs((data.xpos(5)-data.xpos(2))/1e6); %units in meters
         else
-            cstype=questdlg('Run as square grid?','Change Analysis Grid','Yes','No','No');
+            cstype = questdlg('Run as square grid?','Change Analysis Grid','Yes','No','No');
             if strcmp(cstype,'Yes')
                 Settings.ScanType='LtoSquare';
                 %change stepsize
                 stepsize_orig = abs((data.xpos(5)-data.xpos(2))/1e6); %units in meters
             end
         end
-    elseif run==2 && strcmp(Settings.ScanType,'LtoSquare')
+    elseif strcmp(Settings.ScanType,'LtoSquare') && run == 2 
         stepsize_orig = abs((data.xpos(5)-data.xpos(2))/1e6);
     end
-    ScanType=Settings.ScanType;
-    % intensityr=zeros(size(ImageNamesList));
-    alpha_data.r=r;
-    alpha_data.c=c;
+    ScanType = Settings.ScanType;
+    % intensityr = zeros(size(ImageNamesList));
+    alpha_data.r = r;
+    alpha_data.c = c;
     
     
     % Ask if user would like to skip points periodically (effective increase of
     % step size)
     
-    skippts=VaryStepSize;
-    if skippts>=floor(r/2) || skippts>=floor(c/2)
+    skippts = VaryStepSize;
+    if skippts >= floor(r/2) || skippts >= floor(c/2)
         disp('BAD IDEA: THIS WON''T YIELD GOOD RESULTS')
     end
     %
-    % alist=zeros(r,c);
-    % clist=alist;
+    % alist = zeros(r,c);
+    % clist = alist;
     % alist(1:skippts+1,1:skippts+1)=1;
-    % alist=alist';
-    % alist=alist(:);
+    % alist = alist';
+    % alist = alist(:);
     % clist(skippts+2:end,skippts+2:end)=1;
-    % clist=clist';
-    % clist=clist(:);
+    % clist = clist';
+    % clist = clist(:);
     
-    rowlist=1:r;
-    collist=1:c;
-    % rowlist=find(mod(rowlist-1,skippts+1)==0);
-    % collist=find(mod(collist-1,skippts+1)==0);
+    rowlist = 1:r;
+    collist = 1:c;
+    % rowlist = find(mod(rowlist-1,skippts+1)==0);
+    % collist = find(mod(collist-1,skippts+1)==0);
     if ~strcmp(Settings.ScanType,'Hexagonal')
-        INL=reshape(Inds,[c r])';
-        INL=INL(rowlist,collist);
+        INL = reshape(Inds,[c r])';
+        INL = INL(rowlist,collist);
         r = length(rowlist);%
         c = length(collist);%
-        INL=INL';
-        Inds=INL(:);
+        INL = INL';
+        Inds = INL(:);
     end
     % adjust these values for a new grid
     
@@ -105,26 +106,23 @@ for run=1:numruntimes
     if ~strcmp(Settings.ScanType,'L')
         
         if size(Settings.ImageNamesList,1)>1
-            ScanImage = ReadEBSDImage(Settings.ImageNamesList{1},Settings.ImageFilter);
+            ScanImage = ReadEBSDImage(Settings.ImageNamesList{1},...
+                Settings.ImageFilter);
         else
-            ScanImage = ReadH5Pattern(Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter,Settings.valid,1);
+            ScanImage = ReadH5Pattern(Settings.ScanFilePath,...
+                Settings.ImageNamesList, Settings.imsize, ...
+                Settings.ImageFilter,Settings.valid,1);
         end
         
-        [roixc,roiyc]= GetROIs(ScanImage,Settings.NumROIs,Settings.PixelSize,...
-            Settings.ROISize, Settings.ROIStyle);
+        [roixc,roiyc]= GetROIs(ScanImage, Settings.NumROIs,...
+            Settings.PixelSize, Settings.ROISize, Settings.ROIStyle);
         Settings.roixc = roixc;
         Settings.roiyc = roiyc;
         
-        %Not sure if everything before matlabpool close force is necessary...Travis?  ImageNamesList=Settings.ImageNamesList;
-        %  ImageFilter=Settings.ImageFilter;
-        % Allg=data.g;
-        % ScanType=Settings.ScanType;
-        % intensityr=zeros(size(ImageNamesList));
-        
         N = Settings.ScanLength;
         
-        lattice=cell(N,1);
-        Burgers=zeros(N,1);
+        lattice = cell(N,1);
+        Burgers = zeros(N,1);
         
         %Get info for Subscans
         if isfield(Settings,'Resize') && ~all(Settings.Resize == [c r])
@@ -139,10 +137,10 @@ for run=1:numruntimes
         end
         
         %Get Material Info
-        for p=1:FullLength
+        for p = 1:FullLength
             Material = ReadMaterial(lower(Settings.Phase{p}));
-            lattice{p}=Material.lattice;
-            Burgers(p)=Material.Burgers;
+            lattice{p} = Material.lattice;
+            Burgers(p) = Material.Burgers;
         end
         b = Burgers;
         if isempty(b)
@@ -185,7 +183,7 @@ for run=1:numruntimes
                     AllSSEa(cnt) = 0;
                     AllSSEc(cnt) = 0;
                 end
-                ppm.increment();
+                ppm.increment();%#ok
             end
             ppm.delete();
         else
@@ -205,17 +203,17 @@ for run=1:numruntimes
             close(h);
         end
         
-        if NoStrain
+        if NoStrain%TODO Decide if I want to remove this
             for i = 1:Settings.ScanLength
                 AllFa{i} = poldec(AllFa{i});
                 AllFc{i} = poldec(AllFc{i});
             end
         end
         
-        data.Fa=AllFa;
-        data.SSEa=AllSSEa;
-        data.Fc=AllFc;
-        data.SSEc=AllSSEc;
+        data.Fa = AllFa;
+        data.SSEa = AllSSEa;
+        data.Fc = AllFc;
+        data.SSEc = AllSSEc;
         
         
         
@@ -223,41 +221,41 @@ for run=1:numruntimes
         
     end
     if strcmp(Settings.ScanType,'Hexagonal')
-        Beta=zeros(3,3,3,Settings.ScanLength);
-        alpha_total3=zeros(1,Settings.ScanLength);
-        alpha_total5=zeros(1,Settings.ScanLength);
-        alpha_total9=zeros(1,Settings.ScanLength);
+        Beta = zeros(3,3,3,Settings.ScanLength);
+        alpha_total3 = zeros(1,Settings.ScanLength);
+        alpha_total5 = zeros(1,Settings.ScanLength);
+        alpha_total9 = zeros(1,Settings.ScanLength);
     else
-        Beta=zeros(3,3,3,Settings.ScanLength);
-        alpha_total3=zeros(1,Settings.ScanLength);
-        alpha_total5=zeros(1,Settings.ScanLength);
-        alpha_total9=zeros(1,Settings.ScanLength);
+        Beta = zeros(3,3,3,Settings.ScanLength);
+        alpha_total3 = zeros(1,Settings.ScanLength);
+        alpha_total5 = zeros(1,Settings.ScanLength);
+        alpha_total9 = zeros(1,Settings.ScanLength);
     end
     
     % if strcmp(Settings.ScanType,'L')
     FcList = [data.Fc{:}];
-    FcArray=reshape(FcList,[3,3,length(FcList(1,:))/3]);
+    FcArray = reshape(FcList,[3,3,length(FcList(1,:))/3]);
     FaList = [data.Fa{:}];
-    FaArray=reshape(FaList,[3,3,length(FaList(1,:))/3]);
+    FaArray = reshape(FaList,[3,3,length(FaList(1,:))/3]);
     % end
     
     % rotate Fs into sample frame, in order to take derivatives in the sample
     % frame  *****can probably vectorize this using Tony Fast's stuff *****
     % HROIM angles for grain boundary calc
-    Angles=cell2mat(data.g);
-    n=length(Angles)/3;
-    angles=zeros(n,3);
-    n=1:n;
-    for i=1:3
-        angles(:,i)=Angles((n-1)*3+i)';
+    Angles = cell2mat(data.g);
+    n = length(Angles)/3;
+    angles = zeros(n,3);
+    n = 1:n;
+    for i = 1:3
+        angles(:,i) = Angles((n-1)*3+i)';
     end
     
     % if strcmp(Settings.ScanType,'L')
-    thisF=zeros(3,3);
-    FaSample=FaArray;
-    FcSample=FcArray;
-    for i=1:length(FaArray(1,1,:))
-        g=euler2gmat(angles(i,1),angles(i,2),angles(i,3));% this give g(sample to crystal)
+    thisF = zeros(3,3);
+    FaSample = FaArray;
+    FcSample = FcArray;
+    for i = 1:length(FaArray(1,1,:))
+        g = euler2gmat(angles(i,1),angles(i,2),angles(i,3));% this give g(sample to crystal)
         thisF(:,:)=FaArray(:,:,i);
         FaSample(:,:,i)=g'*thisF*g; %check this is crystal to sample
         thisF(:,:)=FcArray(:,:,i);
@@ -277,18 +275,18 @@ for run=1:numruntimes
         stepsizec = stepsizea;
     end
     
-    NoiseCutoff=log10((0.006*pi/180)/(stepsizea*max(b))); %lower cutoff filters noise below resolution level
+    NoiseCutoff = log10((0.006*pi/180)/(stepsizea*max(b))); %lower cutoff filters noise below resolution level
     disp(stepsizea)
-    LowerCutoff=log10(1/stepsizea^2);
-    MinCutoff=max([LowerCutoff(:),NoiseCutoff(:)]);
-    UpperCutoff=log10(1/(min(b)*stepsizea));
-    alpha_data.Fa=FaSample;
-    alpha_data.Fc=FcSample;
+    LowerCutoff = log10(1/stepsizea^2);
+    MinCutoff = max([LowerCutoff(:),NoiseCutoff(:)]);
+    UpperCutoff = log10(1/(min(b)*stepsizea));
+    alpha_data.Fa = FaSample;
+    alpha_data.Fc = FcSample;
     
     disp(['MinCutoff: ',num2str(MinCutoff)])
     disp(['UpperCutoff: ',num2str(UpperCutoff)])
     
-    % Beta(i,j,k(Fc=1 or Fa=2),point number)=0;
+    % Beta(i,j,k(Fc = 1 or Fa = 2),point number)=0;
     
     Beta(1,1,2,:)=-(FaSample(1,1,:)-1)/stepsizea;
     % Beta(1,2,2,:)=-FaSample(1,2,:)/stepsize;
@@ -326,15 +324,15 @@ for run=1:numruntimes
     clear FaSample FcSample
     
     % Filter out bad data
-    discount=0;
-    alpha_filt=alpha;
+    discount = 0;
+    alpha_filt = alpha;
     
     %Use Full-size scan dimensions
     c = Oldsize(1);
     r = Oldsize(2);
     
     %Filter alpha data
-    for i=1:Settings.ScanLength
+    for i = 1:Settings.ScanLength
         
         %Filter by Misorientation
         if (misang(i)>MaxMisorientation)
@@ -348,7 +346,7 @@ for run=1:numruntimes
         
         %Count Filtered points
         if alpha_filt(:,:,i)==0
-            discount=discount+1;
+            discount = discount+1;
         end
     end
     MisAngleInds = RefInds;
@@ -363,23 +361,23 @@ for run=1:numruntimes
     % SlashInds = find(OutPath == '\');
     % OutDir = OutPath(1:SlashInds(end));
     %Create alpha_data to store information for later
-    alpha_data.alpha_total3=alpha_total3;
-    alpha_data.alpha_total5=alpha_total5;
-    alpha_data.alpha_total9=alpha_total9;
-    alpha_data.alpha=alpha;
-    alpha_data.alpha_filt=alpha_filt;
-    alpha_data.misang=misang;
-    alpha_data.misanglea=misanglea;
-    alpha_data.misanglec=misanglec;
-    alpha_data.MisAngleInds=MisAngleInds;
-    alpha_data.discount=discount;
-    % alpha_data.intensityr=intensityr;
-    alpha_data.stepsizea=stepsizea;
-    alpha_data.stepsizec=stepsizec;
-    alpha_data.b=b(Inds);
+    alpha_data.alpha_total3 = alpha_total3;
+    alpha_data.alpha_total5 = alpha_total5;
+    alpha_data.alpha_total9 = alpha_total9;
+    alpha_data.alpha = alpha;
+    alpha_data.alpha_filt = alpha_filt;
+    alpha_data.misang = misang;
+    alpha_data.misanglea = misanglea;
+    alpha_data.misanglec = misanglec;
+    alpha_data.MisAngleInds = MisAngleInds;
+    alpha_data.discount = discount;
+    % alpha_data.intensityr = intensityr;
+    alpha_data.stepsizea = stepsizea;
+    alpha_data.stepsizec = stepsizec;
+    alpha_data.b = b(Inds);
     alpha_data.NumInds = NumInds;
     
-    % if special==1
+    % if special == 1
     %     disp('special')
     %     disp(num2str(stepsizea))
     %     Settings.OutputPath=[AnalysisParamsPath(1:end-8),'Skip',num2str(skippts),'.ang.mat'];
@@ -395,11 +393,11 @@ for run=1:numruntimes
     %     save(AnalysisParamsPath ,'alpha_data','-append');
     % end
     
-    % pgnd=logspace(11,17);
-    % Lupper=1./sqrt(pgnd);
-    % Llower=1./(b*pgnd);
-    % Lusafe=Lupper/3;
-    % Llsafe=Llower/3;
+    % pgnd = logspace(11,17);
+    % Lupper = 1./sqrt(pgnd);
+    % Llower = 1./(b*pgnd);
+    % Lusafe = Lupper/3;
+    % Llsafe = Llower/3;
     %
     % figure;loglog(pgnd,Lupper,'r',pgnd,Llower,'b',pgnd,Lusafe,'r',pgnd,Llsafe,'b')%,...
     %                 %pgnd,2e-7*ones(size(pgnd)),'--g',pgnd,4e-6*ones(size(pgnd)),'--g')
@@ -408,56 +406,56 @@ for run=1:numruntimes
     % plot(alpha_data.alpha_total3,stepsize*ones(size(alpha_data.alpha_total3)),'*k')
     % xlim([10^11 10^17])
     % pm=[14.5953, 13.1897 13.0449 12.8969 12.4546 12.1251 12.2425 mean(log10(alpha_data.alpha_total3))];
-    % pmupper=10.^(pm+[.3429 .7346 1.4164 1.9906 2.7976 3.3855 3.4416 std(log10(alpha_data.alpha_total3))]);
-    % pmlower=10.^(pm-[.3429 .7346 1.4164 1.9906 2.7976 3.3855 3.4416 std(log10(alpha_data.alpha_total3))]);
+    % pmupper = 10.^(pm+[.3429 .7346 1.4164 1.9906 2.7976 3.3855 3.4416 std(log10(alpha_data.alpha_total3))]);
+    % pmlower = 10.^(pm-[.3429 .7346 1.4164 1.9906 2.7976 3.3855 3.4416 std(log10(alpha_data.alpha_total3))]);
     % Lm=[2e-7, 4e-6 8e-6 1.2e-5 1.6e-5 2e-5 2.4e-5 stepsize];
     % plot(10.^pm,Lm,'ok')
     
     % % HROIM angles for grain boundary calc
-    % Angles=cell2mat(data.g);
-    % n=length(Angles)/3;
-    % angles=zeros(n,3);
+    % Angles = cell2mat(data.g);
+    % n = length(Angles)/3;
+    % angles = zeros(n,3);
     % n=[1:n];
-    % for i=1:3
+    % for i = 1:3
     %     angles(:,i)=Angles((n-1)*3+i)';
     % end
     % angles = reshape(angles,[r,c,3]);
-    % clean=1;    %set to 1 to clean up small grains
-    % small=5;   % set to size of minimum grain size (pixels) for cleanup
-    % mistol=MaxMisorientation*pi/180;   % maximum misorientation within a grain
+    % clean = 1;    %set to 1 to clean up small grains
+    % small = 5;   % set to size of minimum grain size (pixels) for cleanup
+    % mistol = MaxMisorientation*pi/180;   % maximum misorientation within a grain
     
     % [grains grainsize sizes BOUND]=findgrains(angles, lattice, clean, small, mistol);
-    % % BOUND=flipud(fliplr(BOUND));
+    % % BOUND = flipud(fliplr(BOUND));
     % x=[1:r];
     % y=[1:c];
     % [X Y]=meshgrid(x,y);
-    % X=X';
-    % Y=Y';
+    % X = X';
+    % Y = Y';
     
     % Calculate average total dislocation density
-    % alpha_total_ave=sum(sum(abs(alpha_total3)))/(r*c-discount)
-    % alpha_total_ave5=sum(sum(abs(alpha_total5)))/(r*c-discount);
-    % alpha_total_ave9=sum(sum(abs(alpha_total9)))/(r*c-discount);
+    % alpha_total_ave = sum(sum(abs(alpha_total3)))/(r*c-discount)
+    % alpha_total_ave5 = sum(sum(abs(alpha_total5)))/(r*c-discount);
+    % alpha_total_ave9 = sum(sum(abs(alpha_total9)))/(r*c-discount);
     
     
     if strcmp(Settings.ScanType,'L')
         disp(1)
         Settings.ScanType='LtoSquare';
-        NewAngles=cell2mat(data.g');
-        Allg=Settings.Angles;
+        NewAngles = cell2mat(data.g');
+        Allg = Settings.Angles;
         Allg(Settings.Inds,:) = NewAngles;
     elseif numruntimes>1
         if strcmp(VaryStepSizeI,'t')
-            if run==numruntimes-1
+            if run == numruntimes-1
                 disp(2)
-                VaryStepSize=floor(min(r,c)/2)-1;
+                VaryStepSize = floor(min(r,c)/2)-1;
             else
                 disp(4)
-                VaryStepSize=VaryStepSize*2+1;
+                VaryStepSize = VaryStepSize*2+1;
             end
         else
             disp(5)
-            VaryStepSize=VaryStepSize+1;
+            VaryStepSize = VaryStepSize+1;
         end
     else
         disp(6)
@@ -471,9 +469,10 @@ save(AnalysisParamsPath ,'alpha_data','-append');
 
 end
 
-function [AllFa,AllSSEa,AllFc,AllSSEc, misanglea, misanglec] = DDCalc(RefInd,RefG,lattice,ImageFilter,Settings)
+function [AllFa, AllSSEa, AllFc, AllSSEc, misanglea, misanglec] =...
+    DDCalc(RefInd, RefG, lattice, ImageFilter, Settings)
 
-image_a2= 0;
+image_a2 = 0;
 RefIndA2 = 0;
 image_c2 = 0;
 RefIndC2 = 0;
@@ -482,7 +481,7 @@ skippts = Settings.NumSkipPts;
 
 %Check Pattern Source
 H5Images = false;
-if size(Settings.ImageNamesList,1)==1
+if size(Settings.ImageNamesList,1) == 1
     H5Images = true;
     H5ImageParams = {Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter};
 end
@@ -533,19 +532,19 @@ if strcmp(Settings.ScanType,'Hexagonal')
     end
 end
 
-misanglea=GeneralMisoCalc(g_b,Amat,lattice);
-misanglec=GeneralMisoCalc(g_b,Cmat,lattice);
+misanglea = GeneralMisoCalc(g_b,Amat,lattice);
+misanglec = GeneralMisoCalc(g_b,Cmat,lattice);
 % evaluate points a and c using Wilk's method with point b as the
 % reference pattern
-%         imgray=rgb2gray(imread(ImagePath)); % this can add significant time for large scans
+%         imgray = rgb2gray(imread(ImagePath)); % this can add significant time for large scans
 %         intensityr(cnt)=mean(imgray(:));
 
 if (isempty(image_a)) || (isempty(image_b)) ||  (isempty(image_c)) || ...
         (RefIndA2>0 && isempty(image_a2)) || (RefIndC2>0 && isempty(image_c2))
     AllFa= -eye(3);
-    AllSSEa=101;
+    AllSSEa = 101;
     AllFc=-eye(3);
-    AllSSEc=101;
+    AllSSEc = 101;
 else
     % first, evaluate point a
     if r > 1 %Not Line Scan
@@ -556,12 +555,12 @@ else
         else
             [AllFa1,AllSSEa1] = CalcFShift(image_b,image_a ,g_b,eye(3),RefIndA,Settings,Settings.Phase{cnt},cnt );
             [AllFa2,AllSSEa2] = CalcFShift(image_b,image_a2,g_b,eye(3),RefIndA2,Settings,Settings.Phase{cnt},cnt);
-            AllFa=0.5*(AllFa1+AllFa2);
-            AllSSEa=0.5*(AllSSEa1+AllSSEa2);
+            AllFa = 0.5*(AllFa1+AllFa2);
+            AllSSEa = 0.5*(AllSSEa1+AllSSEa2);
         end
     else
         AllFa= -eye(3);
-        AllSSEa=101;
+        AllSSEa = 101;
     end
     
     % then, evaluate point c
@@ -571,20 +570,21 @@ else
     else
         [AllFc1,AllSSEc1] = CalcFShift(image_b,image_c ,g_b,eye(3),RefIndC,Settings,Settings.Phase{cnt},cnt);
         [AllFc2,AllSSEc2] = CalcFShift(image_b,image_c2,g_b,eye(3),RefIndC2,Settings,Settings.Phase{cnt},cnt);
-        AllFc=0.5*(AllFc1+AllFc2);
-        AllSSEc=0.5*(AllSSEc1+AllSSEc2);
+        AllFc = 0.5*(AllFc1+AllFc2);
+        AllSSEc = 0.5*(AllSSEc1+AllSSEc2);
     end
 end
 end
 
-function [AllFa,AllFc,misanglea,misanglec] = DDCalcEasy(RefInd, RefG, lattice, Settings)
+function [AllFa, AllFc, misanglea, misanglec] =...
+    DDCalcEasy(RefInd, RefG, lattice, Settings)
 
 
 skippts = Settings.NumSkipPts;
 
 %Check Pattern Source
 H5Images = false;
-if size(Settings.ImageNamesList,1)==1
+if size(Settings.ImageNamesList,1) == 1
     H5Images = true;
     H5ImageParams = {Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter};
 end
@@ -613,8 +613,8 @@ if strcmp(Settings.ScanType,'Hexagonal')
     end
 end
 
-misanglea=GeneralMisoCalc(g_b,Amat,lattice); %need to check the second A-point if hexagonal scan grid***
-misanglec=GeneralMisoCalc(g_b,Cmat,lattice);
+misanglea = GeneralMisoCalc(g_b,Amat,lattice); %need to check the second A-point if hexagonal scan grid***
+misanglec = GeneralMisoCalc(g_b,Cmat,lattice);
 
 Fbinv = inv(g_b'*Settings.data.F(:,:,cnt)*g_b); % in sample frame
 %     Fbinv = inv(Settings.data.F{cnt}); % in crystal frame
@@ -624,20 +624,20 @@ if r > 1 %Not Line Scan
         AllFa = g_b*Amat'*Settings.data.F(:,:,RefIndA)*Amat*Fbinv*g_b'; %put Fa in sample frame, then put the whole thing back in crystal
         %             AllFa = Settings.data.F{RefIndA}*Fbinv; %leave in crystal
     else
-        Amat2=euler2gmat(Settings.data.NewAngles(RefIndA2,1),Settings.data.NewAngles(RefIndA2,2),Settings.data.NewAngles(RefIndA2,3));
+        Amat2 = euler2gmat(Settings.data.NewAngles(RefIndA2,1),Settings.data.NewAngles(RefIndA2,2),Settings.data.NewAngles(RefIndA2,3));
         AllFa1 = g_b*Amat'*Settings.data.F(:,:,RefIndA1)*Amat*Fbinv*g_b';
         AllFa2 = g_b*Amat2'*Settings.data.F(:,:,RefIndA2)*Amat2*Fbinv*g_b';
-        AllFa=0.5*(AllFa1+AllFa2);
+        AllFa = 0.5*(AllFa1+AllFa2);
     end
     
     % scale a direction step F tensor for different step size
     if strcmp(Settings.ScanType,'Hexagonal')
-        AllFatemp=AllFa-eye(3);
-        AllFatemp=AllFatemp/sqrt(3)*2;
-        AllFa=AllFatemp+eye(3);
+        AllFatemp = AllFa-eye(3);
+        AllFatemp = AllFatemp/sqrt(3)*2;
+        AllFa = AllFatemp+eye(3);
     end
 else
-    AllFa= -eye(3);
+    AllFa = -eye(3);
 end
 % then, evaluate point c
 AllFc = g_b*Cmat'*Settings.data.F(:,:,RefIndC)*Cmat*Fbinv*g_b'; %sample then back to crystal
@@ -646,7 +646,8 @@ AllFc = g_b*Cmat'*Settings.data.F(:,:,RefIndC)*Cmat*Fbinv*g_b'; %sample then bac
 
 end
 
-function [RefInd,Refg,NumInds] = GetDDSettings(Inds,Angles,Dims,ScanType,skippts)
+function [RefInd, Refg, NumInds] =...
+    GetDDSettings(Inds, Angles, Dims, ScanType, skippts)
 if size(Inds,1) == 1
     Inds = Inds';
 end
