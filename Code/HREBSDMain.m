@@ -234,7 +234,7 @@ if Settings.CalcDerivatives
         alpha_data = GNDfromOIM(Settings,1,Settings.NumSkipPts);
         save(SaveFile ,'alpha_data','-append'); 
     else
-        DislocationDensityCalculate(Settings,MaxMisorientation,IQcutoff,VaryStepSizeI);
+        DislocationDensityCalculate(Settings,MaxMisorientation,VaryStepSizeI);
     end
     
     % Split Dislocation Density (Code by Tim Ruggles, added 3/5/2015)
