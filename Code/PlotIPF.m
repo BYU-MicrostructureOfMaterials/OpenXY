@@ -2,7 +2,7 @@ function IPF_map = PlotIPF(g,dims,ScanType,plot)
 if nargin < 4
     plot = 1;
 end
-IPF = IPF_rgbcalc(g);
+IPF = IPF_rgbcalc(g, permute(gensymops, [2, 3, 1]), [0 0 1]);
 IPF = real(IPF);
 if strcmp(ScanType,'Square')
     IPF_map(:,:,1) = reshape(IPF(:,1),dims(1),dims(2))';
