@@ -3,7 +3,7 @@
 #SBATCH --ntasks=1
 #SBATCH --nodes=1
 #SBATCH --mem-per-cpu=4096MB
-#SBATCH --time=00:20:00
+#SBATCH --time=01:00:00
 
 
 module add matlab/r2017b
