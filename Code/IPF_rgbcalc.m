@@ -49,6 +49,8 @@ function rgb = IPF_rgbcalc(mats,symops,sampledir)
     inRange = and(inAzRange,correctHemispheres);
 
     if sum(inRange)~=N
+        rgb = zeros(N, 3);
+        return;
         error('Incorrect number of directions found in standard stereographic triangle');
     else
         chosenDirs = dirs(:,inRange);

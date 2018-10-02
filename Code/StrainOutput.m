@@ -181,8 +181,8 @@ for i=1:3
                     if isfield(Settings, 'grainsHaveBeenSplit') && ...
                             Settings.grainsHaveBeenSplit
                         for ii = 1:size(redlines,1)
-                        plot(redlines{ii,1},redlines{ii,2},'LineWidth',1.5,'Color','r')
-                    end%ii = 1:size(redlines,1)
+                            plot(redlines{ii,1},redlines{ii,2},'LineWidth',1.5,'Color','r')
+                        end%ii = 1:size(redlines,1)
                     end
                     hold off
                 end

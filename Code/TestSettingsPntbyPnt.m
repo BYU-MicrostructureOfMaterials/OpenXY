@@ -56,7 +56,9 @@ while(morepoints)
     
     figure(99);
     PlotScan(im,PlotType);
-    caxis(Limits)
+    if length(unique(Limits)) ~= 1
+        caxis(Limits)
+    end
     title({'\fontsize{14} Select a point to calculate the deformation tensor';'\fontsize{10}Scroll-click to select by index number';'\fontsize{10} Right-click to exit'},'HorizontalAlignment','center')
     if gb
         GrainMap = vec2map(Settings.grainID,Settings.Nx,Settings.ScanType);
