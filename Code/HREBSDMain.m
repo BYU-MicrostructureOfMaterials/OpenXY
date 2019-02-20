@@ -96,10 +96,10 @@ else
     for ImageInd = indVect
         %         tic
 %         disp(ImageInd)
-        tic
+
         [F(:,:,ImageInd), g(:,:,ImageInd), U(:,:,ImageInd), SSE(ImageInd), XX(:,:,ImageInd), sigma(:,:,ImageInd)] = ...
 GetDefGradientTensor(Inds(ImageInd),Settings,Settings.Phase{ImageInd});
-        toc
+
         % commented out this (outputs strain matrix - I think - DTF 5/15/14)
 %         if strcmp(Settings.ScanType,'L')
 %             U{ImageInd}.b - eye(3)

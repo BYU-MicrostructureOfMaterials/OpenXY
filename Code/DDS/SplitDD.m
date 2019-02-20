@@ -10,21 +10,21 @@ for i = 1:length(allMaterials)
     end
 end
 
-% if length(matList) > 1
-%     [matchoose,vv] = listdlg('PromptString','Select the material type','SelectionMode','single','ListString',matList);
-%     if vv==0
-%         warndlg('Nothing selected: skipping split dislocation density calculation','Split Dislocation Density');
-%         rhos = [];
-%         return;
-%     end
-% elseif isempty(matList)
-%     warndlg(['No SplitDD material data for ' allMaterials{1}, ' Exiting SplitDD calculation'],'Split Dislocation Density');
-%     rhos = [];
-%     return;
-% else
-%     matchoose = 1;
-% end
-matchoose = 1;
+if length(matList) > 1
+    [matchoose,vv] = listdlg('PromptString','Select the material type','SelectionMode','single','ListString',matList);
+    if vv==0
+        warndlg('Nothing selected: skipping split dislocation density calculation','Split Dislocation Density');
+        rhos = [];
+        return;
+    end
+elseif isempty(matList)
+    warndlg(['No SplitDD material data for ' allMaterials{1}, ' Exiting SplitDD calculation'],'Split Dislocation Density');
+    rhos = [];
+    return;
+else
+    matchoose = 1;
+end
+% matchoose = 1;
 matchoice = matList{matchoose};
 [bedge,ledge, bscrew,lscrew,v, normals, crssfactor, type] = choosemat(matchoice);
 
@@ -160,8 +160,8 @@ for i=1:m*n
     end
 end
 
-alphaorbeta
-alphaorbeta = 'Nye-Kroner (Pantleon)';
+% alphaorbeta
+% alphaorbeta = 'Nye-Kroner (Pantleon)';
 if (alphaorbeta==11) | (strcmp(alphaorbeta, 'Distortion Matching'))
     Fatemp = alpha_data.Fa;
     Fctemp = alpha_data.Fc;

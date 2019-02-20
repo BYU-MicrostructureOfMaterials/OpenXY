@@ -11,6 +11,9 @@ function [rho]=resolvedislocB(alphavec,threeorsix, minscheme,matchoose,gmat, L1,
 b=[bscrew;bedge];
 l=[lscrew;ledge];
 b=b*gmat; % rotate into sample frame
+% nn=sqrt(sum(b.^2,2)');
+bnorm=b*1e10;
+% for i=1:length(nn);bnorm(i,:)=bnorm(i,:)/nn(i);end
 l=l*gmat;
 nedge=length(bedge);
 ntypes=length(b); % number of dislocation types
@@ -20,10 +23,10 @@ ntypes=length(b); % number of dislocation types
 if threeorsix==1
     A=zeros(6,ntypes);
     for i=1:ntypes
-        A(1:3,i)=b(i,:)*l(i,3);
-        A(4,i) = b(i,1)*l(i,2);
-        A(5,i) = b(i,2)*l(i,1);
-        A(6,i) = (b(i,1)*l(i,1) - b(i,2)*l(i,2));
+        A(1:3,i)=bnorm(i,:)*l(i,3);
+        A(4,i) = bnorm(i,1)*l(i,2);
+        A(5,i) = bnorm(i,2)*l(i,1);
+        A(6,i) = (bnorm(i,1)*l(i,1) - bnorm(i,2)*l(i,2));
     end
 
     A = [A -A];
@@ -31,7 +34,7 @@ if threeorsix==1
 else
     A = zeros(3,ntypes);
     for i=1:ntypes
-        A(1:3,i)=b(i,:)*l(i,3);
+        A(1:3,i)=bnorm(i,:)*l(i,3);
 
     end
 
@@ -82,7 +85,7 @@ else
 end
 
 
-rho = rhopm(1:ntypes) - rhopm(ntypes+1:2*ntypes);
+rho = (rhopm(1:ntypes) - rhopm(ntypes+1:2*ntypes))*1e10;
 
 
 

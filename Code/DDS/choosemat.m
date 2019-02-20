@@ -1,6 +1,6 @@
 function [bedge,ledge, bscrew,lscrew,v, normals, crssfactor, type] = choosemat( mat )
 switch mat
-    case 'Mg' 
+    case 'Mg'
         [bedge,ledge, bscrew,lscrew,v, normals, crssfactor, type]=mgsystems;
     case 'Cu'
         [bedge,ledge, bscrew,lscrew,v, normals, crssfactor, type]=cusystems;
@@ -18,8 +18,10 @@ switch mat
         [bedge,ledge, bscrew,lscrew,v, normals, crssfactor, type]=nisystemsSLICK;
     case 'Al-18ss'
         [bedge,ledge, bscrew,lscrew,v, normals, crssfactor, type]=alsystems;
-        case 'Fe'
+    case 'Fe'
         [bedge,ledge, bscrew,lscrew,v, normals, crssfactor, type]=ferritesystems;
+    case 'Zr'
+        [bedge,ledge, bscrew,lscrew,v, normals, crssfactor, type]=zrsystems;
     otherwise
         error('No other crystal systems defined');
 end

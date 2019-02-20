@@ -400,7 +400,9 @@ if UpdateFileLocations
     Settings.FirstImagePath=UpdatePath(Settings.FirstImagePath,NewDir,MainPathLength);
     Settings.ScanFilePath=UpdatePath(Settings.ScanFilePath,NewDir,MainPathLength);
     
-    if exist('alpha_data','var')
+    if exist('alpha_data','var') && exist('rhos','var')
+        save(Settings.OutputPath ,'Settings','alpha_data','rhos','DDSettings');
+    elseif exist('alpha_data','var')
         save(Settings.OutputPath ,'Settings','alpha_data'); 
     else
         save(Settings.OutputPath ,'Settings');
