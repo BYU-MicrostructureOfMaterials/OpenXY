@@ -25,8 +25,9 @@ classdef Batch < handle
             obj.options = superComp.Options();
         end
         
-        run(obj)
+        run(obj, use2FactorAuth)
         
+        twoFactorAuthenticate(obj)
     end
     
     methods (Access = private)

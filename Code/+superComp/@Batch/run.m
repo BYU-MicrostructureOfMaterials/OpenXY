@@ -16,15 +16,31 @@ function run(obj)
 %   See also supercomp.Options
 
 
+% Open a persistent conection to the supercomputer
+obj.connection = ssh2_config(...
+    obj.options.hostName,...
+    obj.options.userName,...
+    obj.options.password...
+    );
+
+% Set up an onCleanup to close the conection when the function exits
+    function closeConection(obj)
+        ssh2_close(obj.connection);
+        obj.connection = [];
+    end
+connectionCleanup = onCleanup( @() closeConection(obj) );
+
 try
     command = ['export return_=1; type sbatch >/dev/null 2>&1 || '...
         '{ return_=0; }; echo "$return_"; unset return_'];
-    slurm_installed = ssh2_simple_command(...
-        obj.options.hostName,...
-        obj.options.userName,...
-        obj.options.password,...
-        command...
-        );
+    
+    if obj.options.use2FactorAuth
+        obj.twoFactorAuthenticate();
+    end
+    
+    [obj.connection, slurm_installed] = ...
+        ssh2_command(obj.connection, command);
+    
 catch ME
     switch ME.identifier
         case 'MATLAB:UndefinedFunction'
@@ -51,20 +67,6 @@ switch slurm_installed{1}
         error('OpenXY:UnexpectedResult',...
             'Unexpected result recieved from server!');
 end
-
-% Open a persistent conection to the supercomputer
-obj.connection = ssh2_config(...
-    obj.options.hostName,...
-    obj.options.userName,...
-    obj.options.password...
-    );
-
-% Set up an onCleanup to close the conection when the function exits
-    function closeConection(obj)
-        ssh2_close(obj.connection);
-        obj.connection = [];
-    end
-connectionCleanup = onCleanup( @() closeConection(obj) );
 
 % Send data to the supercomputer
 if obj.options.sendImages
