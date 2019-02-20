@@ -1,7 +1,7 @@
 function twoFactorAuthenticate(obj)
 
 
-javaaddpath('+superComp\java\')
+javaaddpath('+superComp\java\SSHAuthorizationInterface-1.0-SNAPSHOT.jar')
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -18,7 +18,7 @@ import ch.ethz.ssh2.SCPClient;
 import ch.ethz.ssh2.SFTPv3Client;
 import ch.ethz.ssh2.SFTPv3FileHandle;
 
-import edu.me.byu.sshvalidator.*;
+import edu.byu.me.sshvalidator.SSHValidator;
 
 try
     disp('Running 2 factor auth')
@@ -28,16 +28,18 @@ try
     
     obj.connection.connection.connect();
     
+    validator = SSHValidator(obj.options.password, obj.options.verificationCode);
+    
     authenticated = ...
         obj.connection.connection.authenticateWithKeyboardInteractive(...
         obj.options.userName, ...
-        SSHValidator(obj.options.password, obj.options.verificationCode));
+        validator);
     if authenticated
         tf = 'True';
     else
         tf = 'False';
     end
-    fprintf('Authenticated %s', tf);
+    fprintf('Authenticated %s\n', tf);
     if ~authenticated
         error('OpenXY:SSHValidator', 'Could not authenticate!')
     end
