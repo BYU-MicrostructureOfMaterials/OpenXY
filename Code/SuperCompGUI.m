@@ -22,7 +22,7 @@ function varargout = SuperCompGUI(varargin)
 
 % Edit the above text to modify the response to help SuperCompGUI
 
-% Last Modified by GUIDE v2.5 03-Jul-2018 13:47:27
+% Last Modified by GUIDE v2.5 12-Feb-2019 18:24:28
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -67,22 +67,14 @@ varargout{1} = handles.output;
 
 % --- Executes on button press in submitButton.
 function submitButton_Callback(hObject, eventdata, handles)
+
 batch = superComp.Batch();
-options = batch.options;
-options.hostName = handles.hostNameEditText.String;
-options.userName = handles.userNameEditText.String;
-options.password = handles.passwordEditText.UserData;
-options.email = handles.emailEditText.String;
-options.sendStart = logical(handles.sendStartCheckbox.Value);
-options.sendEnd = logical(handles.sendEndCheckbox.Value);
-options.sendFail = logical(handles.sendFailCheckbox.Value);
-options.sendSource = logical(handles.sendSourceCheckbox.Value);
-options.sendImages = logical(handles.sendImagesCheckbox.Value);
-options.numJobs = str2double(handles.numJobsEditText.String);
-batch.options = options;
+
+batch.options = setOptions(batch.options, handles);
+
 mainHandles = guidata(handles.mainGUIHandle);
 batch.Settings = mainHandles.Settings;
-%TODO Add a try catch for bad connections
+
 try
     batch.run();
 catch ME
@@ -93,6 +85,22 @@ catch ME
             ME.rethrow
     end
 end
+
+
+function options = setOptions(options, handles)
+
+options.hostName = handles.hostNameEditText.String;
+options.userName = handles.userNameEditText.String;
+options.password = handles.passwordEditText.UserData;
+options.email = handles.emailEditText.String;
+options.sendStart = logical(handles.sendStartCheckbox.Value);
+options.sendEnd = logical(handles.sendEndCheckbox.Value);
+options.sendFail = logical(handles.sendFailCheckbox.Value);
+options.sendSource = logical(handles.sendSourceCheckbox.Value);
+options.sendImages = logical(handles.sendImagesCheckbox.Value);
+options.numJobs = str2double(handles.numJobsEditText.String);
+options.use2FactorAuth = logical(handles.twoFactorCheckbox.Value);
+options.verificationCode = handles.verificationCodeEditText.String;
 
 
 
@@ -135,3 +143,15 @@ if isnan(val) || floor(val) ~= val || ~isreal(val)
     beep
     hObject.String = '1';
 end
+
+
+% --- Executes on button press in twoFactorCheckbox.
+function twoFactorCheckbox_Callback(hObject, eventdata, handles)
+if hObject.Value
+    handles.verificationCodeEditText.Enable = 'on';
+else
+    handles.verificationCodeEditText.Enable = 'off';
+end
+
+
+function verificationCodeEditText_Callback(hObject, eventdata, handles)

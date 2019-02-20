@@ -32,6 +32,12 @@ classdef Options
         
         % The ammount of jobs the batch should be spilt into
         numJobs
+        
+        % Should 2 factor authentication be used
+        use2FactorAuth
+        
+        % 2 Factor authentication verification code
+        verificationCode
     end
     
 end
