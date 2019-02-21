@@ -1,8 +1,5 @@
 function twoFactorAuthenticate(obj)
 
-
-javaaddpath('+superComp\java\SSHAuthorizationInterface-1.0-SNAPSHOT.jar')
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;

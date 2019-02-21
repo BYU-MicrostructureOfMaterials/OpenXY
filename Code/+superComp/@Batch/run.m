@@ -35,7 +35,10 @@ try
         '{ return_=0; }; echo "$return_"; unset return_'];
     
     if obj.options.use2FactorAuth
+        
+        javaaddpath('+superComp\java\SSHAuthorizationInterface-1.0-SNAPSHOT.jar')
         obj.twoFactorAuthenticate();
+        
     end
     
     [obj.connection, slurm_installed] = ...
