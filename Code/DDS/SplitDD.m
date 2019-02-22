@@ -145,18 +145,43 @@ if isfield(Settings,'Resize')
 else
     bestgmat=zeros(3,3,n*m);
 end
-for i=1:m*n
-    if bestgmat(:,:,Settings.RefInd(i))==0
-        gmat = euler2gmat(phi1rn(Settings.RefInd(i)),PHIrn(Settings.RefInd(i)), phi2rn(Settings.RefInd(i)));
-        [angle,Axis,deltaG, symclose]=GeneralMisoCalcSym(gmat,eye(3),lattype);
-        newgmat = symclose*gmat;
-        bestgmat(:,:,Settings.RefInd(i))=newgmat(:,:);
+if isfield(Settings,'Resize')
+    for i=1:m*n
+        if bestgmat(:,:,Settings.RefInd(i))==0
+            [ismem memind]=ismember(Settings.RefInd(i),Settings.Inds);
+            if ismem
+                gmat = euler2gmat(phi1rn(memind),PHIrn(memind), phi2rn(memind));
+                [angle,Axis,deltaG, symclose]=GeneralMisoCalcSym(gmat,eye(3),lattype);
+                newgmat = symclose*gmat;
+                bestgmat(:,:,Settings.RefInd(i))=newgmat(:,:);
+            else
+                gmat = euler2gmat(Settings.Angles(Settings.RefInd(i),1),Settings.Angles(Settings.RefInd(i),2),Settings.Angles(Settings.RefInd(i),3));
+                [angle,Axis,deltaG, symclose]=GeneralMisoCalcSym(gmat,eye(3),lattype);
+                newgmat = symclose*gmat;
+                bestgmat(:,:,Settings.RefInd(i))=newgmat(:,:);
+            end
+            if bestgmat(:,:,i)==0
+                gmat = euler2gmat(phi1rn(i),PHIrn(i), phi2rn(i));
+                [angle,Axis,deltaG, symclose]=GeneralMisoCalcSym(gmat,squeeze(bestgmat(:,:,Settings.RefInd(i))),lattype);
+                newgmat = symclose*gmat;
+                bestgmat(:,:,i)=newgmat(:,:);
+            end
+        end
     end
-    if bestgmat(:,:,i)==0
-        gmat = euler2gmat(phi1rn(i),PHIrn(i), phi2rn(i));
-        [angle,Axis,deltaG, symclose]=GeneralMisoCalcSym(gmat,squeeze(bestgmat(:,:,Settings.RefInd(i))),lattype);
-        newgmat = symclose*gmat;
-        bestgmat(:,:,i)=newgmat(:,:);
+else
+    for i=1:m*n
+        if bestgmat(:,:,Settings.RefInd(i))==0
+            gmat = euler2gmat(phi1rn(Settings.RefInd(i)),PHIrn(Settings.RefInd(i)), phi2rn(Settings.RefInd(i)));
+            [angle,Axis,deltaG, symclose]=GeneralMisoCalcSym(gmat,eye(3),lattype);
+            newgmat = symclose*gmat;
+            bestgmat(:,:,Settings.RefInd(i))=newgmat(:,:);
+        end
+        if bestgmat(:,:,i)==0
+            gmat = euler2gmat(phi1rn(i),PHIrn(i), phi2rn(i));
+            [angle,Axis,deltaG, symclose]=GeneralMisoCalcSym(gmat,squeeze(bestgmat(:,:,Settings.RefInd(i))),lattype);
+            newgmat = symclose*gmat;
+            bestgmat(:,:,i)=newgmat(:,:);
+        end
     end
 end
 
@@ -237,12 +262,12 @@ if NumberOfCores>1 %if parallel processing
             matlabpool('local',NumberOfCores);
         end
     end
-%     if any(strcmp(javaclasspath,fullfile(pwd,'java')))
-%         pctRunOnAll javaaddpath('java')
-%     end
+    %     if any(strcmp(javaclasspath,fullfile(pwd,'java')))
+    %         pctRunOnAll javaaddpath('java')
+    %     end
     
     disp(['Starting cross-correlation: ' num2str(m*n) ' points']);
-%     ppm = ParforProgMon( 'Split Dislocation Density ', m*n,1,400,50 );
+    %     ppm = ParforProgMon( 'Split Dislocation Density ', m*n,1,400,50 );
     
     parfor i = 1:m*n
         gmat = squeeze(bestgmat(:,:,i));
@@ -291,12 +316,11 @@ if NumberOfCores>1 %if parallel processing
                     rhos(:,i)=resolvedisloc(merp,11,minscheme,matchoice,gmat,stress, stepsize^2, x0type);
                 end
         end
-%         ppm.increment();
+        %         ppm.increment();
     end
 else
     h = waitbar(0.1,'splitting');
     for i = 1:m*n
-        
         gmat = squeeze(bestgmat(:,:,i));
         
         switch alphaorbeta
