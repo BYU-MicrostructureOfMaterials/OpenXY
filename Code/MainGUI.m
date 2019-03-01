@@ -27,11 +27,11 @@ function varargout = MainGUI(varargin)
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
-                   'gui_Singleton',  gui_Singleton, ...
-                   'gui_OpeningFcn', @MainGUI_OpeningFcn, ...
-                   'gui_OutputFcn',  @MainGUI_OutputFcn, ...
-                   'gui_LayoutFcn',  [] , ...
-                   'gui_Callback',   []);
+    'gui_Singleton',  gui_Singleton, ...
+    'gui_OpeningFcn', @MainGUI_OpeningFcn, ...
+    'gui_OutputFcn',  @MainGUI_OutputFcn, ...
+    'gui_LayoutFcn',  [] , ...
+    'gui_Callback',   []);
 if nargin && ischar(varargin{1})
     gui_State.gui_Callback = str2func(varargin{1});
 end
@@ -228,7 +228,7 @@ guidata(hObject, handles);
 % uiwait(handles.MainGUI);
 
 % --- Outputs from this function are returned to the command line.
-function varargout = MainGUI_OutputFcn(hObject, eventdata, handles) 
+function varargout = MainGUI_OutputFcn(hObject, eventdata, handles)
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -375,7 +375,7 @@ if ~strcmp(handles.FileDir,pwd)
 elseif handles.ScanFileLoaded
     cd(fileparts(handles.Settings.ScanFilePath));
 end
-    
+
 [name, path] = uigetfile({'*.jpg;*.jpeg;*.tif;*.tiff;*.bmp;*.png','Image Files (*.jpg,*.tif,*.bmp,*.png)'},'Select the First Image of the Scan');
 cd(wd);
 SetImageFields(handles,name,path);
@@ -399,7 +399,7 @@ if name ~= 0
         else
             pathT = path;
         end
-
+        
         %Update GUI labels
         set(handles.FirstImageNameText,'String',nameT);
         set(handles.FirstImageNameText,'TooltipString',name);
@@ -413,6 +413,14 @@ if name ~= 0
         handles.Settings.FirstImagePath = fullfile(path,name);
         handles.Settings.PixelSize = x;
         handles.Settings.ROISize = round((handles.Settings.ROISizePercent * .01)*handles.Settings.PixelSize);
+        if handles.Settings.mperpix==25 % if mperpix is the default value
+            if strcmp(handles.Settings.ScanFilePath(end),'f') % if aztec file, assume cropped phosphor
+                handles.Settings.mperpix=28800/max(x,y);
+            else
+                handles.Settings.mperpix=30000/max(x,y);
+            end
+            warndlg(['Setting microns per pixel to ',num2str(handles.Settings.mperpix),' you can change in microscope settings']);
+        end
         handles.Settings.PhosphorSize = handles.Settings.PixelSize * handles.Settings.mperpix;
         handles.Settings.imsize = [x,y];
         
@@ -497,7 +505,7 @@ if name ~= 0
         set(handles.OutputFolderText,'String',pathT);
         set(handles.OutputFolderText,'TooltipString',path);
         handles.Settings.OutputPath = fullfile(path,name);
-    end     
+    end
     handles.OutputLoaded = true;
 elseif ~handles.OutputLoaded
     set(handles.OutputResultsText,'String','Select an Output File');
@@ -831,7 +839,7 @@ Value = get(Popup,'Value');
 string = List{Value};
 
 function SetPopupValue(Popup,String)
-String = num2str(String);    
+String = num2str(String);
 List = get(Popup,'String');
 IndList = 1:length(List);
 Value = IndList(strcmp(List,String));
@@ -982,7 +990,7 @@ if any(strcmp(eventdata.Modifier,'shift')) && strcmp(eventdata.Key,'b')
     handles.Settings = Settings;
     guidata(hObject,handles);
 end
-    
+
 function superCompButton_Callback(hObject, eventdata, handles)
 
 handles.superCompGUI = SuperCompGUI(handles.MainGUI);
