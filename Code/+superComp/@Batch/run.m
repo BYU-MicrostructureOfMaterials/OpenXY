@@ -15,28 +15,30 @@ function run(obj)
 %
 %   See also supercomp.Options
 
+function closeConection(obj)
+    ssh2_close(obj.connection);
+    obj.connection = [];
+end
 
-% Open a persistent conection to the supercomputer
-obj.connection = ssh2_config(...
-    obj.options.hostName,...
-    obj.options.userName,...
-    obj.options.password...
-    );
-
-% Set up an onCleanup to close the conection when the function exits
-    function closeConection(obj)
-        ssh2_close(obj.connection);
-        obj.connection = [];
-    end
-connectionCleanup = onCleanup( @() closeConection(obj) );
 
 try
+    
+    % Open a persistent conection to the supercomputer
+    obj.connection = ssh2_config(...
+        obj.options.hostName,...
+        obj.options.userName,...
+        obj.options.password...
+        );
+    
+    % Set up an onCleanup to close the conection when the function exits
+    connectionCleanup = onCleanup( @() closeConection(obj) );
+    
     command = ['export return_=1; type sbatch >/dev/null 2>&1 || '...
         '{ return_=0; }; echo "$return_"; unset return_'];
     
     if obj.options.use2FactorAuth
-        
-        javaaddpath('+superComp\java\SSHAuthorizationInterface-1.0-SNAPSHOT.jar')
+        jarPath = regexprep('+superComp/java/SSHAuthorizationInterface-1.0-SNAPSHOT.jar', '/', filesep);
+        javaaddpath(jarPath)
         obj.twoFactorAuthenticate();
         
     end
