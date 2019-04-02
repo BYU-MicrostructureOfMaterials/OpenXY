@@ -71,7 +71,7 @@ classdef Batch < handle
                     error('OpenXY:superComp:UnsupportedMethod',...
                         ['Dynamic pattern simulation not supported '...
                         'on the supercomputer!'])
-                case {'Real-Grain Ref', 'Real-Single Ref'}
+                case {'Real-Grain Ref', 'Real-Single Ref', 'Real'}
                     time = duration(0,0,0.4);
                 case 'Remapping'
                     time = duration(0,0,6);
