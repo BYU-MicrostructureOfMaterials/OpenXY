@@ -112,7 +112,19 @@ if ~strcmp(pwd,XYpath)
     path(p);
 end
 addpath(genpath(XYpath));
-addpath('quaternions')
+
+%Validate that quaternions submodulehas been cloned, and add to path
+if exist('quaternions', 'dir') && size(dir('quaternions'), 1) > 1
+    addpath('quaternions')
+else
+     h = warndlg([
+         "You have not cloned the quaternions submodule." 
+         "Some features may not work properly."
+         "Please run the command git submodule update --init --recursive"
+         "or download the code from https://github.com/BYU-MicrostructureOfMaterials/quaternions"
+         ], 'Missing Code');
+     uiwait(h)
+end
 addpath('DDS')
 
 %Add sub folder(s)
