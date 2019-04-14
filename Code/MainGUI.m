@@ -118,10 +118,10 @@ if exist('quaternions', 'dir') && size(dir('quaternions'), 1) > 1
     addpath('quaternions')
 else
      h = warndlg([
-         "You have not cloned the quaternions submodule." 
-         "Some features may not work properly."
-         "Please run the command git submodule update --init --recursive"
-         "or download the code from https://github.com/BYU-MicrostructureOfMaterials/quaternions"
+         'You have not cloned the quaternions submodule.' 
+         'Some features may not work properly.'
+         'Please run the command git submodule update --init --recursive'
+         'or download the code from https://github.com/BYU-MicrostructureOfMaterials/quaternions'
          ], 'Missing Code');
      uiwait(h)
 end
@@ -143,7 +143,7 @@ else
     handles.Settings.CalcMI = 1;
 end
 
-if ~any(strcmp({tb.Name},'Parallel Computing Toolbox')) && Settings.DoParallel > 1
+if ~any(strcmp({tb.Name},'Parallel Computing Toolbox')) && handles.Settings.DoParallel > 1
     w = warndlg({'Parallel Computing Toolbox not installed';'Switching to serial processing'});
     uiwait(w,5);
     handles.Settings.DoParallel = 1;
