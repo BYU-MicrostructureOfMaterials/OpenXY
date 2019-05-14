@@ -6,4 +6,6 @@ switch Type
         map = permute(reshape(vec(:),width,height,sze),[2 1 3]);
     case 'Hexagonal'
         map = Hex2Array(vec,width);
+    otherwise
+        error('vec2map:input', "%s is not a valid scan type.\n Expected 'Square' or 'Hexagonal'", Type);
 end
