@@ -1,8 +1,8 @@
-classdef UPPatternProvider < images.PatternProvider
+classdef UPPatternProvider < patterns.PatternProvider
     %UPPATTERNPROVIDER PatternProvider for .up1 and .up2 files
     
     properties (Access = private, Transient)
-        fileMap 
+        fileMap
     end
     
     methods
@@ -13,15 +13,15 @@ classdef UPPatternProvider < images.PatternProvider
                     precision = 'uint8';
                 case '.up2'
                     precision = 'uint16';
-                otherwise 
+                otherwise
                     error('OpenXY:PatternProvider',...
                         '%s is not a valid file', fileName)
             end
             
             [version, width, height, offset] = ...
-                images.UPPatternProvider.readHeader(fileName);
+                patterns.UPPatternProvider.readHeader(fileName);
             
-            obj@images.PatternProvider(min(width, height));
+            obj@patterns.PatternProvider(fileName, min(width, height));
             
             if version > 2
                 % Extra information can be read from the file if it is
@@ -34,13 +34,25 @@ classdef UPPatternProvider < images.PatternProvider
             obj.fileMap = memmapfile(fileName,...
                 'Offset', offset, 'Format', formatCell);
         end
-                
+        
+        function sobj = saveobj(obj)
+            sobj = saveobj@patterns.PatternProvider(obj);
+        end
+        
     end
     
     methods (Access = protected)
         function pattern = getPatternData(obj, ind)
             pattern = obj.fileMap.Data(ind).image';
         end
+        
+        function obj = restore(obj, ~)
+            %Restore restores specific properties for this subclass
+            % Currently none for this class, so this method is a no-op, but
+            % this must be implemented
+        end
+        
+        
     end
     
     methods (Static)

@@ -101,7 +101,7 @@ classdef ImageFilter
            end
            
            obj = a;
-           obj.distGrid = images.ImageFilter.makeDistGrid(obj.imSize);
+           obj.distGrid = patterns.ImageFilter.makeDistGrid(obj.imSize);
         end
     end
 end
