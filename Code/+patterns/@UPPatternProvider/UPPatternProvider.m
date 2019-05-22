@@ -58,6 +58,10 @@ classdef UPPatternProvider < patterns.PatternProvider
     methods (Static)
         function [version, width, height, offset] = readHeader(fileName)
             fid = fopen(fileName);
+            if fid < 0
+                error('OpenXY:patterns', ...
+                    'Could not open file %s', fileName)
+            end
             whenDone = onCleanup(@() fclose(fid));
             version = fread(fid, 1, 'int');
             width = fread(fid, 1, 'int');
