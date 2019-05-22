@@ -46,16 +46,15 @@ classdef UPPatternProvider < patterns.PatternProvider
             pattern = obj.fileMap.Data(ind).image';
         end
         
-        function obj = restore(obj, ~)
-            %Restore restores specific properties for this subclass
-            % Currently none for this class, so this method is a no-op, but
-            % this must be implemented
-        end
-        
-        
     end
     
     methods (Static)
+        function obj = restore(loadStruct)
+            obj = patterns.UPPatternProvider(loadStruct.fileName);
+        end
+        
+        
+
         function [version, width, height, offset] = readHeader(fileName)
             fid = fopen(fileName);
             if fid < 0

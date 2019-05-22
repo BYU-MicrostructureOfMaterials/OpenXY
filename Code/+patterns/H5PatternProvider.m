@@ -30,17 +30,22 @@ classdef H5PatternProvider < patterns.PatternProvider
     end
     
     methods (Access = protected)
-        function obj = restore(obj, loadStruct)
-            obj.patternPath = loadStruct.patternPath;
-            obj.patternSize = loadStruct.patternSize;
-        end
-        
         function pattern = getPatternData(obj, ind)
             start = ones(size(obj.patternSize));
             start(obj.patternSize == 1) = ind;
             count = obj.patternSize;
             pattern = h5read(obj.fileName, obj.patternPath, start, count)';
         end
+    end
+    
+    methods (Static)
+        function obj = restore(loadStruct)
+            obj = patterns.H5PatternProvider(loadStruct.fileName);
+            obj.patternPath = loadStruct.patternPath;
+            obj.patternSize = loadStruct.patternSize;
+        end
+        
+
     end
 end
 

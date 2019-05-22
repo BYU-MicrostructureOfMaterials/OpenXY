@@ -9,12 +9,12 @@ classdef (Abstract) PatternProvider
         doCropSquare logical {isscalar} = true;
     end
     
-    properties
-    end
-    
     methods (Abstract, Access = protected)
         pattern = getPatternData(obj, ind)
-        obj = restore(obj, loadStruct)
+    end
+    
+    methods (Abstract, Static)
+        obj = restore(loadStruct)
     end
     
     methods
@@ -77,21 +77,24 @@ classdef (Abstract) PatternProvider
         end
         
         function obj = loadobj(loadStruct)
+            if ~exist(loadStruct.fileName, 'file')
+                obj = patterns.DummyPatternProvider(loadStruct.fileName);
+                return
+            end
+            
             [~, ~, extension] = fileparts(loadStruct.fileName);
             switch lower(extension)
                 case {'.up1', '.up2'}
-                    ctor = @patterns.UPPatternProvider;
+                    obj = patterns.UPPatternProvider.restore(loadStruct);
+                case '.h5'
+                    obj = patterns.H5PatternProvider.restore(loadStruct);
                 otherwise
                     error('patterns:PatternProvider',...
                         'unrecognized file extension %s', extension)
             end
             
-            if ~exist(loadStruct.fileName, 'file')
-                ctor = @patterns.DummyPatternProvider;
-            end
-            
-            obj = ctor(loadStruct.fileName);
-            obj = obj.restore(loadStruct);
+            obj.doCropSquare = loadStruct.doCropSquare;
+            obj.filter = loadStruct.filter;
             obj.doCropSquare = loadStruct.doCropSquare;
         end
     end
