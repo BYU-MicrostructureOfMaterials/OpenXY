@@ -1,6 +1,10 @@
 classdef H5PatternProvider < patterns.PatternProvider
     %H5PATTERNPROVIDER Provides patterns from an HDF5 file
     
+    properties
+        imSize
+    end
+    
     properties(Access = private)
         patternPath(1,:) char 
         patternSize
@@ -20,6 +24,7 @@ classdef H5PatternProvider < patterns.PatternProvider
             obj@patterns.PatternProvider(fileName, max(patternSize));
             obj.patternPath = patternPath;
             obj.patternSize = patternSize;
+            obj.imSize = patternSize(1:2);
         end
         
         function sobj = saveobj(obj)

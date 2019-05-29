@@ -1,6 +1,10 @@
 classdef UPPatternProvider < patterns.PatternProvider
     %UPPATTERNPROVIDER PatternProvider for .up1 and .up2 files
     
+    properties
+        imSize
+    end
+    
     properties (Access = private, Transient)
         fileMap
     end
@@ -22,6 +26,8 @@ classdef UPPatternProvider < patterns.PatternProvider
                 patterns.UPPatternProvider.readHeader(fileName);
             
             obj@patterns.PatternProvider(fileName, min(width, height));
+            
+            obj.imSize = [width, height];
             
             if version > 2
                 % Extra information can be read from the file if it is

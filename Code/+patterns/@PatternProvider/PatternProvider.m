@@ -9,6 +9,10 @@ classdef (Abstract) PatternProvider
         doCropSquare logical {isscalar} = true;
     end
     
+    properties (Abstract)
+        imSize(1,2) double
+    end
+    
     methods (Abstract, Access = protected)
         pattern = getPatternData(obj, ind)
     end

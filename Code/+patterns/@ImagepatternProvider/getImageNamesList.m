@@ -1,4 +1,4 @@
-function [ImageNamesList] = GetImageNamesList(firstImagename, scanFormat, scanLength, dimensions, startLocation, steps)
+function [ImageNamesList] = getImageNamesList(firstImagename, scanFormat, scanLength, dimensions, startLocation, steps)
 %GETIMAGENAMESLIST
 %ImageNamesList = GetImageNamesList(ScanFormat, ScanLength, Dimensions, firstImagename, XStep, YStep)
 %Returns a list of image names belonging to a scan, given the scan format,

@@ -1,5 +1,8 @@
 classdef DummyPatternProvider < patterns.PatternProvider
     
+    properties
+        imSize = -1
+    end
     
     methods
         function obj = DummyPatternProvider(fileName)
@@ -10,16 +13,16 @@ classdef DummyPatternProvider < patterns.PatternProvider
     end
     
     methods (Access = protected)
-        function obj = restore(obj, ~)
-            %Restore restores specific properties for this subclass
-            % Currently none for this class, so this method is a no-op, but
-            % this must be implemented
-        end
-        
         function pattern = getPatternData(obj, ind)
             pattern = [];
             error('OpenXY:patterns',...
                 'Cannot load patterns without %s', obj.fileName)
+        end
+    end
+    
+    methods (Static)
+        function obj = restore(loadStruct)
+            obj = patterns.PatternProvider(loadStruct.fileName);
         end
     end
 end

@@ -381,11 +381,10 @@ function SelectImageButton_Callback(hObject, eventdata, handles)
 % hObject    handle to SelectImageButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-wd = pwd;
 if ~strcmp(handles.FileDir,pwd)
-    cd(handles.FileDir);
+    wd = cd(handles.FileDir);
 elseif handles.ScanFileLoaded
-    cd(fileparts(handles.Settings.ScanFilePath));
+    wd = cd(fileparts(handles.Settings.ScanFilePath));
 end
 
 [name, path] = uigetfile({'*.jpg;*.jpeg;*.tif;*.tiff;*.bmp;*.png','Image Files (*.jpg,*.tif,*.bmp,*.png)'},'Select the First Image of the Scan');

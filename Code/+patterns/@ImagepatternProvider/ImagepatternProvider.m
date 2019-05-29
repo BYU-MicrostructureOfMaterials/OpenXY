@@ -1,8 +1,12 @@
 classdef ImagepatternProvider < patterns.PatternProvider
     
+    properties
+        imSize
+    end
+    
     properties (Access = private)
         imageNames
-        scanFormat
+        scanFormat(1,:) char {mustBeMember(scanFormat, {'Hexagonal', 'Square',''})}
         scanLength
         dimensions
         startLocation
@@ -11,26 +15,32 @@ classdef ImagepatternProvider < patterns.PatternProvider
     
     methods
         function obj = ImagepatternProvider(...
-                firstImagename, scanFormat, scanLength,...
+                firstImageName, scanFormat, scanLength,...
                 dimensions, startLocation, steps)
+            
+            firstImageName = char(firstImageName);
             
             info = imfinfo(firstImageName);
             obj@patterns.PatternProvider(...
                 firstImageName, min(info.Width, info.Height));
-            
-            obj.imageNames = obj.getImagenamesList(...
-                firstImagename,...
-                scanFormat,...
-                scanLength,...
-                dimensions,...
-                startLocation,...
-                steps);
             
             obj.scanFormat = scanFormat;
             obj.scanLength = scanLength;
             obj.dimensions = dimensions;
             obj.startLocation = startLocation;
             obj.steps = steps;
+            
+            obj.imageNames = obj.getImageNamesList(...
+                firstImageName,...
+                scanFormat,...
+                scanLength,...
+                dimensions,...
+                startLocation,...
+                steps);
+            im = obj.getPatternData(1);
+            sz = size(im);
+            obj.imSize = im(1:2);
+
         end
         
         function sobj = saveobj(obj)
@@ -47,7 +57,7 @@ classdef ImagepatternProvider < patterns.PatternProvider
     
     methods (Access = protected)
         function pattern = getPatternData(obj, index)
-            pattern = imread(obj.imageNames{index});
+            pattern = mean(imread(obj.imageNames{index}),3);
         end
     end
     
@@ -62,7 +72,7 @@ classdef ImagepatternProvider < patterns.PatternProvider
                 loadStruct.steps);
         end
         
-        imageNames = getImagenamesList(firstImagename, scanFormat, scanLength, dimensions, startLocation, steps)
+        imageNames = getImageNamesList(firstImagename, scanFormat, scanLength, dimensions, startLocation, steps)
     end
 end
 
