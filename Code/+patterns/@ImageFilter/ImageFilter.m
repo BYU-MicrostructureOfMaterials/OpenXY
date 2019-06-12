@@ -2,15 +2,21 @@ classdef ImageFilter
     %IMAGEFILTER Summary of this class goes here
     %   Detailed explanation goes here
     
+    properties (Constant)
+        possibleTypes = {'standard','localthresh'};
+    end
+    
     properties
         lowerRadius(1, 1)...
-            double  {mustBeNonnegative, mustBeNumeric} = 9
+            double  {mustBeNonnegative} = 9
         upperRadius(1, 1)...
-            double  {mustBeNonnegative, mustBeNumeric} = 90
+            double  {mustBeNonnegative} = 90
         lowerSmoothing(1, 1)...
             logical = false
         upperSmoothing(1, 1)...
             logical = false
+        filterType(1, 1)...
+            patterns.ImageFilterType = patterns.ImageFilterType.standard;
         
     end
     
@@ -50,6 +56,21 @@ classdef ImageFilter
             
             im = single(im - mean(im(:)));
             
+        end
+        
+        function tf = eq(obj, other)
+            tf = isa(other, class(obj));
+            if ~tf; return; end
+            
+            tf =obj.lowerRadius == other.lowerRadius &&...
+                obj.upperRadius == other.upperRadius &&...
+                obj.upperSmoothing == other.upperSmoothing &&...
+                obj.lowerSmoothing == other.lowerSmoothing;
+            
+        end
+        
+        function tf = ne(obj, other)
+            tf = ~(obj == other);
         end
         
         function filt = get.imfilter(obj)

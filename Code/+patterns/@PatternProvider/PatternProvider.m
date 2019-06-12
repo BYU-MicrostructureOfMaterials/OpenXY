@@ -50,6 +50,13 @@ classdef (Abstract) PatternProvider
             end
         end
         
+        function pattern = getUnfilteredPattern(obj, ind)
+            pattern = single(obj.getPatternData(ind));
+            if obj.doCropSquare
+                pattern = obj.cropIm(pattern);
+            end
+        end
+        
         function sobj = saveobj(obj)
             sobj.fileName = obj.fileName;
             sobj.filter = obj.filter;

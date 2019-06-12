@@ -272,7 +272,10 @@ wd = pwd;
 if ~strcmp(handles.FileDir,pwd)
     cd(handles.FileDir);
 end
-[name, path, filterind] = uigetfile({'*.ang;*.ctf','Scan Files (*.ang,*.ctf)';'*.h5','OIM HDF5 Files (*.h5)'},'Select a Scan File');
+[name, path, filterind] = uigetfile({
+    '*.ang;*.ctf', 'Scan Files (*.ang,*.ctf)'
+    '*.h5', 'OIM HDF5 Files (*.h5)'
+    },'Select a Scan File');
 cd(wd);
 SetScanFields(handles,name,path,filterind);
 
@@ -305,31 +308,22 @@ if name ~= 0
             try
                 handles.Settings = ImportScanInfo(handles.Settings,name,path);
             catch ME
+                set(handles.ScanNameText,'String','Select a Scan');
+                set(handles.ScanFolderText,'String','Select a Scan');
+                set(handles.ScanFolderText,'TooltipString','');
+                set(handles.ScanSizeText,'String','Select a Scan');
                 if strcmp(ME.identifier,'OpenXY:MissingGrainFile')
-                    set(handles.ScanNameText,'String','Select a Scan');
-                    set(handles.ScanFolderText,'String','Select a Scan');
-                    set(handles.ScanFolderText,'TooltipString','');
-                    set(handles.ScanSizeText,'String','Select a Scan');
                     if (strcmp(ME.message,'No'))
                         errordlg('You cannot use an OIM scan without a grain file!','Grain file required!')
                     end
                     return
                 elseif strcmp(ME.identifier,'OpenXY:MissingcprFile')
-                    set(handles.ScanNameText,'String','Select a Scan');
-                    set(handles.ScanFolderText,'String','Select a Scan');
-                    set(handles.ScanFolderText,'TooltipString','');
-                    set(handles.ScanSizeText,'String','Select a Scan');
                     if (strcmp(ME.message,'No'))
                         errordlg('You cannot use an AZtec scan without a .cpr file!','.cpr file required!')
                     end
                     return
                 else
-                    set(handles.ScanNameText,'String','Select a Scan');
-                    set(handles.ScanFolderText,'String','Select a Scan');
-                    set(handles.ScanFolderText,'TooltipString','');
-                    set(handles.ScanSizeText,'String','Select a Scan');
-                    openFiles = fopen('all');
-                    for ii = openFiles
+                    for ii = fopen('all')
                         fclose(ii);
                     end
                     rethrow(ME);
@@ -353,6 +347,7 @@ if name ~= 0
                     handles.Settings.ImageNamesList = ImportImageNamesList(handles.Settings);
                 end
             else
+                handles.Settings.patterns = patterns.H5PatternProvider(fullfile(path, name));
                 set(handles.SelectImageButton,'Enable','off');
                 handles.ImageLoaded = 1;
                 set(handles.FirstImageNameText,'String','N/A');
@@ -387,11 +382,15 @@ elseif handles.ScanFileLoaded
     wd = cd(fileparts(handles.Settings.ScanFilePath));
 end
 
-[name, path] = uigetfile({'*.jpg;*.jpeg;*.tif;*.tiff;*.bmp;*.png','Image Files (*.jpg,*.tif,*.bmp,*.png)'},'Select the First Image of the Scan');
+[name, path, selection] = uigetfile({
+    '*.jpg;*.jpeg;*.tif;*.tiff;*.bmp;*.png','Image Files'
+    '*.up1;*.up2', 'OIM Uncompressed Pattern Format'
+    },...
+    'Select the First Image of the Scan or patern archive');
 cd(wd);
-SetImageFields(handles,name,path);
+SetImageFields(handles,name,path, selection);
 
-function SetImageFields(handles,name,path)
+function SetImageFields(handles,name,path, selection)
 if name ~= 0
     if strcmp(handles.FileDir,pwd)
         handles.FileDir = path;
@@ -412,17 +411,44 @@ if name ~= 0
         end
         
         %Update GUI labels
-        set(handles.FirstImageNameText,'String',nameT);
-        set(handles.FirstImageNameText,'TooltipString',name);
-        set(handles.ImageFolderText,'String',pathT);
-        set(handles.ImageFolderText,'TooltipString',path);
+        handles.FirstImageNameText.String = nameT;
+        handles.FirstImageNameText.TooltipString = name;
+        handles.ImageFolderText.String = pathT;
+        handles.ImageFolderText.TooltipString = path;
         
-        [x,y,~] = size(imread(fullfile(path,name)));
+        switch selection
+            case 1
+                Settings = handles.Settings;
+                if strcmp(Settings.ScanType,'Square')
+                    xStep = X(2)-X(1);
+                    if length(Y) > 1
+                        yStep = Y(2)-Y(1);
+                    else
+                        yStep = 0; %Line Scans
+                    end
+                else
+                    xStep = X(3)-X(1);
+                    yStep = Y(3)-Y(1);
+                end
+                pats = patterns.ImagepatternProvider(...
+                    fullfile(path,name),...
+                    Settings.ScanType,...
+                    Settings.ScanLength,...
+                    [Settings.Nx, Settings.Ny],...
+                    [Settings.XData, Settings.YData],...
+                    [xStep, yStep]);
+            
+            case 2
+                pats = patterns.UPPatternProvider(fullfile(path,name));
+        end
+        x = pats.imSize(1);
+        y = pats.imSize(2);
         improp = dir(fullfile(path,name));
         SizeStr = [num2str(x) 'x' num2str(y) ' (' num2str(round(improp.bytes/1024)) ' KB)'];
-        set(handles.ImageSizeText,'String',SizeStr);
+        set(handles.ImageSizeText,'String',SizeStr); %TODO Adjust this for .up* files to be in larger units (e.g. GB)
         handles.Settings.FirstImagePath = fullfile(path,name);
         handles.Settings.PixelSize = x;
+        %TODO If you change the ROIs, this will need to change
         handles.Settings.ROISize = round((handles.Settings.ROISizePercent * .01)*handles.Settings.PixelSize);
         if handles.Settings.mperpix==25 % if mperpix is the default value
             if strcmp(handles.Settings.ScanFilePath(end),'f') % if aztec file, assume cropped phosphor
@@ -437,15 +463,17 @@ if name ~= 0
         
         %Get Image Names
         if handles.ScanFileLoaded && ~handles.Fast
-            handles.Settings.ImageNamesList = ImportImageNamesList(handles.Settings);
+            handles.Settings.patterns = pats;
         end
         
-        %Determine if the image has a custom tag in header
-        info = imfinfo(handles.Settings.FirstImagePath);
-        if isfield(info,'UnknownTags')
-            if ~isempty(strfind(info.UnknownTags.Value,'<pattern-center-x-pu>'))
-                handles.Settings.ImageTag = true;
-                handles.Settings.VHRatio = info.Height/info.Width;
+        if isa(pats, 'patterns.ImagepatternProvider')
+            %Determine if the image has a custom tag in header
+            info = imfinfo(handles.Settings.FirstImagePath);
+            if isfield(info,'UnknownTags')
+                if ~isempty(strfind(info.UnknownTags.Value,'<pattern-center-x-pu>'))
+                    handles.Settings.ImageTag = true;
+                    handles.Settings.VHRatio = info.Height/info.Width;
+                end
             end
         end
     end
