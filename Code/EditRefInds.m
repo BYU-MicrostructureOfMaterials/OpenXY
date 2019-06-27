@@ -1,4 +1,4 @@
-function RefInd = EditRefInds(Fig,ScanFilePath,grainID,ImageNames,ScanData,...
+function RefInd = EditRefInds(Fig,ScanFilePath,grainID,patternProvider,ScanData,...
     mapsize,ScanType,AutoRefInds,imsize,ImageFilt,Inds,valid)
 if nargin<8
     Inds = 0;
@@ -122,13 +122,8 @@ while morepoints
                 pos = get(main,'Position');
                 pat = figure('Position',[pos(1)+pos(3)+15 pos(2) pos(3) pos(4)]);
             end
-            if ~isempty(ImageNames)
-                if size(ImageNames,1)>1
-                    pattern = ReadEBSDImage(ImageNames{ind,1},ImageFilt);
-                else
-                    pattern = ReadH5Pattern(ScanFilePath,ImageNames,...
-                        imsize,ImageFilt,valid,ind);
-                end
+            if ~isempty(patternProvider)
+                pattern = patternProvider.getPattern(ind);
             else
                 pattern = imread('NoImage.jpg');
             end

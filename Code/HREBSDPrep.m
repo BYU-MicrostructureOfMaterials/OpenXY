@@ -21,6 +21,8 @@ if ~isfield(Settings,'ImageNamesList')
     disp('Reading Scan File...')
     Settings = ImportScanInfo(Settings,Settings.ScanFilePath);
     if ~isempty(Settings.FirstImagePath)
+        % TODO Make this a PatternProvider factory rather than
+        % ImageNamesList importing
         Settings.ImageNamesList = ImportImageNamesList(Settings);
     end
 end

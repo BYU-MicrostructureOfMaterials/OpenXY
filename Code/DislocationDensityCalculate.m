@@ -75,7 +75,6 @@ elseif run==2 && strcmp(Settings.ScanType,'LtoSquare')
     stepsize_orig = abs((data.xpos(5)-data.xpos(2))/1e6);
 end
 ScanType=Settings.ScanType;
-% intensityr=zeros(size(ImageNamesList));
 alpha_data.r=r;
 alpha_data.c=c;
 
@@ -118,22 +117,12 @@ end
 disp(Settings.ScanType)
 if ~strcmp(Settings.ScanType,'L')
     
-    if size(Settings.ImageNamesList,1)>1
-        ScanImage = ReadEBSDImage(Settings.ImageNamesList{1},Settings.ImageFilter);
-    else
-        ScanImage = ReadH5Pattern(Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter,Settings.valid,1);
-    end
+    ScanImage = Settings.patterns.getPattern(1);
     
     [roixc,roiyc]= GetROIs(ScanImage,Settings.NumROIs,Settings.PixelSize,...
         Settings.ROISize, Settings.ROIStyle);
     Settings.roixc = roixc;
     Settings.roiyc = roiyc;
-
-  %Not sure if everything before matlabpool close force is necessary...Travis?  ImageNamesList=Settings.ImageNamesList;
-  %  ImageFilter=Settings.ImageFilter;
-   % Allg=data.g;
-   % ScanType=Settings.ScanType;
-   % intensityr=zeros(size(ImageNamesList));
 
     N = Settings.ScanLength;
     
@@ -217,7 +206,7 @@ if ~strcmp(Settings.ScanType,'L')
                     DDCalcEasy(RefInds(cnt,:),Refg(:,:,:,cnt),lattice{cnt},Settings);
                 AllSSEa(cnt) = 0;
                 AllSSEc(cnt) = 0;
-        end
+            end
             waitbar(cnt/N,h)
         end
         close(h);
@@ -515,13 +504,6 @@ function [AllFa,AllSSEa,AllFc,AllSSEc, misanglea, misanglec] = DDCalc(RefInd,Ref
     
     skippts = Settings.NumSkipPts;
     
-    %Check Pattern Source
-    H5Images = false;
-    if size(Settings.ImageNamesList,1)==1
-        H5Images = true;
-        H5ImageParams = {Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter};
-    end
-    
     %Extract Dim variables
     r = Settings.data.rows;%
     
@@ -535,36 +517,24 @@ function [AllFa,AllSSEa,AllFc,AllSSEc, misanglea, misanglec] = DDCalc(RefInd,Ref
     Cmat = RefG(:,:,3);
     
     %Get Patterns
-    if ~H5Images
-        image_a = ReadEBSDImage(Settings.ImageNamesList{RefIndA},ImageFilter);
-        image_b = ReadEBSDImage(Settings.ImageNamesList{cnt},ImageFilter);
-        image_c = ReadEBSDImage(Settings.ImageNamesList{RefIndC},ImageFilter);
-    else
-        H5ImageParams = {Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter,Settings.valid};
-        image_a = ReadH5Pattern(H5ImageParams{:},RefIndA,Settings.valid);
-        image_b = ReadH5Pattern(H5ImageParams{:},cnt);
-        image_c = ReadH5Pattern(H5ImageParams{:},RefIndC);
-    end
-        
+    image_a = Settings.patterns.getPattern(RefIndA);
+    image_b = Settings.patterns.getPattern(cnt);
+    image_c = Settings.patterns.getPattern(RefIndC);
+    
+    
+    
     if strcmp(Settings.ScanType,'Hexagonal')
         step = skippts+0.5;
         Cind = 4;
         if mod(ceil(step),2) %Two Ref A's
+            % FIXME This seems odd, I'll need to fix it... --Zach C.
             RefIndA2 = RefInd(4);
-            if ~H5Images
-                image_a2 = ReadEBSDImage(Settings.ImageNamesList{RefIndA},ImageFilter);
-            else
-                image_a2 = ReadH5Pattern(H5ImageParams{:},RefIndA2);
-            end
+            image_a2 = Settings.patterns.getPattern(RefIndA2);
             Cind = 5;
         end
         if mod(step,1) > 0 %Two Ref C's
             RefIndC2 = RefInd(Cind);
-            if ~H5Images
-                image_c2 = ReadEBSDImage(Settings.ImageNamesList{RefIndC},ImageFilter);
-            else
-                image_c2 = ReadH5Pattern(H5ImageParams{:},RefIndC2);
-            end
+            image_c2 = Settings.patterns.getPattern(RefIndC2);
         end
     end
     
@@ -617,13 +587,6 @@ function [AllFa,AllFc,misanglea,misanglec] = DDCalcEasy(RefInd, RefG, lattice, S
 
     skippts = Settings.NumSkipPts;
         
-    %Check Pattern Source
-    H5Images = false;
-    if size(Settings.ImageNamesList,1)==1
-        H5Images = true;
-        H5ImageParams = {Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter};
-        end
-
     %Extract Dim variables
     r = Settings.Ny;%
         

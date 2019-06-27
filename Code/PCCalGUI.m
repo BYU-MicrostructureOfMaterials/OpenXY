@@ -896,7 +896,7 @@ function fromtiffbutton_Callback(hObject, eventdata, handles)
 function tiff_calibration(hObject,eventdata,handles)
 handles = guidata(hObject);
 Settings = handles.Settings;
-info = imfinfo(Settings.ImageNamesList{1});
+
 
 if Settings.ImageTag %See MainGUI.m SetImageFields
     

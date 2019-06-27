@@ -341,18 +341,24 @@ if name ~= 0
             MaterialPopup_Callback(handles.MaterialPopup, [], handles);
             handles = guidata(handles.MainGUI);
             
-            if filterind == 1 %Not h5
-                %Get Image Names
-                if handles.ImageLoaded
-                    handles.Settings.ImageNamesList = ImportImageNamesList(handles.Settings);
-                end
-            else
+            if filterind ~= 1 %Not h5
                 handles.Settings.patterns = patterns.H5PatternProvider(fullfile(path, name));
                 set(handles.SelectImageButton,'Enable','off');
                 handles.ImageLoaded = 1;
                 set(handles.FirstImageNameText,'String','N/A');
                 set(handles.ImageFolderText,'String','N/A');
                 set(handles.ImageSizeText,'String','N/A');
+            else
+                if handles.ImageLoaded
+                    % This was here before the PatternProvider refactor and
+                    % I don't really know if it was actually ever called,
+                    % but if it was, the behavior needs to be replicated. I
+                    % don't know what that behavior was, but if you
+                    % encountered the error mesage, then you should let me
+                    % know what you were doing on github. --Zach Clayburn
+                    warning('The functionality needed is not implemented')
+                    %handles.Settings.ImageNamesList = ImportImageNamesList(handles.Settings);
+                end
             end
         end
     end
@@ -419,6 +425,8 @@ if name ~= 0
         switch selection
             case 1
                 Settings = handles.Settings;
+                X = Settings.XData;
+                Y = Settings.YData;
                 if strcmp(Settings.ScanType,'Square')
                     xStep = X(2)-X(1);
                     if length(Y) > 1
