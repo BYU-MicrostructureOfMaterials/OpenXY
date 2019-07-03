@@ -7,6 +7,9 @@ function alpha_data = DislocationDensityCalculate(Settings,MaxMisorientation,IQc
 format compact
 tic
 
+%FIXME make this toggleable
+doEnforcedAntisymetry = false;
+
 NoStrain = false;
 
 %Calculate Dislocation Density
@@ -252,6 +255,8 @@ else
     alpha_total9=zeros(1,Settings.ScanLength);
 end
 
+NewBeta = Beta;
+
 % if strcmp(Settings.ScanType,'L')
     FcList = [data.Fc{:}];
     FcArray=reshape(FcList,[3,3,length(FcList(1,:))/3]);
@@ -306,28 +311,52 @@ alpha_data.Fc=FcSample;
 disp(['MinCutoff: ',num2str(MinCutoff)])
 disp(['UpperCutoff: ',num2str(UpperCutoff)])
 
-% Beta(i,j,k(Fc=1 or Fa=2),point number)=0;
+if doEnforcedAntisymetry
+    [~, FaSample] = poldec(FaSample);
+    [~, FcSample] = poldec(FcSample);
+end
+
 % Beta is the derivate of the beta tensors
-Beta(1,1,2,:)=-(FaSample(1,1,:)-1)/stepsizea;
-% Beta(1,2,2,:)=-FaSample(1,2,:)/stepsize;
-Beta(1,3,2,:)=-FaSample(1,3,:)/stepsizea;
-% Beta(1,1,1,:)=(FcSample(1,1,:)-1)/stepsize;
-Beta(1,2,1,:)=FcSample(1,2,:)/stepsizec;
-Beta(1,3,1,:)=FcSample(1,3,:)/stepsizec;
+% Beta(i,j,k(Fc=1 or Fa=2),point number)=0;
 
-Beta(2,1,2,:)=-(FaSample(2,1,:))/stepsizea;
-% Beta(2,2,2,:)=-(FaSample(2,2,:)-1)/stepsize;
-Beta(2,3,2,:)=-FaSample(2,3,:)/stepsizea;
-Beta(2,2,1,:)=(FcSample(2,2,:)-1)/stepsizec;
-% Beta(2,1,1,:)=FcSample(2,1,:)/stepsize;
-Beta(2,3,1,:)=FcSample(2,3,:)/stepsizec;
+subtractEye = repmat(eye(3), [1, 1, Settings.ScanLength]);
+Beta_ij1 = (FcSample - subtractEye) / stepsizec;
+Beta_ij1(:, 1, :) = 0;
 
-Beta(3,1,2,:)=-FaSample(3,1,:)/stepsizea;
-% Beta(3,2,2,:)=-FaSample(3,2,:)/stepsize;
-Beta(3,3,2,:)=-(FaSample(3,3,:)-1)/stepsizea;
-% Beta(3,1,1,:)=FcSample(3,1,:)/stepsize;
-Beta(3,2,1,:)=FcSample(3,2,:)/stepsizec;
-Beta(3,3,1,:)=(FcSample(3,3,:)-1)/stepsizec;
+Beta_ij2 = -(FaSample - subtractEye) / stepsizea;
+Beta_ij2(:, 2, :) = 0;
+
+if doEnforcedAntisymetry
+    % Phosphor to sample
+    if isfield(Settings,'camphi1')
+        Qmp = euler2gmat(Settings.camphi1,Settings.camPHI,Settings.camphi2);
+        Qmi = [0 -1 0;1 0 0;0 0 1];
+        sampletilt = Settings.SampleTilt;
+        Qio = [
+            cos(sampletilt) 0 -sin(sampletilt)
+            0 1 0;sin(sampletilt) 0 cos(sampletilt)
+            ];
+        Qpo = Qio*Qmi*Qmp'*[-1 0 0;0 1 0;0 0 -1];
+        
+        Qps = Qpo;
+    else
+        alpha=pi/2-Settings.SampleTilt+Settings.CameraElevation;
+        Qps=[0 -cos(alpha) -sin(alpha);...
+            -1     0            0;...
+            0   sin(alpha) -cos(alpha)];
+    end
+    
+    for ii = 1:Settings.ScanLength
+        
+        Beta_ij1(:, :, ii) = enforceAntisymetry(Beta_ij1(:, :, ii), Qps);
+        Beta_ij2(:, :, ii) = enforceAntisymetry(Beta_ij2(:, :, ii), Qps);
+    end
+
+end
+
+Beta(:, :, 1, :) = Beta_ij1;
+Beta(:, :, 2, :) = Beta_ij2;
+
 % keyboard
 alpha(1,1,:)=shiftdim(Beta(1,2,3,:)-Beta(1,3,2,:))./shiftdim(b(Inds));
 alpha(1,2,:)=shiftdim(Beta(1,3,1,:)-Beta(1,1,3,:))./shiftdim(b(Inds));
@@ -708,4 +737,17 @@ function [RefInd,Refg,NumInds] = GetDDSettings(Inds,Angles,Dims,ScanType,skippts
     g = euler2gmat(Angles);
     Refg = permute(reshape(g(:,:,RefInd),3,3,length(Inds),[]),[1 2 4 3]);
     
+end
+
+function beta = enforceAntisymetry(beta, Qps)
+
+Qsp = Qps';
+
+beta = Qsp * beta * Qsp;
+
+beta(3, 1) = -beta(1, 3);
+beta(3, 2) = -beta(2, 3);
+
+beta = Qps * beta * Qps';
+
 end
