@@ -8,7 +8,7 @@ format compact
 tic
 
 %FIXME make this toggleable
-doEnforcedAntisymetry = false;
+doEnforcedAntisymetry = true;
 
 NoStrain = false;
 
@@ -255,8 +255,6 @@ else
     alpha_total9=zeros(1,Settings.ScanLength);
 end
 
-NewBeta = Beta;
-
 % if strcmp(Settings.ScanType,'L')
     FcList = [data.Fc{:}];
     FcArray=reshape(FcList,[3,3,length(FcList(1,:))/3]);
@@ -312,8 +310,10 @@ disp(['MinCutoff: ',num2str(MinCutoff)])
 disp(['UpperCutoff: ',num2str(UpperCutoff)])
 
 if doEnforcedAntisymetry
-    [~, FaSample] = poldec(FaSample);
-    [~, FcSample] = poldec(FcSample);
+    for ii = 1:Settings.ScanLength
+        FaSample(:, :, ii) = poldec(FaSample(:, :, ii));
+        FcSample(:, :, ii) = poldec(FcSample(:, :, ii));
+    end
 end
 
 % Beta is the derivate of the beta tensors
@@ -743,7 +743,7 @@ function beta = enforceAntisymetry(beta, Qps)
 
 Qsp = Qps';
 
-beta = Qsp * beta * Qsp;
+beta = Qsp * beta * Qsp';
 
 beta(3, 1) = -beta(1, 3);
 beta(3, 2) = -beta(2, 3);
