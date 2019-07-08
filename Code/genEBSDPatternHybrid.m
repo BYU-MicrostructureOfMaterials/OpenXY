@@ -65,6 +65,10 @@ end
 Qcs=Qsc';
 
 % Phospher to sample
+% I wrote frameTransforms.phosphorToSample to consolidate this
+% functionality into one place, but there isn't an easy way to call that
+% function from here. Eventually, I want to use that function here, but it
+% is a larger refactor than I want to deal with right now. --Zach Clayburn
 if ~useeuler
     alpha = pi/2 - sampletilt + elevang;
     % Phospher to sample

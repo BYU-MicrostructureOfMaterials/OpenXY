@@ -99,19 +99,7 @@ Dvp=[(xstar)*Settings.PixelSize;(1-ystar)*Settings.PixelSize;0];
 % Dpv=-Qpv*Dvp;
 
 % Phospher to sample
-if isfield(Settings,'camphi1')
-    Qmp = euler2gmat(Settings.camphi1,Settings.camPHI,Settings.camphi2);
-    Qmi = [0 -1 0;1 0 0;0 0 1];
-    sampletilt = Settings.SampleTilt;
-    Qio = [cos(sampletilt) 0 -sin(sampletilt);0 1 0;sin(sampletilt) 0 cos(sampletilt)];
-    Qpo = Qio*Qmi*Qmp'*[-1 0 0;0 1 0;0 0 -1];
-    
-    Qps = Qpo;
-else
-    Qps=[0 -cos(alpha) -sin(alpha);...
-        -1     0            0;...
-        0   sin(alpha) -cos(alpha)];
-end
+Qps = frameTransforms.phosphorToSample(Settings);
 Qsp=Qps';
 % Crystal to Phospher Screen
 % Qcp=Qsp*Qcs;

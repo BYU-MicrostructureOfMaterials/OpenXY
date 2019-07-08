@@ -1,4 +1,4 @@
-function alpha_data = DislocationDensityCalculate(Settings,MaxMisorientation,IQcutoff,VaryStepSizeI)
+function alpha_data = DislocationDensityCalculate(Settings,maxMisorientation,IQcutoff,VaryStepSizeI)
 %DISLOCATIONDENSITYOUTPUT
 %DislocationDensityOutput(Settings,Components, cmin, cmax, MaxMisorientation)
 %code bits for this function taken from Step2_DisloDens_Lgrid_useF_2.m
@@ -327,24 +327,7 @@ Beta_ij2 = -(FaSample - subtractEye) / stepsizea;
 Beta_ij2(:, 2, :) = 0;
 
 if doEnforcedAntisymetry
-    % Phosphor to sample
-    if isfield(Settings,'camphi1')
-        Qmp = euler2gmat(Settings.camphi1,Settings.camPHI,Settings.camphi2);
-        Qmi = [0 -1 0;1 0 0;0 0 1];
-        sampletilt = Settings.SampleTilt;
-        Qio = [
-            cos(sampletilt) 0 -sin(sampletilt)
-            0 1 0;sin(sampletilt) 0 cos(sampletilt)
-            ];
-        Qpo = Qio*Qmi*Qmp'*[-1 0 0;0 1 0;0 0 -1];
-        
-        Qps = Qpo;
-    else
-        alpha=pi/2-Settings.SampleTilt+Settings.CameraElevation;
-        Qps=[0 -cos(alpha) -sin(alpha);...
-            -1     0            0;...
-            0   sin(alpha) -cos(alpha)];
-    end
+    Qps = frameTransforms.phosphorToSample(Settings);
     
     for ii = 1:Settings.ScanLength
         
@@ -381,24 +364,13 @@ c = Oldsize(1);
 r = Oldsize(2);
 
 %Filter alpha data
-for i=1:Settings.ScanLength
-    
-    %Filter by Misorientation
-    if (misang(i)>MaxMisorientation)
-        alpha_filt(:,:,i)=0;
-    end
-    
-    %Filter Grain Boundaries
-    if Settings.grainID(RefInds(i,2))~=Settings.grainID(RefInds(i,1)) || Settings.grainID(RefInds(i,2))~=Settings.grainID(RefInds(i,3))
-        alpha_filt(:,:,i)=0;
-    end
-    
-    %Count Filtered points
-    if alpha_filt(:,:,i)==0
-        discount=discount+1;
-    end
-end
-MisAngleInds = RefInds;
+badMisAng = misang > maxMisorientation;
+differentGrains =...
+    Settings.grainID(RefInds(:,2))~=Settings.grainID(RefInds(:,1)) |...
+    Settings.grainID(RefInds(:,2))~=Settings.grainID(RefInds(:,3));
+filteredInds = badMisAng | differentGrains;
+alpha_filt(filteredInds) = 0;
+discount = sum(filteredInds);
 
 alpha_total3(1,:)=30/10.*(...
     abs(alpha_filt(1,3,:)) +...
@@ -435,7 +407,7 @@ alpha_data.alpha_filt=alpha_filt;
 alpha_data.misang=misang;
 alpha_data.misanglea=misanglea;
 alpha_data.misanglec=misanglec;
-alpha_data.MisAngleInds=MisAngleInds;
+alpha_data.MisAngleInds=RefInds;
 alpha_data.discount=discount;
 % alpha_data.intensityr=intensityr;
 alpha_data.stepsizea=stepsizea;
