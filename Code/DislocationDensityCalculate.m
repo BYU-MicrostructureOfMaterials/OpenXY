@@ -7,9 +7,6 @@ function alpha_data = DislocationDensityCalculate(Settings,maxMisorientation,IQc
 format compact
 tic
 
-%FIXME make this toggleable
-doEnforcedAntisymetry = true;
-
 NoStrain = false;
 
 %Calculate Dislocation Density
@@ -23,6 +20,7 @@ Allg=Settings.Angles;
 Allg(Settings.Inds,:) = NewAngles;
 Inds = Settings.Inds;
 ImageFilter=Settings.ImageFilter;
+doEnforcedAntisymetry = Settings.doEnforcedAntisymmetry;
 special=0;
 if isfield(Settings,'GNDMethod') && strcmp(Settings.GNDMethod,'Partial')
     EasyDD = 1;

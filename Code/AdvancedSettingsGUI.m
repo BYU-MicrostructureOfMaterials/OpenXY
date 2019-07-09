@@ -22,7 +22,7 @@ function varargout = AdvancedSettingsGUI(varargin)
 
 % Edit the above text to modify the response to help AdvancedSettingsGUI
 
-% Last Modified by GUIDE v2.5 04-Jan-2017 14:23:04
+% Last Modified by GUIDE v2.5 09-Jul-2019 15:10:18
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -139,6 +139,8 @@ set(handles.DoDD,'Value', Settings.CalcDerivatives);
 set(handles.SkipPoints,'String',Settings.NumSkipPts);
 %IQ Cutoff
 set(handles.IQCutoff,'String',num2str(Settings.IQCutoff));
+% Enforced Antisymmetry
+handles.enforcedAntisymetryToggle.Value = Settings.doEnforcedAntisymmetry;
 
 %SplitDD
 %Do SplitDD
@@ -582,21 +584,23 @@ function DoDD_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of DoDD
-handles.Settings.CalcDerivatives = get(hObject,'Value');
+handles.Settings.CalcDerivatives = hObject.Value;
 if get(hObject,'Value')
-    set(handles.DoSplitDD,'Enable','on');
-    set(handles.SkipPoints,'Enable','on');
-    set(handles.IQCutoff,'Enable','on');
-    set(handles.GNDMethod,'Enable','on');
+    handles.DoSplitDD.Enable = 'on';
+    handles.SkipPoints.Enable = 'on';
+    handles.IQCutoff.Enable = 'on';
+    handles.GNDMethod.Enable = 'on';
+    handles.enforcedAntisymetryToggle.Enable = 'on';
     GNDMethod_Callback(handles.GNDMethod, eventdata, handles);
     DoSplitDD_Callback(handles.DoSplitDD, eventdata, handles);
     handles = guidata(hObject);
 else
-    set(handles.DoStrain,'Enable','on');
-    set(handles.DoSplitDD,'Enable','off');
-    set(handles.SkipPoints,'Enable','off');
-    set(handles.IQCutoff,'Enable','off');
-    set(handles.GNDMethod,'Enable','off');
+    handles.DoStrain.Enable = 'on';
+    handles.DoSplitDD.Enable = 'off';
+    handles.SkipPoints.Enable = 'off';
+    handles.IQCutoff.Enable = 'off';
+    handles.GNDMethod.Enable = 'off';
+    handles.enforcedAntisymetryToggle.Enable = 'off';
     DoSplitDD_Callback(handles.DoSplitDD, eventdata, handles);
     handles = guidata(hObject);
 end
@@ -1222,3 +1226,14 @@ if strcmp(eventdata.Key,'l') && ~isempty(eventdata.Modifier) && strcmp(eventdata
     CancelButton_Callback(handles.SaveButton, eventdata, handles);
 end
 
+
+
+% --- Executes on button press in enforcedAntisymetryToggle.
+function enforcedAntisymetryToggle_Callback(hObject, eventdata, handles)
+handles.Settings.doEnforcedAntisymmetry = logical(hObject.Value);
+
+if ValChanged(handles, 'doEnforcedAntisymmetry')
+    handles.edited = true;
+end
+SaveColor(handles)
+guidata(hObject,handles);
