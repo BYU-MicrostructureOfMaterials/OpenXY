@@ -8,12 +8,12 @@ function DislocationDensityPlot(Settings, alpha_data, cmin, cmax, doShowGB)
 % tic
 
 %Calculate Dislocation Density
-cmap = parula;
-cmap = [0 0 0; cmap];
+cmap = [0 0 0; parula];
 data = Settings.data;
 
 crange = cmax - cmin;
 cOffset = crange / length(cmap);
+colorAxis = [cmin - cOffset, cmax];
 
 r = data.rows;%
 c = data.cols;%
@@ -36,6 +36,10 @@ alpha_total3 = alpha_data.alpha_total3;
 alpha_total9 = alpha_data.alpha_total9;
 alpha = alpha_data.alpha;
 
+grainID = Settings.grainID;
+scanSize = [Settings.Nx Settings.Ny];
+scanType = Settings.ScanType;
+
     function drawPlot(map, plotTitle)
         if isLineScan
             map=repmat(map,length(map)/4,1); 
@@ -45,10 +49,10 @@ alpha = alpha_data.alpha;
         axis image
         colormap(cmap)
         colorbar
-        caxis([cmin - cOffset, cmax])
+        caxis(colorAxis)
         if doShowGB
-            PlotGBs(Settings.grainID, ...
-                [Settings.Nx Settings.Ny], Settings.ScanType)
+            PlotGBs(grainID, ...
+                scanSize, scanType)
         end
     end
 
@@ -60,9 +64,9 @@ if strcmp(Settings.ScanType,'Square') ||  strcmp(Settings.ScanType,'LtoSquare')
     end
     ind = reshape(ind,[c r])';
     
-    drawPlot(reshape(alpha(1,3,:),[c r])' .* ind, 'Alpha_1_3');
-    drawPlot(reshape(alpha(2,3,:),[c r])' .* ind, 'Alpha_2_3');
-    drawPlot(reshape(alpha(3,3,:),[c r])' .* ind, 'Alpha_3_3');
+    drawPlot(reshape(alpha(1,3,:), [c r])' .* ind, 'Alpha_1_3');
+    drawPlot(reshape(alpha(2,3,:), [c r])' .* ind, 'Alpha_2_3');
+    drawPlot(reshape(alpha(3,3,:), [c r])' .* ind, 'Alpha_3_3');
     drawPlot(reshape(alpha_total3, [c r])' .* ind, 'Alpha Total');
     
 elseif strcmp(Settings.ScanType,'Hexagonal')
