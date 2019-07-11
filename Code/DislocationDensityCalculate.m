@@ -314,44 +314,33 @@ if doEnforcedAntisymetry
     end
 end
 
-% Beta is the derivate of the beta tensors
-% Beta(i,j,k(Fc=1 or Fa=2),point number)=0;
+repetedEye = repmat(eye(3), [1, 1, Settings.ScanLength]);
 
-subtractEye = repmat(eye(3), [1, 1, Settings.ScanLength]);
-Beta_ij1 = (FcSample - subtractEye) / stepsizec;
-Beta_ij1(:, 1, :) = 0;
-
-Beta_ij2 = -(FaSample - subtractEye) / stepsizea;
-Beta_ij2(:, 2, :) = 0;
+beta_c = FcSample - repetedEye;
+beta_a= -(FaSample - repetedEye);
 
 if doEnforcedAntisymetry
     Qps = frameTransforms.phosphorToSample(Settings);
     
     for ii = 1:Settings.ScanLength
         
-        Beta_ij1(:, :, ii) = enforceAntisymetry(Beta_ij1(:, :, ii), Qps);
-        Beta_ij2(:, :, ii) = enforceAntisymetry(Beta_ij2(:, :, ii), Qps);
+        beta_c(:, :, ii) = enforceAntisymetry(beta_c(:, :, ii), Qps);
+        beta_a(:, :, ii) = enforceAntisymetry(beta_a(:, :, ii), Qps);
     end
 
 end
 
-Beta(:, :, 1, :) = Beta_ij1;
-Beta(:, :, 2, :) = Beta_ij2;
+% Beta is the derivate of the beta tensors
+% Beta(i,j,k(Fc=1 or Fa=2),point number)=0;
+Beta(:, :, 1, :) = beta_c / stepsizea;
+Beta(:, :, 2, :) = beta_a / stepsizea;
 
-% keyboard
-alpha(1,1,:)=shiftdim(Beta(1,2,3,:)-Beta(1,3,2,:))./shiftdim(b(Inds));
-alpha(1,2,:)=shiftdim(Beta(1,3,1,:)-Beta(1,1,3,:))./shiftdim(b(Inds));
-alpha(1,3,:)=shiftdim(Beta(1,1,2,:)-Beta(1,2,1,:))./shiftdim(b(Inds));
+left = squeeze([Beta(:, 2, 3, :), Beta(:, 3, 1, :), Beta(:, 1, 2, :)]);
+right = squeeze([Beta(:, 3, 2, :), Beta(:, 1, 3, :), Beta(:, 2, 1, :)]);
 
-alpha(2,1,:)=shiftdim(Beta(2,2,3,:)-Beta(2,3,2,:))./shiftdim(b(Inds));
-alpha(2,2,:)=shiftdim(Beta(2,3,1,:)-Beta(2,1,3,:))./shiftdim(b(Inds));
-alpha(2,3,:)=shiftdim(Beta(2,1,2,:)-Beta(2,2,1,:))./shiftdim(b(Inds));
+burgers = permute(repmat(b(Inds), [1, 3, 3]), [2, 3, 1]);
 
-alpha(3,1,:)=shiftdim(Beta(3,2,3,:)-Beta(3,3,2,:))./shiftdim(b(Inds));
-alpha(3,2,:)=shiftdim(Beta(3,3,1,:)-Beta(3,1,3,:))./shiftdim(b(Inds));
-alpha(3,3,:)=shiftdim(Beta(3,1,2,:)-Beta(3,2,1,:))./shiftdim(b(Inds));
-
-clear FaSample FcSample
+alpha = (left - right) ./ burgers;
 
 % Filter out bad data
 discount=0;
