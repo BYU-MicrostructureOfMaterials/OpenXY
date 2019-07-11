@@ -65,7 +65,11 @@ else
     g = euler2gmat(Settings.Angles(ImageInd,1) ...
         ,Settings.Angles(ImageInd,2),Settings.Angles(ImageInd,3));
     if isempty(ScanImage)
-        F = -eye(3); SSE = 101; U = -eye(3); sigma = -eye(3); XX = -1;
+        F = -eye(3);
+        SSE = 101;
+        U = -eye(3);
+        sigma = -eye(3);
+        XX = -1 * ones(Settings.NumROIs, 3);
         return;
     end
     
