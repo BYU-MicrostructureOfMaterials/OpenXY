@@ -395,9 +395,11 @@ if UpdateFileLocations
     NewDir=FilePath(1:find(FilePath=='\',1,'last'));
     % Assumes Ang file is in the outer most path/folder
     MainPathLength=find(Settings.ScanFilePath=='\',1,'last');
-        
-    Settings.ImageNamesList=UpdatePath(Settings.ImageNamesList,NewDir,MainPathLength);
+    
     Settings.FirstImagePath=UpdatePath(Settings.FirstImagePath,NewDir,MainPathLength);
+    newPatterns = patterns.makePatternProvider(Settings);
+    newPatterns.filter = Settings.patterns.filter;
+    Settings.patterns = newPatterns;
     Settings.ScanFilePath=UpdatePath(Settings.ScanFilePath,NewDir,MainPathLength);
     
     if exist('alpha_data','var') && exist('rhos','var')

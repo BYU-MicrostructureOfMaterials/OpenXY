@@ -913,7 +913,7 @@ if Settings.ImageTag %See MainGUI.m SetImageFields
     end
     for loopvar=1:length(getdat)
         i = getdat(loopvar);
-        info = imfinfo(Settings.ImageNamesList{i});
+        info = imfinfo(Settings.patterns.imageNames{i});
 
         xistart = strfind(info.UnknownTags.Value,'<pattern-center-x-pu>');
         xifinish = strfind(info.UnknownTags.Value,'</pattern-center-x-pu>');

@@ -196,7 +196,7 @@ if handles.Settings.ImageTag
     i = indi(round(y),round(x));
     VHRatio = Settings.VHRatio;
     try
-        info = imfinfo(Settings.ImageNamesList{i});
+        info = imfinfo(Settings.patterns.imageNames{1});
 
         xistart = strfind(info.UnknownTags.Value,'<pattern-center-x-pu>');
         xifinish = strfind(info.UnknownTags.Value,'</pattern-center-x-pu>');

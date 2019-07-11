@@ -1,12 +1,9 @@
 function Results = PlotLineScan(Settings)
 % to plot data from analysis parameters - first load mat file
-if isfield(Settings,'ScanLength')
-    NN = Settings.ScanLength;
-else
-    NN = length(Settings.ImageNamesList);
-    Settings.ScanLength = NN;
-end
+
+NN = Settings.ScanLength;
 tempF=zeros(3,3);
+
 for i=1:NN
     tempF(:,:)=Settings.data.F(:,:,i);
     [tempR, tempU]=poldec(tempF);

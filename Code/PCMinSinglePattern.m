@@ -35,12 +35,7 @@ pixsize = Settings.PixelSize;
 Material = ReadMaterial(Settings.Phase{Ind});
 
 % keyboard
-if size(Settings.ImageNamesList,1)>1
-    ImagePath = Settings.ImageNamesList{Ind};
-    ScanImage = ReadEBSDImage(ImagePath,Settings.ImageFilter);
-else
-    ScanImage = ReadH5Pattern(Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter,Settings.valid,Ind);
-end
+ScanImage = Settings.patterns.getPattern(Ind);
 
 [roixc,roiyc]= GetROIs(ScanImage,Settings.NumROIs,pixsize,Settings.ROISize,...
     Settings.ROIStyle);

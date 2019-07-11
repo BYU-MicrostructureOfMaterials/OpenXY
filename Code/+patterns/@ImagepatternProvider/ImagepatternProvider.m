@@ -4,8 +4,11 @@ classdef ImagepatternProvider < patterns.PatternProvider
         imSize
     end
     
-    properties (Access = private)
+    properties (GetAccess = public, SetAccess = private)
         imageNames
+    end
+    
+    properties (Access = private)
         scanFormat(1,:) char {mustBeMember(scanFormat, {'Hexagonal', 'Square',''})}
         scanLength
         dimensions

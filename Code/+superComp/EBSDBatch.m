@@ -23,7 +23,7 @@ end
 Settings.OutputPath = ...
     ['~/compute/OpenXY/' outName '/' outName '_' num2str(jobInd) outExt];
 Settings.FirstImagePath = firstImagePath;
-Settings.ImageNamesList = ImportImageNamesList(Settings);
+Settings.patterns = patterns.makePatternProvider(Settings);
 Settings.DisplayGUI = false;
 Settings.DoParallel = 1;
 try
