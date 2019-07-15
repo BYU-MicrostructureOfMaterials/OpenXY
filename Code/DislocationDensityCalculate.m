@@ -335,6 +335,10 @@ end
 Beta(:, :, 1, :) = beta_c / stepsizea;
 Beta(:, :, 2, :) = beta_a / stepsizea;
 
+alpha_data.beta_a = beta_a;
+alpha_data.beta_c = beta_c;
+alpha_data.Beata = Beta;
+
 left = squeeze([Beta(:, 2, 3, :), Beta(:, 3, 1, :), Beta(:, 1, 2, :)]);
 right = squeeze([Beta(:, 3, 2, :), Beta(:, 1, 3, :), Beta(:, 2, 1, :)]);
 
@@ -343,7 +347,6 @@ burgers = permute(repmat(b(Inds), [1, 3, 3]), [2, 3, 1]);
 alpha = (left - right) ./ burgers;
 
 % Filter out bad data
-discount=0;
 alpha_filt=alpha;
 
 %Use Full-size scan dimensions
@@ -355,6 +358,7 @@ badMisAng = misang > maxMisorientation;
 differentGrains =...
     Settings.grainID(RefInds(:,2))~=Settings.grainID(RefInds(:,1)) |...
     Settings.grainID(RefInds(:,2))~=Settings.grainID(RefInds(:,3));
+
 filteredInds = badMisAng | differentGrains;
 alpha_filt(filteredInds) = 0;
 discount = sum(filteredInds);
