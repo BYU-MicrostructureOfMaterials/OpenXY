@@ -42,9 +42,11 @@ classdef ImagepatternProvider < patterns.PatternProvider
                 steps);
             im = obj.getPatternData(1);
             sz = size(im);
-            obj.imSize = im(1:2);
+            obj.imSize = sz(1:2);
 
         end
+        
+        convertImages(obj, saveFile)
         
         function sobj = saveobj(obj)
             sobj = saveobj@patterns.PatternProvider(obj);
