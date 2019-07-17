@@ -1,4 +1,4 @@
-function alpha_data = DislocationDensityCalculate(Settings,MaxMisorientation,IQcutoff,VaryStepSizeI)
+function alpha_data = DislocationDensityCalculate(Settings,maxMisorientation,IQcutoff,VaryStepSizeI)
 %DISLOCATIONDENSITYOUTPUT
 %DislocationDensityOutput(Settings,Components, cmin, cmax, MaxMisorientation)
 %code bits for this function taken from Step2_DisloDens_Lgrid_useF_2.m
@@ -20,6 +20,7 @@ Allg=Settings.Angles;
 Allg(Settings.Inds,:) = NewAngles;
 Inds = Settings.Inds;
 ImageFilter=Settings.ImageFilter;
+doEnforcedAntisymetry = Settings.doEnforcedAntisymmetry;
 special=0;
 if isfield(Settings,'GNDMethod') && strcmp(Settings.GNDMethod,'Partial')
     EasyDD = 1;
@@ -295,45 +296,46 @@ alpha_data.Fc=FcSample;
 disp(['MinCutoff: ',num2str(MinCutoff)])
 disp(['UpperCutoff: ',num2str(UpperCutoff)])
 
-% Beta(i,j,k(Fc=1 or Fa=2),point number)=0;
+if doEnforcedAntisymetry
+    for ii = 1:Settings.ScanLength
+        FaSample(:, :, ii) = poldec(FaSample(:, :, ii));
+        FcSample(:, :, ii) = poldec(FcSample(:, :, ii));
+    end
+end
+
+repetedEye = repmat(eye(3), [1, 1, Settings.ScanLength]);
+
+beta_c = FcSample - repetedEye;
+beta_a= -(FaSample - repetedEye);
+
+if doEnforcedAntisymetry
+    Qps = frameTransforms.phosphorToSample(Settings);
+    
+    for ii = 1:Settings.ScanLength
+        
+        beta_c(:, :, ii) = enforceAntisymetry(beta_c(:, :, ii), Qps);
+        beta_a(:, :, ii) = enforceAntisymetry(beta_a(:, :, ii), Qps);
+    end
+
+end
+
 % Beta is the derivate of the beta tensors
-Beta(1,1,2,:)=-(FaSample(1,1,:)-1)/stepsizea;
-% Beta(1,2,2,:)=-FaSample(1,2,:)/stepsize;
-Beta(1,3,2,:)=-FaSample(1,3,:)/stepsizea;
-% Beta(1,1,1,:)=(FcSample(1,1,:)-1)/stepsize;
-Beta(1,2,1,:)=FcSample(1,2,:)/stepsizec;
-Beta(1,3,1,:)=FcSample(1,3,:)/stepsizec;
+% Beta(i,j,k(Fc=1 or Fa=2),point number)=0;
+Beta(:, :, 1, :) = beta_c / stepsizea;
+Beta(:, :, 2, :) = beta_a / stepsizea;
 
-Beta(2,1,2,:)=-(FaSample(2,1,:))/stepsizea;
-% Beta(2,2,2,:)=-(FaSample(2,2,:)-1)/stepsize;
-Beta(2,3,2,:)=-FaSample(2,3,:)/stepsizea;
-Beta(2,2,1,:)=(FcSample(2,2,:)-1)/stepsizec;
-% Beta(2,1,1,:)=FcSample(2,1,:)/stepsize;
-Beta(2,3,1,:)=FcSample(2,3,:)/stepsizec;
+alpha_data.beta_a = beta_a;
+alpha_data.beta_c = beta_c;
+alpha_data.Beata = Beta;
 
-Beta(3,1,2,:)=-FaSample(3,1,:)/stepsizea;
-% Beta(3,2,2,:)=-FaSample(3,2,:)/stepsize;
-Beta(3,3,2,:)=-(FaSample(3,3,:)-1)/stepsizea;
-% Beta(3,1,1,:)=FcSample(3,1,:)/stepsize;
-Beta(3,2,1,:)=FcSample(3,2,:)/stepsizec;
-Beta(3,3,1,:)=(FcSample(3,3,:)-1)/stepsizec;
-% keyboard
-alpha(1,1,:)=shiftdim(Beta(1,2,3,:)-Beta(1,3,2,:))./shiftdim(b(Inds));
-alpha(1,2,:)=shiftdim(Beta(1,3,1,:)-Beta(1,1,3,:))./shiftdim(b(Inds));
-alpha(1,3,:)=shiftdim(Beta(1,1,2,:)-Beta(1,2,1,:))./shiftdim(b(Inds));
+left = squeeze([Beta(:, 2, 3, :), Beta(:, 3, 1, :), Beta(:, 1, 2, :)]);
+right = squeeze([Beta(:, 3, 2, :), Beta(:, 1, 3, :), Beta(:, 2, 1, :)]);
 
-alpha(2,1,:)=shiftdim(Beta(2,2,3,:)-Beta(2,3,2,:))./shiftdim(b(Inds));
-alpha(2,2,:)=shiftdim(Beta(2,3,1,:)-Beta(2,1,3,:))./shiftdim(b(Inds));
-alpha(2,3,:)=shiftdim(Beta(2,1,2,:)-Beta(2,2,1,:))./shiftdim(b(Inds));
+burgers = permute(repmat(b(Inds), [1, 3, 3]), [2, 3, 1]);
 
-alpha(3,1,:)=shiftdim(Beta(3,2,3,:)-Beta(3,3,2,:))./shiftdim(b(Inds));
-alpha(3,2,:)=shiftdim(Beta(3,3,1,:)-Beta(3,1,3,:))./shiftdim(b(Inds));
-alpha(3,3,:)=shiftdim(Beta(3,1,2,:)-Beta(3,2,1,:))./shiftdim(b(Inds));
-
-clear FaSample FcSample
+alpha = (left - right) ./ burgers;
 
 % Filter out bad data
-discount=0;
 alpha_filt=alpha;
 
 %Use Full-size scan dimensions
@@ -341,24 +343,14 @@ c = Oldsize(1);
 r = Oldsize(2);
 
 %Filter alpha data
-for i=1:Settings.ScanLength
-    
-    %Filter by Misorientation
-    if (misang(i)>MaxMisorientation)
-        alpha_filt(:,:,i)=0;
-    end
-    
-    %Filter Grain Boundaries
-    if Settings.grainID(RefInds(i,2))~=Settings.grainID(RefInds(i,1)) || Settings.grainID(RefInds(i,2))~=Settings.grainID(RefInds(i,3))
-        alpha_filt(:,:,i)=0;
-    end
-    
-    %Count Filtered points
-    if alpha_filt(:,:,i)==0
-        discount=discount+1;
-    end
-end
-MisAngleInds = RefInds;
+badMisAng = misang > maxMisorientation;
+differentGrains =...
+    Settings.grainID(RefInds(:,2))~=Settings.grainID(RefInds(:,1)) |...
+    Settings.grainID(RefInds(:,2))~=Settings.grainID(RefInds(:,3));
+
+filteredInds = badMisAng | differentGrains;
+alpha_filt(filteredInds) = 0;
+discount = sum(filteredInds);
 
 alpha_total3(1,:)=30/10.*(...
     abs(alpha_filt(1,3,:)) +...
@@ -395,7 +387,7 @@ alpha_data.alpha_filt=alpha_filt;
 alpha_data.misang=misang;
 alpha_data.misanglea=misanglea;
 alpha_data.misanglec=misanglec;
-alpha_data.MisAngleInds=MisAngleInds;
+alpha_data.MisAngleInds=RefInds;
 alpha_data.discount=discount;
 % alpha_data.intensityr=intensityr;
 alpha_data.stepsizea=stepsizea;
@@ -671,4 +663,17 @@ function [RefInd,Refg,NumInds] = GetDDSettings(Inds,Angles,Dims,ScanType,skippts
     g = euler2gmat(Angles);
     Refg = permute(reshape(g(:,:,RefInd),3,3,length(Inds),[]),[1 2 4 3]);
     
+end
+
+function beta = enforceAntisymetry(beta, Qps)
+
+Qsp = Qps';
+
+beta = Qsp * beta * Qsp';
+
+beta(3, 1) = -beta(1, 3);
+beta(3, 2) = -beta(2, 3);
+
+beta = Qps * beta * Qps';
+
 end
