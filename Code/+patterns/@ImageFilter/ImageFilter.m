@@ -50,7 +50,7 @@ classdef ImageFilter
             end
             IM = fftshift(IM);
             IM = IM .* (1 - obj.imfilter);
-            IM = fftshift(IM);
+            IM = ifftshift(IM);
             
             im = real(ifftn(IM));
             
