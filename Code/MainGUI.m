@@ -22,7 +22,7 @@ function varargout = MainGUI(varargin)
 
 % Edit the above text to modify the response to help MainGUI
 
-% Last Modified by GUIDE v2.5 17-May-2018 11:48:35
+% Last Modified by GUIDE v2.5 17-Jul-2019 14:55:52
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -348,6 +348,7 @@ if name ~= 0
                 set(handles.FirstImageNameText,'String','N/A');
                 set(handles.ImageFolderText,'String','N/A');
                 set(handles.ImageSizeText,'String','N/A');
+                handles.ExportPatterns.Enable = 'off';
             else
                 if handles.ImageLoaded
                     % This was here before the PatternProvider refactor and
@@ -443,11 +444,12 @@ if name ~= 0
                     Settings.ScanType,...
                     Settings.ScanLength,...
                     [Settings.Nx, Settings.Ny],...
-                    [Settings.XData, Settings.YData],...
+                    [Settings.XData(1), Settings.YData(1)],...
                     [xStep, yStep]);
-            
+                handles.ExportPatterns.Enable = 'on';
             case 2
                 pats = patterns.UPPatternProvider(fullfile(path,name));
+                handles.ExportPatterns.Enable = 'off';
         end
         x = pats.imSize(1);
         y = pats.imSize(2);
@@ -776,6 +778,16 @@ assignin('base','Settings',handles.Settings)
 SaveSettings(handles)
 
 % --------------------------------------------------------------------
+function ExportPatterns_Callback(hObject, eventdata, handles)
+if ~strcmp(handles.FileDir,pwd)
+    wd = cd(handles.FileDir);
+elseif handles.ScanFileLoaded
+    wd = cd(fileparts(handles.Settings.ScanFilePath));
+end
+handles.Settings.patterns.convertImages;
+cd(wd);
+
+% --------------------------------------------------------------------
 function Close_Callback(hObject, eventdata, handles)
 % hObject    handle to Close (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -1043,3 +1055,4 @@ function superCompButton_Callback(hObject, eventdata, handles)
 handles.superCompGUI = SuperCompGUI(handles.MainGUI);
 
 guidata(hObject, handles);
+
