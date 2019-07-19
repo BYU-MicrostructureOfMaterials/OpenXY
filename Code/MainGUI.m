@@ -210,7 +210,7 @@ if strcmp(ext,'.h5'); filterind = 2; else filterind = 1; end;
 SetScanFields(handles,[name ext],fpath,filterind);
 handles = guidata(hObject);
 [fpath,name,ext] = fileparts(handles.Settings.FirstImagePath);
-SetImageFields(handles,[name ext],fpath);
+SetImageFields(handles,[name ext],fpath); % TODO Add all needed arguments
 handles = guidata(hObject);
 [fpath,name,ext] = fileparts(handles.Settings.OutputPath);
 SetOutputFields(handles,[name ext],fpath);
@@ -395,10 +395,10 @@ end
     },...
     'Select the First Image of the Scan or patern archive');
 cd(wd);
-SetImageFields(handles,name,path, selection);
+SetImageFields(handles,name,path);
 
-function SetImageFields(handles,name,path, selection)
-if name ~= 0
+function SetImageFields(handles,name,path)
+if ~isempty(name)
     if strcmp(handles.FileDir,pwd)
         handles.FileDir = path;
     end
@@ -422,35 +422,9 @@ if name ~= 0
         handles.FirstImageNameText.TooltipString = name;
         handles.ImageFolderText.String = pathT;
         handles.ImageFolderText.TooltipString = path;
+        [~, ~, ext] = fileparts(name);
         
-        switch selection
-            case 1
-                Settings = handles.Settings;
-                X = Settings.XData;
-                Y = Settings.YData;
-                if strcmp(Settings.ScanType,'Square')
-                    xStep = X(2)-X(1);
-                    if length(Y) > 1
-                        yStep = Y(2)-Y(1);
-                    else
-                        yStep = 0; %Line Scans
-                    end
-                else
-                    xStep = X(3)-X(1);
-                    yStep = Y(3)-Y(1);
-                end
-                pats = patterns.ImagepatternProvider(...
-                    fullfile(path,name),...
-                    Settings.ScanType,...
-                    Settings.ScanLength,...
-                    [Settings.Nx, Settings.Ny],...
-                    [Settings.XData(1), Settings.YData(1)],...
-                    [xStep, yStep]);
-                handles.ExportPatterns.Enable = 'on';
-            case 2
-                pats = patterns.UPPatternProvider(fullfile(path,name));
-                handles.ExportPatterns.Enable = 'off';
-        end
+        pats = patterns.makePatternProvider(handles.Settings);
         x = pats.imSize(1);
         y = pats.imSize(2);
         improp = dir(fullfile(path,name));
@@ -958,24 +932,24 @@ if handles.ScanFileLoaded
 end
 
 function CloseGUIs(handles)
-if ~isempty(handles.MicroscopeGUI) && isvalid(handles.MicroscopeGUI)
-    close(handles.MicroscopeGUI)
+cellfun(@(x) safeGUIClose(handles, x), {
+'MicroscopeGUI'
+'AdvancedGUI'
+'ROIGUI'
+'PCGUI'
+'TestGeomGUI'
+'superCompGUI'});
+
+
+function safeGUIClose(handles, guiName)
+canClose = ...
+    isfield(handles, guiName) && ...
+    ~isempty(handles.(guiName)) && ...
+    isvalid(handles.(guiName));
+if canClose
+    close(handles.(guiName))
 end
-if ~isempty(handles.AdvancedGUI) && isvalid(handles.AdvancedGUI)
-    close(handles.AdvancedGUI)
-end
-if ~isempty(handles.ROIGUI) && isvalid(handles.ROIGUI)
-    close(handles.ROIGUI)
-end
-if ~isempty(handles.PCGUI) && isvalid(handles.PCGUI)
-    close(handles.PCGUI)
-end
-if ~isempty(handles.TestGeomGUI) && isvalid(handles.TestGeomGUI)
-    close(handles.TestGeomGUI)
-end
-if ~isempty(handles.superCompGUI) && isvalid(handles.superCompGUI)
-    close(handles.superCompGUI)
-end
+    
 
 
 % --- If Enable == 'on', executes on mouse press in 5 pixel border.

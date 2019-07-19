@@ -10,10 +10,10 @@ classdef ImagepatternProvider < patterns.PatternProvider
     
     properties (Access = private)
         scanFormat(1,:) char {mustBeMember(scanFormat, {'Hexagonal', 'Square',''})}
-        scanLength
-        dimensions
-        startLocation
-        steps
+        scanLength(1,1) double
+        dimensions(2,1) double
+        startLocation(2,1) double
+        steps(2,1) double
     end
     
     methods
@@ -29,9 +29,9 @@ classdef ImagepatternProvider < patterns.PatternProvider
             
             obj.scanFormat = scanFormat;
             obj.scanLength = scanLength;
-            obj.dimensions = dimensions;
-            obj.startLocation = startLocation;
-            obj.steps = steps;
+            obj.dimensions = dimensions(:)';
+            obj.startLocation = startLocation(:)';
+            obj.steps = steps(:)';
             
             obj.imageNames = obj.getImageNamesList(...
                 firstImageName,...
@@ -68,7 +68,7 @@ classdef ImagepatternProvider < patterns.PatternProvider
     
     methods (Static)
         function obj = restore(loadStruct)
-            obj = pattterns.ImagepatternProvider(...
+            obj = patterns.ImagepatternProvider(...
                 loadStruct.fileName,...
                 loadStruct.scanFormat,...
                 loadStruct.scanLength,...

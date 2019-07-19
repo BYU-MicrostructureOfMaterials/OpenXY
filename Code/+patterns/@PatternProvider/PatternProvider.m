@@ -99,6 +99,8 @@ classdef (Abstract) PatternProvider
                     obj = patterns.UPPatternProvider.restore(loadStruct);
                 case '.h5'
                     obj = patterns.H5PatternProvider.restore(loadStruct);
+                case {'.jpg', '.jpeg', '.tif', '.tiff', '.bmp', '.png'}
+                    obj = patterns.ImagepatternProvider.restore(loadStruct);
                 otherwise
                     error('patterns:PatternProvider',...
                         'unrecognized file extension %s', extension)

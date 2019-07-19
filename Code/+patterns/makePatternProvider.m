@@ -10,8 +10,8 @@ switch ext
         patternProvider =...
             patterns.UPPatternProvider(Settings.FirstImagePath);
     case { '.jpg', '.jpeg', '.tif', '.tiff', '.bmp', '.png'}
-        X = Settings.XData;
-        Y = Settings.YData;
+        X = unique(Settings.XData);
+        Y = unique(Settings.YData);
         if strcmp(Settings.ScanType,'Square')
             xStep = X(2)-X(1);
             if length(Y) > 1
@@ -29,7 +29,7 @@ switch ext
             Settings.ScanType,...
             Settings.ScanLength,...
             [Settings.Nx, Settings.Ny],...
-            [Settings.XData, Settings.YData],...
+            [Settings.XData(1), Settings.YData(1)],...
             [xStep, yStep]);
 end
 end
