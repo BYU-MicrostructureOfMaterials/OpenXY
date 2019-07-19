@@ -207,7 +207,13 @@ mR=mean(dRshift);
 stdevC=std(dCshift);
 mC=mean(dCshift);
 if stdevR~=0 && stdevC~=0
-    tempind=find(abs(dRshift)<129&abs(dCshift)<129&abs(dRshift-mR)<standev*stdevR&abs(dCshift-mC)<standev*stdevC);
+    % TODO This section doesn't make any sense... I think this is where we
+    % should improve the noise filtering. Why 129? 
+    tempind=find(...
+        abs(dRshift) < 129 & ...
+        abs(dCshift) < 129 & ...
+        abs(dRshift - mean(dRshift)) < standev*stdevR & ...
+        abs(dCshift - mean(dCshift)) < standev*stdevC );
     
     q=(q(:,tempind));
     r=(r(:,tempind));
