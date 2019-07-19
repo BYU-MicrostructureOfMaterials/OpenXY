@@ -424,13 +424,18 @@ if ~isempty(name)
         handles.ImageFolderText.TooltipString = path;
         [~, ~, ext] = fileparts(name);
         
+        handles.Settings.FirstImagePath = fullfile(path,name);
         pats = patterns.makePatternProvider(handles.Settings);
+        if isa(pats, 'patterns.ImagepatternProvider')
+            handles.ExportPatterns.Enable = 'on';
+        else
+            handles.ExportPatterns.Enable = 'off';
+        end
         x = pats.imSize(1);
         y = pats.imSize(2);
         improp = dir(fullfile(path,name));
         SizeStr = [num2str(x) 'x' num2str(y) ' (' num2str(round(improp.bytes/1024)) ' KB)'];
         set(handles.ImageSizeText,'String',SizeStr); %TODO Adjust this for .up* files to be in larger units (e.g. GB)
-        handles.Settings.FirstImagePath = fullfile(path,name);
         handles.Settings.PixelSize = x;
         %TODO If you change the ROIs, this will need to change
         handles.Settings.ROISize = round((handles.Settings.ROISizePercent * .01)*handles.Settings.PixelSize);

@@ -31,6 +31,10 @@ switch ext
             [Settings.Nx, Settings.Ny],...
             [Settings.XData(1), Settings.YData(1)],...
             [xStep, yStep]);
+        
+    otherwise
+        error('OpenXY:PatternProvider:UnrecognizedExtention', ...
+            'Unrecognized file extention %s', ext)
 end
 end
 

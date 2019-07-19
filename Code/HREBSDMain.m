@@ -87,9 +87,7 @@ if Settings.DoParallel > 1
     
 else
     if Settings.DisplayGUI
-        progString = sprintf('Single Processor Progress\nTime Remaining:');
-        h = waitbar(0,progString);
-        innerTimer = tic;
+        h = UI_utils.singleThreadProgBar(length(indVect));
     end
     
     disp('Running strain cross-correlation...')
@@ -108,30 +106,14 @@ GetDefGradientTensor(Inds(ImageInd),Settings,Settings.Phase{ImageInd});
 %         end
         
         if Settings.DisplayGUI
-            N = length(indVect);
-            time = toc(innerTimer);
-            avgTime = time / ImageInd;
-            remainingTime = (avgTime * (N - ImageInd)) / 60;% In Minutes
-            remainingMins = mod(remainingTime,60);
-            remainingHours = (remainingTime - remainingMins) / 60; % In hours
-            progString = sprintf('Single Processor Progress\nTime Remaining: %u Hours %u minutes',remainingHours,round(remainingMins));
-            try
-                waitbar(ImageInd/N,h,progString)
-            catch ME
-                if strcmp(ME.identifier, 'MATLAB:waitbar:InvalidSecondInput')
-                    h = waitbar(ImageInd/N,progString);
-
-                else
-                    ME.rethrow;
-                end
-            end
+            h.update(ImageInd)
         end
         %         IterTime(ImageInd) = toc
 %         if ImageInd>50
 %             keyboard
 %         end
     end
-    if Settings.DisplayGUI; close(h); end;
+    if Settings.DisplayGUI; close(h); end
 end
 Time = toc(outerTimer)/60;
 if Settings.DisplayGUI; disp(['Time to finish: ' num2str(Time) ' minutes']); end;

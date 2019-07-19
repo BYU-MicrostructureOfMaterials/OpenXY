@@ -65,10 +65,13 @@ offset = ftell(fid);
 fseek(fid, offsetLocation, 'bof');
 fwrite(fid, offset, 'int');
 
-for file = imNames'
-    im = imread(file{1});
+N = length(imNames);
+wb = UI_utils.singleThreadProgBar(N);
+for ii = 1:N
+    im = imread(imNames{ii});
     im = flatten(im);
     fwrite(fid, im', precision, 0, 'b');
+    wb.update(ii);
 end
 end
 
