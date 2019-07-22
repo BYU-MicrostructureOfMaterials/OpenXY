@@ -62,7 +62,21 @@ classdef ImagepatternProvider < patterns.PatternProvider
     
     methods (Access = protected)
         function pattern = getPatternData(obj, index)
-            pattern = mean(imread(obj.imageNames{index}),3);
+            try
+                rawIm = imread(obj.imageNames{index});
+            catch except
+                if strcmp(except.identifier,...
+                        'MATLAB:imagesci:imread:fileDoesNotExist')
+                    warning('OpenXY:ImageNotFound',...
+                        ['File %s not found.\n'...
+                        'Replacing with empty image'],...
+                        obj.imageNames{index})
+                    rawIm = zeros(obj.imSize);
+                else
+                    except.rethrow;
+                end
+            end
+            pattern = mean(rawIm, 3);
         end
     end
     

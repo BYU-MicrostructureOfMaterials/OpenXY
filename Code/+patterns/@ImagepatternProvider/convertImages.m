@@ -27,31 +27,10 @@ switch lower(ext)
         error('%s is not supported as a save file', ext)
 end
 
-imNames = obj.imageNames;
-firstIm = imread(imNames{1});
-
-imSize = size(firstIm);
+info = imfinfo(obj.imageNames{1});
 version = 1;
-width = imSize(1);
-height = imSize(2);
-
-switch ndims(firstIm)
-    case 2
-        flatten = @(im) im;
-    case 3
-        if all(all(firstIm(:, :, 1) == firstIm(:, :, 2))) && ...
-                all(all(firstIm(:, :, 2) == firstIm(:, :, 3))) 
-            flatten = @(im) squeeze(im(:, :, 1));
-            
-        else
-            flatten = @(im) cast(mean(im, 3), 'like', im);
-        end
-    otherwise
-        error(['Images have too many dimensions!\'...
-            'nExpected 2 or 3, but got %u in stead'], ndims(firstIm))
-end
-
-
+width = info.Width;
+height = info.Height;
 
 fid = fopen(saveFile, 'w');
 whenDone = onCleanup(@() fclose(fid));
@@ -65,11 +44,10 @@ offset = ftell(fid);
 fseek(fid, offsetLocation, 'bof');
 fwrite(fid, offset, 'int');
 
-N = length(imNames);
+N = length(obj.imageNames);
 wb = UI_utils.singleThreadProgBar(N);
 for ii = 1:N
-    im = imread(imNames{ii});
-    im = flatten(im);
+    im = obj.getPatternData(ii);
     fwrite(fid, im', precision, 0, 'b');
     wb.update(ii);
 end
