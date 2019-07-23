@@ -14,6 +14,8 @@ classdef ImagepatternProvider < patterns.PatternProvider
         dimensions(2,1) double
         startLocation(2,1) double
         steps(2,1) double
+        readStyle(1,:) char...
+            {mustBeMember(readStyle, {'Flat', 'Mean'})} = 'Mean'
     end
     
     methods
@@ -32,6 +34,20 @@ classdef ImagepatternProvider < patterns.PatternProvider
             obj.dimensions = dimensions(:)';
             obj.startLocation = startLocation(:)';
             obj.steps = steps(:)';
+            
+            if info.NumberOfSamples == 1
+                obj.readStyle = 'Flat';
+            else
+                allMatch = true;
+                firstImage = imread(firstImageName);
+                for ii = 2:info.NumberOfSamples
+                    allMatch = allMatch &&...
+                        all(all(firstImage(:, :, 1) == firstImage(:, :, ii)));
+                end
+                if allMatch
+                    obj.readStyle = 'Flat';
+                end
+            end
             
             obj.imageNames = obj.getImageNamesList(...
                 firstImageName,...
@@ -56,7 +72,6 @@ classdef ImagepatternProvider < patterns.PatternProvider
             sobj.dimensions = obj.dimensions;
             sobj.startLocation = obj.startLocation;
             sobj.steps = obj.steps;
-
         end
     end
     
@@ -76,7 +91,12 @@ classdef ImagepatternProvider < patterns.PatternProvider
                     except.rethrow;
                 end
             end
-            pattern = mean(rawIm, 3);
+            switch obj.readStyle
+                case 'Mean'
+                    pattern = mean(rawIm, 3);
+                case 'Flat'
+                    pattern = squeeze(rawIm(:, :, 1));
+            end
         end
     end
     
