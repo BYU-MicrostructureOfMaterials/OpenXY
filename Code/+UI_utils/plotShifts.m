@@ -17,21 +17,20 @@ try
 catch
     figure(100);
 end
-[cx,cy]=Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,roixc,roiyc,F,Settings.PixelSize,alpha);
 cla
 imagesc(RefImage);
 axis image
 colormap gray
 hold on
-for i=1:length(Cshift)
-    if ~isempty(find(keepInds==i, 1))
+for ii=1:length(Cshift)
+    if keepInds(ii)
         %Should probably make this factor "*10" a variable...
-        plot([roixc(i) roixc(i)+scaleFactor*Cshift(i)],[roiyc(i) roiyc(i)+scaleFactor*Rshift(i)],'g.-')
+        plot([roixc(ii) roixc(ii)+scaleFactor*Cshift(ii)],[roiyc(ii) roiyc(ii)+scaleFactor*Rshift(ii)],'g.-')
     else
-        plot([roixc(i) roixc(i)+scaleFactor*Cshift(i)],[roiyc(i) roiyc(i)+scaleFactor*Rshift(i)],'r.-')
+        plot([roixc(ii) roixc(ii)+scaleFactor*Cshift(ii)],[roiyc(ii) roiyc(ii)+scaleFactor*Rshift(ii)],'r.-')
     end
     %         plot([roixc(i) roixc(i)+sf*cx(i)],[roiyc(i) roiyc(i)+sf*cy(i)],'b.-')
-    plot(roixc(i),roiyc(i),'y.')
+    plot(roixc(ii),roiyc(ii),'y.')
 end
 drawnow
 try
@@ -70,14 +69,14 @@ if DoPlotROIs
     set(0,'currentfigure',101);
     PlotROIs(Settings,RefImage);
 end
-for i=1:length(Cshift)
-    if ~isempty(find(keepInds==i, 1))
+for ii=1:length(Cshift)
+    if keepInds(ii)
         %Should probably make this factor "*10" a variable...
-        plot([roixc(i) roixc(i)+scaleFactor*Cshift(i)],[roiyc(i) roiyc(i)+scaleFactor*Rshift(i)],'g.-')
+        plot([roixc(ii) roixc(ii)+scaleFactor*Cshift(ii)],[roiyc(ii) roiyc(ii)+scaleFactor*Rshift(ii)],'g.-')
     else
-        plot([roixc(i) roixc(i)+scaleFactor*Cshift(i)],[roiyc(i) roiyc(i)+scaleFactor*Rshift(i)],'r.-')
+        plot([roixc(ii) roixc(ii)+scaleFactor*Cshift(ii)],[roiyc(ii) roiyc(ii)+scaleFactor*Rshift(ii)],'r.-')
     end
-    plot([roixc(i) roixc(i)+scaleFactor*cx(i)],[roiyc(i) roiyc(i)+scaleFactor*cy(i)],'b.-')
+    plot([roixc(ii) roixc(ii)+scaleFactor*cx(ii)],[roiyc(ii) roiyc(ii)+scaleFactor*cy(ii)],'b.-')
 end
 drawnow
 title({'Experimental Image';['Image ' num2str(Ind) ' (' num2str(iter) ')']})

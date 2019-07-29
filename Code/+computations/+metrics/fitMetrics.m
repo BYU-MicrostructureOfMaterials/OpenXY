@@ -24,7 +24,7 @@ usedRshift = Rshift(keepInds);
 usedCx = cx(keepInds);
 usedCy = cy(keepInds);
 
-numUsed = length(keepInds);
+numUsed = sum(keepInds);
 
 % Squared Sum of Error
 fitMetrics.SSE=sqrt(sum(...

@@ -218,29 +218,27 @@ end
 
 %% Remove bad regions
 stdevR=std(dRshift);
-mR=mean(dRshift);
 stdevC=std(dCshift);
-mC=mean(dCshift);
 if stdevR~=0 && stdevC~=0
     % TODO This section doesn't make any sense... I think this is where we
     % should improve the noise filtering. Why 129? 
-    tempind=find(...
+    tempind=...
         abs(dRshift) < 129 & ...
         abs(dCshift) < 129 & ...
         abs(dRshift - mean(dRshift)) < standev*stdevR & ...
-        abs(dCshift - mean(dCshift)) < standev*stdevC );
+        abs(dCshift - mean(dCshift)) < standev*stdevC;
     
     q=(q(:,tempind));
     r=(r(:,tempind));
     
-    if length(tempind)<4
+    if sum(tempind)<4
         F=eye(3);
         sigma = zeros(3, 3);
         disp('Too few good ROI''s');
         return
     end
 else
-    tempind=1:length(dRshift);
+    tempind=true(size(dRshift));
 end
 
 %% Create stiffness matrix
