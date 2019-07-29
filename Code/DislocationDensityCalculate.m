@@ -349,7 +349,7 @@ differentGrains =...
     Settings.grainID(RefInds(:,2))~=Settings.grainID(RefInds(:,3));
 
 filteredInds = badMisAng | differentGrains;
-alpha_filt(filteredInds) = 0;
+alpha_filt(:,:,filteredInds) = 0;
 discount = sum(filteredInds);
 
 alpha_total3(1,:)=30/10.*(...
@@ -394,6 +394,7 @@ alpha_data.stepsizea=stepsizea;
 alpha_data.stepsizec=stepsizec;
 alpha_data.b=b(Inds);
 alpha_data.NumInds = NumInds;
+alpha_data.filteredInds=filteredInds;
 
 % if special==1
 %     disp('special')
