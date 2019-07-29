@@ -98,7 +98,21 @@ Cshift = zeros(1,length(roixc));
 dRshift = zeros(1,length(roixc));
 dCshift = zeros(1,length(roixc));
 XX = zeros(length(roixc),3);
-fitMetrics = struct('SSE', inf, 'rsqX', 0, 'rsqY', 0);
+
+%% Short circuit if cross-correlating against same pattern
+if Ind == RefInd
+    F = eye(3);
+    fitMetrics = computations.metrics.fitMetrics('good');
+    sigma = zeros(3, 3);
+    if Settings.DoShowPlot
+        pc = [xstar ystar, zstar];
+        UI_utils.plotShifts(RefImage, ScanImage, Ind, RefInd, Settings,...
+            Qsc, pc, 1:length(roixc), Cshift, Rshift, F, fitMetrics);
+        
+    end
+
+    return
+end
 
 % Go over each ROI
 for i=1:length(roixc)
