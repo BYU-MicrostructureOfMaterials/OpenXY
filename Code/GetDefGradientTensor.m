@@ -1,4 +1,4 @@
-function [F, g, U, SSE, XX, sigma] = GetDefGradientTensor(ImageInd,Settings,curMaterial)
+function [F, g, U, fitMetrics, XX, sigma] = GetDefGradientTensor(ImageInd,Settings,curMaterial)
 %GETDEFGRADIENTTENSOR
 %[F g U SSE] = GetDefGradientTensor(ImageInd,Settings)
 %Takes in the HREBSD Settings structure and the image index
@@ -42,8 +42,12 @@ if DoLGrid
     
     if isempty(ScanImage) || isempty(LegAImage) || isempty(LegCImage)
         
-        F.a =  -eye(3); F.b = -eye(3); F.c = -eye(3); SSE.a = 101; SSE.b = 101;
-        SSE.b = 101; U = -eye(3);
+        F.a =  -eye(3);
+        F.b = -eye(3);
+        F.c = -eye(3);
+        fitMetrics.a = computations.metrics.fitMetrics;
+        fitMetrics.b = computations.metrics.fitMetrics;
+        U = -eye(3);
         g = euler2gmat(Angles(ImageInd,1),Angles(ImageInd,2),Angles(ImageInd,3));
         sigma = -eye(3);
         
@@ -66,7 +70,7 @@ else
         ,Settings.Angles(ImageInd,2),Settings.Angles(ImageInd,3));
     if isempty(ScanImage)
         F = -eye(3);
-        SSE = 101;
+        fitMetrics.SSE = computations.metrics.fitMetrics;
         U = -eye(3);
         sigma = -eye(3);
         XX = -1 * ones(Settings.NumROIs, 3);
@@ -152,13 +156,13 @@ switch Settings.HROIMMethod
         if Settings.SinglePattern
             RefImage = Settings.RefImage;
             clear global rs cs Gs
-            [F1,SSE1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,Settings.RefImageInd);
+            [F1,fitMetrics1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,Settings.RefImageInd);
         else
             try
                 RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,sampletilt,curMaterial,Av,ImageInd);
                 
                 clear global rs cs Gs
-                [F1,SSE1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
+                [F1,fitMetrics1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
                 % some catch on SSE as for simulated pattern approach below?
                 for iq=1:Settings.IterationLimit-1
                     [rr,uu]=poldec(F1); % extract the rotation part of the deformation, rr
@@ -166,13 +170,13 @@ switch Settings.HROIMMethod
                     RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,sampletilt,curMaterial,Av,ImageInd);
                     
                     clear global rs cs Gs
-                    [F1,SSE1,XX,sigma] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
+                    [F1,fitMetrics1,XX,sigma] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
                 end
             catch ME
                 F1 = eye(3);
                 sigma = eye(3);
                 XX(Settings.NumROIs,3) = 0;
-                SSE1 = inf;
+                fitMetrics1.SSE = computations.metrics.fitMetrics;
             end
             %%%%%
         end
@@ -192,7 +196,7 @@ switch Settings.HROIMMethod
 
         %Initialize
         clear global rs cs Gs
-        [F1,SSE1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
+        [F1,fitMetrics1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
         
         %.gif recording stuff
         if isfield(Settings,'doGif') && Settings.doGif
@@ -211,7 +215,7 @@ switch Settings.HROIMMethod
                 Settings.PixelSize,Settings.ImageFilter(3),Settings.ImageFilter(4));
             
             clear global rs cs Gs
-            [F1,SSE1,XX,sigma] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
+            [F1,fitMetrics1,XX,sigma] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
             if isfield(Settings,'doGif') && Settings.doGif
                 f = getframe(figure(100));
                 im(:,:,1,frame) = rgb2ind(f.cdata,map,'nodither');
@@ -223,12 +227,14 @@ switch Settings.HROIMMethod
         %Improved convergence routine should replace this loop:
         
         for ii = 1:Settings.IterationLimit
-            if SSE1 > 25 % need to make this a variable in the AdvancedSettings GUI
+            if fitMetrics1.SSE > 25 % need to make this a variable in the AdvancedSettings GUI
                 if ii == 1
                     display(['Didn''t make it in to the iteration loop for:' Settings.ImageNamesList{ImageInd}])
                 end
                 g = euler2gmat(Settings.Angles(ImageInd,1),Settings.Angles(ImageInd,2),Settings.Angles(ImageInd,3)); 
-                F = -eye(3); SSE = 101; U = -eye(3);
+                F = -eye(3);
+                fitMetrics.SSE = computations.metrics.fitMetrics;
+                U = -eye(3);
                 return;
             end
             [r1,u1]=poldec(F1);
@@ -249,7 +255,7 @@ switch Settings.HROIMMethod
                 Settings.ImageFilter(3), Settings.ImageFilter(4));
             %         keyboard
             clear global rs cs Gs
-            [F1,SSE1,XX,sigma] = CalcF(NewRefImage,ScanImage,gr,FTemp,ImageInd,Settings,curMaterial,0);
+            [F1,fitMetrics1,XX,sigma] = CalcF(NewRefImage,ScanImage,gr,FTemp,ImageInd,Settings,curMaterial,0);
             if isfield(Settings,'doGif') && Settings.doGif
                 f = getframe(figure(100));
                 im(:,:,1,frame) = rgb2ind(f.cdata,map,'nodither');
@@ -282,7 +288,7 @@ switch Settings.HROIMMethod
         clear global rs cs Gs
 %         disp(RefImagePath);
         gr = euler2gmat(Settings.Angles(RefImageInd,:));
-        [F1,SSE1,XX,sigma] = CalcFShift(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,RefImageInd);
+        [F1,fitMetrics1,XX,sigma] = CalcFShift(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,RefImageInd);
         
     case 'Hybrid'
         %Use simulated pattern method on one reference image then use
@@ -316,7 +322,7 @@ switch Settings.HROIMMethod
              Material.lattice, sampletilt, elevang);
         
         clear global rs cs Gs
-        [F1,SSE1,XX,sigma] = CalcFShift(RefImage, ScanImage, gr, eye(3),...
+        [F1,fitMetrics1,XX,sigma] = CalcFShift(RefImage, ScanImage, gr, eye(3),...
             ImageInd, Settings, curMaterial, RefImageInd);
         clear global rs cs Gs
         
@@ -339,20 +345,20 @@ if DoLGrid
     
     % evaluate point a using b as the reference
     clear global rs cs Gs
-    [F.a SSE.a] = CalcFRuggles(ScanImage,LegAImage,gr,eye(3),ImageInd,Settings,curMaterial,ImageInd); %note - sending in index of scan point for now - no PC correction!!!
+    [F.a fitMetrics.a] = CalcFRuggles(ScanImage,LegAImage,gr,eye(3),ImageInd,Settings,curMaterial,ImageInd); %note - sending in index of scan point for now - no PC correction!!!
     
     % evaluate point c using b as the refrerence
     clear global rs cs Gs
-    [F.c SSE.c] = CalcFRuggles(ScanImage,LegCImage,gr,eye(3),ImageInd,Settings,curMaterial,ImageInd);%note - sending in index of scan point for now - no PC correction!!!
+    [F.c, fitMetrics.c] = CalcFRuggles(ScanImage,LegCImage,gr,eye(3),ImageInd,Settings,curMaterial,ImageInd);%note - sending in index of scan point for now - no PC correction!!!
     
     Settings.FCalcMethod = KeepFCalcMethod;
     
     F.b = F1;
-    SSE.b = SSE1;
+    fitMetrics.b = fitMetrics1;
     
-    [r.a u.a] = poldec(F.a);
-    [r.b u.b] = poldec(F.b);
-    [r.c u.c] = poldec(F.c);
+    [r.a, u.a] = poldec(F.a);
+    [r.b, u.b] = poldec(F.b);
+    [r.c, u.c] = poldec(F.c);
     
     g.a = r.a'*gr;
     g.b = r.b'*gr;
@@ -362,8 +368,8 @@ if DoLGrid
     U.b = u.b;
     U.c = u.c;
 else
-    SSE = SSE1;
-    [r u]=poldec(F1);
+    fitMetrics = fitMetrics1;
+    [r, u]=poldec(F1);
     U=u;
     R=r;
     F=r*u;

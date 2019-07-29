@@ -1,4 +1,4 @@
-function [F, SSE, XX, sigma] = CalcFShift(RefImage,ScanImage,g,Fo,Ind,Settings,curMaterial,RefInd,PC)
+function [F, fitMetrics, XX, sigma] = CalcFShift(RefImage,ScanImage,g,Fo,Ind,Settings,curMaterial,RefInd,PC)
 %% handle inputs
 
 if size(RefImage)~=size(ScanImage)
@@ -98,6 +98,7 @@ Cshift = zeros(1,length(roixc));
 dRshift = zeros(1,length(roixc));
 dCshift = zeros(1,length(roixc));
 XX = zeros(length(roixc),3);
+fitMetrics = struct('SSE', inf, 'rsqX', 0, 'rsqY', 0);
 
 % Go over each ROI
 for i=1:length(roixc)
@@ -220,7 +221,7 @@ if stdevR~=0 && stdevC~=0
     
     if length(tempind)<4
         F=eye(3);
-        SSE=0;
+        sigma = zeros(3, 3);
         disp('Too few good ROI''s');
         return
     end
@@ -363,28 +364,20 @@ b2 = q2.*r3;
 
 %solve for variables
 X3=A4\b4;
-%variables
-U11=X3(1);
-U12=X3(2);
-U13=X3(3);
-U21=X3(4);
-U22=X3(5);
-U23=X3(6);
-U31=X3(7);
-U32=X3(8);
-U33=X3(9);
+
 %This U is in the crystal frame
-U= [U11 U12 U13;...
-    U21 U22 U23;...
-    U31 U32 U33];
+U = reshape(X3, [3 3])';
 F=U+eye(3);
 
 Qpc = Qsc*Qps;
 
 F = Qpc*F*Qpc';
 
+%% Compute quality of fit metrics
 [cx,cy]=Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,roixc,roiyc,F,Settings.PixelSize,alpha);
-SSE=sqrt(sum((cx(tempind)-Cshift(tempind)).^2+(cy(tempind)-Rshift(tempind)).^2)/length(tempind)) ;
+
+fitMetrics = ...
+    computations.metrics.fitMetrics(cx, cy, Cshift, Rshift, tempind);
 
 %Calculate Stress - BEJ Jan 2017
 if nargout == 4
@@ -399,106 +392,11 @@ if nargout == 4
             end
         end
     end
-else
-    Ustrain = 0;
 end
-assignin('base','Cc_CalcF',Cc)
-assignin('base','Ustrain',Ustrain)
-
-
 
 %% for visualizing process
 if Settings.DoShowPlot
-    sf = 1;
-    DoPlotROIs = 0;
-    try
-        set(0,'currentfigure',100);
-    catch
-        figure(100);
-    end
-    [cx,cy]=Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,roixc,roiyc,F,Settings.PixelSize,alpha);
-    cla
-    imagesc(RefImage);
-    axis image
-    colormap gray
-    hold on
-    if DoPlotROIs
-        set(0,'currentfigure',100);
-        PlotROIs(Settings,RefImage);
-    end
-    for i=1:length(Cshift)
-        if ~isempty(find(tempind==i, 1))
-            %Should probably make this factor "*10" a variable...
-            plot([roixc(i) roixc(i)+sf*Cshift(i)],[roiyc(i) roiyc(i)+sf*Rshift(i)],'g.-')
-        else
-            plot([roixc(i) roixc(i)+sf*Cshift(i)],[roiyc(i) roiyc(i)+sf*Rshift(i)],'r.-')
-        end
-%         plot([roixc(i) roixc(i)+sf*cx(i)],[roiyc(i) roiyc(i)+sf*cy(i)],'b.-')
-        plot(roixc(i),roiyc(i),'y.')
-    end
-    drawnow
-    try
-        set(0,'currentfigure',101);
-    catch
-        figure(101);
-    end
-    text = get(gca,'title');
-    if ~isempty(text.String)
-        [num,iter] = strtok(text.String{2}(6:end));
-        num = str2num(num);
-        iter = str2num(iter);
-        if num == Ind
-            iter = iter + 1;
-        else
-            iter = 1;
-        end
-    else
-        iter = 1;
-    end
-    set(0,'currentfigure',100);
-    if RefInd~=0
-        title({'Reference Image';['Image ' num2str(RefInd) ' (' num2str(iter) ')']})
-    else
-        title({'Simulated Reference Image';[' (' num2str(iter) ')']})
-    end
-    
-    set(0,'currentfigure',101);
-    [cx,cy]=Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,roixc,roiyc,F,Settings.PixelSize,alpha);
-    cla
-    imagesc(ScanImage);
-    axis image
-    colormap gray
-    hold on
-    if DoPlotROIs
-        set(0,'currentfigure',101);
-        PlotROIs(Settings,RefImage);
-    end
-    for i=1:length(Cshift)
-        if ~isempty(find(tempind==i, 1))
-            %Should probably make this factor "*10" a variable...
-            plot([roixc(i) roixc(i)+sf*Cshift(i)],[roiyc(i) roiyc(i)+sf*Rshift(i)],'g.-')
-        else
-            plot([roixc(i) roixc(i)+sf*Cshift(i)],[roiyc(i) roiyc(i)+sf*Rshift(i)],'r.-')
-        end
-        plot([roixc(i) roixc(i)+sf*cx(i)],[roiyc(i) roiyc(i)+sf*cy(i)],'b.-')
-    end
-    drawnow
-    title({'Experimental Image';['Image ' num2str(Ind) ' (' num2str(iter) ')']})
-    U
-    SSE
-    
-    
-    
-%     figure
-%     plot3(dxid,dyid,dxs-dxid,'.')
-%     figure
-%     plot3(dxid,dyid,dys-dyid,'.')
-%     figure
-%     plot3(dxid,dyid,dxcs-dxid,'.')
-%     figure
-%     plot3(dxid,dyid,dycs-dyid,'.')
-% keyboard
-%     save shifts Rshift Cshift cx cy
-    return
-    
+    pc = [xstar ystar, zstar];
+    UI_utils.plotShifts(RefImage, ScanImage, Ind, RefInd, Settings,...
+        Qsc, pc, tempind, Cshift, Rshift, F, fitMetrics);
 end
