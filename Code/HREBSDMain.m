@@ -33,7 +33,7 @@ g = zeros(3,3,Settings.ScanLength);
 % U = repmat({zeros(3)},1,Settings.ScanLength);
 U = zeros(3,3,Settings.ScanLength);
 % SSE = repmat({0},1,Settings.ScanLength);
-SSE = zeros(1,Settings.ScanLength);
+fitMetrics = repmat(computations.metrics.fitMetrics, Settings.ScanLength, 1);
 % XX = repmat({zeros(Settings.NumROIs,3)},1,Settings.ScanLength);
  XX = zeros(Settings.NumROIs,3,Settings.ScanLength);
 sigma = zeros(3,3,Settings.ScanLength);
@@ -69,7 +69,7 @@ if Settings.DoParallel > 1
         %or a structure F.a F.b F.c of deformation gradient tensors for
         %each point in the L grid
         
-        [F(:,:,ImageInd), g(:,:,ImageInd), U(:,:,ImageInd), SSE(ImageInd), XX(:,:,ImageInd), sigma(:,:,ImageInd)] = ...
+        [F(:,:,ImageInd), g(:,:,ImageInd), U(:,:,ImageInd), fitMetrics(ImageInd), XX(:,:,ImageInd), sigma(:,:,ImageInd)] = ...
             GetDefGradientTensor(Inds(ImageInd),Settings,Settings.Phase{ImageInd});
         
         %{
@@ -97,7 +97,7 @@ else
         %         tic
 %         disp(ImageInd)
 
-        [F(:,:,ImageInd), g(:,:,ImageInd), U(:,:,ImageInd), SSE(ImageInd), XX(:,:,ImageInd), sigma(:,:,ImageInd)] = ...
+        [F(:,:,ImageInd), g(:,:,ImageInd), U(:,:,ImageInd), fitMetrics(ImageInd), XX(:,:,ImageInd), sigma(:,:,ImageInd)] = ...
 GetDefGradientTensor(Inds(ImageInd),Settings,Settings.Phase{ImageInd});
 
         % commented out this (outputs strain matrix - I think - DTF 5/15/14)
@@ -158,12 +158,12 @@ if ~isfield(Settings,'data') || Settings.DoStrain
             Settings.U{jj} = U{jj}.b;
             Settings.Ua{jj} = U{jj}.a;
             Settings.Uc{jj} = U{jj}.c;
-            Settings.SSE{jj} = SSE{jj}.b;
-            Settings.SSEa{jj} = SSE{jj}.a;
-            Settings.SSEc{jj} = SSE{jj}.c;
-            data.SSE{jj} = SSE{jj}.b;
-            data.SSEa{jj} = SSE{jj}.a;
-            data.SSEc{jj} = SSE{jj}.c;
+            Settings.SSE{jj} = fitMetrics{jj}.b;
+            Settings.SSEa{jj} = fitMetrics{jj}.a;
+            Settings.SSEc{jj} = fitMetrics{jj}.c;
+            data.SSE{jj} = fitMetrics{jj}.b;
+            data.SSEa{jj} = fitMetrics{jj}.a;
+            data.SSEc{jj} = fitMetrics{jj}.c;
             data.F{jj} = F{jj}.b;
             data.Fa{jj} = F{jj}.a;
             data.Fc{jj} = F{jj}.c;
@@ -172,8 +172,8 @@ if ~isfield(Settings,'data') || Settings.DoStrain
         end
     else
         data.IQ = cell(1,Settings.ScanLength);
-        Settings.SSE = zeros(1, Settings.ScanLength);
-        data.SSE = zeros(1, Settings.ScanLength);
+        Settings.fitMetrics = repmat(computations.metrics.fitMetrics, Settings.ScanLength, 1);
+        data.fitMetrics = repmat(computations.metrics.fitMetrics, Settings.ScanLength, 1);
         data.F = zeros(3, 3, Settings.ScanLength);
         data.phi1rn = zeros(1, Settings.ScanLength);
         data.PHIrn = zeros(1, Settings.ScanLength);
@@ -183,8 +183,8 @@ if ~isfield(Settings,'data') || Settings.DoStrain
         for jj = indVect
             data.IQ{jj} = Settings.IQ(jj);
             [phi1 PHI phi2] = gmat2euler(g(:,:,jj));
-            Settings.SSE(jj) = SSE(jj);
-            data.SSE(jj) = SSE(jj);
+            Settings.fitMetrics(jj) = fitMetrics(jj);
+            data.fitMetrics(jj) = fitMetrics(jj);
             data.F(:,:,jj) = F(:,:,jj);
             data.phi1rn(jj) = phi1;
             data.PHIrn(jj) = PHI;
@@ -209,10 +209,10 @@ if ~isfield(Settings,'data') || Settings.DoStrain
     
     data.sigma = sigma;
     data.U = U;
-    Settings.AverageSSE = mean([Settings.SSE(:)]);
+    Settings.AverageSSE = mean([Settings.fitMetrics.SSE]);
     Settings.data = data;
 else
-    Settings.SSE = Settings.data.SSE;
+    Settings.fitMetrics = Settings.data.fitMetrics;
 end
 
 
@@ -260,11 +260,11 @@ end
 if strcmp(ext,'.ang')
     WriteHROIMAngFile(Settings.ScanFilePath,fullfile(OutputPath, ['Corr_' FileName '.ang']),...
         Settings.NewAngles(:,1),Settings.NewAngles(:,2),Settings.NewAngles(:,3)...
-        ,Settings.SSE);
+        ,[Settings.fitMetrics.SSE]);
 elseif strcmp(ext,'.ctf')
     WriteHROIMCtfFile(Settings.ScanFilePath,fullfile(OutputPath, ['Corr_' FileName '.ctf']),...
         Settings.NewAngles(:,1),Settings.NewAngles(:,2),Settings.NewAngles(:,3)...
-        ,Settings.SSE);
+        ,[Settings.fitMetrics.SSE]);
 end
 
 % keyboard

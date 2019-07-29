@@ -50,7 +50,7 @@ end
 % Strain plots ************************
 
 %Ignore obviously bad points
-SSE = Settings.SSE;
+SSE = [Settings.fitMetrics.SSE];
 BadIndex = 1:length(SSE);
 cutoff = (mean(SSE(SSE ~= inf)) + 2*std(SSE(SSE ~= inf)));
 BadPoints = SSE > cutoff;
