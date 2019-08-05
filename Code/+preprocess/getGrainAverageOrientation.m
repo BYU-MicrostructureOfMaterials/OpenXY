@@ -1,10 +1,10 @@
 function [quats] = getGrainAverageOrientation(...
-    grainIDs, orientations, symOps, imageQuality)
+    grainIDs, orientations, symOps, confidenceIndex)
 
 scanLength = length(grainIDs);
 
 if nargin < 4
-    imageQuality = ones(scanLength, 1);
+    confidenceIndex = ones(scanLength, 1);
 end
 
 
@@ -40,22 +40,19 @@ allAvg = rotQuats;
 for ii = 1:numGrains
     currGrain = grainIDs == ii;
     currQuats = quats(currGrain, :);
-    currIQ = imageQuality(currGrain);
-    [avgQuats(ii, :), rotQuats(currGrain, :)] = getSymetryQuats(currQuats, symOps, currIQ);
+    currIQ = confidenceIndex(currGrain);
+    [avgQuats(ii, :), rotQuats(currGrain, :)] =...
+        getAvgQuat(currQuats, symOps, currIQ);
     allAvg(currGrain, :) = repmat(avgQuats(ii, :), sum(currGrain), 1);
 end
 
-makeIPF(quats, 'Original');
-makeIPF(rotQuats, 'Rotated');
-makeIPF(allAvg, 'GrainAvg');
-
 
 end
 
-function [avg_q, rot_quats] = getSymetryQuats(quats, symOps, imageQuality)
-%Still some problems on grains 2 & 3...
+function [avg_q, rot_quats] =...
+    getAvgQuat(quats, symOps, confidenceIndex)
 
-[~, best] = max(imageQuality);
+[~, best] = max(confidenceIndex);
 
 refQuat = quats(best, :);
 
@@ -76,21 +73,5 @@ qMat = rot_quats' * rot_quats;
 [~, maxInd] = max(max(d));
 
 avg_q = v(:, maxInd)';
-
-end
-
-function makeIPF(quats, titleString)
-figure;
-ax = axes;
-
-g = quat2rmat(quats);
-dims = [29 31];
-type = 'Square';
-
-ipf = PlotIPF(g,dims,type,0);
-
-image(ax, ipf);
-axis(ax, 'image');
-title(ax, titleString);
 
 end
