@@ -1,4 +1,4 @@
-function [quats] = getGrainAverageOrientation(...
+function [grainAvg, allAvg, rotQuats] = getGrainAverageOrientation(...
     grainIDs, orientations, symOps, confidenceIndex)
 
 scanLength = length(grainIDs);
@@ -32,7 +32,7 @@ if numel(sz) == 3
 end
 
 numGrains = max(grainIDs);
-avgQuats = zeros(numGrains, 4);
+grainAvg = zeros(numGrains, 4);
 rotQuats = zeros(scanLength, 4);
 
 allAvg = rotQuats;
@@ -41,9 +41,9 @@ for ii = 1:numGrains
     currGrain = grainIDs == ii;
     currQuats = quats(currGrain, :);
     currIQ = confidenceIndex(currGrain);
-    [avgQuats(ii, :), rotQuats(currGrain, :)] =...
+    [grainAvg(ii, :), rotQuats(currGrain, :)] =...
         getAvgQuat(currQuats, symOps, currIQ);
-    allAvg(currGrain, :) = repmat(avgQuats(ii, :), sum(currGrain), 1);
+    allAvg(currGrain, :) = repmat(grainAvg(ii, :), sum(currGrain), 1);
 end
 
 
