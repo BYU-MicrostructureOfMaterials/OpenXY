@@ -18,15 +18,12 @@ else
     q_symops = rmat2quat(permute(gensymops,[3 2 1]));
 end
 
-%Set up Function for finding refference immages
-IQ = Settings.IQ;
-CI = Settings.CI;
-Fit = Settings.Fit;
 grainID = Settings.grainID;
 
 if min(grainID) == 0
     grainID = grainID + 1;
 end
+%{
     function newID = getNewRefInd(newGrainIDIn)
         %GETNEWREFIND Find the best reference point for the given grain
         %   Code adapted from GetRefImageInds
@@ -45,7 +42,7 @@ end
         
         newID = indVec(candidates(vote));
     end
-
+%}
 %.gif recording stuff for testing, edit doGIF to true to use.
 doGIF = false;
 if doGIF
@@ -71,9 +68,14 @@ misoThresh = deg2rad(tolerance);
 
 % Find the best refference points for the current grains
 refInds = zeros(max(grainID),1);
+if isfield(Settings,'RefInd')
+    refIndsAll = Settings.grainID;
+else
+    refIndsAll = grainProcessing.getReferenceInds(Settings);
+end
 currentGrainNumber = min(grainID);
-for ii = currentGrainNumber:max(grainID)
-    refInds(ii) = getNewRefInd(ii);
+for ii = currentGrainNumber:length(refInds)
+    refInds(ii) = refIndsAll(find(grainID == ii, 1));
 end
 
 while currentGrainNumber <= max(grainID)
@@ -134,12 +136,14 @@ while currentGrainNumber <= max(grainID)
             for ii = 1:CC.NumObjects
                 newGrainID = max(grainID) + 1;
                 grainID(map2vec(L == ii)) = newGrainID;
-                refInds(end + 1) = getNewRefInd(newGrainID);
+            refInds(end + 1) = ...
+                getRefIndForGrain(Settings, newGrainID, grainID);
             end% ii = 1:CC.NumObjects
         else
             newGrainID = max(grainID) + 1;
             grainID(newGrainsBool) = newGrainID;
-            refInds(end + 1) = getNewRefInd(newGrainID);
+            refInds(end + 1) = ...
+                getRefIndForGrain(Settings, newGrainID, grainID);
         end% CC.NumObjects > 1
     end% any(newGrainsBool)
     
@@ -164,3 +168,36 @@ if nargout >= 2
 end
 
 end
+
+function refInd = getRefIndForGrain(Settings, currentGrainID, grainIDs)
+
+import grainProcessing.refImageInds.*;
+
+if nargin < 3
+    grainIDs = Settings.grainID;
+end
+
+IQ = Settings.IQ;
+CI = Settings.CI;
+fit = Settings.Fit;
+
+switch Settings.GrainRefImageType
+    case 'Min Kernel Avg Miso'
+    case {'IQ > Fit > CI', 'Manual'}
+        pointIDs = find(grainIDs == currentGrainID);
+
+        currentCI = CI(pointIDs);
+        currentIQ = IQ(pointIDs);
+        currentFit = fit(pointIDs);
+        pickedPoint = ImageDataBasedGrainRefInd(...
+            currentCI, currentIQ, currentFit);
+        refInd = pointIDs(pickedPoint);
+
+    case 'Grain Mean Orientation'
+    otherwise
+        error('OpenXY:UnknownRefImageType',...
+            '%s is not a recognized reference image type.',...
+            Settings.GrainRefImageType)
+end
+end
+
