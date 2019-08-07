@@ -105,7 +105,11 @@ set(handles.StandardDeviation,'String',num2str(Settings.StandardDeviation));
 %Misorientation Tolerance
 set(handles.MisoTol,'String',num2str(Settings.MisoTol));
 %Grain Ref Type
-GrainRefImageTypeList = {'Min Kernel Avg Miso','IQ > Fit > CI','Manual'};
+GrainRefImageTypeList = {
+    'Min Kernel Avg Miso'
+    'IQ > Fit > CI','Manual'
+    'Grain Mean Orientation'
+    }';
 set(handles.GrainRefType, 'String', GrainRefImageTypeList);
 SetPopupValue(handles.GrainRefType,Settings.GrainRefImageType);
 %Grain ID Method

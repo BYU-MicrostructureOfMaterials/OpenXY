@@ -49,8 +49,7 @@ end
 
 end
 
-function [avg_q, rot_quats] =...
-    getAvgQuat(quats, symOps, confidenceIndex)
+function [avg_q, rot_quats] = getAvgQuat(quats, symOps, confidenceIndex)
 
 [~, best] = max(confidenceIndex);
 

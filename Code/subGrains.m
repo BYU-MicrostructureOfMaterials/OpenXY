@@ -183,6 +183,8 @@ fit = Settings.Fit;
 
 switch Settings.GrainRefImageType
     case 'Min Kernel Avg Miso'
+        
+        
     case {'IQ > Fit > CI', 'Manual'}
         pointIDs = find(grainIDs == currentGrainID);
 

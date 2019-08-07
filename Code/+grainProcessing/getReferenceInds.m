@@ -9,6 +9,7 @@ switch Settings.GrainRefImageType
     case 'IQ > Fit > CI'
         refInds = getImageDataBasedRefInds(Settings);
     case 'Grain Mean Orientation'
+        refInds = getMeanOrientationRefInds(Settings);
     case 'Manual'
         %Figure this out later...
     otherwise
