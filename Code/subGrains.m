@@ -120,14 +120,7 @@ while currentGrainNumber <= max(grainID)
         end% CC.NumObjects > 1
         
         Settings.grainID = grainID;
-        newRefs = grainProcessing.getReferenceInds(Settings, refInds);
-        
-        newGrainNums = find(isnan(refInds));
-        for ii = newGrainNums'
-            points = grainID == ii;
-            newRef = unique(newRefs(points));
-            refInds(ii) = newRef;
-        end
+        [newRefs, refInds] = grainProcessing.getReferenceInds(Settings, refInds);
         
     end% any(newGrainsBool)
     
@@ -145,10 +138,7 @@ if doGIF
 end
 
 if nargout >= 2
-    refInd = zeros(size(grainID));
-    for ii = min(grainID):max(grainID)
-        refInd(grainID == ii) = refInds(ii);
-    end
+    refInd = newRefs;
 end
 
 end

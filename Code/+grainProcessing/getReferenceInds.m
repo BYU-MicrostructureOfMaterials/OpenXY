@@ -1,4 +1,4 @@
-function refInds = getReferenceInds(Settings, currentRefInds)
+function [refInds, sortedRefInds] = getReferenceInds(Settings, currentRefInds)
 
 if nargin < 2
     uniqueGrains = length(unique(Settings.grainID));
@@ -22,6 +22,13 @@ switch Settings.GrainRefImageType
         error('OpenXY:UnknownRefImageType',...
             '%s is not a recognized reference image type.',...
             Settings.GrainRefImageType)
+end
+
+if nargout > 1
+    [sortedGrains, sortedOrder] = sort(Settings.grainID);
+    [~, ia] = unique(sortedGrains);
+    grainIds = sortedOrder(ia);
+    sortedRefInds = refInds(grainIds);
 end
 
 end
