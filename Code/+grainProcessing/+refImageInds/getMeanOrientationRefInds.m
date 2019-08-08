@@ -1,4 +1,4 @@
-function refInds = getMeanOrientationRefInds(Settings)
+function refInds = getMeanOrientationRefInds(Settings, currentRefInds)
 
 import grainProcessing.refImageInds.*;
 
@@ -27,7 +27,12 @@ firstGrain = min(grainIDs);
 lastGrain = max(grainIDs);
 
 for id = firstGrain:lastGrain
+    
     currGrain = find(grainIDs == id);
+    if ~isnan(currentRefInds(id))
+        refInds(currGrain) = currentRefInds(id);
+        continue;
+    end
     avgOrientation = grainAvg(id, :);
     grainOrientations = symQuats(currGrain, :);
     

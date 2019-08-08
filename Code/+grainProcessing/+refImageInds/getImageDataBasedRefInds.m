@@ -12,7 +12,7 @@ fit = Settings.Fit;
 
 grainID = Settings.grainID;
 
-refInds = zeros(size(IQ,1),1);
+refInds = zeros(Settings.ScanLength ,1);
 firstGrain = min(grainID);
 lastGrain = max(grainID);
 
@@ -20,6 +20,11 @@ for currID = firstGrain:lastGrain
     
     currGrain = find(grainID == currID)';
     if numel(currGrain) == 0
+        continue
+    end
+    
+    if ~isnan(currentRefInds(currID))
+        refInds(currGrain) = currentRefInds(currID);
         continue
     end
     
