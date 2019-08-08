@@ -1,4 +1,4 @@
-function [grainAvg, allAvg, rotQuats] = getGrainAverageOrientation(...
+function [grainAvg, rotQuats, allAvg] = getGrainAverageOrientation(...
     grainIDs, orientations, symOps, confidenceIndex)
 
 scanLength = length(grainIDs);
@@ -47,6 +47,7 @@ for ii = 1:numGrains
 end
 
 
+
 end
 
 function [avg_q, rot_quats] = getAvgQuat(quats, symOps, confidenceIndex)
@@ -72,5 +73,7 @@ qMat = rot_quats' * rot_quats;
 [~, maxInd] = max(max(d));
 
 avg_q = v(:, maxInd)';
-
+if avg_q(1) < 0
+    avg_q = -avg_q;
+end
 end

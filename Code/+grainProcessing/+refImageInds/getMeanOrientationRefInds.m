@@ -3,7 +3,7 @@ function refInds = getMeanOrientationRefInds(Settings)
 import grainProcessing.refImageInds.*;
 
 grainIDs = Settings.grainID;
-IQ = Settings.IQ;
+CI = Settings.CI;
 angles = Settings.Angles;
 
 %Get Quaternion symmetry operators
@@ -19,6 +19,21 @@ else
     q_symops = rmat2quat(permute(gensymops,[3 2 1]));
 end
 
+[grainAvg, symQuats] = grainProcessing.getGrainAverageOrientation(...
+    grainIDs, angles, q_symops, CI);
 
-% TODO Continue to work from here
+refInds = zeros(Settings.ScanLength, 1);
+firstGrain = min(grainIDs);
+lastGrain = max(grainIDs);
+
+for id = firstGrain:lastGrain
+    currGrain = find(grainIDs == id);
+    avgOrientation = grainAvg(id, :);
+    grainOrientations = symQuats(currGrain, :);
+    
+    misos = quatangle(grainOrientations, avgOrientation);
+    [~, bestFit] = min(misos);
+    refInds(currGrain) = currGrain(bestFit);
+end
+
 end
