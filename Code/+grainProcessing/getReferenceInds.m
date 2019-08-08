@@ -1,13 +1,19 @@
-function refInds = getReferenceInds(Settings)
+function refInds = getReferenceInds(Settings, currentRefInds)
+
+if nargin < 2
+    uniqueGrains = length(unique(Settings.grainID));
+    currentRefInds = nan(uniqueGrains, 1);
+end
 
 import grainProcessing.refImageInds.*;
 
 switch Settings.GrainRefImageType
     case 'Min Kernel Avg Miso'
         OIM_mapValues = ReadOIMMapData(Settings.KernelAvgMisoPath);
-        refInds = getImageDataBasedRefInds(Settings, OIM_mapValues{4});
+        refInds = getImageDataBasedRefInds(...
+            Settings, currentRefInds, OIM_mapValues{4});
     case 'IQ > Fit > CI'
-        refInds = getImageDataBasedRefInds(Settings);
+        refInds = getImageDataBasedRefInds(Settings, currentRefInds);
     case 'Grain Mean Orientation'
         refInds = getMeanOrientationRefInds(Settings);
     case 'Manual'
