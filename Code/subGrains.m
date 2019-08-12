@@ -18,33 +18,11 @@ else
     q_symops = rmat2quat(permute(gensymops,[3 2 1]));
 end
 
-%Set up Function for finding refference immages
-IQ = Settings.IQ;
-CI = Settings.CI;
-Fit = Settings.Fit;
 grainID = Settings.grainID;
 
 if min(grainID) == 0
     grainID = grainID + 1;
 end
-    function newID = getNewRefInd(newGrainIDIn)
-        %GETNEWREFIND Find the best reference point for the given grain
-        %   Code adapted from GetRefImageInds
-        indVec = find(grainID == newGrainIDIn);
-        [MaxCI,CIInd] = max(CI(indVec));
-        [MinFit,FitInd] = min(Fit(indVec));
-        [MaxIQ,IQInd] = max(IQ(indVec));
-        
-        MaxCITradeoff = Fit(indVec(CIInd))/MinFit + MaxIQ/IQ(indVec(CIInd));
-        MinFitTradeOff = MaxIQ/IQ(indVec(FitInd)) + MaxCI/CI(indVec(FitInd));
-        MaxIQTradeoff = Fit(indVec(IQInd))/MinFit + MaxCI/CI(indVec(IQInd));
-        
-        candidates = [CIInd FitInd IQInd];
-        
-        [~,vote] = min([MaxCITradeoff MinFitTradeOff MaxIQTradeoff]);
-        
-        newID = indVec(candidates(vote));
-    end
 
 %.gif recording stuff for testing, edit doGIF to true to use.
 doGIF = false;
@@ -71,9 +49,14 @@ misoThresh = deg2rad(tolerance);
 
 % Find the best refference points for the current grains
 refInds = zeros(max(grainID),1);
+if isfield(Settings,'RefInd')
+    refIndsAll = Settings.grainID;
+else
+    refIndsAll = grainProcessing.getReferenceInds(Settings);
+end
 currentGrainNumber = min(grainID);
-for ii = currentGrainNumber:max(grainID)
-    refInds(ii) = getNewRefInd(ii);
+for ii = currentGrainNumber:length(refInds)
+    refInds(ii) = refIndsAll(find(grainID == ii, 1));
 end
 
 while currentGrainNumber <= max(grainID)
@@ -89,30 +72,24 @@ while currentGrainNumber <= max(grainID)
     
     % Find all of the points that are within the threshold misoreintation
     goodPoints = false(Settings.ScanLength,1);
-    goodPoints(currentGrainBool) = quatMisoSym(referenceOreintation,grainOreintations,q_symops,'default') < misoThresh;
+    goodPoints(currentGrainBool) = ...
+        quatMisoSym(referenceOreintation, grainOreintations, ...
+        q_symops, 'default') < misoThresh;
     
     % Transform the vector into an array to use the bwconncomp function to
     %   find the continuous regions of the points within the threshold
-    goodPointsMap = vec2map(goodPoints,Settings.Nx,Settings.ScanType);
+    goodPointsMap = vec2map(goodPoints, Settings.Nx, Settings.ScanType);
     CC = bwconncomp(goodPointsMap,4);
     
     % If there are multiple continuous areas, break them up
     if CC.NumObjects > 1
         changedRefInd = IDChangeVec(currentRefInd);
-        for ii = 1:CC.NumObjects
-            if ismember(changedRefInd,CC.PixelIdxList{ii})
-                % If the area is the part containing the original
-                % refference point continue
-                break;
-            end
-        end% ii = 1:CC.NumObjects
+        newGrains = cellfun(...
+            @(x) ~ismember(changedRefInd, x), CC.PixelIdxList);
+        newGrainPoints = vertcat(CC.PixelIdxList{newGrains});
         
-        % Use the previous loop to find all the new subgrains
-        tempInd = find(1:CC.NumObjects ~= ii);
-        for jj = tempInd
-            % Remove all of the points from the new subgrains
-            goodPointsMap(CC.PixelIdxList{jj}) = false;
-        end% jj = tempInd
+        % Remove all of the points from the new subgrains
+        goodPointsMap(newGrainPoints) = false;
         
         % Transform the map back into a vector
         goodPoints = map2vec(goodPointsMap);
@@ -134,13 +111,17 @@ while currentGrainNumber <= max(grainID)
             for ii = 1:CC.NumObjects
                 newGrainID = max(grainID) + 1;
                 grainID(map2vec(L == ii)) = newGrainID;
-                refInds(end + 1) = getNewRefInd(newGrainID);
+            refInds(end + 1) = nan;
             end% ii = 1:CC.NumObjects
         else
             newGrainID = max(grainID) + 1;
             grainID(newGrainsBool) = newGrainID;
-            refInds(end + 1) = getNewRefInd(newGrainID);
+            refInds(end + 1) = nan;
         end% CC.NumObjects > 1
+        
+        Settings.grainID = grainID;
+        [newRefs, refInds] = grainProcessing.getReferenceInds(Settings, refInds);
+        
     end% any(newGrainsBool)
     
     currentGrainNumber = currentGrainNumber + 1;
@@ -157,10 +138,8 @@ if doGIF
 end
 
 if nargout >= 2
-    refInd = zeros(size(grainID));
-    for ii = min(grainID):max(grainID)
-        refInd(grainID == ii) = refInds(ii);
-    end
+    refInd = newRefs;
 end
 
 end
+
