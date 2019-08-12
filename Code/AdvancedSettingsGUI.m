@@ -569,6 +569,7 @@ if ~handles.Fast
     end
     handles.AutoRefInds = ...
         grainProcessing.getReferenceInds(handles.Settings);
+    handles.Settings.RefInd = handles.AutoRefInds;
     handles = updateGrainMap(handles);
 end
 
@@ -1060,14 +1061,16 @@ axis(ax, 'image')
 
 if strcmp(handles.Settings.HROIMMethod,'Real')
     if handles.Settings.RefImageInd == 0
-        if isfield(handles.Settings,'RefInd')
-            [X,Y] = ind2sub2([handles.Settings.Nx,handles.Settings.Ny],handles.Settings.RefInd,handles.Settings.ScanType);
+        if ~isfield(handles.Settings,'RefInd')
+            handles.Settings.RefInd = grainProcessing.getReferenceInds(handles.Settings);
         end
+        [X,Y] = ind2sub2([handles.Settings.Nx,handles.Settings.Ny],handles.Settings.RefInd,handles.Settings.ScanType);
     else
         [X,Y] = ind2sub2([handles.Settings.Nx,handles.Settings.Ny],handles.Settings.RefImageInd,handles.Settings.ScanType);
     end
     hold(ax, 'on')
     plot(ax, X, Y, 'kd', 'MarkerFaceColor', 'k')
+    hold(ax, 'off')
 end
 guidata(handles.AdvancedSettingsGUI,handles);
 
