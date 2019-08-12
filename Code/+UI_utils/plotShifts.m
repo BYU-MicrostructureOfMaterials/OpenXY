@@ -78,6 +78,19 @@ for ii=1:length(Cshift)
     end
     plot([roixc(ii) roixc(ii)+scaleFactor*cx(ii)],[roiyc(ii) roiyc(ii)+scaleFactor*cy(ii)],'b.-')
 end
+
+
+% Calculate Effective Strain
+% TODO Make this a seperate function
+g = euler2rmat(Settings.Angles(Ind, :));
+Fsample = g' * F * g;
+strain = (Fsample + Fsample') / 2 - eye(3);
+exx=(2*strain(1,1,:)-strain(2,2,:)-strain(3,3,:))/3;
+eyy=(-strain(1,1,:)+2*strain(2,2,:)-strain(3,3,:))/3;
+ezz=(-strain(1,1,:)-strain(2,2,:)+2*strain(3,3,:))/3;
+strainEff=2/3*sqrt(3*(exx.^2+eyy.^2+ezz.^2)/2+3*(strain(1,2,:).^2+strain(1,3,:).^2+strain(2,3,:).^2));
+
+
 drawnow
 title({'Experimental Image';['Image ' num2str(Ind) ' (' num2str(iter) ')']})
 
@@ -85,10 +98,9 @@ fprintf(1, [
     '\n'...
     'Point: %u\n'...
     '\tSSE: %f\n'...
-    '\tR^2_x: %f\n'...
-    '\tR^2_y: %f\n'...
     '\tR^2: %f\n'...
+    '\tEffective Strain: %f\n'...
     ],...
-    Ind, fitMetrics.SSE, fitMetrics.rsqX, fitMetrics.rsqY, fitMetrics.rsq)
+    Ind, fitMetrics.SSE, fitMetrics.rsq, strainEff)
 
 
