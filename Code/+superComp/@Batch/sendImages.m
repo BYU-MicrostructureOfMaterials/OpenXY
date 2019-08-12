@@ -3,11 +3,22 @@ function sendImages(obj)
 disp('Sending Images')
 
 Settings = obj.Settings;
-localPath = fileparts(Settings.FirstImagePath);
 
-len = length(localPath);
-fileNames = cellfun(@(x) x(len+2:end), Settings.ImageNamesList,...
-    'UniformOutput', false);
+localPath = fileparts(Settings.FirstImagePath);
+switch class(Settings.patterns)
+    case 'patterns.ImagepatternProvider'
+        len = length(localPath);
+        fileNames = cellfun(@(x) x(len+2:end),...
+            Settings.patterns.imageNames, 'UniformOutput', false);
+        
+    case 'patterns.DummyPatternProvider'
+        error('OpenXY:SuperComputer:ImagesNotFound', 'Cannot find images');
+
+    otherwise
+        fileNames = Settings.patterns.fileName;
+        
+end
+
 
 pathComponents = strsplit(localPath,filesep);
 folderName = strrep(pathComponents{end}, ' ', '\ ');

@@ -81,14 +81,11 @@ while(morepoints)
             
             g = euler2gmat(Settings.Angles(ind,1),Settings.Angles(ind,2),Settings.Angles(ind,3));
             
-            I2 = ReadEBSDImage(Settings.ImageNamesList{ind},Settings.ImageFilter);
+            I2 = Settings.patterns.getPattern(ind);
             figure(100); imagesc(I2); axis image; xlim([0 pixsize]); ylim([0 pixsize]); colormap('hot')
             genEBSDPatternHybridLineOverlay(g,paramspat,eye(3),Material.lattice,Material.a1,Material.b1,Material.c1,Material.axs);
             
             set(figure(100),'Position',[pos(1)-pos(3)/2-10 pos(2)-pos(4) - 100 pos(3) pos(4)])
-
-            
-            Settings.ImageNamesList{ind}
         case 2
             gb = ~gb;
         otherwise

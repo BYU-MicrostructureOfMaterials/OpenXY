@@ -59,17 +59,10 @@ PCvals = zeros(length(Inds),numpc);
 PCnew = zeros(3,1);
 
 %Extract out arrays to avoid parfor overhead
-ImageNamesList = Settings.ImageNamesList(Inds);
+patterns = Settins.patterns;
 ImageFilter = Settings.ImageFilter;
 Angles = Settings.Angles(Inds,:);
 
-%Set up for reading patters from H5 files
-H5Images = false;
-H5ImageParams = {};
-if size(Settings.ImageNamesList,1)==1
-    H5Images = true;
-    H5ImageParams = {Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter};
-end
 
 label = {'XStar','YStar','ZStar'};
 pctRunOnAll javaaddpath('java')
@@ -92,12 +85,7 @@ for dir = 1:3
 %             Material = ReadMaterial(Settings.Phase{Ind});
 %         end
         
-        if H5Images
-            ScanImage = ReadH5Pattern(H5ImageParams{:},qq);
-        else
-            ImagePath = ImageNamesList{qq};
-            ScanImage = ReadEBSDImage(ImagePath,ImageFilter);
-        end
+        ScanImage = patterns.getPattern(qq);
 %         if strcmp('Intensity',Settings.ROIStyle)
 %             [roixc,roiyc]= GetROIs(ScanImage,Settings.NumROIs,pixsize,Settings.ROISize,...
 %                 Settings.ROIStyle);

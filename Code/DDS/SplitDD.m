@@ -271,7 +271,9 @@ if NumberOfCores>1 %if parallel processing
     
     parfor i = 1:m*n
         gmat = squeeze(bestgmat(:,:,i));
-        
+        if alpha_data.filteredInds(i)
+            rhos(:,i)=0;
+        else
         switch alphaorbeta
             case 'Nye-Kroner'
                 if alphavecp(1:3,i)==0;
@@ -317,12 +319,15 @@ if NumberOfCores>1 %if parallel processing
                 end
         end
         %         ppm.increment();
+        end
     end
 else
     h = waitbar(0.1,'splitting');
     for i = 1:m*n
         gmat = squeeze(bestgmat(:,:,i));
-        
+        if alpha_data.filteredInds(i)
+            rhos(:,i)=0;
+        else
         switch alphaorbeta
             case 'Nye-Kroner'
                 if alphavecp(1:3,i)==0;
@@ -358,6 +363,7 @@ else
                     merp(6,1) = beta(10,i);
                     rhos(:,i)=resolvedisloc(merp,11,minscheme,matchoice,gmat,stress, stepsize^2, x0type);
                 end
+        end
         end
         waitbar(i/m/n);
     end

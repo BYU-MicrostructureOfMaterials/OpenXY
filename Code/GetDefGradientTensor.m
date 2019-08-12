@@ -15,13 +15,11 @@ DoLGrid = strcmp(Settings.ScanType,'L');
 % fftw('wisdom',Settings.largefftmeth);
 % disp(curMaterial)
 
-H5Images = false;
-if size(Settings.ImageNamesList,1)==1
-    H5Images = true;
-    H5ImageParams = {Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter,Settings.valid};
-end
 
 if DoLGrid
+    % This is depricated, and has been for as long as I have worked here,
+    % we need to just remove it, otherwise, why do we even have source
+    % control? --Zach C.
     
     %the LImageNamesList field is a cell of length three containing the
     %L-grid image paths.
@@ -56,16 +54,7 @@ if DoLGrid
     
 else
     
-    if H5Images
-        ScanImage = ReadH5Pattern(H5ImageParams{:},ImageInd);
-    else
-        ImagePath = Settings.ImageNamesList{ImageInd};
-        if strcmp(Settings.ImageFilterType,'standard')
-            ScanImage = ReadEBSDImage(ImagePath,Settings.ImageFilter);
-        else
-            ScanImage = localthresh(ImagePath);
-        end
-    end
+    ScanImage = Settings.patterns.getPattern(ImageInd);
     g = euler2gmat(Settings.Angles(ImageInd,1) ...
         ,Settings.Angles(ImageInd,2),Settings.Angles(ImageInd,3));
     if isempty(ScanImage)
@@ -229,7 +218,7 @@ switch Settings.HROIMMethod
         for ii = 1:Settings.IterationLimit
             if fitMetrics1.SSE > 25 % need to make this a variable in the AdvancedSettings GUI
                 if ii == 1
-                    display(['Didn''t make it in to the iteration loop for:' Settings.ImageNamesList{ImageInd}])
+                    display(['Didn''t make it in to the iteration loop for point ' ImageInd])
                 end
                 g = euler2gmat(Settings.Angles(ImageInd,1),Settings.Angles(ImageInd,2),Settings.Angles(ImageInd,3)); 
                 F = -eye(3);
@@ -274,17 +263,7 @@ switch Settings.HROIMMethod
         %Find the grain of scan image and get the reference image for that
         %grain
         RefImageInd = Settings.RefInd(ImageInd);
-        if H5Images
-            RefImage = ReadH5Pattern(H5ImageParams{:},RefImageInd);
-        else
-            RefImagePath = Settings.ImageNamesList{RefImageInd}; % original line
-            if strcmp(Settings.ImageFilterType,'standard')
-                RefImage = ReadEBSDImage(RefImagePath,Settings.ImageFilter);
-            else
-                RefImage = localthresh(RefImagePath);
-            end
-        end
-        
+        RefImage = Settings.patterns.getPattern(RefImageInd);
         clear global rs cs Gs
 %         disp(RefImagePath);
         gr = euler2gmat(Settings.Angles(RefImageInd,:));
@@ -296,16 +275,7 @@ switch Settings.HROIMMethod
     
     case 'Remapping'
         RefImageInd = Settings.RefInd(ImageInd);
-        if H5Images
-            RefImage = ReadH5Pattern(H5ImageParams{:},RefImageInd);
-        else
-            RefImagePath = Settings.ImageNamesList{RefImageInd}; % original line
-            if strcmp(Settings.ImageFilterType,'standard')
-                RefImage = ReadEBSDImage(RefImagePath,Settings.ImageFilter);
-            else
-                RefImage = localthresh(RefImagePath);
-            end
-        end
+        RefImage = Settings.patterns.getPattern(RefImageInd);
         %{
         % Uncomment to compare unrotated refference to rotated one
         clear global rs cs Gs

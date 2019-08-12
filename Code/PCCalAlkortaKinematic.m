@@ -38,12 +38,7 @@ doShowPlot = false;
 % pctRunOnAll javaaddpath('java')
 % ppm = ParforProgMon( 'Point Calibration ', npoints,1,400,50 );
 
-if size(Settings.ImageNamesList,1)>1
-    ImagePath = Settings.ImageNamesList{1};
-    ScanImage = ReadEBSDImage(ImagePath,Settings.ImageFilter);
-else
-    ScanImage = ReadH5Pattern(Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter,Settings.valid,1);
-end
+ScanImage = Settings.patterns.getPattern(1);
 
 [roixc,roiyc]= GetROIs(ScanImage,Settings.NumROIs,pixsize,Settings.ROISize,...
     Settings.ROIStyle);
@@ -100,13 +95,7 @@ if Settings.DoParallel == 1
         
         Material = ReadMaterial(Settings.Phase{Ind});
         
-        if size(Settings.ImageNamesList,1)>1
-            ImagePath = Settings.ImageNamesList{Ind};
-            ScanImage = ReadEBSDImage(ImagePath,Settings.ImageFilter);
-        else
-            ScanImage = ReadH5Pattern(Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter,Settings.valid,Ind);
-        end
-        
+        ScanImage = Settings.patterns.getPattern(Ind);
         
         gr = euler2gmat(Settings.Angles(Ind,1),Settings.Angles(Ind,2),Settings.Angles(Ind,3));
         
@@ -156,14 +145,6 @@ if Settings.DoParallel == 1
             %%%%% Improved convergence routine should replace this loop:
             
             for ii = 1:Settings.IterationLimit
-                %             if SSE1 > 25 % need to make this a variable in the AdvancedSettings GUI
-                %                 if ii == 1
-                %                     display(['Didn''t make it in to the iteration loop for:' Settings.ImageNamesList{Ind}])
-                %                 end
-                %                 g = euler2gmat(Settings.Angles(Ind,1),Settings.Angles(Ind,2),Settings.Angles(Ind,3));
-                %                 F = -eye(3); SSE = 101; U = -eye(3);
-                %                 return;
-                %             end
                 [r1,u1]=poldec(F1);
                 U1=u1;
                 R1=r1;
@@ -322,13 +303,7 @@ else
         
         Material = ReadMaterial(Settings.Phase{Ind});
         
-        if size(Settings.ImageNamesList,1)>1
-            ImagePath = Settings.ImageNamesList{Ind};
-            ScanImage = ReadEBSDImage(ImagePath,Settings.ImageFilter);
-        else
-            ScanImage = ReadH5Pattern(Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter,Settings.valid,Ind);
-        end
-        
+        ScanImage = Settings.patterns.getPattern(Ind);
         
         gr = euler2gmat(Settings.Angles(Ind,1),Settings.Angles(Ind,2),Settings.Angles(Ind,3));
         
@@ -378,14 +353,6 @@ else
             %%%%% Improved convergence routine should replace this loop:
             
             for ii = 1:Settings.IterationLimit
-                %             if SSE1 > 25 % need to make this a variable in the AdvancedSettings GUI
-                %                 if ii == 1
-                %                     display(['Didn''t make it in to the iteration loop for:' Settings.ImageNamesList{Ind}])
-                %                 end
-                %                 g = euler2gmat(Settings.Angles(Ind,1),Settings.Angles(Ind,2),Settings.Angles(Ind,3));
-                %                 F = -eye(3); SSE = 101; U = -eye(3);
-                %                 return;
-                %             end
                 [r1,u1]=poldec(F1);
                 U1=u1;
                 R1=r1;

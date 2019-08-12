@@ -390,21 +390,7 @@ width = WidthOptions(val);
 
 % Read Pattern and plot with overlay
 axes(handles.Pattern)
-if (size(Settings.ImageNamesList,1)  ==  1)%H5 Format
-    H5ImageParams = {Settings.ScanFilePath,Settings.ImageNamesList,Settings.imsize,Settings.ImageFilter,Settings.valid};
-    I2 = ReadH5Pattern(H5ImageParams{:},ind);
-else%.ang/.ctf
-    if get(handles.Filter,'Value')
-        ImageFilter = Settings.ImageFilter;
-        if strcmp(Settings.ImageFilterType,'standard')
-            I2=ReadEBSDImage(Settings.ImageNamesList{ind},ImageFilter);
-        else
-            I2=localthresh(Settings.ImageNamesList{ind});
-        end
-    else
-        I2=ReadEBSDImage(Settings.ImageNamesList{ind},[0 0 0 0]);
-    end
-end
+I2 = Settings.patterns.getPattern(ind);
 im = imagesc(I2); axis image; xlim([0 pixsize]); ylim([0 pixsize]); colormap('gray'); axis off;
 
 if strcmp(GetPopupString(handles.SimType),'Dynamic')

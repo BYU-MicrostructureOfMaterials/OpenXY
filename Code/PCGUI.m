@@ -319,8 +319,8 @@ if strcmp(type,'Strain Minimization')
     if handles.Fast
         disp('Reading Scan File...')
         Settings = ImportScanInfo(Settings,Settings.ScanFilePath);
-        disp('Generate Image Names List...')
-        Settings.ImageNamesList = ImportImageNamesList(Settings);
+        disp('Generate Pattern Provider...')
+        Settings.patterns = patterns.makePatternProvider(Settings);
         handles = GenPlots(handles,Settings);
     end
     
@@ -374,8 +374,8 @@ elseif strcmp(type,'Grid')
     if ~isfield(Settings,'ImageNamesList')
         disp('Reading Scan File...')
         Settings = ImportScanInfo(Settings,Settings.ScanFilePath);
-        disp('Generate Image Names List...')
-        Settings.ImageNamesList = ImportImageNamesList(Settings);
+        disp('Generate Pattern Provider...')
+        Settings.patterns = patterns.makePatternProvider(Settings);
         
         handles = GenPlots(handles,Settings);
     end
@@ -415,7 +415,7 @@ elseif strcmp(type,'Tiff')
     if strcmp(sel,'Yes')
         %Read PC from images
         disp('Reading Pattern Center from Tiff Images...')
-        [PCData.XStar,PCData.YStar,PCData.ZStar] = ReadTiffPC(handles.Settings.ImageNamesList,...
+        [PCData.XStar,PCData.YStar,PCData.ZStar] = ReadTiffPC(handles.Settings.patterns.imageNames,...
             [handles.Settings.Nx handles.Settings.Ny],handles.Settings.VHRatio);
         
         %Add to PC List
