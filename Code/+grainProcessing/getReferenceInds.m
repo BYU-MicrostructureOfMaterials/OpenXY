@@ -12,12 +12,10 @@ switch Settings.GrainRefImageType
         OIM_mapValues = ReadOIMMapData(Settings.KernelAvgMisoPath);
         refInds = getImageDataBasedRefInds(...
             Settings, currentRefInds, OIM_mapValues{4});
-    case 'IQ > Fit > CI'
+    case {'IQ > Fit > CI', 'Manual'}
         refInds = getImageDataBasedRefInds(Settings, currentRefInds);
     case 'Grain Mean Orientation'
-        refInds = getMeanOrientationRefInds(Settings);
-    case 'Manual'
-        %Figure this out later...
+        refInds = getMeanOrientationRefInds(Settings, currentRefInds);
     otherwise
         error('OpenXY:UnknownRefImageType',...
             '%s is not a recognized reference image type.',...
