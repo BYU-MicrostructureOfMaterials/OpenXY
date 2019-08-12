@@ -60,6 +60,7 @@ if L1
         case 3  % use CRSS of each system
             minimizer=crssfactor';
             minimizer = [minimizer minimizer];
+            minimizer = [minimizer minimizer];
         otherwise
             error('only types 1-3 defined')
     end

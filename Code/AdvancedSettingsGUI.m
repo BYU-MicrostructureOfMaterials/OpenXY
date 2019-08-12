@@ -1120,14 +1120,14 @@ end
 %Manually Edit Inds
 handles.GrainMap = OpenGrainMap(handles);
 ScanData = [handles.Settings.CI handles.Settings.Fit handles.Settings.IQ handles.Settings.Angles];
-if ~isfield(handles.Settings,'ImageNamesList')
-    ImageNamesList = {};
+if ~isfield(handles.Settings,'patterns')
+    patterns = {};
     imsize = [];
 else
-    ImageNamesList = handles.Settings.ImageNamesList;
-    imsize = handles.Settings.imsize;
+    patterns = handles.Settings.patterns;
+    imsize = patterns.imSize;
 end
-RefInd = EditRefInds(handles.GrainMap,handles.Settings.ScanFilePath,handles.Settings.grainID,ImageNamesList,ScanData,...
+RefInd = EditRefInds(handles.GrainMap,handles.Settings.ScanFilePath,handles.Settings.grainID,patterns,ScanData,...
     [handles.Settings.Nx handles.Settings.Ny],handles.Settings.ScanType,handles.AutoRefInds,...
     imsize,handles.Settings.ImageFilter,Inds,handles.Settings.valid);
 

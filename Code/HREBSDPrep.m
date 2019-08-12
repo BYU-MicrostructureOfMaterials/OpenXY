@@ -17,11 +17,13 @@ Settings.largefftmeth = fftw('wisdom');
 Settings.ROISize = round((Settings.ROISizePercent * .01)*Settings.PixelSize);
 
 %% Import Scan (for Fast GUI)
-if ~isfield(Settings,'ImageNamesList')
+if ~isfield(Settings,'patterns')
     disp('Reading Scan File...')
     Settings = ImportScanInfo(Settings,Settings.ScanFilePath);
     if ~isempty(Settings.FirstImagePath)
-        Settings.ImageNamesList = ImportImageNamesList(Settings);
+        % TODO Make this a PatternProvider factory rather than
+        % ImageNamesList importing
+        Settings.patterns = patterns.makePatternProvider(Settings);
     end
 end
 
@@ -68,23 +70,10 @@ if strcmp(Settings.HROIMMethod,'Dynamic Simulated')
         Settings.RefImageInd = 4;
         
         %Read Image
-        if size(Settings.ImageNamesList,1)>1
-            ImagePath = Settings.ImageNamesList{Settings.RefImageInd};
-            if strcmp(Settings.ImageFilterType,'standard')
-                ScanImage = ReadEBSDImage(ImagePath,Settings.ImageFilter);
-            else
-                ScanImage = localthresh(ImagePath);
-            end
-            gr = euler2gmat(Settings.Angles(Settings.RefImageInd,1) ...
-                ,Settings.Angles(Settings.RefImageInd,2),Settings.Angles(Settings.RefImageInd,3));
-            if isempty(ScanImage)
-                error('Reference Image not found')
-            end
-        else
-            ScanImage = ReadH5Pattern(Settings.ScanFilePath,Settings.ImageNamesList,...
-                Settings.imsize,Settings.ImageFilter,Settings.valid,Settings.RefImageInd);
-        end
-        
+        ScanImage = Settings.patterns.getPattern(Settings.RefImageInd);
+        gr = euler2gmat(Settings.Angles(Settings.RefImageInd,1) ...
+            ,Settings.Angles(Settings.RefImageInd,2),Settings.Angles(Settings.RefImageInd,3));
+
         %Extract Variables
         curMaterial = Settings.Phase{Settings.RefImageInd};
         xstar = Settings.XStar(Settings.RefImageInd);
@@ -144,10 +133,10 @@ end
 
 %% Check to see if camera orientation data exists
 
-if Settings.ImageTag
+if Settings.ImageTag && isa(Settings.patterns, 'patterns.ImagepatternProvider')
     button = questdlg('Would you like to read the camera orientation calibration from the first TIFF image?');
     if strcmp(button,'Yes')
-        info = imfinfo(Settings.ImageNamesList{1});
+        info = imfinfo(Settings.patterns.imageNames{1});
         
         start1 = strfind(info.UnknownTags.Value,'<detector-orientation-euler1-deg>');
         end1 = strfind(info.UnknownTags.Value,'</detector-orientation-euler1-deg>');

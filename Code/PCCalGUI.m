@@ -896,7 +896,7 @@ function fromtiffbutton_Callback(hObject, eventdata, handles)
 function tiff_calibration(hObject,eventdata,handles)
 handles = guidata(hObject);
 Settings = handles.Settings;
-info = imfinfo(Settings.ImageNamesList{1});
+
 
 if Settings.ImageTag %See MainGUI.m SetImageFields
     
@@ -913,7 +913,7 @@ if Settings.ImageTag %See MainGUI.m SetImageFields
     end
     for loopvar=1:length(getdat)
         i = getdat(loopvar);
-        info = imfinfo(Settings.ImageNamesList{i});
+        info = imfinfo(Settings.patterns.imageNames{i});
 
         xistart = strfind(info.UnknownTags.Value,'<pattern-center-x-pu>');
         xifinish = strfind(info.UnknownTags.Value,'</pattern-center-x-pu>');
