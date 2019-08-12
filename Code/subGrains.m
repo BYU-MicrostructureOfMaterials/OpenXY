@@ -50,7 +50,7 @@ misoThresh = deg2rad(tolerance);
 % Find the best refference points for the current grains
 refInds = zeros(max(grainID),1);
 if isfield(Settings,'RefInd')
-    refIndsAll = Settings.grainID;
+    refIndsAll = Settings.RefInd;
 else
     refIndsAll = grainProcessing.getReferenceInds(Settings);
 end
