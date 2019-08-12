@@ -105,7 +105,12 @@ set(handles.StandardDeviation,'String',num2str(Settings.StandardDeviation));
 %Misorientation Tolerance
 set(handles.MisoTol,'String',num2str(Settings.MisoTol));
 %Grain Ref Type
-GrainRefImageTypeList = {'Min Kernel Avg Miso','IQ > Fit > CI','Manual'};
+GrainRefImageTypeList = {
+    'IQ > Fit > CI'
+    'Grain Mean Orientation'
+    'Min Kernel Avg Miso'
+    'Manual'
+    }';
 set(handles.GrainRefType, 'String', GrainRefImageTypeList);
 SetPopupValue(handles.GrainRefType,Settings.GrainRefImageType);
 %Grain ID Method
@@ -287,7 +292,7 @@ switch HROIMMethod
             set(handles.HROIMedit,'Enable','off');
         end
         handles.Settings.RefInd = [];
-        ToggleGrainMap_Callback(handles.ToggleGrainMap,eventdata,handles);
+        handles = updateGrainMap(handles);
     case 'Simulated-Dynamic'
         %Check for EMsoft
         EMsoftPath = GetEMsoftPath;
@@ -339,7 +344,7 @@ switch HROIMMethod
                     set(handles.HROIMedit,'Enable','off');
                 end
                 handles.Settings.RefInd = [];
-                ToggleGrainMap_Callback(handles.ToggleGrainMap,eventdata,handles);
+                handles = updateGrainMap(handles);
             end
         end
     case {'Real-Grain Ref','Remapping'}
@@ -429,7 +434,7 @@ switch HROIMMethod
             handles.Settings.RefImageInd = round(input);
             handles.Settings.RefInd(1:handles.Settings.ScanLength) = round(input);
             set(hObject,'String',num2str(round(input)));
-            ToggleGrainMap_Callback(handles.ToggleGrainMap,eventdata,handles);
+            handles = updateGrainMap(handles);
         else
             msgbox(['Invalid input. Must be between 1 and ' num2str(handles.Settings.ScanLength) '.'],'Invalid Image Index');
             set(hObject,'String',num2str(handles.Settings.RefImageInd));
@@ -523,27 +528,34 @@ function GrainRefType_Callback(hObject, eventdata, handles)
 %        contents{get(hObject,'Value')} returns selected item from GrainRefType
 contents = cellstr(get(hObject,'String'));
 GrainRefType = contents{get(hObject,'Value')};
-if strcmp(GrainRefType,'Min Kernel Avg Miso')
-    set(handles.SelectKAM,'Enable','on');
-else
+if ~strcmp(GrainRefType,'Min Kernel Avg Miso')
     set(handles.SelectKAM,'Enable','off');
 end
 if ~handles.Fast
+    handles.Settings.GrainRefImageType = GrainRefType;
     switch GrainRefType
         case 'Min Kernel Avg Miso'
             if ~isfield(handles.Settings,'KernelAvgMisoPath') || ~exist(handles.Settings.KernelAvgMisoPath,'file')
                 SelectKAM_Callback(handles.SelectKAM,eventdata,handles);
+                set(handles.SelectKAM,'Enable','on');
                 handles = guidata(hObject);
-                handles.Settings.RefInd = handles.AutoRefInds;
+                if ~isfield(handles.Settings, 'KernelAvgMisoPath') ...
+                        || isempty(handles.Settings.KernelAvgMisoPath)
+                    set(handles.SelectKAM,'Enable','off');
+                    set(hObject, 'Value', ...
+                        find(contains(contents,'IQ > Fit > CI')));
+                    return;
+                end
             end
         case 'IQ > Fit > CI'
-            handles.AutoRefInds = UpdateAutoInds(handles,handles.Settings.GrainRefImageType);
-            handles.Settings.RefInd = handles.AutoRefInds;
-            ToggleGrainMap_Callback(handles.ToggleGrainMap,eventdata,handles);
+            % No special procedures
+        case 'Grain Mean Orientation'
+            % No Special procedures
         case 'Manual'
             grainIDs = unique(handles.Settings.grainID);
             if ~isfield(handles.Settings,'RefInd') || isempty(handles.Settings.RefInd)
-                handles.AutoRefInds = UpdateAutoInds(handles,handles.Settings.GrainRefImageType);
+                handles.AutoRefInds = grainProcessing.getReferenceInds(...
+                    handles.Settings);
                 handles.Settings.RefInd = handles.AutoRefInds;
             end
             RefGrainIDs = handles.Settings.grainID(unique(handles.Settings.RefInd));
@@ -553,10 +565,13 @@ if ~handles.Fast
                 EditRefPoints_Callback(handles.EditRefPoints, eventdata, handles);
                 handles = guidata(hObject);
             end
-            ToggleGrainMap_Callback(handles.ToggleGrainMap,eventdata,handles);
+            return
     end
+    handles.AutoRefInds = ...
+        grainProcessing.getReferenceInds(handles.Settings);
+    handles = updateGrainMap(handles);
 end
-handles.Settings.GrainRefImageType = GrainRefType;
+
 if ValChanged(handles,'GrainRefImageType')
     handles.edited = true;
 end
@@ -838,13 +853,12 @@ function SelectKAM_Callback(hObject, eventdata, handles)
 % hObject    handle to SelectKAM (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-w = pwd;
 if exist(handles.Settings.ScanFilePath,'file')
     path = fileparts(handles.Settings.ScanFilePath);
 else
     path = pwd;
 end
-cd(path);
+w = cd(path);
 [name, path] = uigetfile('*.txt','OIM Map Data');
 if name ~= 0 %Nothing selected
     set(handles.KAMname,'String',name);
@@ -852,11 +866,13 @@ if name ~= 0 %Nothing selected
     set(handles.KAMpath,'String',path);
     set(handles.KAMpath,'TooltipString',path);
     handles.Settings.KernelAvgMisoPath = fullfile(path,name);
-    
-    %Get RefImageInds
-    handles.AutoRefInds = UpdateAutoInds(handles,handles.Settings.GrainRefImageType);
-    guidata(hObject,handles);
+
+else
+    handles.Settings.KernelAvgMisoPath = '';
 end
+
+guidata(hObject,handles);
+
 cd(w);
 if ValChanged(handles,'KernelAvgMisoPath')
     handles.edited = true;
@@ -1016,26 +1032,8 @@ function ToggleGrainMap_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of ToggleGrainMap
 if get(hObject,'Value') && ~handles.Fast
     handles.GrainMap = OpenGrainMap(handles);
-    cla
-    GrainMap = vec2map(handles.Settings.grainID,handles.Settings.Nx,handles.Settings.ScanType);
-    if size(GrainMap,1) == 1 %Line Scans
-        GrainMap = repmat(GrainMap,round(size(GrainMap,2)/6),1);
-    end
-    imagesc(GrainMap)
-    axis image
+    handles = updateGrainMap(handles);
     
-    if strcmp(handles.Settings.HROIMMethod,'Real')
-        if handles.Settings.RefImageInd == 0
-            if isfield(handles.Settings,'RefInd')
-                [X,Y] = ind2sub2([handles.Settings.Nx,handles.Settings.Ny],handles.Settings.RefInd,handles.Settings.ScanType);
-            end
-        else
-            [X,Y] = ind2sub2([handles.Settings.Nx,handles.Settings.Ny],handles.Settings.RefImageInd,handles.Settings.ScanType);
-        end
-        hold on
-        plot(X,Y,'kd','MarkerFaceColor','k')
-    end
-    guidata(hObject,handles);
 elseif ishandle(handles.GrainMap)
     close(handles.GrainMap)
     set(hObject,'BackgroundColor',[1 1 1]*0.94)
@@ -1043,6 +1041,35 @@ else
     set(hObject,'BackgroundColor',[1 1 1]*0.94)
 end
 
+function handles = updateGrainMap(handles)
+if ~ishandle(handles.GrainMap)
+    return
+end
+
+closeFun = handles.GrainMap.DeleteFcn;
+clf(handles.GrainMap, 'reset');
+handles.GrainMap.DeleteFcn = closeFun;
+
+ax = axes(handles.GrainMap);
+GrainMap = vec2map(handles.Settings.grainID,handles.Settings.Nx,handles.Settings.ScanType);
+if size(GrainMap,1) == 1 %Line Scans
+    GrainMap = repmat(GrainMap,round(size(GrainMap,2)/6),1);
+end
+imagesc(ax, GrainMap)
+axis(ax, 'image')
+
+if strcmp(handles.Settings.HROIMMethod,'Real')
+    if handles.Settings.RefImageInd == 0
+        if isfield(handles.Settings,'RefInd')
+            [X,Y] = ind2sub2([handles.Settings.Nx,handles.Settings.Ny],handles.Settings.RefInd,handles.Settings.ScanType);
+        end
+    else
+        [X,Y] = ind2sub2([handles.Settings.Nx,handles.Settings.Ny],handles.Settings.RefImageInd,handles.Settings.ScanType);
+    end
+    hold(ax, 'on')
+    plot(ax, X, Y, 'kd', 'MarkerFaceColor', 'k')
+end
+guidata(handles.AdvancedSettingsGUI,handles);
 
 % --- Executes on button press in EditRefPoints.
 function EditRefPoints_Callback(hObject, eventdata, handles)
