@@ -38,10 +38,10 @@ else
     end
 end
 
-StdDev = std(im(:));
-Mean = mean(im(:));
-Limits(1) = Mean - 3*StdDev;
-Limits(2) = Mean + 3*StdDev;
+% StdDev = std(im(:));
+% Mean = mean(im(:));
+% Limits(1) = Mean - 3*StdDev;
+% Limits(2) = Mean + 3*StdDev;
 
 Settings.DoShowPlot = 1;
 Settings.SinglePattern = 0;
@@ -56,9 +56,9 @@ while(morepoints)
     
     figure(99);
     PlotScan(im,PlotType);
-    if length(unique(Limits)) ~= 1
-        caxis(Limits)
-    end
+%     if length(unique(Limits)) ~= 1
+%         caxis(Limits)
+%     end
     title({'\fontsize{14} Select a point to calculate the deformation tensor';'\fontsize{10}Scroll-click to select by index number';'\fontsize{10} Right-click to exit'},'HorizontalAlignment','center')
     if gb
         GrainMap = vec2map(Settings.grainID,Settings.Nx,Settings.ScanType);

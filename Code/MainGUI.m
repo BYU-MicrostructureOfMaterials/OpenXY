@@ -1023,7 +1023,10 @@ if any(strcmp(eventdata.Modifier,'shift')) && strcmp(eventdata.Key,'b')
         Settings.grainsHaveBeenSplit = true;
         Settings.oldGrains.grainID = Settings.grainID;
         Settings.oldGrains.RefInd = Settings.RefInd;
+        
+        disp('Splitting grains, please wait...')
         [Settings.grainID,Settings.RefInd] = subGrains(Settings,tolerance);
+        disp('Grains have been split')
     end
     handles.Settings = Settings;
     guidata(hObject,handles);
