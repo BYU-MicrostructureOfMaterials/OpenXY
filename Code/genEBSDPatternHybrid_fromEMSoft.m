@@ -16,9 +16,9 @@ omega = 0;
 alphaBD = 0;
 energymin = 5.0;
 energymax = 20.0;
-includebackground = '''y''';
+includebackground = 'y';
 anglefile = ['OpenXY_euler' num2str(ImageInd) '.txt'];  %fullfile(OpenXYPath,'temp','testeuler.txt');%['temp' filesep 'testeuler.txt'];
-eulerconvention = '''tsl''';
+eulerconvention = 'tsl';
 
 %Get EMsoft Path
 if exist('SystemSettings.mat','file')
@@ -34,15 +34,15 @@ else
 end
 energyfile = masterfile;%EMsoft now uses the master output for both the master file and energy file(sprintf('%s_MCoutput.h5',Material));
 datafile = ['EBSDout_' num2str(ImageInd) '.h5'];
-bitdepth = '''8bit''';
+bitdepth = '8bit';
 beamcurrent = 15; %Make variable later
 dwelltime = 100;   %Make variable later
 binning = 1;       %Make variable later
-applyDeformation = '''n''';
+applyDeformation = 'n';
 Ftensor = '1.D0, 0.D0, 0.D0, 0.D0, 1.D0, 0.D0, 0.D0, 0.D0, 1.D0,';
-scalingmode = '''not''';
+scalingmode = 'not';
 gammavalue = .4;   %Make variable later
-maskpattern = '''y''';
+maskpattern = 'y';
 nthreads = 1;
 
 [phi1,PHI,phi2] = gmat2euler(g); % in radians
@@ -57,6 +57,8 @@ fprintf(fid,'eu\n');
 fprintf(fid,'1\n');
 fprintf(fid,'%g,%g,%g\n',phi1*180/pi,PHI*180/pi,phi2*180/pi);% in degrees
 fclose(fid);
+
+cleanupAngles = onCleanup(@() delete(fullfile(EMdataPath,anglefile)));
 
 %Write EMEBSDexample.nml file
 fid=fopen(inputfile,'w');
@@ -84,44 +86,42 @@ formatString = [
 ' energymin = %g,\n'...5.0
 ' energymax = %g,\n'...20.0
 ... include a realistic intensity background or not ...
-' includebackground = %s,\n'...'y'
+' includebackground = ''%s'',\n'...'y'
 ... name of angle file (euler angles or quaternions); path relative to EMdatapathname
-' anglefile = %s,\n'...'testeuler.txt'
+' anglefile = ''%s'',\n'...'testeuler.txt'
 ... does this file have only orientations ('orientations') or does it also have pattern center and deformation tensor ('orpcdef')
 ... if anglefiletype = 'orpcdef' then each line in the euler input file should look like this: (i.e., 15 floats)
 ...   55.551210  58.856774  325.551210  0.0  0.0  15000.0  1.00 0.00 0.00 0.00 1.00 0.00 0.00 0.00 1.00
 ...   <-   Euler angles  (degrees)  ->  <- pat. ctr.   ->  <- deformation tensor in column-major form->
-' anglefiletype = ''orientations'','...
+' anglefiletype = ''orientations'',\n'...
 ... 'tsl' or 'hkl' Euler angle convention parameter
-' eulerconvention = %s,\n'...'tsl'
+' eulerconvention = ''%s'',\n'...'tsl'
 ... name of EBSD master output file; path relative to EMdatapathname
-' masterfile = %s,\n'...'master.h5'
-... name of Monte Carlo output file; path relative to EMdatapathname
-' energyfile = %s,\n'...'MC.h5'
+' masterfile = ''%s'',\n'...'master.h5'
 ... name of output file; path relative to EMdatapathname
-' datafile = %s,\n'...'EBSDout.h5'
+' datafile = ''%s'',\n'...'EBSDout.h5'
 ... bitdepth '8bit' for [0..255] bytes; 'float' for 32-bit reals; '##int' for 32-bit integers with ##-bit dynamic range
 ... e.g., '9int' will get you 32-bit integers with intensities scaled to the range [ 0 .. 2^(9)-1 ];
 ... '17int' results in the intensity range [ 0 .. 2^(17)-1 ]
-' bitdepth = %s,\n'...'8bit'
+' bitdepth = ''%s'',\n'...'8bit'
  ... incident beam current [nA]
 ' beamcurrent = %g,\n'...'150.0'
 ... beam dwell time [micro s]
 ' dwelltime = %g,\n'...'100.0'
 ... include Poisson noise ? (y/n) (noise will be applied *before* binning and intensity scaling)
-' poisson = ''n'','...
+' poisson = ''n'',\n'...
 ... binning mode (1, 2, 4, or 8)
 ' binning = %u,\n'...'1'
 ... should we perform an approximate computation that includes a lattice distortion? ('y' or 'n')
 ... This uses a polar decomposition of the deformation tensor Fmatrix which results in
 ... an approcimation of the pattern for the distorted lattice; the bands will be very close
 ... to the correct position in each pattern, but the band widths will likely be incorrect.
-' applyDeformation = %s\n'...'n'
+' applyDeformation = ''%s''\n'...'n'
 ... if applyDeformation='y' then enter the 3x3 deformation tensor in column-major form
 ... the default is the identity tensor, i.e., no deformation
 ' Ftensor = %s\n'...1.D0, 0.D0, 0.D0, 0.D0, 1.D0, 0.D0, 0.D0, 0.D0, 1.D0,
 ... intensity scaling mode 'not' = no scaling, 'lin' = linear, 'gam' = gamma correction
-' scalingmode = %s,\n'...'not',
+' scalingmode = ''%s'',\n'...'not',
 ... gamma correction factor
 ' gammavalue = %g,\n'...1.0,
 ... if the 'makedictionary' parameter is 'n', then we have the normal execution of the program
@@ -129,9 +129,9 @@ formatString = [
 ... the resulting dictionary can be used for static indexing in the EMEBSDDI program...
 ... these parameters must be taken identical to the ones in the EMEBSDDI.nml input file to have
 ... optimal indexing...
-' makedictionary = ''n'','...
+' makedictionary = ''n'',\n'...
 ... should a circular mask be applied to the data? 'y', 'n'
-' maskpattern = %s,\n'...'n',
+' maskpattern = ''%s'',\n'...'n',
 ... mask radius (in pixels, AFTER application of the binning operation)
 ' maskradius = %u,\n'...
 ... hi pass filter w parameter; 0.05 is a reasonable value
@@ -144,7 +144,7 @@ formatString = [
 
 fprintf(fid,formatString,L,thetac,delta,numsx,numsy,xpc,ypc,omega,...
     alphaBD,energymin,energymax,includebackground,anglefile,...
-    eulerconvention,masterfile,energyfile,datafile,bitdepth,...
+    eulerconvention,masterfile,datafile,bitdepth,...
     beamcurrent,dwelltime,binning,applyDeformation,Ftensor,...
     scalingmode,gammavalue,maskpattern,floor(numsx/2),nthreads);
 %{
@@ -196,20 +196,26 @@ fprintf(fid,'/\n');
 %}
 fclose(fid);
 
+cleanupNamelist = onCleanup(@() delete(inputfile));
+
 %run EMsoft
 cd(EMdataPath);
 %setenv('DYLD_LIBRARY_PATH',['/opt/local/lib/libgcc/']);
 [status,cmdout] = system(['"' fullfile(EMsoftPath,'bin','EMEBSD') '" ' inputfile]);
 cd(OpenXYPath);
+
+cleanupDataFile = onCleanup(@() delete(fullfile(EMdataPath,datafile)));
 %!EMEBSD EMEBSDexample.nml
-disp(cmdout)
+if status
+    disp(cmdout)
+end
 %generate pic
 h5infostruct=h5info(datafilepath);
 data1=h5read(h5infostruct.Filename,'/EMData/EBSD/EBSDPatterns');
 pic=zeros(numsx,numsy);
 pic(:,:)=data1(:,:,1);
-pic=flipud(pic');   % flip to correct OIM reference frame (swap TD and RD)
+pic=(pic');   % flip to correct OIM reference frame (swap TD and RD)
 %imagesc(pic)
 %colormap 'gray'
-delete(fullfile(EMdataPath,datafile), inputfile, fullfile(EMdataPath,anglefile));
+% delete(fullfile(EMdataPath,datafile), inputfile, fullfile(EMdataPath,anglefile));
 end

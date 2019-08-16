@@ -286,7 +286,11 @@ mR=mean(dRshift);
 stdevC=std(dCshift);
 mC=mean(dCshift);
 if stdevR~=0 && stdevC~=0
-    tempind=find(abs(dRshift)<129&abs(dCshift)<129&abs(dRshift-mR)<standev*stdevR&abs(dCshift-mC)<standev*stdevC);
+    tempind = ...
+        abs(dRshift) < 129 & ...
+        abs(dCshift) < 129 & ...
+        abs(dRshift-mR) < standev * stdevR & ...
+        abs(dCshift-mC) < standev * stdevC;
     rs1=(rs1(tempind));
     rs2=(rs2(tempind));
     rs3=(rs3(tempind));
@@ -313,7 +317,7 @@ if stdevR~=0 && stdevC~=0
         return
     end
 else
-    tempind=1:length(rc3);
+    tempind = true(size(rc3));
 end
 length(tempind);
 g=Qsc;
