@@ -1,4 +1,4 @@
-function [F, SSE, XX, sigma] = CalcF(RefImage,ScanImage,g,Fo,Ind,Settings,curMaterial,RefInd,PC)
+function [F, fitMetrics, XX, sigma] = CalcF(RefImage,ScanImage,g,Fo,Ind,Settings,curMaterial,RefInd,PC)
 %Desc: This function can be used to calculate the deformation tensor F (in the crystal frame) that
 %describes the deformation to move the pattern RefImage onto the pattern ScanImage.
 % modified 10/28/14 by DTF to correctly change Pattern Center when using
@@ -138,6 +138,23 @@ dRshift = zeros(1,length(roixc));
 dCshift = zeros(1,length(roixc));
 XX = zeros(length(roixc),3);
 
+%% Short circuit if cross-correlating against same pattern
+if Ind == RefInd
+    F = eye(3);
+    fitMetrics = computations.metrics.fitMetrics('good');
+    sigma = zeros(3, 3);
+    if Settings.DoShowPlot
+        pc = [xstar ystar, zstar];
+        UI_utils.plotShifts(RefImage, ScanImage, Ind, RefInd, Settings,...
+            Qsc, pc, 1:length(roixc), Cshift, Rshift, F, fitMetrics);
+        
+    end
+
+    return
+end
+
+
+
 %% Go over each ROI
 for i=1:length(roixc)
     rc=roiyc(i);
@@ -269,7 +286,11 @@ mR=mean(dRshift);
 stdevC=std(dCshift);
 mC=mean(dCshift);
 if stdevR~=0 && stdevC~=0
-    tempind=find(abs(dRshift)<129&abs(dCshift)<129&abs(dRshift-mR)<standev*stdevR&abs(dCshift-mC)<standev*stdevC);
+    tempind = ...
+        abs(dRshift) < 129 & ...
+        abs(dCshift) < 129 & ...
+        abs(dRshift-mR) < standev * stdevR & ...
+        abs(dCshift-mC) < standev * stdevC;
     rs1=(rs1(tempind));
     rs2=(rs2(tempind));
     rs3=(rs3(tempind));
@@ -291,12 +312,12 @@ if stdevR~=0 && stdevC~=0
     
     if length(tempind)<4
         F=eye(3);
-        SSE=0;
+        fitMetrics = computations.metrics.fitMetrics;
         disp('Too few good ROI''s');
         return
     end
 else
-    tempind=1:length(rc3);
+    tempind = true(size(rc3));
 end
 length(tempind);
 g=Qsc;
@@ -451,19 +472,7 @@ switch Settings.FCalcMethod
         F=g*F*g'; %Put in crystal frame
         %calculate the sum of the squared errors
         [cx,cy]=Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,roixc,roiyc,F,Settings.PixelSize,alpha);
-        SSE=sqrt(sum((cx(tempind)-Cshift(tempind)).^2+(cy(tempind)-Rshift(tempind)).^2)/length(tempind)) ;
-        %         Fs{1}=F;
-        %         SSEs(1)=SSE;
-        %
-        %         n=(g*[0;0;1])'*inv(Fo)/norm((g*[0;0;1])'*inv(Fo));
-        %         C=Cc;
-        %         % vars:                          a11                                        a12                                                     a13                                      a21                                 a22                                                           a23                                     a31                                                                a32                                 a33
-        %         Aa=[ C(1,1,1,1)*n(1)+C(1,2,1,1)*n(2)+C(1,3,1,1)*n(3) C(1,1,1,2)*n(1)+C(1,2,1,2)*n(2)+C(1,3,1,2)*n(3)    C(1,1,1,3)*n(1)+C(1,2,1,3)*n(2)+C(1,3,1,3)*n(3) C(1,1,1,2)*n(1)+C(1,2,1,2)*n(2)+C(1,3,1,2)*n(3) C(1,1,2,2)*n(1)+C(1,2,2,2)*n(2)+C(1,3,2,2)*n(3)  C(1,1,2,3)*n(1)+C(1,2,2,3)*n(2)+C(1,3,2,3)*n(3)  C(1,1,1,3)*n(1)+C(1,2,1,3)*n(2)+C(1,3,1,3)*n(3)      C(1,1,2,3)*n(1)+C(1,2,2,3)*n(2)+C(1,3,2,3)*n(3) C(1,1,3,3)*n(1)+C(1,2,3,3)*n(2)+C(1,3,3,3)*n(3)];
-        %         Ab=[ C(2,1,1,1)*n(1)+C(2,2,1,1)*n(2)+C(2,3,1,1)*n(3) C(2,1,1,2)*n(1)+C(2,2,1,2)*n(2)+C(2,3,1,2)*n(3)    C(2,1,1,3)*n(1)+C(2,2,1,3)*n(2)+C(2,3,1,3)*n(3) C(2,1,1,2)*n(1)+C(2,2,1,2)*n(2)+C(2,3,1,2)*n(3) C(2,1,2,2)*n(1)+C(2,2,2,2)*n(2)+C(2,3,2,2)*n(3)  C(2,1,2,3)*n(1)+C(2,2,2,3)*n(2)+C(2,3,2,3)*n(3)  C(2,1,1,3)*n(1)+C(2,2,1,3)*n(2)+C(2,3,1,3)*n(3)      C(2,1,2,3)*n(1)+C(2,2,2,3)*n(2)+C(2,3,2,3)*n(3) C(2,1,3,3)*n(1)+C(2,2,3,3)*n(2)+C(2,3,3,3)*n(3)];
-        %         Ac=[ C(3,1,1,1)*n(1)+C(3,2,1,1)*n(2)+C(3,3,1,1)*n(3) C(3,1,1,2)*n(1)+C(3,2,1,2)*n(2)+C(3,3,1,2)*n(3)    C(3,1,1,3)*n(1)+C(3,2,1,3)*n(2)+C(3,3,1,3)*n(3) C(3,1,1,2)*n(1)+C(3,2,1,2)*n(2)+C(3,3,1,2)*n(3) C(3,1,2,2)*n(1)+C(3,2,2,2)*n(2)+C(3,3,2,2)*n(3)  C(3,1,2,3)*n(1)+C(3,2,2,3)*n(2)+C(3,3,2,3)*n(3)  C(3,1,1,3)*n(1)+C(3,2,1,3)*n(2)+C(3,3,1,3)*n(3)      C(3,1,2,3)*n(1)+C(3,2,2,3)*n(2)+C(3,3,2,3)*n(3) C(3,1,3,3)*n(1)+C(3,2,3,3)*n(2)+C(3,3,3,3)*n(3)];
-        %         BCerr=[Aa;Ab;Ac]*[F(1,1)-1;F(1,2);F(1,3);F(2,1);F(2,2)-1;F(2,3);F(3,1);F(3,2);F(3,3)-1];
-        %         BCerr = sqrt(sum(BCerr.^2));
-        %         BCerrs(1)=BCerr;
+        fitMetrics = computations.metrics.fitMetrics(cx, cy, Cshift, Rshift, tempind);
         
     case 'Real Crystal'
         %% Method 2: wilkinson in crystal frame
@@ -529,19 +538,7 @@ switch Settings.FCalcMethod
         F=U+eye(3);
         %calculate the sum of the squared errors
         [cx,cy]=Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,roixc,roiyc,F,Settings.PixelSize,alpha);
-        SSE=sqrt(sum((cx(tempind)-Cshift(tempind)).^2+(cy(tempind)-Rshift(tempind)).^2)/length(tempind)) ;
-        %         Fs{2}=F;
-        %         SSEs(2)=SSE;
-        
-        %         n=(g*[0;0;1])'*inv(Fo)/norm((g*[0;0;1])'*inv(Fo));
-        %         C=Cc;
-        % vars:                          a11                                        a12                                                     a13                                      a21                                 a22                                                           a23                                     a31                                                                a32                                 a33
-        %         Aa=[ C(1,1,1,1)*n(1)+C(1,2,1,1)*n(2)+C(1,3,1,1)*n(3) C(1,1,1,2)*n(1)+C(1,2,1,2)*n(2)+C(1,3,1,2)*n(3)    C(1,1,1,3)*n(1)+C(1,2,1,3)*n(2)+C(1,3,1,3)*n(3) C(1,1,1,2)*n(1)+C(1,2,1,2)*n(2)+C(1,3,1,2)*n(3) C(1,1,2,2)*n(1)+C(1,2,2,2)*n(2)+C(1,3,2,2)*n(3)  C(1,1,2,3)*n(1)+C(1,2,2,3)*n(2)+C(1,3,2,3)*n(3)  C(1,1,1,3)*n(1)+C(1,2,1,3)*n(2)+C(1,3,1,3)*n(3)      C(1,1,2,3)*n(1)+C(1,2,2,3)*n(2)+C(1,3,2,3)*n(3) C(1,1,3,3)*n(1)+C(1,2,3,3)*n(2)+C(1,3,3,3)*n(3)];
-        %         Ab=[ C(2,1,1,1)*n(1)+C(2,2,1,1)*n(2)+C(2,3,1,1)*n(3) C(2,1,1,2)*n(1)+C(2,2,1,2)*n(2)+C(2,3,1,2)*n(3)    C(2,1,1,3)*n(1)+C(2,2,1,3)*n(2)+C(2,3,1,3)*n(3) C(2,1,1,2)*n(1)+C(2,2,1,2)*n(2)+C(2,3,1,2)*n(3) C(2,1,2,2)*n(1)+C(2,2,2,2)*n(2)+C(2,3,2,2)*n(3)  C(2,1,2,3)*n(1)+C(2,2,2,3)*n(2)+C(2,3,2,3)*n(3)  C(2,1,1,3)*n(1)+C(2,2,1,3)*n(2)+C(2,3,1,3)*n(3)      C(2,1,2,3)*n(1)+C(2,2,2,3)*n(2)+C(2,3,2,3)*n(3) C(2,1,3,3)*n(1)+C(2,2,3,3)*n(2)+C(2,3,3,3)*n(3)];
-        %         Ac=[ C(3,1,1,1)*n(1)+C(3,2,1,1)*n(2)+C(3,3,1,1)*n(3) C(3,1,1,2)*n(1)+C(3,2,1,2)*n(2)+C(3,3,1,2)*n(3)    C(3,1,1,3)*n(1)+C(3,2,1,3)*n(2)+C(3,3,1,3)*n(3) C(3,1,1,2)*n(1)+C(3,2,1,2)*n(2)+C(3,3,1,2)*n(3) C(3,1,2,2)*n(1)+C(3,2,2,2)*n(2)+C(3,3,2,2)*n(3)  C(3,1,2,3)*n(1)+C(3,2,2,3)*n(2)+C(3,3,2,3)*n(3)  C(3,1,1,3)*n(1)+C(3,2,1,3)*n(2)+C(3,3,1,3)*n(3)      C(3,1,2,3)*n(1)+C(3,2,2,3)*n(2)+C(3,3,2,3)*n(3) C(3,1,3,3)*n(1)+C(3,2,3,3)*n(2)+C(3,3,3,3)*n(3)];
-        %         BCerr=[Aa;Ab;Ac]*[F(1,1)-1;F(1,2);F(1,3);F(2,1);F(2,2)-1;F(2,3);F(3,1);F(3,2);F(3,3)-1];
-        %         BCerr=sqrt(sum(BCerr.^2));
-        %         BCerrs(2)=BCerr;
+        fitMetrics = computations.metrics.fitMetrics(cx, cy, Cshift, Rshift, tempind);
         
     case 'Collin Sample'
         %% method 5: Colin's method in sample frame
@@ -614,18 +611,7 @@ switch Settings.FCalcMethod
         F=g*A*g';
         
         [cx,cy]=Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,roixc,roiyc,F,Settings.PixelSize,alpha);
-        SSE=sqrt(sum((cx(tempind)-Cshift(tempind)).^2+(cy(tempind)-Rshift(tempind)).^2)/length(tempind)) ;
-        %         Fs{5}=F;
-        %         SSEs(5)=SSE;
-        %         n=(g*[0;0;1])'*inv(Fo)/norm((g*[0;0;1])'*inv(Fo));
-        %         C=Cc;
-        % vars:                          a11                                        a12                                                     a13                                      a21                                 a22                                                           a23                                     a31                                                                a32                                 a33
-        %         Aa=[ C(1,1,1,1)*n(1)+C(1,2,1,1)*n(2)+C(1,3,1,1)*n(3) C(1,1,1,2)*n(1)+C(1,2,1,2)*n(2)+C(1,3,1,2)*n(3)    C(1,1,1,3)*n(1)+C(1,2,1,3)*n(2)+C(1,3,1,3)*n(3) C(1,1,1,2)*n(1)+C(1,2,1,2)*n(2)+C(1,3,1,2)*n(3) C(1,1,2,2)*n(1)+C(1,2,2,2)*n(2)+C(1,3,2,2)*n(3)  C(1,1,2,3)*n(1)+C(1,2,2,3)*n(2)+C(1,3,2,3)*n(3)  C(1,1,1,3)*n(1)+C(1,2,1,3)*n(2)+C(1,3,1,3)*n(3)      C(1,1,2,3)*n(1)+C(1,2,2,3)*n(2)+C(1,3,2,3)*n(3) C(1,1,3,3)*n(1)+C(1,2,3,3)*n(2)+C(1,3,3,3)*n(3)];
-        %         Ab=[ C(2,1,1,1)*n(1)+C(2,2,1,1)*n(2)+C(2,3,1,1)*n(3) C(2,1,1,2)*n(1)+C(2,2,1,2)*n(2)+C(2,3,1,2)*n(3)    C(2,1,1,3)*n(1)+C(2,2,1,3)*n(2)+C(2,3,1,3)*n(3) C(2,1,1,2)*n(1)+C(2,2,1,2)*n(2)+C(2,3,1,2)*n(3) C(2,1,2,2)*n(1)+C(2,2,2,2)*n(2)+C(2,3,2,2)*n(3)  C(2,1,2,3)*n(1)+C(2,2,2,3)*n(2)+C(2,3,2,3)*n(3)  C(2,1,1,3)*n(1)+C(2,2,1,3)*n(2)+C(2,3,1,3)*n(3)      C(2,1,2,3)*n(1)+C(2,2,2,3)*n(2)+C(2,3,2,3)*n(3) C(2,1,3,3)*n(1)+C(2,2,3,3)*n(2)+C(2,3,3,3)*n(3)];
-        %         Ac=[ C(3,1,1,1)*n(1)+C(3,2,1,1)*n(2)+C(3,3,1,1)*n(3) C(3,1,1,2)*n(1)+C(3,2,1,2)*n(2)+C(3,3,1,2)*n(3)    C(3,1,1,3)*n(1)+C(3,2,1,3)*n(2)+C(3,3,1,3)*n(3) C(3,1,1,2)*n(1)+C(3,2,1,2)*n(2)+C(3,3,1,2)*n(3) C(3,1,2,2)*n(1)+C(3,2,2,2)*n(2)+C(3,3,2,2)*n(3)  C(3,1,2,3)*n(1)+C(3,2,2,3)*n(2)+C(3,3,2,3)*n(3)  C(3,1,1,3)*n(1)+C(3,2,1,3)*n(2)+C(3,3,1,3)*n(3)      C(3,1,2,3)*n(1)+C(3,2,2,3)*n(2)+C(3,3,2,3)*n(3) C(3,1,3,3)*n(1)+C(3,2,3,3)*n(2)+C(3,3,3,3)*n(3)];
-        %         BCerr=[Aa;Ab;Ac]*[F(1,1)-1;F(1,2);F(1,3);F(2,1);F(2,2)-1;F(2,3);F(3,1);F(3,2);F(3,3)-1];
-        %         BCerr=sqrt(sum(BCerr.^2));
-        %         BCerrs(5)=BCerr;
+        fitMetrics = computations.metrics.fitMetrics(cx, cy, Cshift, Rshift, tempind);
         
     case 'Collin Crystal'
         %% method 6: Colin's method in crystal frame
@@ -696,19 +682,7 @@ switch Settings.FCalcMethod
         F=U+eye(3);
         
         [cx,cy]=Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,roixc,roiyc,F,Settings.PixelSize,alpha);
-        SSE=sqrt(sum((cx(tempind)-Cshift(tempind)).^2+(cy(tempind)-Rshift(tempind)).^2)/length(tempind)) ;
-        %         Fs{6}=F;
-        %         SSEs(6)=SSE;
-        %         n=(g*[0;0;1])'*inv(Fo)/norm((g*[0;0;1])'*inv(Fo));
-        %         C=Cc;
-        % vars:                          a11                                        a12                                                     a13                                      a21                                 a22                                                           a23                                     a31                                                                a32                                 a33
-        %         Aa=[ C(1,1,1,1)*n(1)+C(1,2,1,1)*n(2)+C(1,3,1,1)*n(3) C(1,1,1,2)*n(1)+C(1,2,1,2)*n(2)+C(1,3,1,2)*n(3)    C(1,1,1,3)*n(1)+C(1,2,1,3)*n(2)+C(1,3,1,3)*n(3) C(1,1,1,2)*n(1)+C(1,2,1,2)*n(2)+C(1,3,1,2)*n(3) C(1,1,2,2)*n(1)+C(1,2,2,2)*n(2)+C(1,3,2,2)*n(3)  C(1,1,2,3)*n(1)+C(1,2,2,3)*n(2)+C(1,3,2,3)*n(3)  C(1,1,1,3)*n(1)+C(1,2,1,3)*n(2)+C(1,3,1,3)*n(3)      C(1,1,2,3)*n(1)+C(1,2,2,3)*n(2)+C(1,3,2,3)*n(3) C(1,1,3,3)*n(1)+C(1,2,3,3)*n(2)+C(1,3,3,3)*n(3)];
-        %         Ab=[ C(2,1,1,1)*n(1)+C(2,2,1,1)*n(2)+C(2,3,1,1)*n(3) C(2,1,1,2)*n(1)+C(2,2,1,2)*n(2)+C(2,3,1,2)*n(3)    C(2,1,1,3)*n(1)+C(2,2,1,3)*n(2)+C(2,3,1,3)*n(3) C(2,1,1,2)*n(1)+C(2,2,1,2)*n(2)+C(2,3,1,2)*n(3) C(2,1,2,2)*n(1)+C(2,2,2,2)*n(2)+C(2,3,2,2)*n(3)  C(2,1,2,3)*n(1)+C(2,2,2,3)*n(2)+C(2,3,2,3)*n(3)  C(2,1,1,3)*n(1)+C(2,2,1,3)*n(2)+C(2,3,1,3)*n(3)      C(2,1,2,3)*n(1)+C(2,2,2,3)*n(2)+C(2,3,2,3)*n(3) C(2,1,3,3)*n(1)+C(2,2,3,3)*n(2)+C(2,3,3,3)*n(3)];
-        %         Ac=[ C(3,1,1,1)*n(1)+C(3,2,1,1)*n(2)+C(3,3,1,1)*n(3) C(3,1,1,2)*n(1)+C(3,2,1,2)*n(2)+C(3,3,1,2)*n(3)    C(3,1,1,3)*n(1)+C(3,2,1,3)*n(2)+C(3,3,1,3)*n(3) C(3,1,1,2)*n(1)+C(3,2,1,2)*n(2)+C(3,3,1,2)*n(3) C(3,1,2,2)*n(1)+C(3,2,2,2)*n(2)+C(3,3,2,2)*n(3)  C(3,1,2,3)*n(1)+C(3,2,2,3)*n(2)+C(3,3,2,3)*n(3)  C(3,1,1,3)*n(1)+C(3,2,1,3)*n(2)+C(3,3,1,3)*n(3)      C(3,1,2,3)*n(1)+C(3,2,2,3)*n(2)+C(3,3,2,3)*n(3) C(3,1,3,3)*n(1)+C(3,2,3,3)*n(2)+C(3,3,3,3)*n(3)];
-        %         BCerr=[Aa;Ab;Ac]*[F(1,1)-1;F(1,2);F(1,3);F(2,1);F(2,2)-1;F(2,3);F(3,1);F(3,2);F(3,3)-1];
-        %         BCerr=sqrt(sum(BCerr.^2));
-        %         BCerrs(6)=BCerr; %end of method 6
-        %         F={};
+        fitMetrics = computations.metrics.fitMetrics(cx, cy, Cshift, Rshift, tempind);
         
         %Calculate Stress - BEJ Jan 2017
         if nargout == 4
@@ -735,84 +709,9 @@ end
 
 %% for visualizing process
 if Settings.DoShowPlot
-    sf = 1;
-    DoPlotROIs = 0;
-    try
-        set(0,'currentfigure',100);
-    catch
-        figure(100);
-    end
-    [cx,cy]=Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,roixc,roiyc,F,Settings.PixelSize,alpha);
-    cla
-    imagesc(RefImage);
-    axis image
-    colormap gray
-    hold on
-    if DoPlotROIs
-        set(0,'currentfigure',100);
-        PlotROIs(Settings,RefImage);
-    end
-    for i=1:length(Cshift)
-        if ~isempty(find(tempind==i, 1))
-            %Should probably make this factor "*10" a variable...
-            plot([roixc(i) roixc(i)+sf*Cshift(i)],[roiyc(i) roiyc(i)+sf*Rshift(i)],'g.-')
-        else
-            plot([roixc(i) roixc(i)+sf*Cshift(i)],[roiyc(i) roiyc(i)+sf*Rshift(i)],'r.-')
-        end
-        plot([roixc(i) roixc(i)+sf*cx(i)],[roiyc(i) roiyc(i)+sf*cy(i)],'b.-')
-    end
-    drawnow
-    try
-        set(0,'currentfigure',101);
-    catch
-        figure(101);
-    end
-    text = get(gca,'title');
-    if ~isempty(text.String)
-        [num,iter] = strtok(text.String{2}(6:end));
-        num = str2num(num);
-        iter = str2num(iter);
-        if num == Ind
-            iter = iter + 1;
-        else
-            iter = 1;
-        end
-    else
-        iter = 1;
-    end
-    set(0,'currentfigure',100);
-    if RefInd~=0
-        title({'Reference Image';['Image ' num2str(RefInd) ' (' num2str(iter) ')']})
-    else
-        title({'Simulated Reference Image';[' (' num2str(iter) ')']})
-    end
-    
-    set(0,'currentfigure',101);
-    [cx,cy]=Theoretical_Pixel_Shift(Qsc,xstar,ystar,zstar,roixc,roiyc,F,Settings.PixelSize,alpha);
-    cla
-    imagesc(ScanImage);
-    axis image
-    colormap gray
-    hold on
-    if DoPlotROIs
-        set(0,'currentfigure',101);
-        PlotROIs(Settings,RefImage);
-    end
-    for i=1:length(Cshift)
-        if ~isempty(find(tempind==i, 1))
-            %Should probably make this factor "*10" a variable...
-            plot([roixc(i) roixc(i)+sf*Cshift(i)],[roiyc(i) roiyc(i)+sf*Rshift(i)],'g.-')
-        else
-            plot([roixc(i) roixc(i)+sf*Cshift(i)],[roiyc(i) roiyc(i)+sf*Rshift(i)],'r.-')
-        end
-        plot([roixc(i) roixc(i)+sf*cx(i)],[roiyc(i) roiyc(i)+sf*cy(i)],'b.-')
-    end
-    drawnow
-    title({'Experimental Image';['Image ' num2str(Ind) ' (' num2str(iter) ')']})
-    U
-    SSE
-% keyboard
-%     save shifts Rshift Cshift cx cy
-    return
-    
+    pc = [xstar ystar, zstar];
+    UI_utils.plotShifts(RefImage, ScanImage, Ind, RefInd, Settings,...
+        Qsc, pc, tempind, Cshift, Rshift, F, fitMetrics);
+
 end
+

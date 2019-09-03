@@ -59,7 +59,10 @@ for ii = currentGrainNumber:length(refInds)
     refInds(ii) = refIndsAll(find(grainID == ii, 1));
 end
 
-while currentGrainNumber <= max(grainID)
+maxGrainNum = max(grainID);
+while currentGrainNumber <= maxGrainNum
+    fprintf('Splitting grain %u/%u %f\n',...
+        currentGrainNumber, maxGrainNum, currentGrainNumber / maxGrainNum)
     % Find the refference point for the current grain and its oreintation
     currentRefInd = refInds(currentGrainNumber);
     referenceOreintation = euler2quat(Settings.Angles(currentRefInd,:));
@@ -131,7 +134,8 @@ while currentGrainNumber <= max(grainID)
         f = getframe(figure(314));
         im(:,:,1,currentGrainNumber) = rgb2ind(f.cdata,map,'nodither');
     end
-end% currentGrainNumber <= max(grainID)
+    maxGrainNum = max(grainID);
+end% currentGrainNumber <= maxGrainNum
 if doGIF
     gifName = 'testing.gif';
     imwrite(im,map,gifName,'DelayTime',0.25,'LoopCount',inf)

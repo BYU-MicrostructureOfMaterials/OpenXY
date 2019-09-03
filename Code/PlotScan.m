@@ -23,5 +23,6 @@ switch PlotType
     case 'Misorientation'
         im = imagesc(im);
         colormap(hot)
+        colorbar
 end
 axis image
