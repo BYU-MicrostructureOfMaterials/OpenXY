@@ -19,8 +19,9 @@ else
     q_symops = rmat2quat(permute(gensymops,[3 2 1]));
 end
 
+skipVector = ~isnan(currentRefInds);
 [grainAvg, symQuats] = grainProcessing.getGrainAverageOrientation(...
-    grainIDs, angles, q_symops, CI);
+    grainIDs, angles, q_symops, CI, skipVector);
 
 refInds = zeros(Settings.ScanLength, 1);
 firstGrain = min(grainIDs);
@@ -29,7 +30,7 @@ lastGrain = max(grainIDs);
 for id = firstGrain:lastGrain
     
     currGrain = find(grainIDs == id);
-    if ~isnan(currentRefInds(id))
+    if skipVector(id)
         refInds(currGrain) = currentRefInds(id);
         continue;
     end
