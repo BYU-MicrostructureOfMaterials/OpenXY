@@ -1,7 +1,7 @@
 classdef DummyPatternProvider < patterns.PatternProvider
     
     properties
-        imSize = -1
+        imSize double = -1
     end
     
     methods

@@ -1,7 +1,7 @@
 classdef ImagepatternProvider < patterns.PatternProvider
     
     properties
-        imSize
+        imSize double
     end
     
     properties (GetAccess = public, SetAccess = private)

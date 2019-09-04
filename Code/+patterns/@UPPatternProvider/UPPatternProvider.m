@@ -2,7 +2,7 @@ classdef UPPatternProvider < patterns.PatternProvider
     %UPPATTERNPROVIDER PatternProvider for .up1 and .up2 files
     
     properties
-        imSize
+        imSize double
     end
     
     properties (Access = private, Transient)

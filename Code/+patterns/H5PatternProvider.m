@@ -2,7 +2,7 @@ classdef H5PatternProvider < patterns.PatternProvider
     %H5PATTERNPROVIDER Provides patterns from an HDF5 file
     
     properties
-        imSize
+        imSize double
     end
     
     properties(Access = private)

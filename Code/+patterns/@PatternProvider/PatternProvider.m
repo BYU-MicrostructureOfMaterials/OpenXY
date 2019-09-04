@@ -6,11 +6,11 @@ classdef (Abstract) PatternProvider
         fileName char
 
         filter patterns.ImageFilter 
-        doCropSquare logical {isscalar} = true;
+        doCropSquare logical = true;
     end
     
     properties (Abstract)
-        imSize(1,2) double
+        imSize double
     end
     
     methods (Abstract, Access = protected)
