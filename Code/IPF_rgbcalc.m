@@ -36,7 +36,9 @@ function rgb = IPF_rgbcalc(mats,symops,sampledir)
 
     %find directions within correct azimuth angle
     xyPlaneNorms = sqrt( (dirs(1,:).^2) + (dirs(2,:).^2) );
-    azimuth = acos(dirs(1,:)./xyPlaneNorms);
+    azcosine = dirs(1,:)./xyPlaneNorms;
+    azcosine(dirs(1,:)==0 & xyPlaneNorms == 0) = 1;
+    azimuth = acos(azcosine);
     negativeY = dirs(2,:)<0;
     azimuth(negativeY) = (2*pi) - azimuth(negativeY);
     inAzRange = and(azimuth>=0,azimuth<(pi/4));
@@ -47,6 +49,22 @@ function rgb = IPF_rgbcalc(mats,symops,sampledir)
 
     %Find dir that lies in standard steriographic triangle
     inRange = and(inAzRange,correctHemispheres);
+    
+    %Checking for duplicates
+    nsymops = size(symops,3);
+    for i=1:N
+        checkforhit = 0;
+        for j=1:nsymops
+            if inRange((i-1)*nsymops+j) == 1
+                if checkforhit == 0
+                    checkforhit = 1;
+                else
+                    inRange((i-1)*nsymops+j) = 0;
+                end
+            end
+            
+        end
+    end
 
     if sum(inRange)~=N
         rgb = zeros(N, 3);
