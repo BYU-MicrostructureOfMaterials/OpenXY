@@ -41,11 +41,11 @@ function rgb = IPF_rgbcalc(mats,symops,sampledir)
     azimuth = acos(azcosine);
     negativeY = dirs(2,:)<0;
     azimuth(negativeY) = (2*pi) - azimuth(negativeY);
-    inAzRange = and(azimuth>=0,azimuth<(pi/4));
+    inAzRange = and(azimuth>=-2e-16,azimuth<(pi/4+2e-16));
 
     %find directions that point to postive side of -1 0 1 plane
     dotProducts = [-1 0 1]*dirs;
-    correctHemispheres = dotProducts>0;
+    correctHemispheres = dotProducts>-2e-16;
 
     %Find dir that lies in standard steriographic triangle
     inRange = and(inAzRange,correctHemispheres);
