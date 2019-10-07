@@ -96,7 +96,7 @@ else
 end
 
 % Populate Color Dropdown
-ColorString = {'yellow','magenta','cyan','red','green','blue','white','black','holiday'};
+ColorString = {'yellow','magenta','cyan','red','green','blue','white','black'};
 set(handles.ColorScheme,'String',ColorString);
 SetPopupValue(handles.ColorScheme,TestGeometrySettings.color);
 
@@ -417,13 +417,6 @@ else
     genEBSDPatternHybridLineOverlay(g,paramspat,eye(3),Material.lattice,Material.a1,Material.b1,Material.c1,Material.axs,...
         'BlinkSpeed',speed,'Color',color,'MaxSpeed',handles.MaxSpeed,...
         'LineWidth',width);
-    if strcmp(color,'holiday')
-        colormap hot
-        gui = findall(handles.TestGeometryGUI,'BackgroundColor',[0.94 0.94 0.94]);
-        set(gui,'BackgroundColor','red')
-        set(gui,'ForegroundColor','white','FontWeight','bold')
-        set(handles.TestGeometryGUI,'Color','green')
-    end
 end
 
 % --- Executes on selection change in BlinkSpeed.
