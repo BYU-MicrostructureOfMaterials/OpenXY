@@ -84,14 +84,15 @@ handles.Settings = Settings;
 handles.MaxSpeed = 4;
 
 % Load previous settings
-if exist('SystemSettings.mat','file')
-    load SystemSettings.mat
-end
-if ~exist('TestGeometrySettings','var')
+sysSettings = matfile('SystemSettings.mat', 'Writable', true);
+if ~isprop(sysSettings,'TestGeometrySettings')
    TestGeometrySettings.blinkspeed = 'Medium';
    TestGeometrySettings.color = 'green';
    TestGeometrySettings.MapType = 'Image Quality';
    TestGeometrySettings.LineWidth = 0.5;
+   sysSettings.TestGeometrySettings = TestGeometrySettings;
+else
+    TestGeometrySettings = sysSettings.TestGeometrySettings;
 end
 
 % Populate Color Dropdown
@@ -224,7 +225,8 @@ if get(handles.IPFMap,'Value')
 else
     TestGeometrySettings.MapType = 'Image Quality';
 end
-save('SystemSettings.mat','TestGeometrySettings','-append')
+sysSettings = matfile('SystemSettings.mat', 'Writable', true);
+sysSettings.TestGeometrySettings = TestGeometrySettings;
 TestGeometryGUI_CloseRequestFcn(handles.TestGeometryGUI, eventdata, handles)
 
 

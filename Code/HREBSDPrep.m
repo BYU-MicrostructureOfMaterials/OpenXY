@@ -43,8 +43,9 @@ end
 %% EMSoft Setup
 if strcmp(Settings.HROIMMethod,'Dynamic Simulated')
     %Check Path
-    if exist('SystemSettings.mat','file')
-        load SystemSettings
+    sysSettings = matfile('SystemSettings.mat');
+    if isprop(sysSettings, 'EMsoftPath') && ~isempty(sysSettings.EMsoftPath)
+        EMsoftPath = sysSettings.EMsoftPath;
         EMdataPath = fullfile(fileparts(EMsoftPath),'EMdata');
         if ~exist(EMdataPath,'dir')
             error('EMsoft path is incorrect. Re-select in Advanced Settings');

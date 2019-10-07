@@ -86,24 +86,21 @@ if handles.Fast
 end
 
 %Load System Settings
-OpenXYPath = '';
-if exist('SystemSettings.mat','file')
-    load SystemSettings
-end
-if ~exist('understand','var')
-    understand = LicenseGUI;
-    if ~understand
+sysSettings = matfile('SystemSettings.mat', 'Writable', true);
+
+if ~isprop(sysSettings, 'understand') || ~sysSettings.understand
+    sysSettings.understand = LicenseGUI;
+    if ~sysSettings.understand
         error('Must acknowlege understanding of terms to use OpenXY')
     end
 end
-if ~exist(OpenXYPath,'dir')
-    OpenXYPath = fileparts(which('MainGUI'));
-    save('SystemSettings','OpenXYPath');
+
+if ~isprop(sysSettings, 'OpenXYPath') || ~exist(sysSettings.OpenXYPath,'dir')
+    sysSettings.OpenXYPath = fileparts(which('MainGUI'));
 end
-if exist('pos','var')
-    set(hObject,'Position',pos)
+if isprop(sysSettings, 'pos')
+    set(hObject,'Position', sysSettings.pos)
 end
-save('SystemSettings.mat','understand','-append')
 %Change working directory
 XYpath = fileparts(mfilename('fullpath'));
 if ~strcmp(pwd,XYpath)
@@ -258,7 +255,8 @@ function MainGUI_CloseRequestFcn(hObject, eventdata, handles)
 % Hint: delete(hObject) closes the figure
 SaveSettings(handles);
 pos = get(handles.MainGUI,'Position');
-save('SystemSettings.mat','pos','-append')
+sysSettings = matfile('SystemSettings.mat', 'Writable', true);
+sysSettings.pos = pos;
 CloseGUIs(handles)
 delete(hObject);
 

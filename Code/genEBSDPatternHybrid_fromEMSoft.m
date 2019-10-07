@@ -21,10 +21,11 @@ anglefile = ['OpenXY_euler' num2str(ImageInd) '.txt'];  %fullfile(OpenXYPath,'te
 eulerconvention = 'tsl';
 
 %Get EMsoft Path
-if exist('SystemSettings.mat','file')
-    load SystemSettings
-    EMdataPath = fullfile(fileparts(EMsoftPath),'EMdata');
-end
+
+sysSet = matfile('SystemSettings.mat');
+EMsoftPath = sysSet.EMsoftPath;
+EMdataPath = fullfile(fileparts(EMsoftPath),'EMdata');
+
 
 %added masterfile and energyfile to the code folder.  Is that right?
 if ~exist(fullfile(EMdataPath,sprintf('%s_EBSDmaster.h5',Material)),'file')
