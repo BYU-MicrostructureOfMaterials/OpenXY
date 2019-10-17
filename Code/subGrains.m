@@ -142,7 +142,7 @@ if doGIF
 end
 
 if nargout >= 2
-    refInd = newRefs;
+    refInd = newRefs; %FIXME It is possible to reach this code without ever setting newRefInds
 end
 
 end
