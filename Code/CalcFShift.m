@@ -242,7 +242,7 @@ else
 end
 
 %% Create stiffness matrix
-
+Qpc = Qsc*Qps;
 
 if strcmp(Material.lattice,'cubic') || strcmp(Material.lattice,'tetragonal')
     C1111=Material.C11*1e9;
@@ -250,17 +250,17 @@ if strcmp(Material.lattice,'cubic') || strcmp(Material.lattice,'tetragonal')
     C1122=Material.C12*1e9;
     delta=eye(3);
     %Transform to the crystal apply stress normal to surface is zero
-    Cs=zeros(3,3,3,3);
+    Cp=zeros(3,3,3,3);
     Cc=zeros(3,3,3,3);
 
-    g=Qsp*Qcs;
+    g=Qsp*Qcs; % g for crystal to phosphor
     for i=1:3
         for j=1:3
             for k=1:3
                 for ls=1:3
                     Cc(i,j,k,ls)=C1122*delta(i,j)*delta(k,ls)+C2323*(delta(i,k)*delta(j,ls)+delta(i,ls)*delta(j,k))...
                         +(C1111-C1122-2*C2323)*(delta(1,i)*delta(1,j)*delta(1,k)*delta(1,ls)+delta(2,i)*delta(2,j)*delta(2,k)*delta(2,ls)+delta(3,i)*delta(3,j)*delta(3,k)*delta(3,ls));
-                    Cs(i,j,k,ls)=C1122*delta(i,j)*delta(k,ls)+C2323*(delta(i,k)*delta(j,ls)+delta(i,ls)*delta(j,k))...
+                    Cp(i,j,k,ls)=C1122*delta(i,j)*delta(k,ls)+C2323*(delta(i,k)*delta(j,ls)+delta(i,ls)*delta(j,k))...
                     +(C1111-C1122-2*C2323)*(g(i,1)*g(j,1)*g(k,1)*g(ls,1)+g(i,2)*g(j,2)*g(k,2)*g(ls,2)+g(i,3)*g(j,3)*g(k,3)*g(ls,3));
                 end
             end
@@ -275,11 +275,11 @@ else
     C1133=Material.C13*1e9;
     delta=eye(3);
     %Transform to the crystal apply stress normal to surface is zero
-    Cc=zeros(3,3,3,3);
-    Cs=zeros(3,3,3,3);
+    Cc=zeros(3,3,3,3); % stiffness tensor in crystal frame
+    Cp=zeros(3,3,3,3); % stiffness tensor in phosphor frame
 
-    g=g';
-
+%     g=g'; % Make it  crystal to sample (instead of sample to crystal)
+    g=Qsp*Qcs; % g for crystal to phosphor
     %for hexagonal lattice in crystal frame, I couldn't think of a more clever
     %way of doing this, but I'm sure that there is one. Not sure if the
     %sample frame is correct
@@ -308,7 +308,7 @@ else
                         for n = 1:3
                             for o = 1:3
                                 for p = 1:3
-                                    Cs(i,j,k,ls) = Cs(i,j,k,ls) + g(i,m)*g(j,n)*g(k,o)*g(ls,p)*Cc(m,n,o,p);
+                                    Cp(i,j,k,ls) = Cp(i,j,k,ls) + g(i,m)*g(j,n)*g(k,o)*g(ls,p)*Cc(m,n,o,p);
                                 end
                             end
                         end
@@ -317,15 +317,7 @@ else
             end
         end
     end
-    Cc(1,1,2,2) = C1122;
-    Cc(2,2,1,1) = C1122;
-    Cc(3,3,3,3) = C3333;
-    Cc(1,2,1,2) = C1212;
-    Cc(1,2,2,1) = C1212;
-    Cc(2,1,2,1) = C1212;
-    Cc(2,1,1,2) = C1212;
 end
-
 
 sigma = zeros(3,3);
 
@@ -353,7 +345,10 @@ b2 = q2.*r3;
 %     C=Cs;
 %     A5=[ C(1,1,1,1)*n(1)+C(1,2,1,1)*n(2)+C(1,3,1,1)*n(3) C(1,1,1,2)*n(1)+C(1,2,1,2)*n(2)+C(1,3,1,2)*n(3)    C(1,1,1,3)*n(1)+C(1,2,1,3)*n(2)+C(1,3,1,3)*n(3) C(1,1,1,2)*n(1)+C(1,2,1,2)*n(2)+C(1,3,1,2)*n(3) C(1,1,2,2)*n(1)+C(1,2,2,2)*n(2)+C(1,3,2,2)*n(3)  C(1,1,2,3)*n(1)+C(1,2,2,3)*n(2)+C(1,3,2,3)*n(3)  C(1,1,1,3)*n(1)+C(1,2,1,3)*n(2)+C(1,3,1,3)*n(3)      C(1,1,2,3)*n(1)+C(1,2,2,3)*n(2)+C(1,3,2,3)*n(3) C(1,1,3,3)*n(1)+C(1,2,3,3)*n(2)+C(1,3,3,3)*n(3)]/1e11;
 %     A6=[ C(2,1,1,1)*n(1)+C(2,2,1,1)*n(2)+C(2,3,1,1)*n(3) C(2,1,1,2)*n(1)+C(2,2,1,2)*n(2)+C(2,3,1,2)*n(3)    C(2,1,1,3)*n(1)+C(2,2,1,3)*n(2)+C(2,3,1,3)*n(3) C(2,1,1,2)*n(1)+C(2,2,1,2)*n(2)+C(2,3,1,2)*n(3) C(2,1,2,2)*n(1)+C(2,2,2,2)*n(2)+C(2,3,2,2)*n(3)  C(2,1,2,3)*n(1)+C(2,2,2,3)*n(2)+C(2,3,2,3)*n(3)  C(2,1,1,3)*n(1)+C(2,2,1,3)*n(2)+C(2,3,1,3)*n(3)      C(2,1,2,3)*n(1)+C(2,2,2,3)*n(2)+C(2,3,2,3)*n(3) C(2,1,3,3)*n(1)+C(2,2,3,3)*n(2)+C(2,3,3,3)*n(3)]/1e11;
-%     A7=[ C(3,1,1,1)*n(1)+C(3,2,1,1)*n(2)+C(3,3,1,1)*n(3) C(3,1,1,2)*n(1)+C(3,2,1,2)*n(2)+C(3,3,1,2)*n(3)    C(3,1,1,3)*n(1)+C(3,2,1,3)*n(2)+C(3,3,1,3)*n(3) C(3,1,1,2)*n(1)+C(3,2,1,2)*n(2)+C(3,3,1,2)*n(3) C(3,1,2,2)*n(1)+C(3,2,2,2)*n(2)+C(3,3,2,2)*n(3)  C(3,1,2,3)*n(1)+C(3,2,2,3)*n(2)+C(3,3,2,3)*n(3)  C(3,1,1,3)*n(1)+C(3,2,1,3)*n(2)+C(3,3,1,3)*n(3)      C(3,1,2,3)*n(1)+C(3,2,2,3)*n(2)+C(3,3,2,3)*n(3) C(3,1,3,3)*n(1)+C(3,2,3,3)*n(2)+C(3,3,3,3)*n(3)]/1e11;
+
+n = Qsp*[0;0;1]; %unit normal on sample, rotate into phosphor frame
+C=Cp;    
+A7=[ C(3,1,1,1)*n(1)+C(3,2,1,1)*n(2)+C(3,3,1,1)*n(3) C(3,1,1,2)*n(1)+C(3,2,1,2)*n(2)+C(3,3,1,2)*n(3)    C(3,1,1,3)*n(1)+C(3,2,1,3)*n(2)+C(3,3,1,3)*n(3) C(3,1,1,2)*n(1)+C(3,2,1,2)*n(2)+C(3,3,1,2)*n(3) C(3,1,2,2)*n(1)+C(3,2,2,2)*n(2)+C(3,3,2,2)*n(3)  C(3,1,2,3)*n(1)+C(3,2,2,3)*n(2)+C(3,3,2,3)*n(3)  C(3,1,1,3)*n(1)+C(3,2,1,3)*n(2)+C(3,3,1,3)*n(3)      C(3,1,2,3)*n(1)+C(3,2,2,3)*n(2)+C(3,3,2,3)*n(3) C(3,1,3,3)*n(1)+C(3,2,3,3)*n(2)+C(3,3,3,3)*n(3)]/1e11;
 % 
 %     b5=0;
 %     b6=0;
@@ -362,7 +357,8 @@ b2 = q2.*r3;
 %     A4 = [A1;A2;A5;A6;A7];
 % else
     b7 = 0;
-    A7=[1 0 0 0 1 0 0 0 1];
+%     A7=[1 0 0 0 1 0 0 0 1]; %alternative for trace free condition - does
+%     not affect tetragonality, but affects pseudostrains
     b4 = [b1;b2;b7];
     A4 = [A1;A2;A7];
 %     
@@ -377,12 +373,11 @@ b2 = q2.*r3;
 %solve for variables
 X3=A4\b4;
 
-%This U is in the crystal frame
+%This U is in the **PHOSPHOR** (NOT crystal) frame
 U = reshape(X3, [3 3])';
 F=U+eye(3);
 
-Qpc = Qsc*Qps;
-
+% rotate into crystal frame
 F = Qpc*F*Qpc';
 
 %% Compute quality of fit metrics

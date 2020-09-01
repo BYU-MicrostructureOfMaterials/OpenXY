@@ -59,7 +59,7 @@ PCvals = zeros(length(Inds),numpc);
 PCnew = zeros(3,1);
 
 %Extract out arrays to avoid parfor overhead
-patterns = Settins.patterns;
+patterns = Settings.patterns;
 ImageFilter = Settings.ImageFilter;
 Angles = Settings.Angles(Inds,:);
 

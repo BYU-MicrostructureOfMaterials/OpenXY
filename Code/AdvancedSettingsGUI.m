@@ -295,8 +295,9 @@ switch HROIMMethod
         handles = updateGrainMap(handles);
     case 'Simulated-Dynamic'
         %Check for EMsoft
-        EMsoftPath = GetEMsoftPath;
-        if isempty(EMsoftPath)
+        [EMsoftPath EMdataPath] = GetEMsoftPath;
+        if isempty(EMsoftPath) || isempty(EMdataPath)
+            warndlgpause('EMsoft or EMdata path not defined - try again to select Simulated-Dynamic; resetting to kinematic');
             HROIMMethod = 'Simulated';
             SetPopupValue(hObject,'Simulated-Kinematic');
             handles.Settings.HROIMMethod = HROIMMethod;
@@ -317,7 +318,7 @@ switch HROIMMethod
             else
                 mats = handles.Settings.Material;
             end
-            EMdataPath = fullfile(fileparts(EMsoftPath),'EMdata');
+            %EMdataPath = fullfile(fileparts(EMsoftPath),'EMdata');
             EMsoftMats = dir(EMdataPath);
             EMsoftMats = {EMsoftMats(~cellfun(@isempty,strfind({EMsoftMats.name},'EBSDmaster'))).name}';
             EMsoftMats = cellfun(@(x) x(1:strfind(x,'_EBSDmaster')-1),EMsoftMats,'UniformOutput',false);
@@ -1098,7 +1099,7 @@ if length(options)>1
         def = GrainRefType;
     end
     sel = questdlg('Select Method for Automatic selection (for leftover grains)','Manual Reference Selection',...
-        options,def);
+        options{:},def);
 else
     sel = options;
 end

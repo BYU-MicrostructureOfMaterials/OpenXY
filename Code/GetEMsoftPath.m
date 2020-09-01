@@ -1,31 +1,41 @@
-function EMsoftPath = GetEMsoftPath
-%Check for EMsoft
+function [EMsoftPath EMdataPath] = GetEMsoftPath
+%Check for EMsoft - this file is set up for EMsoft version 5, July 2020
 EMsoftPath = '';
 if exist('SystemSettings.mat','file')
     load SystemSettings
 else
     OpenXYPath = fileparts(which('MainGUI'));
 end
-if ~exist('EMsoftPath','var') || isempty(EMsoftPath)
+if ~exist('EMsoftPath','var') || isempty(EMsoftPath) || ~exist('EMdataPath','var') || isempty(EMdataPath)
     sel = questdlg({'EMsoft required, but no path has been specified';'Is EMsoft installed on the local computer?'},'EMsoft not found','Yes','No','Yes');
     if strcmp(sel,'Yes')
-        EMsoftPath = uigetdir(OpenXYPath,'Select EMsoft root directory');
+        msgbox('Select directory with EMsoftConfig.json (usually in /Users/**you**/.congig/EMsoft/); press shift/command/G to show hidden directories on a Mac');
+        EMconfigPath = uigetdir('Select directory with EMsoftConfig.json');
+        EMsc=textread([EMconfigPath,'/EMsoftConfig.json'],'%s','delimiter','\n');
+        temp=EMsc{2};
+        slash=strfind(temp,'/');
+        EMsoftPath=temp(slash(1):slash(end));
+        temp=EMsc{4};
+        slash=strfind(temp,'/');
+        EMdataPath=temp(slash(1):slash(end));
     else
-        warndlgpause('Cannot use dyamically simulated patterns. Resetting to kinematic simulation.','EMsoft not found');
+        warndlgpause('Cannot use dynamically simulated patterns. Resetting to kinematic simulation.','EMsoft not found');
         return;
     end
 end
 %Check if EMEBSD command exists
-commandName = fullfile(EMsoftPath,'bin','EMEBSD');
+commandName = fullfile(EMsoftPath,'EMEBSD');
 if ispc
     commandName = [commandName '.exe'];
 end
 if ~exist(commandName,'file')
-    warndlgpause({['EMEBSD command not found in ' fullfile(EMsoftPath,'bin') ','],'Resetting to kinematic simulation.'},'EMsoft not found');
+    warndlgpause({['EMEBSD command not found in ' fullfile(EMsoftPath,'bin') ','],'Resetting to kinematic simulation; resetting EMsoft path.'},'EMsoft not found');
     EMsoftPath = '';
+    save('SystemSettings.mat','OpenXYPath');
+else
+    save('SystemSettings.mat','OpenXYPath','EMsoftPath','EMdataPath');
 end
-save('SystemSettings.mat','OpenXYPath','EMsoftPath');
-    
+
 function warndlgpause(msg,title)
 h = warndlg(msg,title);
 uiwait(h,7);

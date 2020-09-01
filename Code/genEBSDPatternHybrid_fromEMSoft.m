@@ -23,7 +23,7 @@ eulerconvention = 'tsl';
 %Get EMsoft Path
 if exist('SystemSettings.mat','file')
     load SystemSettings
-    EMdataPath = fullfile(fileparts(EMsoftPath),'EMdata');
+%     EMdataPath = fullfile(fileparts(EMsoftPath),'EMdata'); % old emsoft version
 end
 
 %added masterfile and energyfile to the code folder.  Is that right?
@@ -67,7 +67,7 @@ formatString = [
 ... template file for the EMEBSD program
 ...
 ... distance between scintillator and illumination point [microns]
-' L = %g\n'...
+' L = %g,\n'...
 ... tilt angle of the camera (positive below horizontal, [degrees])
 ' thetac = %g,\n'...
 ... CCD pixel size on the scintillator surface [microns]
@@ -201,7 +201,7 @@ cleanupNamelist = onCleanup(@() delete(inputfile));
 %run EMsoft
 cd(EMdataPath);
 %setenv('DYLD_LIBRARY_PATH',['/opt/local/lib/libgcc/']);
-[status,cmdout] = system(['"' fullfile(EMsoftPath,'bin','EMEBSD') '" ' inputfile]);
+[status,cmdout] = system(['"' fullfile(EMsoftPath,'EMEBSD') '" ' inputfile]);
 cd(OpenXYPath);
 
 cleanupDataFile = onCleanup(@() delete(fullfile(EMdataPath,datafile)));

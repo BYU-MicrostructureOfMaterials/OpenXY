@@ -357,7 +357,7 @@ else
     Cc=zeros(3,3,3,3);
     Cs=zeros(3,3,3,3);
     
-    g=g';
+    g=g'; % switch from sample to crystal, to crystal to sample
     
     %for hexagonal lattice in crystal frame, I couldn't think of a more clever
     %way of doing this, but I'm sure that there is one. Not sure if the
@@ -404,7 +404,7 @@ else
     Cc(2,1,2,1) = C1212;
     Cc(2,1,1,2) = C1212;
 end
-g=g';
+g=g'; % switch back to sample to crystal transformation
 Z= zeros(length(tempind),1);
 sigma = zeros(3,3);
 
@@ -650,13 +650,15 @@ switch Settings.FCalcMethod
         b1=-q1+(q1.*rp1+q2.*rp2+q3.*rp3).*rp1;
         b2=-q2+(q1.*rp1+q2.*rp2+q3.*rp3).*rp2;
         b3=-q3+(q1.*rp1+q2.*rp2+q3.*rp3).*rp3;
-%         b5=0;
-%         b6=0;
-%         b7=0;
+        b5=0;
+        b6=0;
+        b7=0;
 %         b4 = [b1;b2;b3;b5;b6;b7];
 %         A4 = [A1;A2;A3;A5;A6;A7];
-        b7 = 0;
-        A7 = [1 0 0 0 1 0 0 0 1];
+%         b7 = 0;
+%         A7 = [1 0 0 0 1 0 0 0 1]; % Alternative boundary condition: Tim Ruggles Implementation of
+%         Trace-Free - it does not affect tetragonality, but affects strain
+%         ratios  (e.g. SiGe samples from NIST)
         
         % Using only the last of the traction free conditions (see
         % Wilkinson methods above): **********************

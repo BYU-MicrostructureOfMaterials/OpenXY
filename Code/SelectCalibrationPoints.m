@@ -65,6 +65,7 @@ function Inds = SelectCalibrationPoints(mapsize,IQ,Angles)
     
     while morepoints       
         %Gets X,Y data from user
+        figure(f); % for some reason ginput is not working on mac without this line
         [x,y, button] = ginput(1);
         if x > Nx
             x = Nx;
