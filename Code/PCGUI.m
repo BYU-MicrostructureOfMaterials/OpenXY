@@ -122,9 +122,8 @@ end
 if isfield(Settings,'ScanParams') && isfield(Settings.ScanParams,'VHRatio')
     handles.V = Settings.ScanParams.VHRatio;
 else
-    im = imread(Settings.FirstImagePath);
-    [Y,X,~] = size(im);
-    handles.V = Y/X;
+    imSize = Settings.patterns.imSize;
+    handles.V = imSize(2) / imSize(1);
 end
 
 %Select Current PC

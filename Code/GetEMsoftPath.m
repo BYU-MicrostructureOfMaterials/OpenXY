@@ -1,8 +1,9 @@
 function [EMsoftPath EMdataPath] = GetEMsoftPath
 %Check for EMsoft - this file is set up for EMsoft version 5, July 2020
 EMsoftPath = '';
-if exist('SystemSettings.mat','file')
-    load SystemSettings
+sysSettings = matfile('SystemSettings.mat', 'Writable', true);
+if isprop(sysSettings, 'OpenXYPath')
+    OpenXYPath = sysSettings.OpenXYPath;
 else
     OpenXYPath = fileparts(which('MainGUI'));
 end
@@ -22,6 +23,8 @@ if ~exist('EMsoftPath','var') || isempty(EMsoftPath) || ~exist('EMdataPath','var
         warndlgpause('Cannot use dynamically simulated patterns. Resetting to kinematic simulation.','EMsoft not found');
         return;
     end
+else
+    EMsoftPath = sysSettings.EMsoftPath;
 end
 %Check if EMEBSD command exists
 commandName = fullfile(EMsoftPath,'EMEBSD');

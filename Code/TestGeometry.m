@@ -84,18 +84,19 @@ handles.Settings = Settings;
 handles.MaxSpeed = 4;
 
 % Load previous settings
-if exist('SystemSettings.mat','file')
-    load SystemSettings.mat
-end
-if ~exist('TestGeometrySettings','var')
+sysSettings = matfile('SystemSettings.mat', 'Writable', true);
+if ~isprop(sysSettings,'TestGeometrySettings')
    TestGeometrySettings.blinkspeed = 'Medium';
    TestGeometrySettings.color = 'green';
    TestGeometrySettings.MapType = 'Image Quality';
    TestGeometrySettings.LineWidth = 0.5;
+   sysSettings.TestGeometrySettings = TestGeometrySettings;
+else
+    TestGeometrySettings = sysSettings.TestGeometrySettings;
 end
 
 % Populate Color Dropdown
-ColorString = {'yellow','magenta','cyan','red','green','blue','white','black','holiday'};
+ColorString = {'yellow','magenta','cyan','red','green','blue','white','black'};
 set(handles.ColorScheme,'String',ColorString);
 SetPopupValue(handles.ColorScheme,TestGeometrySettings.color);
 
@@ -224,7 +225,8 @@ if get(handles.IPFMap,'Value')
 else
     TestGeometrySettings.MapType = 'Image Quality';
 end
-save('SystemSettings.mat','TestGeometrySettings','-append')
+sysSettings = matfile('SystemSettings.mat', 'Writable', true);
+sysSettings.TestGeometrySettings = TestGeometrySettings;
 TestGeometryGUI_CloseRequestFcn(handles.TestGeometryGUI, eventdata, handles)
 
 
@@ -415,13 +417,6 @@ else
     genEBSDPatternHybridLineOverlay(g,paramspat,eye(3),Material.lattice,Material.a1,Material.b1,Material.c1,Material.axs,...
         'BlinkSpeed',speed,'Color',color,'MaxSpeed',handles.MaxSpeed,...
         'LineWidth',width);
-    if strcmp(color,'holiday')
-        colormap hot
-        gui = findall(handles.TestGeometryGUI,'BackgroundColor',[0.94 0.94 0.94]);
-        set(gui,'BackgroundColor','red')
-        set(gui,'ForegroundColor','white','FontWeight','bold')
-        set(handles.TestGeometryGUI,'Color','green')
-    end
 end
 
 % --- Executes on selection change in BlinkSpeed.
