@@ -35,18 +35,22 @@ classdef ImagepatternProvider < patterns.PatternProvider
             obj.startLocation = startLocation(:)';
             obj.steps = steps(:)';
             
-            if info.NumberOfSamples == 1
-                obj.readStyle = 'Flat';
-            else
-                allMatch = true;
-                firstImage = imread(firstImageName);
-                for ii = 2:info.NumberOfSamples
-                    allMatch = allMatch &&...
-                        all(all(firstImage(:, :, 1) == firstImage(:, :, ii)));
-                end
-                if allMatch
+            if isfield(info,'NumberOfSamples')
+                if info.NumberOfSamples == 1
                     obj.readStyle = 'Flat';
+                else
+                    allMatch = true;
+                    firstImage = imread(firstImageName);
+                    for ii = 2:info.NumberOfSamples
+                        allMatch = allMatch &&...
+                            all(all(firstImage(:, :, 1) == firstImage(:, :, ii)));
+                    end
+                    if allMatch
+                        obj.readStyle = 'Flat';
+                    end
                 end
+            else
+                obj.readStyle = 'Flat';
             end
             
             obj.imageNames = obj.getImageNamesList(...
@@ -59,7 +63,7 @@ classdef ImagepatternProvider < patterns.PatternProvider
             im = obj.getPatternData(1);
             sz = size(im);
             obj.imSize = sz(1:2);
-
+            
         end
         
         convertImages(obj, saveFile)

@@ -54,8 +54,8 @@ ScanParams = Settings.ScanParams;
 if Settings.DoParallel == 1
     %% Single Processor Calculation
     javaaddpath('java')
-    ppm =...
-        ParforProgMon('Point Calibration ',npoints*(1+iterCalcF),1,450,50);
+%     ppm =... % error in parformon.. hence comment out line 57, 58, 216, 241 and 245 in PCCalAlkortaKinematic.m
+%         ParforProgMon('Point Calibration ',npoints*(1+iterCalcF),1,450,50);
     for i=1:npoints
         
         Ind = Inds(i);
@@ -213,7 +213,7 @@ if Settings.DoParallel == 1
             bn(j) = norm(beta);
             
             %         gr = r'*gr;
-            ppm.increment();
+%             ppm.increment();
         end
         
         
@@ -238,12 +238,12 @@ if Settings.DoParallel == 1
         disp(['Point: ' num2str(i)])
         CalibrationPointsPC(i,:) = PCref';
         
-        ppm.increment();
+%         ppm.increment();
         
     end
-    pause(1);
-    ppm.delete();
-    pause(1);
+%     pause(1);
+%     ppm.delete();
+%     pause(1);
     % Pausese are there to prevent bug in parforprogmon when using single
     % processor.
 else

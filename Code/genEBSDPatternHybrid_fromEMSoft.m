@@ -116,7 +116,7 @@ formatString = [
 ... This uses a polar decomposition of the deformation tensor Fmatrix which results in
 ... an approcimation of the pattern for the distorted lattice; the bands will be very close
 ... to the correct position in each pattern, but the band widths will likely be incorrect.
-' applyDeformation = ''%s''\n'...'n'
+' applyDeformation = ''%s'',\n'...'n'
 ... if applyDeformation='y' then enter the 3x3 deformation tensor in column-major form
 ... the default is the identity tensor, i.e., no deformation
 ' Ftensor = %s\n'...1.D0, 0.D0, 0.D0, 0.D0, 1.D0, 0.D0, 0.D0, 0.D0, 1.D0,
