@@ -555,6 +555,10 @@ function [AllFa,AllSSEa,AllFc,AllSSEc, misanglea, misanglec] = DDCalc(RefInd,Ref
                 [AllFa1,AllSSEa1] = CalcFShift(image_b,image_a ,g_b,eye(3),RefIndA,Settings,Settings.Phase{cnt},cnt );
                 [AllFa2,AllSSEa2] = CalcFShift(image_b,image_a2,g_b,eye(3),RefIndA2,Settings,Settings.Phase{cnt},cnt);
                 AllFa=0.5*(AllFa1+AllFa2);
+                if isstruct(AllSSEa1)
+                    AllSSEa1=AllSSEa1.SSE;
+                    AllSSEa2=AllSSEa2.SSE;
+                end
                 AllSSEa=0.5*(AllSSEa1+AllSSEa2);
             end
         else
@@ -570,6 +574,10 @@ function [AllFa,AllSSEa,AllFc,AllSSEc, misanglea, misanglec] = DDCalc(RefInd,Ref
             [AllFc1,AllSSEc1] = CalcFShift(image_b,image_c ,g_b,eye(3),RefIndC,Settings,Settings.Phase{cnt},cnt);
             [AllFc2,AllSSEc2] = CalcFShift(image_b,image_c2,g_b,eye(3),RefIndC2,Settings,Settings.Phase{cnt},cnt);
             AllFc=0.5*(AllFc1+AllFc2);
+            if isstruct(AllSSEc1)
+                    AllSSEc1=AllSSEc1.SSE;
+                    AllSSEc2=AllSSEc2.SSE;
+                end
             AllSSEc=0.5*(AllSSEc1+AllSSEc2);
         end
     end
