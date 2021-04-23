@@ -57,6 +57,7 @@ BadPoints = SSE > cutoff;
 BadIndex = BadIndex(BadPoints);
 for j = 1:length(BadIndex)
     data.F(:,:,BadIndex(j)) = eye(3);
+
 end
 
 % FList = [data.F{:}];
@@ -146,12 +147,10 @@ for i=1:3
         
         epsijvec = map2vec(epsij);
         AverageStrain = mean(epsijvec(~BadPoints));
-        %cMap = [[0 0 0];parula(126);[0 0 0]];
-        cMap = parula(128);
-        cMap(1,:) = cMap(1,:)./3;
-        cMap(end,:) = cMap(end,:)./3;
+        cMap = [1,1,1;parula(126);1,1,1]; %bad points and points not in selected range are in white
         if any(strcmp(['e' num2str(i) num2str(j)],Components))
             figure;
+            epsij(epsij==0)=-10;
             imagesc(epsij)
             title(['\epsilon_',num2str(i),'_',num2str(j) ' Average Strain: ' num2str(AverageStrain)],'fontsize',14)
             shading flat
@@ -243,12 +242,10 @@ end
 
 strainEffvec = map2vec(strainEff);
 AverageStrain = mean(strainEffvec(~BadPoints));
-%cMap = [[0 0 0];parula(126);[0 0 0]];
-cMap = parula(128);
-cMap(1,:) = cMap(1,:)./3;
-% cMap(end,:) = cMap(end,:)./3;
+cMap = [1,1,1;parula(126);1,1,1]; %bad points and points not in selected range are in white
 if any(strcmp(['e' num2str(i) num2str(j)],Components))
     figure;
+    strainEff(strainEff==0)=-10;
     imagesc(strainEff)
     title(['Effective Strain, \epsilon_E_f_f Average Strain: ' num2str(AverageStrain),' (Black=Poor Data)'],'fontsize',14)
     shading flat
