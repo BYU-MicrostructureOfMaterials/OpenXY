@@ -39,13 +39,30 @@ for i=1:m
     end
 end
 
-figure; 
-imagesc(epstet);
-caxis([0 .03]);
-axis equal tight
-axis off
-title('Tetragonality map')
-colorbar
-if doShowGB
-    PlotGBs(Settings.grainID,[Settings.Nx Settings.Ny],Settings.ScanType)
+
+if m == 1 
+    e33 = Settings.data.U(3,3,:);
+    figure;
+    plot(Settings.data.xpos,squeeze(e33))
+    xlabel('Position (microns)')
+    ylabel('Tetragonality')
+elseif n == 1
+    e33 = Settings.data.U(3,3,:);
+    figure;
+    plot(Settings.data.ypos,squeeze(e33))
+    xlabel('Position (microns)')
+    ylabel('Tetragonality')
+else
+    figure;
+    imagesc(epstet);
+    caxis([0 .03]);
+    axis equal tight
+    axis off
+    colorbar
+    if doShowGB
+        PlotGBs(Settings.grainID,[Settings.Nx Settings.Ny],Settings.ScanType)
+    end
 end
+
+title('Tetragonality map')
+
