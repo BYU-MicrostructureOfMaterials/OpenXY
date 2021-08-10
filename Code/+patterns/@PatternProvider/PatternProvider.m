@@ -1,7 +1,7 @@
 classdef (Abstract) PatternProvider
     %IMAGEPROVIDER Provides the pattern images for a scan
     
-    properties
+    properties 
         % The name of the file provided (e.g. ims.up2, im_x0y.jpg etc.)
         fileName char
 
@@ -28,28 +28,34 @@ classdef (Abstract) PatternProvider
             obj.filter = patterns.ImageFilter(imSize);
         end
         
-        function pattern = getPattern(obj, ind1, ind2)
+        function pattern = getPattern(obj, Settings, ind1, ind2)
+            persistent obj_two i
             switch nargin
-                case 2
-                    ind = ind1;
                 case 3
+                    ind = ind1;
+                case 4
                     %TODO Add row, column indexing
                 otherwise
                      error('OpenXY:UPPatternProvider', ...
                     "Pattern index or row, colum coordinate required")
             end
-            
-            pattern = single(obj.getPatternData(ind));
-            
-            if obj.doCropSquare
-                pattern = obj.cropIm(pattern);
+            [~, ~, ext] = fileparts(Settings.FirstImagePath);
+            if strcmp(ext,'.ebsp') && isempty(i)
+                obj_two=patterns.EBSPPatternProvider(Settings.FirstImagePath,Settings);
+                pattern=single(obj_two.getPatternData(ind));
+                i=1;
+            else
+                pattern = single(obj_two.getPatternData(ind));
             end
             
-            if obj.filter.doFilter
-                pattern = obj.filter.filterImage(pattern);
+            if obj_two.doCropSquare
+                pattern = obj_two.cropIm(pattern);
+            end
+            
+            if obj_two.filter.doFilter
+                pattern = obj_two.filter.filterImage(pattern);
             end
         end
-        
         function pattern = getUnfilteredPattern(obj, ind)
             pattern = single(obj.getPatternData(ind));
             if obj.doCropSquare
@@ -95,6 +101,8 @@ classdef (Abstract) PatternProvider
             
             [~, ~, extension] = fileparts(loadStruct.fileName);
             switch lower(extension)
+                case '.ebsp'
+                    obj = patterns.EBSPPatternProvider.restore(loadStruct);
                 case {'.up1', '.up2'}
                     obj = patterns.UPPatternProvider.restore(loadStruct);
                 case '.h5'

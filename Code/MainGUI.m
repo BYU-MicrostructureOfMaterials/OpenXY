@@ -390,6 +390,7 @@ end
 [name, path, selection] = uigetfile({
     '*.jpg;*.jpeg;*.tif;*.tiff;*.bmp;*.png','Image Files'
     '*.up1;*.up2', 'OIM Uncompressed Pattern Format'
+    '*.ebsp','EBSP Format'
     },...
     'Select the First Image of the Scan or patern archive');
 cd(wd);
@@ -409,7 +410,7 @@ if ~isempty(name)
         else
             nameT = name;
         end
-        if size(name,2) > 37
+        if size(path,2) > 37
             pathT = [path(1:34),'...'];
         else
             pathT = path;
@@ -424,11 +425,12 @@ if ~isempty(name)
         
         handles.Settings.FirstImagePath = fullfile(path,name);
         pats = patterns.makePatternProvider(handles.Settings);
-        if isa(pats, 'patterns.ImagepatternProvider')
-            handles.ExportPatterns.Enable = 'on';
-        else
-            handles.ExportPatterns.Enable = 'off';
-        end
+         if isa(pats, 'patterns.ImagepatternProvider')
+             handles.ExportPatterns.Enable = 'on';
+         else
+             handles.ExportPatterns.Enable = 'off';
+         end
+%         handles.ExportPatterns.Enable = 'on';
         x = pats.imSize(1);
         y = pats.imSize(2);
         improp = dir(fullfile(path,name));

@@ -53,8 +53,9 @@ if DoLGrid
     end
     
 else
-    
-    ScanImage = Settings.patterns.getPattern(ImageInd);
+
+    ScanImage = Settings.patterns.getPattern(Settings,ImageInd);
+
     g = euler2gmat(Settings.Angles(ImageInd,1) ...
         ,Settings.Angles(ImageInd,2),Settings.Angles(ImageInd,3));
     if isempty(ScanImage)
@@ -65,7 +66,6 @@ else
         XX = -1 * ones(Settings.NumROIs, 3);
         return;
     end
-    
 end
 
 %Initialize variables for params settings for calcFnew and genEBSDpattern
@@ -101,7 +101,6 @@ if strcmp(Settings.ROIStyle,'Intensity')
         Settings.ROIStyle);
     Settings.roixc = roixc;
     Settings.roiyc = roiyc;
-    
 else
     [roixc,roiyc]= GetROIs(ScanImage,Settings.NumROIs,pixsize,Settings.ROISize,...
         Settings.ROIStyle);
@@ -168,8 +167,7 @@ switch Settings.HROIMMethod
                 fitMetrics1.SSE = computations.metrics.fitMetrics;
             end
             %%%%%
-        end
-        
+        end     
     case 'Simulated'
         
         %         RefImage = genEBSDPatternHybrid(gr,paramspat,eye(3),lattice,al,bl,cl,axs); % testing next line instead *****
@@ -214,7 +212,6 @@ switch Settings.HROIMMethod
         %%%%%
 %}a
         %Improved convergence routine should replace this loop:
-        
         for ii = 1:Settings.IterationLimit
             if fitMetrics1.SSE > 25 % need to make this a variable in the AdvancedSettings GUI
                 if ii == 1
@@ -263,10 +260,11 @@ switch Settings.HROIMMethod
         %Find the grain of scan image and get the reference image for that
         %grain
         RefImageInd = Settings.RefInd(ImageInd);
-        RefImage = Settings.patterns.getPattern(RefImageInd);
+        RefImage = Settings.patterns.getPattern(Settings,RefImageInd);
         clear global rs cs Gs
 %         disp(RefImagePath);
         gr = euler2gmat(Settings.Angles(RefImageInd,:));
+        
         [F1,fitMetrics1,XX,sigma] = CalcFShift(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,RefImageInd);
         
     case 'Hybrid'

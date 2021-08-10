@@ -39,12 +39,22 @@ alpha = alpha_data.alpha;
 grainID = Settings.grainID;
 scanSize = [Settings.Nx Settings.Ny];
 scanType = Settings.ScanType;
-
+figure;
     function drawPlot(map, plotTitle)
         if isLineScan
             map=repmat(map,length(map)/4,1); 
         end
-        figure;imagesc(log10(abs(map)))
+        hold on
+        if strcmp(plotTitle, 'Alpha_1_3')
+            subplot(1,3,1)
+        elseif strcmp(plotTitle,'Alpha_2_3')
+            subplot(1,3,2)
+        elseif strcmp(plotTitle,'Alpha_3_3')
+            subplot(1,3,3)
+        else
+            figure;
+        end
+        imagesc(log10(abs(map)))
         title(plotTitle ,'fontsize', 14)
         axis image
         colormap(cmap)

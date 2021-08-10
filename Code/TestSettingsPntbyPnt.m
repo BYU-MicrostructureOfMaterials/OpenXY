@@ -1,5 +1,4 @@
 function TestSettingsPntbyPnt(Settings,MainGUI)
-
 %% Prep
 Settings = HREBSDPrep(Settings);
 Settings.doGif = false;
@@ -90,9 +89,7 @@ while(morepoints)
             set(figure(100),'Position',[pos(1)-pos(3)/2-10 pos(2)-pos(4) - 100 pos(3) pos(4)])
             set(figure(101),'Position',[pos(1)+pos(3)/2+10 pos(2)-pos(4) - 100 pos(3) pos(4)])
             
-            tic
             [F, g, U, SSE] = GetDefGradientTensor(ind,Settings,Settings.Phase{ind});
-            toc
             
             set(figure(100),'Position',[pos(1)-pos(3)/2-10 pos(2)-pos(4) - 100 pos(3) pos(4)])
             set(figure(101),'Position',[pos(1)+pos(3)/2+10 pos(2)-pos(4) - 100 pos(3) pos(4)])

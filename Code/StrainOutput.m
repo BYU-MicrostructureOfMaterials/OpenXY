@@ -101,6 +101,7 @@ strain(2,2,:)=strain(2,2,:)-1;
 strain(3,3,:)=strain(3,3,:)-1;
 lines = [];
 oldLines = [];
+figure;
 for i=1:3
     for j=i:3
         epsij=strain(i,j,:);
@@ -149,7 +150,14 @@ for i=1:3
         AverageStrain = mean(epsijvec(~BadPoints));
         cMap = [1,1,1;parula(126);1,1,1]; %bad points and points not in selected range are in white
         if any(strcmp(['e' num2str(i) num2str(j)],Components))
-            figure;
+            hold on
+            if i==1
+                subplot(3,3,j)
+            elseif i==2
+                subplot(3,3,i+j+1)
+            else
+                subplot(3,3,9)
+            end
             epsij(epsij==0)=-10;
             imagesc(epsij)
             title(['\epsilon_',num2str(i),'_',num2str(j) ' Average Strain: ' num2str(AverageStrain)],'fontsize',14)

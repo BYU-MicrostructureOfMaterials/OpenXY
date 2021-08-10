@@ -43,7 +43,7 @@ if ~strcmp(ext,'.h5')
         %Number of steps in x and y
         Nx = length(X);
         Ny = length(Y);
-        
+        Settings.Nx = Nx; Settings.Ny = Ny;
         %Validate Scan Size
         if ~strcmp(Settings.ScanType,'Hexagonal')
             if isfield(Settings.ScanParams,'NumColsOdd') && isfield(Settings.ScanParams,'NumRows')

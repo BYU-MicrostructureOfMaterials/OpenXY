@@ -407,3 +407,4 @@ if Settings.DoShowPlot
     UI_utils.plotShifts(RefImage, ScanImage, Ind, RefInd, Settings,...
         Qsc, pc, tempind, Cshift, Rshift, F, fitMetrics);
 end
+

@@ -9,6 +9,9 @@ switch ext
     case {'.up1', '.up2'}
         patternProvider =...
             patterns.UPPatternProvider(Settings.FirstImagePath);
+    case '.ebsp'
+        patternProvider =...
+            patterns.EBSPPatternProvider(Settings.FirstImagePath,Settings);
     case { '.jpg', '.jpeg', '.tif', '.tiff', '.bmp', '.png'}
         X = unique(Settings.XData);
         Y = unique(Settings.YData);
