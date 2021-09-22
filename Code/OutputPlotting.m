@@ -42,6 +42,8 @@ if nargout
 else
     gui_mainfcn(gui_State, varargin{:});
 end
+
+
 % End initialization code - DO NOT EDIT
 
 
@@ -218,7 +220,7 @@ handles.matfileloaded = 1;
 handles.PlotSelectedButton.Enable = 'On';
 plotOptions = {};
 if Settings.DoStrain
-    plotOptions = [plotOptions,'Strain','Tetragonality'];
+    plotOptions = [plotOptions,'Strain','Tetragonality','Stress'];
 end
 if Settings.CalcDerivatives
     plotOptions = [plotOptions,'Dislocation Density'];
@@ -268,6 +270,9 @@ if strcmp(SelectionType,'open')
     end
     if strcmp(OldList(clickedIndex),'Dislocation Density')
         RemoveDislocationDensityComponents(handles);
+    end
+    if strcmp(OldList(clickedIndex), 'Stress')
+       RemoveStressComponents(handles); 
     end
     
 end
@@ -441,7 +446,15 @@ if ~isempty(Matches)
     
     StrainOutput(Settings,Matches,DoShowGB,smin,smax,MaxMisorientation);
 end
-    
+
+%Check for Stress Components
+StressComponentsList = {'VM','σ1','σ2','σ3'};
+Matches = [];
+Matches = intersect(StressComponentsList,Components);
+if ~isempty(Matches)
+    PlotStress(Settings);
+end
+
 %Check for Dislocation Density Components
 DisloComponentsList = {'alpha13';'alpha23';'alpha33';'alphaTotal'};
 Matches = [];
@@ -508,6 +521,9 @@ if isempty(ToCalculateList)
     if strcmp(SelectedOption,'Dislocation Density')
         AddDislocationDensityComponents(handles);
     end
+    if strcmp(SelectedOption,'Stress')
+        AddStressComponents(handles);
+    end
 else
    %Add to whatever is already in there. Remove duplicates. 
    CalcList = get(handles.CalculatedListBox,'String');
@@ -519,6 +535,9 @@ else
         end
         if strcmp(SelectedOption,'Dislocation Density')
             AddDislocationDensityComponents(handles);
+        end
+        if strcmp(SelectedOption,'Stress')
+            AddStressComponents(handles);
         end
    end
 end
@@ -535,7 +554,7 @@ function AddStrainComponents(handles)
     end
 
 function AddDislocationDensityComponents(handles)
-DisloComponentsList = {'alpha13';'alpha23';'alpha33';'alphaTotal'};
+    DisloComponentsList = {'alpha13';'alpha23';'alpha33';'alphaTotal'};
     CurrentComponentsList = get(handles.ComponentsListBox,'String');
     if isempty(CurrentComponentsList)
         set(handles.ComponentsListBox,'String',DisloComponentsList);
@@ -543,6 +562,19 @@ DisloComponentsList = {'alpha13';'alpha23';'alpha33';'alphaTotal'};
         CurrentComponentsList = cat(1,CurrentComponentsList,DisloComponentsList);
         set(handles.ComponentsListBox,'String',CurrentComponentsList);
     end
+ 
+function AddStressComponents(handles)
+    StressComponentsList= {'VM','σ1','σ2','σ3'};
+    CurrentComponentsList= get(handles.ComponentsListBox,'String');
+    if isempty(CurrentComponentsList)
+        set(handles.ComponentsListBox,'String',StressComponentsList);
+    else
+        CurrentComponentsList = cat(1,CurrentComponentsList,StressComponentsList);
+        set(handles.ComponentsListBox,'String',CurrentComponentsList);
+    end
+        
+        
+        
         
 function RemoveStrainComponents(handles)
     CurrentComponentsList = get(handles.ComponentsListBox,'String');
@@ -560,7 +592,13 @@ function RemoveDislocationDensityComponents(handles)
     set(handles.ComponentsListBox,'String',CurrentComponentsList);
     set(handles.ComponentsListBox,'Value',1);
 
-
+function RemoveStressComponents(handles)
+    CurrentComponentsList = get(handles.ComponentsListBox,'String');
+    StressComponentsList = {'VM','σ1','σ2','σ3'};
+    [Matches CurrentInd] = setdiff(CurrentComponentsList,StressComponentsList);
+    CurrentComponentsList = CurrentComponentsList(CurrentInd);
+    set(handles.ComponentsListBox,'String',CurrentComponentsList);
+    set(handles.ComponentsListBox,'Value',1);
 
 function StrainMinEdit_Callback(hObject, eventdata, handles)
 % hObject    handle to StrainMinEdit (see GCBO)

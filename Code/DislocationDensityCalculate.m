@@ -118,7 +118,7 @@ end
 disp(Settings.ScanType)
 if ~strcmp(Settings.ScanType,'L')
     
-    ScanImage = Settings.patterns.getPattern(1);
+    ScanImage = Settings.patterns.getPattern(Settings,1);
     
     [roixc,roiyc]= GetROIs(ScanImage,Settings.NumROIs,Settings.PixelSize,...
         Settings.ROISize, Settings.ROIStyle);
@@ -510,9 +510,9 @@ function [AllFa,AllSSEa,AllFc,AllSSEc, misanglea, misanglec] = DDCalc(RefInd,Ref
     Cmat = RefG(:,:,3);
     
     %Get Patterns
-    image_a = Settings.patterns.getPattern(RefIndA);
-    image_b = Settings.patterns.getPattern(cnt);
-    image_c = Settings.patterns.getPattern(RefIndC);
+    image_a = Settings.patterns.getPattern(Settings,RefIndA);
+    image_b = Settings.patterns.getPattern(Settings,cnt);
+    image_c = Settings.patterns.getPattern(Settings,RefIndC);
     
     
     
@@ -522,12 +522,12 @@ function [AllFa,AllSSEa,AllFc,AllSSEc, misanglea, misanglec] = DDCalc(RefInd,Ref
         if mod(ceil(step),2) %Two Ref A's
             % FIXME This seems odd, I'll need to fix it... --Zach C.
             RefIndA2 = RefInd(4);
-            image_a2 = Settings.patterns.getPattern(RefIndA2);
+            image_a2 = Settings.patterns.getPattern(Settings,RefIndA2);
             Cind = 5;
         end
         if mod(step,1) > 0 %Two Ref C's
             RefIndC2 = RefInd(Cind);
-            image_c2 = Settings.patterns.getPattern(RefIndC2);
+            image_c2 = Settings.patterns.getPattern(Settings,RefIndC2);
         end
     end
     

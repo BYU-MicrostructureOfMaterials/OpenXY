@@ -160,7 +160,7 @@ axis(ax, 'image');
 axis(ax, 'off');
 
 %Draw Filtered Image
-handles.filteredImage = Settings.patterns.getPattern(1);
+handles.filteredImage = Settings.patterns.getPattern(Settings,1);
 ax = handles.filteredImageAxes;
 imagesc(ax, handles.filteredImage);
 colormap(ax, gray);

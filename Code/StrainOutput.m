@@ -255,7 +255,8 @@ if any(strcmp(['e' num2str(i) num2str(j)],Components))
     figure;
     strainEff(strainEff==0)=-10;
     imagesc(strainEff)
-    title(['Effective Strain, \epsilon_E_f_f Average Strain: ' num2str(AverageStrain),' (Black=Poor Data)'],'fontsize',14)
+%     title(['Effective Strain, \epsilon_E_f_f Average Strain: ' num2str(AverageStrain),' (Black=Poor Data)'],'fontsize',14)
+    title(['Von Mises Strain, \epsilon_E_f_f Average Strain: ' num2str(AverageStrain),' (White=Poor Data)'],'fontsize',14)
     shading flat
     axis equal tight
     % view(2)

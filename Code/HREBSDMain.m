@@ -6,6 +6,7 @@
 
 function Settings = HREBSDMain(Settings, indVect)
 disp('Entering HREBSDMain')
+
 % tic
 if Settings.EnableProfiler; profile on; end;
 %if Settings.DisplayGUI; disp('Dont forget to change PC if the image is cropped by ReadEBSDImage.m'); end;
@@ -260,3 +261,7 @@ input{1} = SaveFile;
 if Settings.DisplayGUI
     OutputPlotting(input); %moved here due to error writing ang file for vaudin files ****
 end
+%Plot IPF Always
+figure
+PlotIPF(euler2gmat(Settings.Angles),[Settings.Nx Settings.Ny],Settings.ScanType);
+

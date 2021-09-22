@@ -23,22 +23,43 @@ title('Von Mises Stress')
 caxis(lim)
 colorbar
 
+% figure
+% imagesc(logmap(:,:,1));
+% title('Principal Stress - 1')
+% caxis(lim)
+% colorbar
+% 
+% figure
+% imagesc(logmap(:,:,2));
+% title('Principal Stress - 2')
+% caxis(lim)
+% colorbar
+% 
+% figure
+% imagesc(logmap(:,:,3));
+% title('Principal Stress - 3')
+% caxis(lim)
+% colorbar
+
+%Put Principal Stresses on 1 subplot (if desired).  Uncomment code above if
+%individual plots preferred.  
+
 figure
+subplot(2,2,1)
 imagesc(logmap(:,:,1));
-title('Principal Stress - 1')
+title('1st Principal Stress (Sample Frame)')
 caxis(lim)
 colorbar
-
-figure
+subplot(2,2,2)
 imagesc(logmap(:,:,2));
-title('Principal Stress - 2')
+title('2nd Principal Stress (Sample Frame)')
+caxis(lim)
+colorbar
+subplot(2,2,3)
+imagesc(logmap(:,:,3));
+title('3rd Principal Stress (Sample Frame)')
 caxis(lim)
 colorbar
 
-figure
-imagesc(logmap(:,:,3));
-title('Principal Stress - 3')
-caxis(lim)
-colorbar
 
 

@@ -44,16 +44,24 @@ classdef (Abstract) PatternProvider
                 obj_two=patterns.EBSPPatternProvider(Settings.FirstImagePath,Settings);
                 pattern=single(obj_two.getPatternData(ind));
                 i=1;
+            elseif strcmp(ext,'.ebsp')
+                pattern=single(obj_two.getPatternData(ind));
+                if obj_two.doCropSquare
+                    pattern = obj_two.cropIm(pattern);
+                end
+                
+                if obj_two.filter.doFilter
+                    pattern = obj_two.filter.filterImage(pattern);
+                end
             else
-                pattern = single(obj_two.getPatternData(ind));
-            end
-            
-            if obj_two.doCropSquare
-                pattern = obj_two.cropIm(pattern);
-            end
-            
-            if obj_two.filter.doFilter
-                pattern = obj_two.filter.filterImage(pattern);
+                pattern=single(obj.getPatternData(ind));
+                if obj.doCropSquare
+                    pattern = obj.cropIm(pattern);
+                end
+                
+                if obj.filter.doFilter
+                    pattern = obj.filter.filterImage(pattern);
+                end
             end
         end
         function pattern = getUnfilteredPattern(obj, ind)

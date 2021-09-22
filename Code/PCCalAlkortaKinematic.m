@@ -38,7 +38,7 @@ doShowPlot = false;
 % pctRunOnAll javaaddpath('java')
 % ppm = ParforProgMon( 'Point Calibration ', npoints,1,400,50 );
 
-ScanImage = Settings.patterns.getPattern(1);
+ScanImage = Settings.patterns.getPattern(Settings,1);
 
 [roixc,roiyc]= GetROIs(ScanImage,Settings.NumROIs,pixsize,Settings.ROISize,...
     Settings.ROIStyle);
@@ -95,7 +95,7 @@ if Settings.DoParallel == 1
         
         Material = ReadMaterial(Settings.Phase{Ind});
         
-        ScanImage = Settings.patterns.getPattern(Ind);
+        ScanImage = Settings.patterns.getPattern(Settings,Ind);
         
         gr = euler2gmat(Settings.Angles(Ind,1),Settings.Angles(Ind,2),Settings.Angles(Ind,3));
         
@@ -303,7 +303,7 @@ else
         
         Material = ReadMaterial(Settings.Phase{Ind});
         
-        ScanImage = Settings.patterns.getPattern(Ind);
+        ScanImage = Settings.patterns.getPattern(Settings,Ind);
         
         gr = euler2gmat(Settings.Angles(Ind,1),Settings.Angles(Ind,2),Settings.Angles(Ind,3));
         

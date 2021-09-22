@@ -25,6 +25,7 @@ function varargout = TestGeometry(varargin)
 % Last Modified by GUIDE v2.5 12-Jan-2017 15:34:34
 
 % Begin initialization code - DO NOT EDIT
+
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
                    'gui_Singleton',  gui_Singleton, ...
@@ -392,7 +393,7 @@ width = WidthOptions(val);
 
 % Read Pattern and plot with overlay
 axes(handles.Pattern)
-I2 = Settings.patterns.getPattern(ind);
+I2 = Settings.patterns.getPattern(Settings,ind);
 im = imagesc(I2); axis image; xlim([0 pixsize]); ylim([0 pixsize]); colormap('gray'); axis off;
 
 if strcmp(GetPopupString(handles.SimType),'Dynamic')

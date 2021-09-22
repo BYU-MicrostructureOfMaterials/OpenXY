@@ -15,4 +15,6 @@ elseif strcmp(ScanType,'Hexagonal')
 end
 if plot
     image(IPF_map)
+    title('IPF')
+    colorbar
 end
