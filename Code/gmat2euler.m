@@ -31,7 +31,7 @@ if g(3,3) > 1-tol
     end
     phi2=0.0;
 elseif g(3,3) < -1+tol
-    PHI=0.0;
+    PHI=pi;
     if g(1,1) > 1-tol
         phi1 = 0.0;
     elseif g(1,1) < -1.0
