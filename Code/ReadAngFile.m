@@ -1,5 +1,5 @@
 
-function [AngFileVals, ScanParams, GrainVals, FileName, FilePath ] = ReadAngFile(FilePath,FileName)
+function [AngFileVals, ScanParams, GrainVals, FileName, FilePath ] = ReadAngFile(FilePath,Settings,FileName)
 %READANGFILE
 %[AngFileVals ScanParams FileName FilePath ] = ReadAngFile(FilePath,FileName)
 %Fast reading .ang files of any size. 
@@ -10,10 +10,9 @@ function [AngFileVals, ScanParams, GrainVals, FileName, FilePath ] = ReadAngFile
 %Jay Basinger July 10,2009
 %Either leave the input blank, and a text dialog box will appear, or
 %if the file and pathname are known, pass those in.
-
-if nargin == 1
+if nargin == 2
     FullPath = FilePath;
-elseif nargin == 2
+elseif nargin == 3
     FullPath = fullfile(FilePath,FileName);
 else
     [FileName, FilePath] = uigetfile('*.ang','OIM .ang file');
@@ -61,12 +60,16 @@ while ~feof(fid)
         AngFileVals = textscan(fid, data.format);
     end
 end
-
+Settings.Angles(:,1) = AngFileVals{1};
+Settings.Angles(:,2) = AngFileVals{2};
+Settings.Angles(:,3) = AngFileVals{3};
+Settings.Nx = ScanParams.NumColsOdd;
+Settings.Ny = ScanParams.NumRows;
 fclose(fid);
-
+Settings.mater = ScanParams.material;
 % Get Grain Vals
 PhaseNum = AngFileVals{8};
-GrainVals = GetOIMGrainVals(FullPath,PhaseNum);
+GrainVals = GetOIMGrainVals(FullPath,PhaseNum,Settings);
 
 % phi1 = AngFileVals{1,1};
 % Phi = AngFileVals{1,2};

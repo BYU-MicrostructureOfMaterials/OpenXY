@@ -87,5 +87,5 @@ for i = 1:NumPhase
 end
 
 % Get Grain Vals
-Settings.GrainVals = GetOIMGrainVals(filepath,PhaseNum);
+Settings.GrainVals = GetOIMGrainVals(filepath,PhaseNum,Settings);
     

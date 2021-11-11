@@ -1,9 +1,9 @@
-function GrainVals = GetOIMGrainVals(FullPath,PhaseNum)
+function GrainVals = GetOIMGrainVals(FullPath,PhaseNum,Settings)
 % Get data from Grain File
 [path, name] = fileparts(FullPath);
 GrainFilePath = fullfile(path,[name '.txt']);
 if ~exist(GrainFilePath,'file')
-    button = questdlg('No matching grain file was found. Would you like to manually select a grain file?','Grain file not found');
+    button = questdlg('No matching grain file was found. Would you like to manually select a grain file? If not selected, OpenXY will find Grain Values','Grain file not found');
     if strcmp(button,'Yes')
         w = pwd;
         cd(path);
@@ -14,7 +14,15 @@ if ~exist(GrainFilePath,'file')
         end
         GrainFilePath = fullfile(path,name);
     else
-        throw(MException('OpenXY:MissingGrainFile',button));
+        Settings.GrainMethod = 'Find Grains';
+        phase = cell(length(PhaseNum),1);
+        for i = 1:length(phase)
+           phase{i} = Settings.mater;
+        end
+        Settings.GrainVals.Phase = phase;
+        GrainVals.Phase = phase;
+        GrainVals.grainID = CalcGrainID(Settings);
+        return;
     end
 end
 
