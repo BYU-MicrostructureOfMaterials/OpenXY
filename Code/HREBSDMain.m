@@ -100,7 +100,7 @@ else
    %for ImageInd = testMatrix %trying the second half of the data
        % disp(indVect)
   % for ImageInd = [400, 401, 402, 403, 404] %check that my code to skip ImageInd 402 works -- it does
-        disp(ImageInd)
+       % disp(ImageInd)
      %   if ImageInd == 402 %it wasn't working on 402, 481, 511, 579, 594, 595, 602, 675, 714 (probably same errors)
      %       continue;
      %   end
