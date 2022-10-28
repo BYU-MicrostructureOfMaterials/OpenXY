@@ -21,10 +21,7 @@ function simpat = genEBSDPatternHybrid(g,params,F,lattice,alattice,blattice,clat
 %           xstar, ystar, zstar, pixel size, accelerating voltage, sample tilt, elevation angle, Fhkl, dhkl, hkl
 %           
 %           
-%    
-
-counter = 0; %for to see how many loops we done did
-
+%   
 xstar = params{1};
 ystar = params{2};
 zstar = params{3};
@@ -220,6 +217,10 @@ for i = 1:length(dhkl)
             ymax(ymax<1)=[];
             ymin(ymin<1)=1;
             ymax(ymax>pixsize)=pixsize;
+
+%             trying to fix the warnings that are happening
+            if sum(abs(imag(yp))) == 0
+
 %             disp('here')
 %             counter = 0;
 % 
@@ -235,6 +236,7 @@ for i = 1:length(dhkl)
 %                disp(['loop: ', num2str(counter)])
 %                counter = counter + 1;
                 simpat((ymin(ind)):(ymax(ind)),x(ind)+1)=simpat((ymin(ind)):(ymax(ind)),x(ind)+1)+sFhkl(i);
+            end
             end
         else
             %sort to find the high and low vals

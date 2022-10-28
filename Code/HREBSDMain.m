@@ -92,8 +92,8 @@ else
     end
     
     disp('Running strain cross-correlation...')
-   %for ImageInd = indVect
-   for ImageInd = 561 %562, 563, 591, 835 gives infinite loop error
+   for ImageInd = indVect
+%    for ImageInd = 619 %562, 563, 591, 835 gives infinite loop error
    %610, 619 gave different orange errors but kept going
    %testMatrix = (836:899); %total is 899, problems at 402, 481, 511, 579, 594, 595, 602, 675, 714
    %disp(testMatrix)

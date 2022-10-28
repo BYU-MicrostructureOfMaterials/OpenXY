@@ -15,10 +15,7 @@ DoLGrid = strcmp(Settings.ScanType,'L');
 % fftw('wisdom',Settings.largefftmeth);
 % disp(curMaterial)
 
-%disp('GOT TO THIS POINT') for debugging -- did print
-
 if DoLGrid
-    %disp('GOT TO HERE') -- did not print
     % This is depricated, and has been for as long as I have worked here,
     % we need to just remove it, otherwise, why do we even have source
     % control? --Zach C.
