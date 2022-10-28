@@ -15,7 +15,6 @@ DoLGrid = strcmp(Settings.ScanType,'L');
 % fftw('wisdom',Settings.largefftmeth);
 % disp(curMaterial)
 
-
 if DoLGrid
     % This is depricated, and has been for as long as I have worked here,
     % we need to just remove it, otherwise, why do we even have source
@@ -37,7 +36,7 @@ if DoLGrid
         LegAImage = localthresh(LegAPath);
         LegCImage = localthresh(LegCPath);
     end
-    
+   
     if isempty(ScanImage) || isempty(LegAImage) || isempty(LegCImage)
         
         F.a =  -eye(3);
@@ -68,6 +67,8 @@ else
     end
 end
 
+%disp('GOT TO THIS POINT')--did print. so first IF statement is FALSE
+
 %Initialize variables for params settings for calcFnew and genEBSDpattern
 
 xstar = Settings.XStar(ImageInd);
@@ -79,6 +80,7 @@ Av = Settings.AccelVoltage*1000; %put it in eV from KeV
 sampletilt = Settings.SampleTilt;
 
 elevang = Settings.CameraElevation;
+
 
 pixsize = Settings.PixelSize;
 Material = ReadMaterial(curMaterial);  % this should depend on the crystal structure maybe not here
@@ -215,19 +217,24 @@ switch Settings.HROIMMethod
         for ii = 1:Settings.IterationLimit
             if fitMetrics1.SSE > 25 % need to make this a variable in the AdvancedSettings GUI
                 if ii == 1
-                    display(['Didn''t make it in to the iteration loop for point ' ImageInd])
+                    display(['Didn''t make it in to the iteration loop for point ', num2str(ImageInd)]) %changed from "for point ' ImageInd" so that the index is converted to a string so it can be displayed
+                  %  disp('this is where it breaks') %for debugging 
+
                 end
                 g = euler2gmat(Settings.Angles(ImageInd,1),Settings.Angles(ImageInd,2),Settings.Angles(ImageInd,3)); 
                 F = -eye(3);
-                fitMetrics.SSE = computations.metrics.fitMetrics;
+                %fitMetrics.SSE = computations.metrics.fitMetrics;
+                fitMetrics = fitMetrics1;
+                fitMetrics.SSE = 999;
                 U = -eye(3);
                 return;
+                %the error gets here, then returns so it stops.
             end
+
             [r1,u1]=poldec(F1);
             U1=u1;
             R1=r1;
             FTemp=R1*U1; %**** isn't this just F1 - why did we bother doing this????
-            
             
             NewRefImage = genEBSDPatternHybrid(gr,paramspat,FTemp,Material.lattice,Material.a1,Material.b1,Material.c1,Material.axs);% correct method ******DTF changed to test new profiles             pattern *****
             %  NewRefImage = genEBSDPatternHybridmult(gr,paramspat,FTemp,lattice,al,bl,cl,axs);  % multiplied simulated approach
