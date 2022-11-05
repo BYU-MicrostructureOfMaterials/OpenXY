@@ -291,7 +291,8 @@ switch HROIMMethod
         else
             set(handles.HROIMedit,'Enable','off');
         end
-        handles.Settings.RefInd = [];
+%         handles.Settings.RefInd = [];
+        handles.Settings.RefInd(1:handles.Settings.ScanLength) = 1; %this is from the 'Real - Single Ref' Case
         handles = updateGrainMap(handles);
     case 'Simulated-Dynamic'
         %Check for EMsoft
