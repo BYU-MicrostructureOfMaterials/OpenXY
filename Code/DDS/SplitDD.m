@@ -181,7 +181,7 @@ else
             [angle,Axis,deltaG, symclose]=GeneralMisoCalcSym(gmat,squeeze(bestgmat(:,:,Settings.RefInd(i))),lattype);
             newgmat = symclose*gmat;
             bestgmat(:,:,i)=newgmat(:,:);
-        end
+        end        
     end
 end
 

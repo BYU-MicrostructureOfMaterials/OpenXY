@@ -56,6 +56,7 @@ function AdvancedSettingsGUI_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.output = hObject;
 
 %Accept Settings from MainGUI or Load Settings.mat
+
 handles.Fast = false;
 if isempty(varargin)
     stemp=load('Settings.mat');
@@ -76,6 +77,11 @@ if handles.Fast
     set(handles.EditRefPoints,'Enable','off')
     set(handles.ToggleGrainMap,'Enable','off')
 end
+
+
+Settings.singleRefInd = false; %boolean is true if using single reference pattern, false otherwise
+% disp(['test the flag in ASGui: ', num2str(Settings.singleRefInd)])%the flag is set here correctly, but idk if it saves to settings right
+
 
 %HROIM Method
 if ~isfield(Settings,'DoStrain')
@@ -291,11 +297,14 @@ switch HROIMMethod
         else
             set(handles.HROIMedit,'Enable','off');
         end
-        handles.Settings.RefInd = [];
+%         handles.Settings.RefInd = [];
+        handles.Settings.singleRefInd = true; %add a new flag to show we want just one reference image
+ %       disp(['check flag for single ref ind case simulated kinematic: ', num2str(handles.Settings.singleRefInd)])%check it, see if it actually changes...
+        handles.Settings.RefInd(1:handles.Settings.ScanLength) = 1; %this is from the 'Real - Single Ref' Case Line 373
         handles = updateGrainMap(handles);
     case 'Simulated-Dynamic'
         %Check for EMsoft
-        [EMsoftPath EMdataPath] = GetEMsoftPath;
+        [EMsoftPath, EMdataPath] = GetEMsoftPath;
         if isempty(EMsoftPath) || isempty(EMdataPath)
             warndlgpause('EMsoft or EMdata path not defined - try again to select Simulated-Dynamic; resetting to kinematic');
             HROIMMethod = 'Simulated';
@@ -344,11 +353,15 @@ switch HROIMMethod
                 else
                     set(handles.HROIMedit,'Enable','off');
                 end
-                handles.Settings.RefInd = [];
+%                 handles.Settings.RefInd = [];
+                handles.Settings.singleRefInd = true; %add a new flag to show we want just one reference image
+ %       disp(['check flag for single ref ind case simulated dynamic: ', num2str(handles.Settings.singleRefInd)])%check it, see if it actually changes...
+                handles.Settings.RefInd(1:handles.Settings.ScanLength) = 1; %this is from the 'Real - Single Ref' Case Line 373
                 handles = updateGrainMap(handles);
             end
         end
     case {'Real-Grain Ref','Remapping'}
+        handles.Settings.singleRefInd = false; %we want more than one reference pattern here
         set(handles.HROIMlabel,'String','Ref Image Index');
         handles.Settings.RefImageInd = 0;
         set(handles.HROIMedit,'String',num2str(handles.Settings.RefImageInd));
@@ -367,6 +380,7 @@ switch HROIMMethod
         handles = guidata(hObject);
     case 'Real-Single Ref'
         set(handles.HROIMlabel,'String','Ref Image Index');
+        handles.Settings.singleRefInd = true; %we only want to use one reference pattern here....
         if handles.Settings.RefImageInd == 0
             handles.Settings.RefImageInd = 1;
             if ~handles.Fast
@@ -395,7 +409,7 @@ guidata(hObject,handles);
 function warndlgpause(msg,title)
 h = warndlg(msg,title);
 uiwait(h,7);
-if isvalid(h); close(h); end;
+if isvalid(h); close(h); end
 
 
 % --- Executes during object creation, after setting all properties.
@@ -554,7 +568,9 @@ if ~handles.Fast
             % No Special procedures
         case 'Manual'
             grainIDs = unique(handles.Settings.grainID);
-            if ~isfield(handles.Settings,'RefInd') || isempty(handles.Settings.RefInd)
+%             if ~isfield(handles.Settings,'RefInd') || isempty(handles.Settings.RefInd)
+            if ~isfield(handles.Settings, 'RefInd') || handles.Settings.singleRefInd
+%                 disp(['we made it into this thingy with the flag as: ', num2str(handles.Settings.singleRefInd)])
                 handles.AutoRefInds = grainProcessing.getReferenceInds(...
                     handles.Settings);
                 handles.Settings.RefInd = handles.AutoRefInds;
