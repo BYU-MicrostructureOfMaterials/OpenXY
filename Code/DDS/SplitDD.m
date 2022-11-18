@@ -170,14 +170,12 @@ if isfield(Settings,'Resize')
     end
 else
     for i=1:m*n
-        %if Settings.RefInd ~= 0
         if bestgmat(:,:,Settings.RefInd(i))==0
             gmat = euler2gmat(phi1rn(Settings.RefInd(i)),PHIrn(Settings.RefInd(i)), phi2rn(Settings.RefInd(i)));
             [angle,Axis,deltaG, symclose]=GeneralMisoCalcSym(gmat,eye(3),lattype);
             newgmat = symclose*gmat;
             bestgmat(:,:,Settings.RefInd(i))=newgmat(:,:);
         end
-        %end
         if bestgmat(:,:,i)==0
             gmat = euler2gmat(phi1rn(i),PHIrn(i), phi2rn(i));
             [angle,Axis,deltaG, symclose]=GeneralMisoCalcSym(gmat,squeeze(bestgmat(:,:,Settings.RefInd(i))),lattype);
