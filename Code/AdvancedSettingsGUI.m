@@ -56,6 +56,9 @@ function AdvancedSettingsGUI_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.output = hObject;
 
 %Accept Settings from MainGUI or Load Settings.mat
+
+handles.singleRefInd = false; % add this to try and make it work....
+
 handles.Fast = false;
 if isempty(varargin)
     stemp=load('Settings.mat');
@@ -292,6 +295,7 @@ switch HROIMMethod
             set(handles.HROIMedit,'Enable','off');
         end
 %         handles.Settings.RefInd = [];
+        handles.singleRefInd = true; %add a new flag to show we want just one reference image
         handles.Settings.RefInd(1:handles.Settings.ScanLength) = 1; %this is from the 'Real - Single Ref' Case Line 373
         handles = updateGrainMap(handles);
     case 'Simulated-Dynamic'
@@ -555,7 +559,8 @@ if ~handles.Fast
             % No Special procedures
         case 'Manual'
             grainIDs = unique(handles.Settings.grainID);
-            if ~isfield(handles.Settings,'RefInd') || isempty(handles.Settings.RefInd)
+%             if ~isfield(handles.Settings,'RefInd') || isempty(handles.Settings.RefInd)
+            if ~isfield(handles.Settings, 'RefInd') || handles.singleRefInd
                 handles.AutoRefInds = grainProcessing.getReferenceInds(...
                     handles.Settings);
                 handles.Settings.RefInd = handles.AutoRefInds;
