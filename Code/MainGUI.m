@@ -386,13 +386,16 @@ if ~strcmp(handles.FileDir,pwd)
 elseif handles.ScanFileLoaded
     wd = cd(fileparts(handles.Settings.ScanFilePath));
 end
-
+ 
 [name, path, selection] = uigetfile({
-    '*.jpg;*.jpeg;*.tif;*.tiff;*.bmp;*.png','Image Files'
-    '*.up1;*.up2', 'OIM Uncompressed Pattern Format'
-    '*.ebsp','EBSP Format'
+    '*.jpg;*.jpeg;*.tif;*.tiff;*.bmp;*.png','Image Files';...
+    '*.up1;*.up2', 'OIM Uncompressed Pattern Format';...
+    '*.ebsp','EBSP Format'...
     },...
     'Select the First Image of the Scan or patern archive');
+
+% [name, path, selection] = uigetfile({'*.jpg;*jpeg', 'Image Files'; '*.ebsp', 'ebsp format'}, 'select a file');
+
 cd(wd);
 SetImageFields(handles,name,path);
 
