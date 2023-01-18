@@ -146,13 +146,23 @@ switch Settings.HROIMMethod
         if Settings.SinglePattern
             RefImage = Settings.RefImage;
             clear global rs cs Gs
-            [F1,fitMetrics1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,Settings.RefImageInd);
+%             [F1,fitMetrics1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,Settings.RefImageInd);
+            disp('ATTEMPT THE SWITCH')
+            [F1,fitMetrics1,XX] = SwitchF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,Settings.RefImageInd);
+            disp('FINISHED THE SWITCH')
+
+
         else
             try
                 RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,sampletilt,curMaterial,Av,ImageInd);
                 
                 clear global rs cs Gs
-                [F1,fitMetrics1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
+
+%                 [F1,fitMetrics1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
+                disp('ATTEMPT THE SWITCH')
+                [F1,fitMetrics1,XX] = SwitchF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
+                disp('FINISHED THE SWITCH')
+
                 % some catch on SSE as for simulated pattern approach below?
                 for iq=1:Settings.IterationLimit-1
                     [rr,uu]=poldec(F1); % extract the rotation part of the deformation, rr
@@ -160,7 +170,10 @@ switch Settings.HROIMMethod
                     RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,sampletilt,curMaterial,Av,ImageInd);
                     
                     clear global rs cs Gs
-                    [F1,fitMetrics1,XX,sigma] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
+%                     [F1,fitMetrics1,XX,sigma] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
+                    disp('ATTEMPT THE SWITCH')
+                    [F1,fitMetrics1,XX, sigma] = SwitchF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
+                    disp('FINISHED THE SWITCH')
                 end
             catch ME
                 F1 = eye(3);
@@ -185,7 +198,10 @@ switch Settings.HROIMMethod
 
         %Initialize
         clear global rs cs Gs
-        [F1,fitMetrics1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
+%         [F1,fitMetrics1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
+        disp('ATTEMPT THE SWITCH')
+        [F1,fitMetrics1,XX] = SwitchF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
+        disp('FINISHED THE SWITCH')
         
         %.gif recording stuff
         if isfield(Settings,'doGif') && Settings.doGif
@@ -204,7 +220,12 @@ switch Settings.HROIMMethod
                 Settings.PixelSize,Settings.ImageFilter(3),Settings.ImageFilter(4));
             
             clear global rs cs Gs
-            [F1,fitMetrics1,XX,sigma] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
+%             [F1,fitMetrics1,XX,sigma] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
+            disp('ATTEMPT THE SWITCH')
+            [F1,fitMetrics1,XX, sigma] = SwitchF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
+            disp('FINISHED THE SWITCH')
+
+
             if isfield(Settings,'doGif') && Settings.doGif
                 f = getframe(figure(100));
                 im(:,:,1,frame) = rgb2ind(f.cdata,map,'nodither');
@@ -248,7 +269,12 @@ switch Settings.HROIMMethod
                 Settings.ImageFilter(3), Settings.ImageFilter(4));
             %         keyboard
             clear global rs cs Gs
-            [F1,fitMetrics1,XX,sigma] = CalcF(NewRefImage,ScanImage,gr,FTemp,ImageInd,Settings,curMaterial,0);
+%             [F1,fitMetrics1,XX,sigma] = CalcF(NewRefImage,ScanImage,gr,FTemp,ImageInd,Settings,curMaterial,0);
+
+            disp('ATTEMPT THE SWITCH')
+            [F1,fitMetrics1,XX, sigma] = SwitchF(NewRefImage,ScanImage,gr,FTemp,ImageInd,Settings,curMaterial,0);
+            disp('FINISHED THE SWITCH')
+
             if isfield(Settings,'doGif') && Settings.doGif
                 f = getframe(figure(100));
                 im(:,:,1,frame) = rgb2ind(f.cdata,map,'nodither');
@@ -273,7 +299,7 @@ switch Settings.HROIMMethod
         gr = euler2gmat(Settings.Angles(RefImageInd,:));
         
         [F1,fitMetrics1,XX,sigma] = CalcFShift(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,RefImageInd);
-        
+
     case 'Hybrid'
         %Use simulated pattern method on one reference image then use
         %Real for all others in that grain.
@@ -320,7 +346,7 @@ if DoLGrid
     
     % evaluate point a using b as the reference
     clear global rs cs Gs
-    [F.a fitMetrics.a] = CalcFRuggles(ScanImage,LegAImage,gr,eye(3),ImageInd,Settings,curMaterial,ImageInd); %note - sending in index of scan point for now - no PC correction!!!
+    [F.a, fitMetrics.a] = CalcFRuggles(ScanImage,LegAImage,gr,eye(3),ImageInd,Settings,curMaterial,ImageInd); %note - sending in index of scan point for now - no PC correction!!!
     
     % evaluate point c using b as the refrerence
     clear global rs cs Gs

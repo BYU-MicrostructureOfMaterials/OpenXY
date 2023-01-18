@@ -86,14 +86,17 @@ if strcmp(Settings.HROIMMethod,'Dynamic Simulated')
         
         RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,sampleTilt,curMaterial,Av);
         clear global rs cs Gs
-        [F1,~,~] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,Settings.RefImageInd);
+%         [F1,~,~] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,Settings.RefImageInd);
+        [F1,~,~] = SwitchF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,Settings.RefImageInd);
+
         for iq=1:3
             [rr,~]=poldec(F1); % extract the rotation part of the deformation, rr
             gr=rr'*gr; % correct the rotation component of the deformation so that it doesn't affect strain calc
             RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,sampleTilt,curMaterial,Av);
             
             clear global rs cs Gs
-            [F1,~,~] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,Settings.RefImageInd);
+%             [F1,~,~] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,Settings.RefImageInd);
+            [F1,~,~] = SwitchF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,Settings.RefImageInd);
         end
         Settings.RefImage = RefImage;
     end
