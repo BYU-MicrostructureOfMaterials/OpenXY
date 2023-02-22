@@ -127,7 +127,8 @@ if Settings.DoParallel == 1
             
             %Initialize
             clear global rs cs Gs
-            F1 = CalcF(RefImage,ScanImage,gr,eye(3),Ind,Settings,Settings.Phase{Ind},0);
+            %F1 = CalcF(RefImage,ScanImage,gr,eye(3),Ind,Settings,Settings.Phase{Ind},0);
+            F1 = SwitchF(RefImage,ScanImage,gr,eye(3),Ind,Settings,Settings.Phase{Ind},0);
             
             %%%%New stuff to remove rotation error from strain measurement DTF  7/14/14
             for iq=1:4
@@ -138,7 +139,8 @@ if Settings.DoParallel == 1
                     Settings.PixelSize,Settings.ImageFilter(3),Settings.ImageFilter(4));
                 
                 clear global rs cs Gs
-                F1 = CalcF(RefImage,ScanImage,gr,eye(3),Ind,Settings,Settings.Phase{Ind},0);
+                %F1 = CalcF(RefImage,ScanImage,gr,eye(3),Ind,Settings,Settings.Phase{Ind},0);
+                F1 = SwitchF(RefImage,ScanImage,gr,eye(3),Ind,Settings,Settings.Phase{Ind},0);
             end
             %%%%
             
@@ -157,7 +159,8 @@ if Settings.DoParallel == 1
                     Settings.ImageFilter(3), Settings.ImageFilter(4));
                 %         keyboard
                 clear global rs cs Gs
-                F1 = CalcF(NewRefImage,ScanImage,gr,FTemp,Ind,Settings,Settings.Phase{Ind},0);
+                %F1 = CalcF(NewRefImage,ScanImage,gr,FTemp,Ind,Settings,Settings.Phase{Ind},0);
+                F1 = SwitchF(NewRefImage,ScanImage,gr,FTemp,Ind,Settings,Settings.Phase{Ind},0);
                 
             end
             [r,u]=poldec(F1);
@@ -335,7 +338,8 @@ else
             
             %Initialize
             clearGlobal
-            F1 = CalcF(RefImage,ScanImage,gr,eye(3),Ind,Settings,Settings.Phase{Ind},0);
+            %F1 = CalcF(RefImage,ScanImage,gr,eye(3),Ind,Settings,Settings.Phase{Ind},0);
+            F1 = SwitchF(RefImage,ScanImage,gr,eye(3),Ind,Settings,Settings.Phase{Ind},0);
             
             %%%%New stuff to remove rotation error from strain measurement DTF  7/14/14
             for iq=1:4
@@ -346,7 +350,8 @@ else
                     Settings.PixelSize,Settings.ImageFilter(3),Settings.ImageFilter(4));
                 
                 clearGlobal
-                F1 = CalcF(RefImage,ScanImage,gr,eye(3),Ind,Settings,Settings.Phase{Ind},0);
+                %F1 = CalcF(RefImage,ScanImage,gr,eye(3),Ind,Settings,Settings.Phase{Ind},0);
+                F1 = SwitchF(RefImage,ScanImage,gr,eye(3),Ind,Settings,Settings.Phase{Ind},0);
             end
             %%%%
             
@@ -365,7 +370,8 @@ else
                     Settings.ImageFilter(3), Settings.ImageFilter(4));
                 %         keyboard
                 clearGlobal
-                F1 = CalcF(NewRefImage,ScanImage,gr,FTemp,Ind,Settings,Settings.Phase{Ind},0);
+                %F1 = CalcF(NewRefImage,ScanImage,gr,FTemp,Ind,Settings,Settings.Phase{Ind},0);
+                F1 = SwitchF(NewRefImage,ScanImage,gr,FTemp,Ind,Settings,Settings.Phase{Ind},0);
                 
             end
             [r,u]=poldec(F1);

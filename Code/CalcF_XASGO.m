@@ -11,7 +11,7 @@
 % IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 function F = CalcF_XASGO(RefImage,ScanImage, RefInd, Ind, Settings)
-disp('MADE IT INTO XASGO!!!!!!')
+%disp('MADE IT INTO XASGO!!!!!!')
 
 RefPat.Image = RefImage;
 if RefInd==0

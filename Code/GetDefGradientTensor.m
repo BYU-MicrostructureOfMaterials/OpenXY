@@ -147,9 +147,9 @@ switch Settings.HROIMMethod
             RefImage = Settings.RefImage;
             clear global rs cs Gs
 %             [F1,fitMetrics1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,Settings.RefImageInd);
-            disp('ATTEMPT THE SWITCH')
+            %disp('ATTEMPT THE SWITCH')
             [F1,fitMetrics1,XX] = SwitchF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,Settings.RefImageInd);
-            disp('FINISHED THE SWITCH')
+            %disp('FINISHED THE SWITCH')
 
 
         else
@@ -159,9 +159,9 @@ switch Settings.HROIMMethod
                 clear global rs cs Gs
 
 %                 [F1,fitMetrics1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
-                disp('ATTEMPT THE SWITCH')
+                %disp('ATTEMPT THE SWITCH')
                 [F1,fitMetrics1,XX] = SwitchF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
-                disp('FINISHED THE SWITCH')
+                %disp('FINISHED THE SWITCH')
 
                 % some catch on SSE as for simulated pattern approach below?
                 for iq=1:Settings.IterationLimit-1
@@ -171,9 +171,9 @@ switch Settings.HROIMMethod
                     
                     clear global rs cs Gs
 %                     [F1,fitMetrics1,XX,sigma] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
-                    disp('ATTEMPT THE SWITCH')
+                    %disp('ATTEMPT THE SWITCH')
                     [F1,fitMetrics1,XX, sigma] = SwitchF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
-                    disp('FINISHED THE SWITCH')
+                    %disp('FINISHED THE SWITCH')
                 end
             catch ME
                 F1 = eye(3);
@@ -199,9 +199,9 @@ switch Settings.HROIMMethod
         %Initialize
         clear global rs cs Gs
 %         [F1,fitMetrics1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
-        disp('ATTEMPT THE SWITCH')
+        %disp('ATTEMPT THE SWITCH')
         [F1,fitMetrics1,XX] = SwitchF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
-        disp('FINISHED THE SWITCH')
+        %disp('FINISHED THE SWITCH')
         
         %.gif recording stuff
         if isfield(Settings,'doGif') && Settings.doGif
@@ -221,9 +221,9 @@ switch Settings.HROIMMethod
             
             clear global rs cs Gs
 %             [F1,fitMetrics1,XX,sigma] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
-            disp('ATTEMPT THE SWITCH')
+            %disp('ATTEMPT THE SWITCH')
             [F1,fitMetrics1,XX, sigma] = SwitchF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
-            disp('FINISHED THE SWITCH')
+            %disp('FINISHED THE SWITCH')
 
 
             if isfield(Settings,'doGif') && Settings.doGif
@@ -271,9 +271,9 @@ switch Settings.HROIMMethod
             clear global rs cs Gs
 %             [F1,fitMetrics1,XX,sigma] = CalcF(NewRefImage,ScanImage,gr,FTemp,ImageInd,Settings,curMaterial,0);
 
-            disp('ATTEMPT THE SWITCH')
+            %disp('ATTEMPT THE SWITCH')
             [F1,fitMetrics1,XX, sigma] = SwitchF(NewRefImage,ScanImage,gr,FTemp,ImageInd,Settings,curMaterial,0);
-            disp('FINISHED THE SWITCH')
+            %disp('FINISHED THE SWITCH')
 
             if isfield(Settings,'doGif') && Settings.doGif
                 f = getframe(figure(100));

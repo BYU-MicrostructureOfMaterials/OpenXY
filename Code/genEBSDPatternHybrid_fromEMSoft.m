@@ -201,7 +201,9 @@ cleanupNamelist = onCleanup(@() delete(inputfile));
 %run EMsoft
 cd(EMdataPath);
 %setenv('DYLD_LIBRARY_PATH',['/opt/local/lib/libgcc/']);
-[status,cmdout] = system(['"' fullfile(EMsoftPath,'EMEBSD') '" ' inputfile]);
+%[status,cmdout] = system(['"' fullfile(EMsoftPath,'EMEBSD') '" ' inputfile]);  %this is the real line
+EMsoftPath1 = EMsoftPath + 'bin/' %some hard coding to get it to look where I need it to for EMsoft -- Bethany Syphus
+[status, cmdout] = system(['"' fullfile(EMsoftPath1,'EMEBSD') '" ' inputfile]);
 cd(OpenXYPath);
 
 cleanupDataFile = onCleanup(@() delete(fullfile(EMdataPath,datafile)));

@@ -1,7 +1,8 @@
-function list = getSourceList(obj)
+function list = getSourceList(obj) %what does this function do?
 list = {'AnalyzeLineScan.m'
     'CalcCrossCorrelationCoef.m'
     'CalcF.m'
+    'CalcF_XASGO.m'%not sure I need this either
     'CalcFShift.m'
     'CalcGrainID.m'
     'CalcMutualInformation.m'
@@ -71,6 +72,7 @@ list = {'AnalyzeLineScan.m'
     'ReadScanFile.m'
     'SkipPointsHelp.m'
     'StrainOutput.m'
+    'SwitchF.m'%DO I NEED THIS HERE?????
     'SystemSettings.mat'
     'TetragonalityOutput.m'
     'Theoretical_Pixel_Shift.m'
