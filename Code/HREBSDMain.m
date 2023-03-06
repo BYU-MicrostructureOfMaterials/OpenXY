@@ -92,7 +92,7 @@ else
     end
     
     disp('Running strain cross-correlation...')
-     %for ImageInd = indVect
+%      for ImageInd = indVect
 %    for ImageInd = 619 %562, 563, 591, 835 gives infinite loop error
    %610, 619 gave different orange errors but kept going
         testMatrix = (1:5); %total is 899, problems at 402, 481, 511, 579, 594, 595, 602, 675, 714
@@ -116,9 +116,12 @@ else
         %         tic
         
 
-        [F(:,:,ImageInd), g(:,:,ImageInd), U(:,:,ImageInd), fitMetrics(ImageInd), XX(:,:,ImageInd), sigma(:,:,ImageInd)] = ...
-GetDefGradientTensor(Inds(ImageInd),Settings,Settings.Phase{ImageInd});  %image 402 does not return anything because a base case is tripped and the function just returns nothing
+        %[F(:,:,ImageInd), g(:,:,ImageInd), U(:,:,ImageInd), fitMetrics(ImageInd), XX(:,:,ImageInd), sigma(:,:,ImageInd)] = ...
+%GetDefGradientTensor(Inds(ImageInd),Settings,Settings.Phase{ImageInd});  %image 402 does not return anything because a base case is tripped and the function just returns nothing
 
+
+[F(:,:,ImageInd), g(:,:,ImageInd), U(:,:,ImageInd), ~, XX(:,:,ImageInd), sigma(:,:,ImageInd)] = ...
+GetDefGradientTensor(Inds(ImageInd),Settings,Settings.Phase{ImageInd});
         % commented out this (outputs strain matrix - I think - DTF 5/15/14)
 %         if strcmp(Settings.ScanType,'L')
 %             U{ImageInd}.b - eye(3)

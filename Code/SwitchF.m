@@ -37,6 +37,16 @@ switch Settings.calcMethod
         XX = -1 * ones(Settings.NumROIs, 3);
         sigma = -eye(3);
     
+    case 'Amoeba'
+        F = CalcF_Amoeba(RefImage,ScanImage, RefInd, Ind, Settings);
+        fitMetrics.SSE = 999;
+        fitMetrics.rsqX = 0;
+        fitMetrics.rsqY = 0;
+        fitMetrics.rsq = 0;
+%         disp(fitMetrics)
+        XX = -1 * ones(Settings.NumROIs, 3);
+        sigma = -eye(3);
+        
     otherwise
         disp('There has been a problem with the calculation method')
 end

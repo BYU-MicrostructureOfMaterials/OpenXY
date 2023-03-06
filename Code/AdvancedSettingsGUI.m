@@ -89,7 +89,7 @@ if ~isfield(Settings,'DoStrain')
 end
 set(handles.DoStrain,'Value',Settings.DoStrain);
 
-filePrefList = {'CalcF', 'XASGO'}; %set up the options for the drop down
+filePrefList = {'CalcF', 'XASGO', 'Amoeba'}; %set up the options for the drop down
 set(handles.CalcFilePreference, 'String', filePrefList);
 
 HROIMMethodList = {'Simulated-Kinematic', 'Simulated-Dynamic', 'Real-Grain Ref', 'Real-Single Ref', 'Remapping'}; 
@@ -1329,8 +1329,12 @@ calcFilePref = contents{get(hObject,'Value')};
         case 'XASGO'
         %disp('got XASGO')
         handles.Settings.calcMethod = 'XASGO';
+        case 'Amoeba'
+        handles.Settings.calcMethod = 'Amoeba';
+
         handles = updateGrainMap(handles);
         %handles = guidata(hObject);
+        
         
     end
     %handles = updateGrainMap(handles);

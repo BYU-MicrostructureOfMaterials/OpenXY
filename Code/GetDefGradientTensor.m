@@ -180,6 +180,7 @@ switch Settings.HROIMMethod
                 sigma = eye(3);
                 XX(Settings.NumROIs,3) = 0;
                 fitMetrics1.SSE = computations.metrics.fitMetrics;
+                cd 'C:\Users\bcsyphus\Documents\GitHub\OpenXY\Code';%hard code to get back to the OpenXY code after the failed EMsoft attempt -- Bethany Syphus 3/3/23
             end
             %%%%%
         end     
