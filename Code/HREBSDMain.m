@@ -221,6 +221,19 @@ end
 
 %% Save Analysis
 %Save deformation gradient, rotation, strain tensors, and SSE.
+
+Settings.GrainVals=rmfield(Settings.GrainVals,'Phase');
+Settings.GrainVals=rmfield(Settings.GrainVals,'grainID');
+%Settings.ScanParams=rmfield(Settings.ScanParams,'NumRows');
+%Settings.ScanParams=rmfield(Settings.ScanParams,'NumColsOdd');
+%Settings.ScanParams=rmfield(Settings.ScanParams,'NumColsEven');
+Settings.data=rmfield(Settings.data,'xpos');
+Settings.data=rmfield(Settings.data,'ypos');
+Settings.data=rmfield(Settings.data,'fitMetrics');
+Settings.data=rmfield(Settings.data,'IQ');
+Settings.data=rmfield(Settings.data,'rows');
+Settings.data=rmfield(Settings.data,'cols'); 
+
 [OutputPath, FileName, ~] = fileparts(Settings.OutputPath);
 SaveFile = fullfile(OutputPath,['AnalysisParams_' FileName '.mat']);
 Settings.AnalysisParamsPath = SaveFile;
