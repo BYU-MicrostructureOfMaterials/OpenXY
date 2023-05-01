@@ -1,4 +1,16 @@
-function [F, g, U, fitMetrics, XX, sigma] = GetDefGradientTensor(ImageInd,Settings,curMaterial)
+% Copyright 2021 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
+% Under the terms of Contract DE-NA0003525 with NTESS, the U.S. Government retains certain rights in this software.
+% Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
+% (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge,
+% publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do
+% so, subject to the following conditions:
+% The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+% THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+% OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+% LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
+% IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+function [F, g, U, fitMetrics, XX, sigma, PCnew] = GetDefGradientTensor(ImageInd,Settings,curMaterial)
 %GETDEFGRADIENTTENSOR
 %[F g U SSE] = GetDefGradientTensor(ImageInd,Settings)
 %Takes in the HREBSD Settings structure and the image index
@@ -14,6 +26,7 @@ function [F, g, U, fitMetrics, XX, sigma] = GetDefGradientTensor(ImageInd,Settin
 DoLGrid = strcmp(Settings.ScanType,'L');
 % fftw('wisdom',Settings.largefftmeth);
 % disp(curMaterial)
+
 
 if DoLGrid
     % This is depricated, and has been for as long as I have worked here,
@@ -36,7 +49,7 @@ if DoLGrid
         LegAImage = localthresh(LegAPath);
         LegCImage = localthresh(LegCPath);
     end
-   
+    
     if isempty(ScanImage) || isempty(LegAImage) || isempty(LegCImage)
         
         F.a =  -eye(3);
@@ -52,9 +65,8 @@ if DoLGrid
     end
     
 else
-
+    
     ScanImage = Settings.patterns.getPattern(Settings,ImageInd);
-
     g = euler2gmat(Settings.Angles(ImageInd,1) ...
         ,Settings.Angles(ImageInd,2),Settings.Angles(ImageInd,3));
     if isempty(ScanImage)
@@ -65,9 +77,8 @@ else
         XX = -1 * ones(Settings.NumROIs, 3);
         return;
     end
+    
 end
-
-%disp('GOT TO THIS POINT')--did print. so first IF statement is FALSE
 
 %Initialize variables for params settings for calcFnew and genEBSDpattern
 
@@ -80,7 +91,6 @@ Av = Settings.AccelVoltage*1000; %put it in eV from KeV
 sampletilt = Settings.SampleTilt;
 
 elevang = Settings.CameraElevation;
-
 
 pixsize = Settings.PixelSize;
 Material = ReadMaterial(curMaterial);  % this should depend on the crystal structure maybe not here
@@ -103,6 +113,7 @@ if strcmp(Settings.ROIStyle,'Intensity')
         Settings.ROIStyle);
     Settings.roixc = roixc;
     Settings.roiyc = roiyc;
+    
 else
     [roixc,roiyc]= GetROIs(ScanImage,Settings.NumROIs,pixsize,Settings.ROISize,...
         Settings.ROIStyle);
@@ -141,28 +152,19 @@ gr=g;
 switch Settings.HROIMMethod
     
     case 'Dynamic Simulated'
+        
         mperpix = Settings.mperpix;
         
         if Settings.SinglePattern
+            disp('hello')
             RefImage = Settings.RefImage;
             clear global rs cs Gs
-%             [F1,fitMetrics1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,Settings.RefImageInd);
-            %disp('ATTEMPT THE SWITCH')
-            [F1,fitMetrics1,XX] = SwitchF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,Settings.RefImageInd);
-            %disp('FINISHED THE SWITCH')
-
-
+            [F1,fitMetrics1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,Settings.RefImageInd);
         else
             try
                 RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,sampletilt,curMaterial,Av,ImageInd);
-                
                 clear global rs cs Gs
-
-%                 [F1,fitMetrics1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
-                %disp('ATTEMPT THE SWITCH')
-                [F1,fitMetrics1,XX] = SwitchF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
-                %disp('FINISHED THE SWITCH')
-
+                [F1,fitMetrics1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
                 % some catch on SSE as for simulated pattern approach below?
                 for iq=1:Settings.IterationLimit-1
                     [rr,uu]=poldec(F1); % extract the rotation part of the deformation, rr
@@ -170,20 +172,183 @@ switch Settings.HROIMMethod
                     RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,sampletilt,curMaterial,Av,ImageInd);
                     
                     clear global rs cs Gs
-%                     [F1,fitMetrics1,XX,sigma] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
-                    %disp('ATTEMPT THE SWITCH')
-                    [F1,fitMetrics1,XX, sigma] = SwitchF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
-                    %disp('FINISHED THE SWITCH')
+                    [F1,fitMetrics1,XX,sigma] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
                 end
             catch ME
                 F1 = eye(3);
                 sigma = eye(3);
                 XX(Settings.NumROIs,3) = 0;
                 fitMetrics1.SSE = computations.metrics.fitMetrics;
-                %cd 'C:\Users\bcsyphus\Documents\GitHub\OpenXY\Code';%hard code to get back to the OpenXY code after the failed EMsoft attempt -- Bethany Syphus 3/3/23
             end
             %%%%%
-        end     
+        end
+
+%         case 'Dynamic Simulated' %XASGO
+%         
+%         mperpix = Settings.mperpix;
+%         
+%         if Settings.SinglePattern
+%             RefImage = Settings.RefImage;
+%             clear global rs cs Gs
+%             [F1,fitMetrics1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,Settings.RefImageInd);
+%         else
+%             Qps = frameTransforms.phosphorToSample(Settings);
+%             Settings.IterationOptions.numimax = 25;
+%             Settings.IterationOptions.Hupdate = false;
+%             Settings.IterationOptions.F_guess = eye(3);
+%             Settings.IterationOptions.steptolerance = 100.0e-6;
+%             Settings.ROIinfo = [.5 .5 .0 .40];
+% %             try
+%                 RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,sampletilt,curMaterial,Av,ImageInd);
+% %                 clear global rs cs Gs
+% %                 [F1,fitMetrics1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
+%                 F1 = eye(3);
+%                 % some catch on SSE as for simulated pattern approach below?
+%                 for iq=1:Settings.IterationLimit-1
+%                     [rr,uu]=poldec(F1); % extract the rotation part of the deformation, rr
+%                     gr=rr'*gr; % correct the rotation component of the deformation so that it doesn't affect strain calc
+%                     RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,sampletilt,curMaterial,Av,ImageInd);
+%                     
+% %                 if iq>0
+% %                     Settings.IterationOptions.F_guess = (Qps')*(gr')*F1*gr*Qps;
+% %                 end
+%                 F1 = CalcF_Amoeba(RefImage,ScanImage, 0, ImageInd, Settings);
+%                 sigma = eye(3);
+%                 XX = -1 * ones(Settings.NumROIs, 3);
+%                 fitMetrics1 = computations.metrics.fitMetrics;     
+%                 end
+% %             catch ME
+% %                 F1 = eye(3);
+% %                 sigma = eye(3);
+% %                 XX(Settings.NumROIs,3) = 0;
+% %                 fitMetrics1.SSE = computations.metrics.fitMetrics;
+% %             end
+%             %%%%%
+%         end
+
+    case 'Dynamic Simulated FDelta'
+%         try
+        
+        Material = ReadMaterial(curMaterial);
+        mperpix = Settings.mperpix;
+        C1111=Material.C11*1e9;
+        C2323=Material.C44*1e9;
+        C1122=Material.C12*1e9;
+        delta=eye(3);
+        Cc=zeros(3,3,3,3);
+        
+        for i=1:3
+            for j=1:3
+                for k=1:3
+                    for ls=1:3
+                        Cc(i,j,k,ls)=C1122*delta(i,j)*delta(k,ls)+C2323*(delta(i,k)*delta(j,ls)+delta(i,ls)*delta(j,k))...
+                            +(C1111-C1122-2*C2323)*(delta(1,i)*delta(1,j)*delta(1,k)*delta(1,ls)+delta(2,i)*delta(2,j)*delta(2,k)*delta(2,ls)+delta(3,i)*delta(3,j)*delta(3,k)*delta(3,ls));
+
+                    end
+                end
+            end
+        end
+        
+%         try
+        
+        Qps = frameTransforms.phosphorToSample(Settings);
+        damper = 1;
+        goodtogo = 0;
+        
+        Settings.IterationOptions.numimax = 20;
+        Settings.IterationOptions.Hupdate = true;
+        Settings.IterationOptions.F_guess = eye(3);
+        Settings.IterationOptions.steptolerance = 10.0e-6;
+
+
+        RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,sampletilt,curMaterial,Av,ImageInd);
+        
+        clear global rs cs Gs
+        [F1,fitMetrics1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
+        
+%         Settings.ROIinfo = [.5 .5 .0 .40];
+%         F1 = CalcF_Amoeba(RefImage,ScanImage, 0, ImageInd, Settings);
+%         Settings.IterationOptions.F_guess = (Qps')*(gr')*F1*gr*Qps;
+%         F1 = CalcF_XASGO(RefImage,ScanImage, 0, ImageInd, Settings);
+%         sigma = eye(3);
+%         XX = -1 * ones(Settings.NumROIs, 3);
+%         fitMetrics1 = computations.metrics.fitMetrics;
+        
+        [F1,Delta] = ResolveFandDelta(F1, gr, Qps, Cc);
+        xs = zeros(Settings.IterationLimit,1);
+        ys = xs;
+        zs = xs;
+        xs(1) = xstar;
+        ys(1) = ystar;
+        zs(1) = zstar;
+        count = 1;
+        xstar = xstar - Delta(1)*zstar;
+        ystar = ystar + Delta(2)*zstar;
+        zstar = zstar + Delta(3)*zstar;
+        
+        while ~goodtogo
+            for iq=1:Settings.IterationLimit-1
+                count = count + 1
+                xs(count) = xstar;
+                ys(count) = ystar;
+                zs(count) = zstar;
+                [rr,uu]=poldec(F1); % extract the rotation part of the deformation, rr
+                gr=rr'*gr; % correct the rotation component of the deformation so that it doesn't affect strain calc
+                RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,sampletilt,curMaterial,Av,ImageInd);
+%                 clear global rs cs Gs
+%                 [F1,fitMetrics1,XX,sigma] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
+                
+%                 if iq>0
+%                     Settings.IterationOptions.F_guess = (Qps')*(gr')*F1*gr*Qps;
+%                 end
+%                 Settings.ROIinfo = [.5 .5 .0 .40];
+%                 F1 = CalcF_XASGO(RefImage,ScanImage, 0, ImageInd, Settings);
+%                 sigma = eye(3);
+%                 XX = -1 * ones(Settings.NumROIs, 3);
+%                 fitMetrics1 = computations.metrics.fitMetrics;
+                
+                clear global rs cs Gs
+                [F1,fitMetrics1,XX,sigma] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
+                
+                [F1,Delta] = ResolveFandDelta(F1, gr, Qps, Cc);
+                xstar = xstar - damper*Delta(1)*zstar;
+                ystar = ystar + damper*Delta(2)*zstar;
+                zstar = zstar + damper*Delta(3)*zstar;
+                F1 = eye(3) + damper*(F1-eye(3));
+            end
+            taillen = 4;
+            p = polyfit(1:taillen,xs(end-taillen+1:end)',1);
+            mx = p(1);
+            stdx = std(xs(end-taillen+1:end));
+            
+            p = polyfit(1:taillen,ys(end-taillen+1:end)',1);
+            my = p(1);
+            stdy = std(ys(end-taillen+1:end));
+            
+            p = polyfit(1:taillen,zs(end-taillen+1:end)',1);
+            mz = p(1);
+            stdz = std(zs(end-taillen+1:end));
+            
+            goodtogo = 1;
+        
+        end
+        fitMetrics1.mx = mx;
+        fitMetrics1.my = my;
+        fitMetrics1.mz = mz;
+        fitMetrics1.fdcount = count;
+        
+%         figure; plot(xs);
+%         figure; plot(ys);
+%         figure; plot(zs);
+        
+        [rr,uu]=poldec(F1); % extract the rotation part of the deformation, rr
+        gr=rr'*gr;
+        RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,sampletilt,curMaterial,Av,ImageInd);
+        RefImage = custimfilt(RefImage,9,90,0,0);
+
+
+
+        
     case 'Simulated'
         
         %         RefImage = genEBSDPatternHybrid(gr,paramspat,eye(3),lattice,al,bl,cl,axs); % testing next line instead *****
@@ -199,10 +364,7 @@ switch Settings.HROIMMethod
 
         %Initialize
         clear global rs cs Gs
-%         [F1,fitMetrics1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
-        %disp('ATTEMPT THE SWITCH')
-        [F1,fitMetrics1,XX] = SwitchF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
-        %disp('FINISHED THE SWITCH')
+        [F1,fitMetrics1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
         
         %.gif recording stuff
         if isfield(Settings,'doGif') && Settings.doGif
@@ -221,12 +383,7 @@ switch Settings.HROIMMethod
                 Settings.PixelSize,Settings.ImageFilter(3),Settings.ImageFilter(4));
             
             clear global rs cs Gs
-%             [F1,fitMetrics1,XX,sigma] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
-            %disp('ATTEMPT THE SWITCH')
-            [F1,fitMetrics1,XX, sigma] = SwitchF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
-            %disp('FINISHED THE SWITCH')
-
-
+            [F1,fitMetrics1,XX,sigma] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
             if isfield(Settings,'doGif') && Settings.doGif
                 f = getframe(figure(100));
                 im(:,:,1,frame) = rgb2ind(f.cdata,map,'nodither');
@@ -236,27 +393,23 @@ switch Settings.HROIMMethod
         %%%%%
 %}a
         %Improved convergence routine should replace this loop:
+        
         for ii = 1:Settings.IterationLimit
             if fitMetrics1.SSE > 25 % need to make this a variable in the AdvancedSettings GUI
                 if ii == 1
-                    display(['Didn''t make it in to the iteration loop for point ', num2str(ImageInd)]) %changed from "for point ' ImageInd" so that the index is converted to a string so it can be displayed
-                  %  disp('this is where it breaks') %for debugging 
-
+                    display(['Didn''t make it in to the iteration loop for point ' ImageInd])
                 end
                 g = euler2gmat(Settings.Angles(ImageInd,1),Settings.Angles(ImageInd,2),Settings.Angles(ImageInd,3)); 
                 F = -eye(3);
-                %fitMetrics.SSE = computations.metrics.fitMetrics;
-                fitMetrics = fitMetrics1;
-                fitMetrics.SSE = 999;
+                fitMetrics.SSE = computations.metrics.fitMetrics;
                 U = -eye(3);
                 return;
-                %the error gets here, then returns so it stops.
             end
-
             [r1,u1]=poldec(F1);
             U1=u1;
             R1=r1;
             FTemp=R1*U1; %**** isn't this just F1 - why did we bother doing this????
+            
             
             NewRefImage = genEBSDPatternHybrid(gr,paramspat,FTemp,Material.lattice,Material.a1,Material.b1,Material.c1,Material.axs);% correct method ******DTF changed to test new profiles             pattern *****
             %  NewRefImage = genEBSDPatternHybridmult(gr,paramspat,FTemp,lattice,al,bl,cl,axs);  % multiplied simulated approach
@@ -270,12 +423,7 @@ switch Settings.HROIMMethod
                 Settings.ImageFilter(3), Settings.ImageFilter(4));
             %         keyboard
             clear global rs cs Gs
-%             [F1,fitMetrics1,XX,sigma] = CalcF(NewRefImage,ScanImage,gr,FTemp,ImageInd,Settings,curMaterial,0);
-
-            %disp('ATTEMPT THE SWITCH')
-            [F1,fitMetrics1,XX, sigma] = SwitchF(NewRefImage,ScanImage,gr,FTemp,ImageInd,Settings,curMaterial,0);
-            %disp('FINISHED THE SWITCH')
-
+            [F1,fitMetrics1,XX,sigma] = CalcF(NewRefImage,ScanImage,gr,FTemp,ImageInd,Settings,curMaterial,0);
             if isfield(Settings,'doGif') && Settings.doGif
                 f = getframe(figure(100));
                 im(:,:,1,frame) = rgb2ind(f.cdata,map,'nodither');
@@ -293,14 +441,43 @@ switch Settings.HROIMMethod
     case 'Real'
         %Find the grain of scan image and get the reference image for that
         %grain
-        RefImageInd = Settings.RefInd(ImageInd);
+        if Settings.RefImageInd==0
+            RefImageInd = Settings.RefInd(ImageInd);
+        else
+            RefImageInd = Settings.RefImageInd;
+        end
         RefImage = Settings.patterns.getPattern(Settings,RefImageInd);
         clear global rs cs Gs
 %         disp(RefImagePath);
         gr = euler2gmat(Settings.Angles(RefImageInd,:));
-        
         [F1,fitMetrics1,XX,sigma] = CalcFShift(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,RefImageInd);
+        
+    case 'Real XASGO'
+%         profile on
+        %Find the grain of scan image and get the reference image for that
+        %grain
+        RefImageInd = Settings.RefInd(ImageInd);
+        RefImage = Settings.patterns.getPattern(RefImageInd);
 
+        gr = euler2gmat(Settings.Angles(RefImageInd,:));
+        
+%         [Fg,~,~,~] = CalcFShift(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,RefImageInd);
+        Qps = frameTransforms.phosphorToSample(Settings);
+        Settings.IterationOptions.numimax = 15;
+        Settings.IterationOptions.Hupdate = false;
+        Settings.IterationOptions.F_guess = eye(3);%(Qps')*Fg*Qps;
+        Settings.IterationOptions.steptolerance = 50.0e-6;
+        Settings.ROIinfo = [.5 .5 .00 .40];
+        try
+            F1 = CalcF_XASGO(RefImage,ScanImage, RefImageInd, ImageInd, Settings);
+        catch me
+            F1 = -eye(3);
+        end
+        sigma = eye(3);
+        XX = -1 * ones(Settings.NumROIs, 3);
+        fitMetrics1 = computations.metrics.fitMetrics;
+%         profile viewer
+        
     case 'Hybrid'
         %Use simulated pattern method on one reference image then use
         %Real for all others in that grain.
@@ -347,7 +524,7 @@ if DoLGrid
     
     % evaluate point a using b as the reference
     clear global rs cs Gs
-    [F.a, fitMetrics.a] = CalcFRuggles(ScanImage,LegAImage,gr,eye(3),ImageInd,Settings,curMaterial,ImageInd); %note - sending in index of scan point for now - no PC correction!!!
+    [F.a fitMetrics.a] = CalcFRuggles(ScanImage,LegAImage,gr,eye(3),ImageInd,Settings,curMaterial,ImageInd); %note - sending in index of scan point for now - no PC correction!!!
     
     % evaluate point c using b as the refrerence
     clear global rs cs Gs
@@ -381,6 +558,8 @@ else
 %     U(1,1)
 %     U(3,3)
 end
+
+PCnew = [xstar;ystar;zstar];
 
 end
 

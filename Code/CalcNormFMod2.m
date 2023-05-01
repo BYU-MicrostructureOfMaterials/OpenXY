@@ -1,4 +1,4 @@
-function [normF U] = CalcNormFMod2(PC,I0,params2,lattice,a1,b1,c1,axs,g,X,ImageInd,Settings)
+function [normF, U] = CalcNormFMod2(PC,I0,params2,lattice,a1,b1,c1,axs,g,X,ImageInd,Settings)
 
 params2{1} = PC(1);
 params2{2} = PC(2);
@@ -35,8 +35,9 @@ switch Settings.HROIMMethod
             
             clear global rs cs Gs
             %     [F SSE] = CalcF(I1,I0,g,F,ImageInd,Settings,Settings.Material); % old version
-            [F SSE] = CalcF(I1,I0,g,eye(3),Ind,Settings,Settings.Phase{Ind},0,PC); % new DTF
-            [R U] = poldec(F);
+            %[F SSE] = CalcF(I1,I0,g,eye(3),Ind,Settings,Settings.Phase{Ind},0,PC); % new DTF
+            [F, SSE] = SwitchF(I1,I0,g,eye(3),Ind,Settings,Settings.Phase{Ind},0,PC); %switch function
+            [R, U] = poldec(F);
             g=R'*g;
         end
         
@@ -47,7 +48,8 @@ switch Settings.HROIMMethod
             I1 = custimfilt(I1,X(1),Settings.PixelSize,X(3),X(4));
             clear global rs cs Gs
             %     [F SSE] = CalcF(I1,I0,g,F,ImageInd,Settings,Settings.Material); % old version
-            [F SSE] = CalcF(I1,I0,g,eye(3),Ind,Settings,Settings.Phase{Ind},0,PC); % new DTF
+            %[F SSE] = CalcF(I1,I0,g,eye(3),Ind,Settings,Settings.Phase{Ind},0,PC); % new DTF
+            [F, SSE] = SwitchF(I1,I0,g,eye(3),Ind,Settings,Settings.Phase{Ind},0,PC); %switch function
             [R U] = poldec(F);
             g=R'*g;
         end
@@ -63,7 +65,8 @@ switch Settings.HROIMMethod
             clear global rs cs Gs
             %     [F SSE] = calcFnew(I1,I0,g,F,paramsF,standev,6);
             %     [F SSE] = CalcF(I1,I0,g,F,ImageInd,Settings,Settings.Material);% ** same change as above DTF 7/21/14
-            [F SSE] = CalcF(I1,I0,g,F,Ind,Settings,Settings.Phase{Ind},0,PC);
+            %[F SSE] = CalcF(I1,I0,g,F,Ind,Settings,Settings.Phase{Ind},0,PC);
+            [F, SSE] = SwitchF(I1,I0,g,F,Ind,Settings,Settings.Phase{Ind},0,PC);
         end
         
         [R U] = poldec(F);

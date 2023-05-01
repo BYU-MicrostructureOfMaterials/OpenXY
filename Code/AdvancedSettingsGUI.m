@@ -22,7 +22,7 @@ function varargout = AdvancedSettingsGUI(varargin)
 
 % Edit the above text to modify the response to help AdvancedSettingsGUI
 
-% Last Modified by GUIDE v2.5 09-Jul-2019 15:10:18
+% Last Modified by GUIDE v2.5 03-Apr-2023 14:53:11
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -78,7 +78,8 @@ if handles.Fast
     set(handles.ToggleGrainMap,'Enable','off')
 end
 
-
+Settings.calcMethod = 'CalcF'; %default value settting for the calculation method
+Settings.convMethod = 'Original'; %default value setting for the convergence method
 Settings.singleRefInd = false; %boolean is true if using single reference pattern, false otherwise
 % disp(['test the flag in ASGui: ', num2str(Settings.singleRefInd)])%the flag is set here correctly, but idk if it saves to settings right
 
@@ -89,9 +90,15 @@ if ~isfield(Settings,'DoStrain')
 end
 set(handles.DoStrain,'Value',Settings.DoStrain);
 
-HROIMMethodList = {'Simulated-Kinematic','Simulated-Dynamic','Real-Grain Ref','Real-Single Ref','Remapping'};
+filePrefList = {'CalcF', 'XASGO', 'Amoeba'}; %set up the options for the drop down
+set(handles.CalcFilePreference, 'String', filePrefList);
+
+HROIMMethodList = {'Simulated-Kinematic', 'Simulated-Dynamic', 'Real-Grain Ref', 'Real-Single Ref', 'Remapping'}; 
+%This ^^ is the original line
+
+%HROIMMethodList = {'Simulated-Kinematic: CalcF', 'Simulated-Kinematic: XASGO', 'Simulated-Dynamic: CalcF', 'Simulated-Dynamic: XASGO', 'Real-Grain Ref','Real-Single Ref','Remapping'};
 set(handles.HROIMMethod, 'String', HROIMMethodList);
-switch Settings.HROIMMethod
+switch Settings.HROIMMethod %what is this???
     case 'Simulated'
         SetPopupValue(handles.HROIMMethod,'Simulated-Kinematic');
     case 'Dynamic Simulated'
@@ -327,11 +334,27 @@ switch HROIMMethod
             else
                 mats = handles.Settings.Material;
             end
+
+            %so here I changed where it was looking and how it read in the
+            %file names and how I named the files
+            %(materialName_EMEBSDmaster.nml). I also copied the entire
+            %EMsoft bin folder into my EMdata folder so it would read in
+            %the right place --Bethany Syphus (get EMsoft to run on
+            %windows)
+
             %EMdataPath = fullfile(fileparts(EMsoftPath),'EMdata');
             EMsoftMats = dir(EMdataPath);
-            EMsoftMats = {EMsoftMats(~cellfun(@isempty,strfind({EMsoftMats.name},'EBSDmaster'))).name}';
-            EMsoftMats = cellfun(@(x) x(1:strfind(x,'_EBSDmaster')-1),EMsoftMats,'UniformOutput',false);
+            %myVar = [EMdataPath 'EMdata'];
+            %EMsoftMats = dir(myVar); %my test
+
+            %EMsoftMats = {EMsoftMats(true).name};
+            EMsoftMats = {EMsoftMats(~cellfun(@isempty,strfind({EMsoftMats.name},'EMEBSDmaster'))).name};
+            %EMsoftMats2 = {EMsoftMats(contains({EMsoftMats.name}, 'EBSDmaster')).name};
+            EMsoftMats = cellfun(@(x) x(1:strfind(x,'_EMEBSDmaster')-1),EMsoftMats,'UniformOutput',false);
             inlist = ismember(mats,EMsoftMats);
+
+            %inlist = ismember(mats, 'ferrite');
+
             if ~all(inlist)
                 valid = 0;
                 msg = {['No master EBSD files for: ' strjoin(mats(~inlist),', ')], ['Search path: ' EMdataPath],'Resetting to kinematic simulation'};
@@ -1273,7 +1296,9 @@ if strcmp(eventdata.Key,'l') && ~isempty(eventdata.Modifier) && strcmp(eventdata
     CancelButton_Callback(handles.SaveButton, eventdata, handles);
 end
 
-
+%This is for the actual gui dropdown and selection of the calculation type.
+%Which calculation file to use is stored in Settings so it can be easily
+%accessed throughout the code -- Bethany Syphus
 
 % --- Executes on button press in enforcedAntisymetryToggle.
 function enforcedAntisymetryToggle_Callback(hObject, eventdata, handles)
@@ -1284,3 +1309,95 @@ if ValChanged(handles, 'doEnforcedAntisymmetry')
 end
 SaveColor(handles)
 guidata(hObject,handles);
+
+
+% --- Executes on selection change in CalcFilePreference.
+function CalcFilePreference_Callback(hObject, eventdata, handles)
+% hObject    handle to CalcFilePreference (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+contents = cellstr(get(hObject,'String'));
+calcFilePref = contents{get(hObject,'Value')};
+
+%disp('make the switch')
+%disp(calcFilePref)
+
+    switch calcFilePref
+        case 'CalcF'
+        handles.Settings.calcMethod = 'CalcF';
+        %disp('got here')
+        case 'XASGO'
+        %disp('got XASGO')
+        handles.Settings.calcMethod = 'XASGO';
+        case 'Amoeba'
+        handles.Settings.calcMethod = 'Amoeba';
+
+        handles = updateGrainMap(handles);
+        %handles = guidata(hObject);
+        
+        
+    end
+    %handles = updateGrainMap(handles);
+    %disp(handles.Settings.calcMethod)
+    guidata(hObject, handles);
+    %handles = updateGrainMap(handles);
+    %disp(handles.Settings.calcMethod)
+% Hints: contents = cellstr(get(hObject,'String')) returns CalcFilePreference contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from CalcFilePreference
+
+
+% --- Executes during object creation, after setting all properties.
+function CalcFilePreference_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to CalcFilePreference (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in calcOptions.
+function calcOptions_Callback(hObject, eventdata, handles)
+% hObject    handle to calcOptions (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns calcOptions contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from calcOptions
+
+contents = cellstr(get(hObject,'String'));
+convPref = contents{get(hObject,'Value')};
+
+%disp('make the switch')
+%disp(calcFilePref)
+
+    switch convPref
+        case 'Original'
+        handles.Settings.convMethod = 'Original';
+        %disp('got original')
+        case 'Fdelta'
+        %disp('got Fdelta')
+        handles.Settings.convMethod = 'Fdelta';
+
+        handles = updateGrainMap(handles);
+        %handles = guidata(hObject);
+    end
+
+     guidata(hObject, handles);
+
+% --- Executes during object creation, after setting all properties.
+function calcOptions_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to calcOptions (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+    if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+    end
+

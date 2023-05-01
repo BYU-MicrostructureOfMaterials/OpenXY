@@ -115,7 +115,9 @@ if ~strcmp(ext,'.h5')
 else
     [Settings, Settings.ScanParams, Material] = ReadHDF5(Settings,ScanPath);
 end
-
+if ~exist('grainID','var')
+Settings.grainID = CalcGrainID(Settings);
+end
 %Save GrainVals
 Settings.grainID = Settings.GrainVals.grainID;
 Settings.Phase = Settings.GrainVals.Phase;

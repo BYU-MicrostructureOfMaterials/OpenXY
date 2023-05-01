@@ -7,7 +7,7 @@
 function Settings = HREBSDMain(Settings, indVect)
 disp('Entering HREBSDMain')
 
-% tic
+% ticfiel
 if Settings.EnableProfiler; profile on; end;
 %if Settings.DisplayGUI; disp('Dont forget to change PC if the image is cropped by ReadEBSDImage.m'); end;
 
@@ -70,9 +70,12 @@ if Settings.DoParallel > 1
         %or a structure F.a F.b F.c of deformation gradient tensors for
         %each point in the L grid
         
-        [F(:,:,ImageInd), g(:,:,ImageInd), U(:,:,ImageInd), fitMetrics(ImageInd), XX(:,:,ImageInd), sigma(:,:,ImageInd)] = ...
-            GetDefGradientTensor(Inds(ImageInd),Settings,Settings.Phase{ImageInd});
-        
+%         [F(:,:,ImageInd), g(:,:,ImageInd), U(:,:,ImageInd), fitMetrics(ImageInd), XX(:,:,ImageInd), sigma(:,:,ImageInd)] = ...
+%             GetDefGradientTensor(Inds(ImageInd),Settings,Settings.Phase{ImageInd});
+
+[F(:,:,ImageInd), g(:,:,ImageInd), U(:,:,ImageInd), fitMetrics(ImageInd), XX(:,:,ImageInd), sigma(:,:,ImageInd)] = ...
+            SwitchGetDefGrad(Inds(ImageInd),Settings,Settings.Phase{ImageInd});
+
         %{
         commented out this (outputs strain matrix - I think - DTF 5/15/14)
         if strcmp(Settings.ScanType,'L')
@@ -92,32 +95,26 @@ else
     end
     
     disp('Running strain cross-correlation...')
-     for ImageInd = indVect
+     for ImageInd = indVect;
 %    for ImageInd = 619 %562, 563, 591, 835 gives infinite loop error
    %610, 619 gave different orange errors but kept going
-%         testMatrix = (400:405); %total is 899, problems at 402, 481, 511, 579, 594, 595, 602, 675, 714
+        %testMatrix = (20:45); %total is 899, problems at 402, 481, 511, 579, 594, 595, 602, 675, 714
    %disp(testMatrix)
-%    for ImageInd = testMatrix %trying the second half of the data
+    %for ImageInd = testMatrix
+%     for i = testMatrix
+        %ImageInd = 510;
        % disp(indVect)
-  % for ImageInd = [400, 401, 402, 403, 404] %check that my code to skip ImageInd 402 works -- it does
-     %   disp(ImageInd)
-     %   if ImageInd == 402 %it wasn't working on 402, 481, 511, 579, 594, 595, 602, 675, 714 (probably same errors)
-     %       continue;
-     %   end
-      %  if ImageInd == 481 
-      %      continue;
-      %  end
-     %   if ImageInd == 511 
-      %      continue;
-       % end
-       % if ImageInd == 531 
-       %     continue;
-       % end
-        %         tic
-        
 
-        [F(:,:,ImageInd), g(:,:,ImageInd), U(:,:,ImageInd), fitMetrics(ImageInd), XX(:,:,ImageInd), sigma(:,:,ImageInd)] = ...
-GetDefGradientTensor(Inds(ImageInd),Settings,Settings.Phase{ImageInd});  %image 402 does not return anything because a base case is tripped and the function just returns nothing
+        %[F(:,:,ImageInd), g(:,:,ImageInd), U(:,:,ImageInd), fitMetrics(ImageInd), XX(:,:,ImageInd), sigma(:,:,ImageInd)] = ...
+%GetDefGradientTensor(Inds(ImageInd),Settings,Settings.Phase{ImageInd});  
+
+
+% [F(:,:,ImageInd), g(:,:,ImageInd), U(:,:,ImageInd), ~, XX(:,:,ImageInd), sigma(:,:,ImageInd)] = ...
+% GetDefGradientTensor(Inds(ImageInd),Settings,Settings.Phase{ImageInd});
+
+[F(:,:,ImageInd), g(:,:,ImageInd), U(:,:,ImageInd), ~, XX(:,:,ImageInd), sigma(:,:,ImageInd)] = ...
+SwitchGetDefGrad(Inds(ImageInd),Settings,Settings.Phase{ImageInd});
+
 
         % commented out this (outputs strain matrix - I think - DTF 5/15/14)
 %         if strcmp(Settings.ScanType,'L')
@@ -125,6 +122,14 @@ GetDefGradientTensor(Inds(ImageInd),Settings,Settings.Phase{ImageInd});  %image 
 %         else
 %             U{ImageInd} - eye(3)
 %         end
+
+%disp(ImageInd);
+%this is where I write the strain to a file
+%U(:,:,1:9)
+    file = fopen('Uvalues.txt', 'w');
+    fprintf(file, '%g\n', U(:,:,1:9));
+    fclose(file);
+%disp(F);
         
         if Settings.DisplayGUI
             h.update(ImageInd)

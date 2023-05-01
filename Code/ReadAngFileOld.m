@@ -63,12 +63,6 @@ end
 Settings.Angles(:,1) = AngFileVals{1};
 Settings.Angles(:,2) = AngFileVals{2};
 Settings.Angles(:,3) = AngFileVals{3};
-Settings.XData=AngFileVals{4};
-Settings.YData=AngFileVals{5};
-X=unique(Settings.XData);
-Y=unique(Settings.YData);
-ScanParams.NumColsOdd=length(X);
-ScanParams.NumRows=length(Y);
 Settings.Nx = ScanParams.NumColsOdd;
 Settings.Ny = ScanParams.NumRows;
 fclose(fid);

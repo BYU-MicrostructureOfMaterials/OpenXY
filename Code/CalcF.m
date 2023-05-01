@@ -21,7 +21,7 @@ function [F, fitMetrics, XX, sigma] = CalcF(RefImage,ScanImage,g,Fo,Ind,Settings
 %
 %% handle inputs
 
-disp('MADE IT TO CALC F!')
+%disp('MADE IT TO CALC F!')
 
 Material = ReadMaterial(curMaterial);
 % g0 = g;
