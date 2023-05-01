@@ -73,7 +73,7 @@ if length(varargin) >= 1
         if length(varargin) > 2
             handles.DDSettings = varargin{3};
         end
-        OutputTypesList = {'Strain','Dislocation Density','Split Dislocation Density','Tetragonality'};
+        OutputTypesList = {'Strain','Dislocation Density','Split Dislocation Density','Tetragonality','Burgers Vectors'};
         if handles.Settings.Ny == 1
             OutputTypesList = [OutputTypesList 'Line Scan Plot'];
         end
@@ -223,7 +223,7 @@ if Settings.DoStrain
     plotOptions = [plotOptions,'Strain','Tetragonality','Stress'];
 end
 if Settings.CalcDerivatives
-    plotOptions = [plotOptions,'Dislocation Density'];
+    plotOptions = [plotOptions,'Dislocation Density', 'Burgers Vectors'];
     handles.DisloMinEdit.Enable = 'On';
     handles.DisloMaxEdit.Enable = 'On';
     handles.SetDislocationDefaultsButton.Enable = 'On';
@@ -269,6 +269,9 @@ if strcmp(SelectionType,'open')
         RemoveStrainComponents(handles);
     end
     if strcmp(OldList(clickedIndex),'Dislocation Density')
+        RemoveDislocationDensityComponents(handles);
+    end
+    if strcmp(OldList(clickedIndex),'Burgers Vectors')
         RemoveDislocationDensityComponents(handles);
     end
     if strcmp(OldList(clickedIndex), 'Stress')
@@ -470,6 +473,19 @@ if ~isempty(Matches)
     end
 end
 
+%Check for Burgers Vectors Components
+BurgVectComponentsList = {'IPF';'Dislocation_Density'; 'Crystallographic_Directions'};
+Matches = [];
+Matches = intersect(BurgVectComponentsList,Components);
+
+if ~isempty(Matches)
+    if exist('alpha_data','var')
+        PlotBurgersVector(Settings, alpha_data);
+    else
+        warndlg(['Warning, the file: ' FilePath ', does not contain an alpha_data file'],'Warning');
+    end
+end
+
 %Check for Split Dislocation Density
 Matches = intersect('Split Dislocation Density',Calculations);
 if ~isempty(Matches)
@@ -489,6 +505,13 @@ CalcMeasuresList = get(handles.CalculatedListBox,'String');
 if any(strcmp(CalcMeasuresList,'Tetragonality'))
     TetragonalityOutput(Settings,DoShowGB);
 end
+
+% If you don't want burgers vectors to have components uncomment thus and
+% comment out all component related Burgers Vectors pieces of code in here
+%CalcMeasuresList = get(handles.CalculatedListBox,'String');
+%if any(strcmp(CalcMeasuresList,'Burgers Vectors'))
+%    PlotBurgersVector(Settings, alpha_data);
+%end
 
 %Check for LineScan plots
 Matches = [];
@@ -515,14 +538,17 @@ SelectedOption = OptionsList(OptionsInd);
 ToCalculateList = get(handles.CalculatedListBox,'String');
 if isempty(ToCalculateList)
     set(handles.CalculatedListBox,'String',SelectedOption)
+    if strcmp(SelectedOption,'Stress')
+        AddStressComponents(handles);
+    end
     if strcmp(SelectedOption,'Strain')
         AddStrainComponents(handles);
     end
     if strcmp(SelectedOption,'Dislocation Density')
         AddDislocationDensityComponents(handles);
     end
-    if strcmp(SelectedOption,'Stress')
-        AddStressComponents(handles);
+    if strcmp(SelectedOption,'Burgers Vectors')
+        AddBurgersVectorsComponents(handles);
     end
 else
    %Add to whatever is already in there. Remove duplicates. 
@@ -535,6 +561,9 @@ else
         end
         if strcmp(SelectedOption,'Dislocation Density')
             AddDislocationDensityComponents(handles);
+        end
+        if strcmp(SelectedOption,'Burgers Vectors')
+            AddBurgersVectorsComponents(handles);
         end
         if strcmp(SelectedOption,'Stress')
             AddStressComponents(handles);
@@ -562,9 +591,19 @@ function AddDislocationDensityComponents(handles)
         CurrentComponentsList = cat(1,CurrentComponentsList,DisloComponentsList);
         set(handles.ComponentsListBox,'String',CurrentComponentsList);
     end
- 
+
+function AddBurgersVectorsComponents(handles)
+    BurgVectComponentsList = {'IPF';'Dislocation_Density'; 'Crystallographic_Directions'};
+    CurrentComponentsList = get(handles.ComponentsListBox,'String');
+    if isempty(CurrentComponentsList)
+        set(handles.ComponentsListBox,'String',BurgVectComponentsList);
+    else
+        CurrentComponentsList = cat(1,CurrentComponentsList,BurgVectComponentsList);
+        set(handles.ComponentsListBox,'String',CurrentComponentsList);
+    end
+
 function AddStressComponents(handles)
-    StressComponentsList= {'VM','σ1','σ2','σ3'};
+    StressComponentsList= {'VM';'σ1';'σ2';'σ3'};
     CurrentComponentsList= get(handles.ComponentsListBox,'String');
     if isempty(CurrentComponentsList)
         set(handles.ComponentsListBox,'String',StressComponentsList);
@@ -592,9 +631,17 @@ function RemoveDislocationDensityComponents(handles)
     set(handles.ComponentsListBox,'String',CurrentComponentsList);
     set(handles.ComponentsListBox,'Value',1);
 
+function RemoveBurgersVectorsComponents(handles)
+    CurrentComponentsList = get(handles.ComponentsListBox,'String');
+    BurgComponentsList = {'IPF';'Dislocation_Density'; 'Crystallographic_Directions'};
+    [Matches CurrentInd] = setdiff(CurrentComponentsList,BurgComponentsList);
+    CurrentComponentsList = CurrentComponentsList(CurrentInd);
+    set(handles.ComponentsListBox,'String',CurrentComponentsList);
+    set(handles.ComponentsListBox,'Value',1);
+
 function RemoveStressComponents(handles)
     CurrentComponentsList = get(handles.ComponentsListBox,'String');
-    StressComponentsList = {'VM','σ1','σ2','σ3'};
+    StressComponentsList = {'VM';'σ1';'σ2';'σ3'};
     [Matches CurrentInd] = setdiff(CurrentComponentsList,StressComponentsList);
     CurrentComponentsList = CurrentComponentsList(CurrentInd);
     set(handles.ComponentsListBox,'String',CurrentComponentsList);
