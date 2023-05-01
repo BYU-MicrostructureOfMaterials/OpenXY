@@ -95,14 +95,9 @@ else
     end
     
     disp('Running strain cross-correlation...')
-     for ImageInd = indVect;
-%    for ImageInd = 619 %562, 563, 591, 835 gives infinite loop error
-   %610, 619 gave different orange errors but kept going
-        %testMatrix = (20:45); %total is 899, problems at 402, 481, 511, 579, 594, 595, 602, 675, 714
-   %disp(testMatrix)
-    %for ImageInd = testMatrix
-%     for i = testMatrix
-        %ImageInd = 510;
+     %for ImageInd = indVect;
+        testMatrix = (20:45); 
+    for ImageInd = testMatrix
        % disp(indVect)
 
         %[F(:,:,ImageInd), g(:,:,ImageInd), U(:,:,ImageInd), fitMetrics(ImageInd), XX(:,:,ImageInd), sigma(:,:,ImageInd)] = ...
@@ -126,9 +121,9 @@ SwitchGetDefGrad(Inds(ImageInd),Settings,Settings.Phase{ImageInd});
 %disp(ImageInd);
 %this is where I write the strain to a file
 %U(:,:,1:9)
-    file = fopen('Uvalues.txt', 'w');
-    fprintf(file, '%g\n', U(:,:,1:9));
-    fclose(file);
+%     file = fopen('Uvalues.txt', 'w');
+%     fprintf(file, '%g\n', U(:,:,1:9));
+%     fclose(file);
 %disp(F);
         
         if Settings.DisplayGUI

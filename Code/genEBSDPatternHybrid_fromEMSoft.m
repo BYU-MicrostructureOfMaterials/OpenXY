@@ -65,8 +65,8 @@ anglefilepath = fullfile(EMdataPath, anglefile);
 
 %Create the .h5 file????
 
-% f = fopen(fullfile(datafilepath), 'w');
-% fclose(f);
+f = fopen(fullfile(datafilepath), 'w');
+fclose(f);
 
 %Write testeuler.txt file
 fid=fopen(fullfile(EMdataPath,anglefile),'w'); %original line
@@ -317,6 +317,8 @@ cleanupDataFile = onCleanup(@() delete(fullfile(EMdataPath,datafile)));
 %!EMEBSD EMEBSDexample.nml
 if status
     disp(cmdout)
+
+    
 end
 %generate pic
 h5infostruct=h5info(datafilepath); %commented out because no h5 is being
