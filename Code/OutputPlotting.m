@@ -272,7 +272,7 @@ if strcmp(SelectionType,'open')
         RemoveDislocationDensityComponents(handles);
     end
     if strcmp(OldList(clickedIndex),'Burgers Vectors')
-        RemoveDislocationDensityComponents(handles);
+        RemoveBurgersVectorComponents(handles);
     end
     if strcmp(OldList(clickedIndex), 'Stress')
        RemoveStressComponents(handles); 
@@ -631,10 +631,10 @@ function RemoveDislocationDensityComponents(handles)
     set(handles.ComponentsListBox,'String',CurrentComponentsList);
     set(handles.ComponentsListBox,'Value',1);
 
-function RemoveBurgersVectorsComponents(handles)
+function RemoveBurgersVectorComponents(handles)
     CurrentComponentsList = get(handles.ComponentsListBox,'String');
-    BurgComponentsList = {'IPF';'Dislocation_Density'; 'Crystallographic_Directions'};
-    [Matches CurrentInd] = setdiff(CurrentComponentsList,BurgComponentsList);
+    BurgVectComponentsList = {'IPF';'Dislocation_Density'; 'Crystallographic_Directions'};
+    [Matches CurrentInd] = setdiff(CurrentComponentsList,BurgVectComponentsList);
     CurrentComponentsList = CurrentComponentsList(CurrentInd);
     set(handles.ComponentsListBox,'String',CurrentComponentsList);
     set(handles.ComponentsListBox,'Value',1);
