@@ -235,12 +235,21 @@ switch Settings.HROIMMethod
         end
         %%%%%
 %}a
+
+        
+
         %Improved convergence routine should replace this loop:
         for ii = 1:Settings.IterationLimit
+            %changed from 25 to 30 to get more of the simulated images
             if fitMetrics1.SSE > 25 % need to make this a variable in the AdvancedSettings GUI
                 if ii == 1
                     display(['Didn''t make it in to the iteration loop for point ', num2str(ImageInd)]) %changed from "for point ' ImageInd" so that the index is converted to a string so it can be displayed
                   %  disp('this is where it breaks') %for debugging 
+%                   fid = fopen('badPoints.txt', 'a');  
+%                   fprintf(fid, '%s', [num2str(ImageInd), '\n']);
+%                   fclose(fid);
+
+                  disp(['fitMetrics1.SSE = ', num2str(fitMetrics1.SSE)])
 
                 end
                 g = euler2gmat(Settings.Angles(ImageInd,1),Settings.Angles(ImageInd,2),Settings.Angles(ImageInd,3)); 
@@ -252,6 +261,8 @@ switch Settings.HROIMMethod
                 return;
                 %the error gets here, then returns so it stops.
             end
+            
+
 
             [r1,u1]=poldec(F1);
             U1=u1;

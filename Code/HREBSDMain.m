@@ -73,7 +73,7 @@ if Settings.DoParallel > 1
 %         [F(:,:,ImageInd), g(:,:,ImageInd), U(:,:,ImageInd), fitMetrics(ImageInd), XX(:,:,ImageInd), sigma(:,:,ImageInd)] = ...
 %             GetDefGradientTensor(Inds(ImageInd),Settings,Settings.Phase{ImageInd});
 
-[F(:,:,ImageInd), g(:,:,ImageInd), U(:,:,ImageInd), fitMetrics(ImageInd), XX(:,:,ImageInd), sigma(:,:,ImageInd)] = ...
+        [F(:,:,ImageInd), g(:,:,ImageInd), U(:,:,ImageInd), fitMetrics(ImageInd), XX(:,:,ImageInd), sigma(:,:,ImageInd)] = ...
             SwitchGetDefGrad(Inds(ImageInd),Settings,Settings.Phase{ImageInd});
 
         %{
@@ -95,9 +95,9 @@ else
     end
     
     disp('Running strain cross-correlation...')
-     %for ImageInd = indVect;
-        testMatrix = (20:45); 
-    for ImageInd = testMatrix
+    for ImageInd = indVect;
+%         testMatrix = (400:500); 
+%     for ImageInd = testMatrix
        % disp(indVect)
 
         %[F(:,:,ImageInd), g(:,:,ImageInd), U(:,:,ImageInd), fitMetrics(ImageInd), XX(:,:,ImageInd), sigma(:,:,ImageInd)] = ...
@@ -107,8 +107,10 @@ else
 % [F(:,:,ImageInd), g(:,:,ImageInd), U(:,:,ImageInd), ~, XX(:,:,ImageInd), sigma(:,:,ImageInd)] = ...
 % GetDefGradientTensor(Inds(ImageInd),Settings,Settings.Phase{ImageInd});
 
-[F(:,:,ImageInd), g(:,:,ImageInd), U(:,:,ImageInd), ~, XX(:,:,ImageInd), sigma(:,:,ImageInd)] = ...
+
+[F(:,:,ImageInd), g(:,:,ImageInd), U(:,:,ImageInd), fitMetrics(ImageInd), XX(:,:,ImageInd), sigma(:,:,ImageInd)] = ...
 SwitchGetDefGrad(Inds(ImageInd),Settings,Settings.Phase{ImageInd});
+
 
 
         % commented out this (outputs strain matrix - I think - DTF 5/15/14)

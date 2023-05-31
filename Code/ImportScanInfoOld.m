@@ -1,4 +1,4 @@
-function Settings = ImportScanInfo(Settings,name,path)
+function Settings = ImportScanInfoOld(Settings,name,path)
 %Read Scan File
 switch nargin
     case 1

@@ -397,12 +397,15 @@ switch Settings.HROIMMethod
         for ii = 1:Settings.IterationLimit
             if fitMetrics1.SSE > 25 % need to make this a variable in the AdvancedSettings GUI
                 if ii == 1
-                    display(['Didn''t make it in to the iteration loop for point ' ImageInd])
+                    display(['Didn''t make it in to the iteration loop for point ', num2str(ImageInd)])
                 end
                 g = euler2gmat(Settings.Angles(ImageInd,1),Settings.Angles(ImageInd,2),Settings.Angles(ImageInd,3)); 
                 F = -eye(3);
-                fitMetrics.SSE = computations.metrics.fitMetrics;
+                %fitMetrics.SSE = computations.metrics.fitMetrics;
                 U = -eye(3);
+                fitMetrics = fitMetrics1;
+                fitMetrics.SSE = 999;
+                PCnew = [xstar;ystar;zstar];
                 return;
             end
             [r1,u1]=poldec(F1);
