@@ -564,7 +564,7 @@ function AddDislocationDensityComponents(handles)
     end
  
 function AddStressComponents(handles)
-    StressComponentsList= {'VM','σ1','σ2','σ3'};
+    StressComponentsList= {'VM';'σ1';'σ2';'σ3'};
     CurrentComponentsList= get(handles.ComponentsListBox,'String');
     if isempty(CurrentComponentsList)
         set(handles.ComponentsListBox,'String',StressComponentsList);
