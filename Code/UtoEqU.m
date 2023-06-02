@@ -26,6 +26,7 @@ numMatrix = length(rawU) / 9; %9 because 9 values in a 3x3 matrix
 b=1;
 E=zeros(numMatrix,1);
 
+%calc eq strain from strain values
 for a = 1:numMatrix %number of matrices
     u(1:9) = rawU(b:b+8);
     b = b + 9;
@@ -44,6 +45,13 @@ end
 
 E = E';
 
+%place all the statistical analysis here and save it to a nice folder or
+%something
+histogram(E, 100)
+sd = std(E)
+r = range(E)
+
+%save the equivalent strain values to a file
 eqU = fopen('eqUVals.txt', 'w');
 fprintf(eqU, '%g\n', E(1:end));
 fclose(eqU);
