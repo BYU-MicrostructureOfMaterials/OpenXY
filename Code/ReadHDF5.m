@@ -87,5 +87,6 @@ for i = 1:NumPhase
 end
 
 % Get Grain Vals
+Settings.mater = Mat.MaterialName;
 Settings.GrainVals = GetOIMGrainVals(filepath,PhaseNum,Settings);
     

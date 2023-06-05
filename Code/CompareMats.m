@@ -19,7 +19,7 @@ for i = 1:size(ScanMats,1)
         CompareField('c1');
         ChangeList = cell(count-1,4);
         for j = 1:count-1;
-            ChangeList(j,:) = {Change{j} Material.(Change{j}) ScanMats(i).(Change{j}) false};
+            ChangeList(j,:) = {j Material.(j) ScanMats(i).(j) false};
         end
         if size(ChangeList,1)>0
             [Sel,Action] = CreateSelectGUI(ChangeList);
