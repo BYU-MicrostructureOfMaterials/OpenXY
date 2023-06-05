@@ -15,11 +15,14 @@ if any(~strcmp(PhaseLattice{1},PhaseLattice))
 else
     lattice = PhaseLattice{1};
 end
-angles = vec2map(Settings.Angles,Settings.Nx,Settings.ScanType);
+% angles = vec2map(Settings.Angles,Settings.Nx,Settings.ScanType);
+[angles, Settings.Ny] = vec2map(Settings.Angles,Settings.Nx,Settings.ScanType);
 mistol = Settings.MisoTol*pi/180;
 MinGrainSize = Settings.MinGrainSize;
 clean = MinGrainSize ~= 0;
 grainID = findgrains(angles, lattice, clean, MinGrainSize, mistol)';
-grainID = reshape(grainID,Settings.Ny,Settings.Nx);
-grainID = reshape(grainID',Settings.Nx*Settings.Ny,1);
+% grainID = reshape(grainID,Settings.Ny,Settings.Nx);
+% grainID = reshape(grainID',Settings.Nx*Settings.Ny,1);
+grainID = reshape(grainID,Settings.Ny,[]);
+grainID = reshape(grainID',[],1);
 

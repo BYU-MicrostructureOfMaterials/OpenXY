@@ -12,9 +12,9 @@ NoStrain = false;
 %Calculate Dislocation Density
 data = Settings.data;
 AnalysisParamsPath=Settings.AnalysisParamsPath;
-r = data.rows;%
-c = data.cols;%
-stepsize_orig = abs((data.xpos(3)-data.xpos(2))/1e6); %units in meters. This is for square grid
+r = Settings.Ny;%
+c = Settings.Nx;%
+stepsize_orig = abs((Settings.XData(3)-Settings.XData(2))/1e6); %units in meters. This is for square grid
 NewAngles=cell2mat(data.g');
 Allg=Settings.Angles;
 Allg(Settings.Inds,:) = NewAngles;
@@ -484,6 +484,9 @@ alpha_data.filteredInds=filteredInds;
     disp(VaryStepSize)
     
 end
+ alpha_data=rmfield(alpha_data,'r');
+ alpha_data=rmfield(alpha_data, 'c');
+
 save(AnalysisParamsPath ,'alpha_data','-append'); 
 
 end
@@ -498,7 +501,7 @@ function [AllFa,AllSSEa,AllFc,AllSSEc, misanglea, misanglec] = DDCalc(RefInd,Ref
     skippts = Settings.NumSkipPts;
     
     %Extract Dim variables
-    r = Settings.data.rows;%
+    r = Settings.Ny;%
     
     %Extract Variables 
     RefIndA = RefInd(1);

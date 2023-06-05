@@ -37,11 +37,14 @@ if ~strcmp(ext,'.h5')
         Settings.ScanFilePath = ScanPath;
         
         %Unique x and y
-        X = unique(Settings.XData);
-        Y = unique(Settings.YData);
+%         X = unique(Settings.XData);
+%         Y = unique(Settings.YData);
+        [X, iaX, icX] = unique(Settings.XData);
+        [Y, iaY, icY] = unique(Settings.YData);
         
         %Number of steps in x and y
-        Nx = length(X);
+%         Nx = length(X);
+        Nx = iaX(end);
         Ny = length(Y);
         Settings.Nx = Nx; Settings.Ny = Ny;
         %Validate Scan Size
