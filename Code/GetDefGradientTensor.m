@@ -156,6 +156,19 @@ switch Settings.HROIMMethod
             try
                 RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,sampletilt,curMaterial,Av,ImageInd);
                 
+
+                %%%%%%%%%%%%%try to save some
+                %%%%%%%%%%%%%.jpegs%%%%%%%%%%%
+%                 scanNum = 1; %change this too
+%                 scanType = '.jpeg'; %can change this to .tiff or whatever
+%                 folderName = ['Scan_', num2str(scanNum), scanType];
+%                 mkdir(folderName);%make a new folder for every scan
+%                 cd(folderName);%go to the folder to save for all the data
+%                 imageName = ['pattern', num2str(ImageInd), '.jpeg'];
+%                 imwrite(RefImage, imageName);
+%                 cd('..');
+
+
                 clear global rs cs Gs
 
 %                 [F1,fitMetrics1,XX] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
@@ -169,6 +182,17 @@ switch Settings.HROIMMethod
                     gr=rr'*gr; % correct the rotation component of the deformation so that it doesn't affect strain calc
                     RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,sampletilt,curMaterial,Av,ImageInd);
                     
+                    RefImage2 = single(RefImage)/255;
+                    scanNum = 2; %change this too
+                    scanMat = 'silicon'; %can change this
+                    folderName = ['Scan_', num2str(scanNum), scanMat];
+                    mkdir(folderName);%make a new folder for every scan
+                    cd(folderName);%go to the folder to save for all the data
+                    imageName = ['pattern', num2str(ImageInd), '.jpeg'];
+                    imwrite(RefImage2(:, :)', imageName);
+                    cd('..');
+
+
                     clear global rs cs Gs
 %                     [F1,fitMetrics1,XX,sigma] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
                     %disp('ATTEMPT THE SWITCH')
@@ -245,11 +269,13 @@ switch Settings.HROIMMethod
                 if ii == 1
                     display(['Didn''t make it in to the iteration loop for point ', num2str(ImageInd)]) %changed from "for point ' ImageInd" so that the index is converted to a string so it can be displayed
                   %  disp('this is where it breaks') %for debugging 
-%                   fid = fopen('badPoints.txt', 'a');  
-%                   fprintf(fid, '%s', [num2str(ImageInd), '\n']);
-%                   fclose(fid);
+                  fid = fopen('badPoints.txt', 'a');  
+                  formatSpec = '%i\n';
+                  fprintf(fid, formatSpec, ImageInd);
+                  %fprintf(fid, '%s', [num2str(ImageInd), '\n']);
+                  fclose(fid);
 
-                  disp(['fitMetrics1.SSE = ', num2str(fitMetrics1.SSE)])
+%                   disp(['fitMetrics1.SSE = ', num2str(fitMetrics1.SSE)])
 
                 end
                 g = euler2gmat(Settings.Angles(ImageInd,1),Settings.Angles(ImageInd,2),Settings.Angles(ImageInd,3)); 

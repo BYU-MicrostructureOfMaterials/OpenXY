@@ -19,6 +19,19 @@ catch
 end
 cla
 imagesc(RefImage);
+% 
+% RefImage2 = single(RefImage)/255;
+% scanNum = 3; %change this too
+% scanType = '.jpeg'; %can change this to .tiff or whatever
+% folderName = ['Scan_', num2str(scanNum), scanType];
+% mkdir(folderName);%make a new folder for every scan
+% cd(folderName);%go to the folder to save for all the data
+% imageName = ['pattern', num2str(Ind), '.jpeg'];
+% imwrite(RefImage2(:, :)', imageName);
+% cd('..');
+
+
+
 axis image
 colormap gray
 hold on
