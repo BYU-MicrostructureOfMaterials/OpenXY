@@ -128,8 +128,17 @@ if ~strcmp(Settings.HROIMMethod,'Simulated')&& ~isfield(Settings,'RefInd')
             Settings.RefInd = GetRefImageInds(...
                 {Settings.Angles;Settings.IQ;Settings.CI;Settings.Fit}, Settings.grainID);
         end
-    end  
+    end
+    for i = 1:length(Settings.RefInd) %added this for zeros in the grain reference thing
+        if Settings.RefInd(i) <= 0
+            if i == 1
+                Settings.RefInd(i) = Settings.RefInd(i + 5); %use five just in case the next one is still invalid
+            end
+            Settings.RefInd(i) = Settings.RefInd(i - 1);
+        end
+    end
 end
+
 
 %% Check to see if camera orientation data exists
 

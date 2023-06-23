@@ -221,7 +221,7 @@ if strcmp(Settings.ScanType,'Hexagonal')
         if bitget(abs(rr),1)~=0 %odd
             
             for cc = 1:NColsOdd
-                NewstrainEff(rr,cc) = strainRff(count);
+                NewstrainEff(rr,cc) = strainEff(count);
                 if i==1 && j==1
                     gmap(rr,cc)=Settings.grainID(count);
                 end

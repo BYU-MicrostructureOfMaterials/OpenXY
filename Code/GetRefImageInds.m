@@ -47,6 +47,10 @@ lastGrain = max(GrainID);
 
 SortedGrainInds{lastGrain} = [];
 
+if firstGrain <= 0
+    firstGrain = 1;
+end
+
 %sort by grain ID
 for GrnInd = firstGrain:lastGrain
     
