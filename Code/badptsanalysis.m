@@ -1,4 +1,4 @@
-scanNum = 3;
+scanNum = 68;
 fid = fopen(['badPointsScan' num2str(scanNum) '.txt'], 'r');
 
 

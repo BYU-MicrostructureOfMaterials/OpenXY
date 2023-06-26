@@ -182,15 +182,15 @@ switch Settings.HROIMMethod
                     gr=rr'*gr; % correct the rotation component of the deformation so that it doesn't affect strain calc
                     RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,sampletilt,curMaterial,Av,ImageInd);
                     
-                    RefImage2 = single(RefImage)/255;
-                    scanNum = 2; %change this too
-                    scanMat = 'silicon'; %can change this
-                    folderName = ['Scan_', num2str(scanNum), scanMat];
-                    mkdir(folderName);%make a new folder for every scan
-                    cd(folderName);%go to the folder to save for all the data
-                    imageName = ['pattern', num2str(ImageInd), '.jpeg'];
-                    imwrite(RefImage2(:, :)', imageName);
-                    cd('..');
+%                     RefImage2 = single(RefImage)/255;
+%                     scanNum = 3; %change this too
+%                     scanMat = 'silicon'; %can change this
+%                     folderName = ['Scan_', num2str(scanNum), scanMat];
+%                     mkdir(folderName);%make a new folder for every scan
+%                     cd(folderName);%go to the folder to save for all the data
+%                     imageName = ['pattern_', num2str(ImageInd), '.jpeg'];
+%                     imwrite(RefImage2(:, :)', imageName);
+%                     cd('..');
 
 
                     clear global rs cs Gs

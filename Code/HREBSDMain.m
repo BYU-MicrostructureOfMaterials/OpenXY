@@ -95,9 +95,9 @@ else
     end
     
     disp('Running strain cross-correlation...')
-    for ImageInd = indVect;
-%         testMatrix = (400:500); 
-%     for ImageInd = testMatrix
+%     for ImageInd = indVect;
+        testMatrix = (164011:164040); 
+    for ImageInd = testMatrix
        % disp(indVect)
 
         %[F(:,:,ImageInd), g(:,:,ImageInd), U(:,:,ImageInd), fitMetrics(ImageInd), XX(:,:,ImageInd), sigma(:,:,ImageInd)] = ...

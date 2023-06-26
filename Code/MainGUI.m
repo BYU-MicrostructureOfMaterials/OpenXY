@@ -574,7 +574,7 @@ catch ME
     handles.ScanFileLoaded = false;
     Reset_RunButton(handles);
     enableRunButton(handles);
-    save('temp/ErrorSettings.mat'); %this was causing issues and errors when trying to run Emsoft so I took it
+    %save('temp/ErrorSettings.mat'); %this was causing issues and errors when trying to run Emsoft so I took it
     %out -- Bethany Syphus (It wasn't able to find the folder?)
     msg = 'OpenXY encountered an error. Re-select the scan file to reset.';
     cause = MException('MATLAB:OpenXY',msg);

@@ -82,6 +82,7 @@ classdef ImagepatternProvider < patterns.PatternProvider
     methods (Access = protected)
         function pattern = getPatternData(obj, index)
             try
+%                 out = obj.imageNames(index);
                 rawIm = imread(obj.imageNames{index});
             catch except
                 if strcmp(except.identifier,...

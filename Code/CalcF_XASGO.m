@@ -12,6 +12,7 @@
 
 function F = CalcF_XASGO(RefImage,ScanImage, RefInd, Ind, Settings)
 %disp('MADE IT INTO XASGO!!!!!!')
+disp(Ind)
 
 RefPat.Image = RefImage;
 if RefInd==0

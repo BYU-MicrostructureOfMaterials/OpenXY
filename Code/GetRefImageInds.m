@@ -45,6 +45,11 @@ RefInd = zeros(size(IQ,1),1);
 firstGrain = min(GrainID);
 lastGrain = max(GrainID);
 
+if firstGrain <= 0
+    firstGrain = 1;
+end
+
+
 SortedGrainInds{lastGrain} = [];
 
 %sort by grain ID

@@ -18,7 +18,7 @@ firstGrain = min(grainID);
 
 %added this because it some of the grain values are zeros and zeros can't
 %be indices
-if firstGrain == 0
+if firstGrain <= 0
     firstGrain = 1;
 end
 

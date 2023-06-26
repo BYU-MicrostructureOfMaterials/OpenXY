@@ -54,6 +54,8 @@ Settings.doEnforcedAntisymmetry = false;
 Settings.KernelAvgMisoPath = '';
 %Calculation Options
 Settings.EnableProfiler = 0;
+Settings.convMethod = 'Original';
+Settings.calcMethod = 'CalcF';
 
 %% PC Calibration
 Settings.PlaneFit = 'Naive';

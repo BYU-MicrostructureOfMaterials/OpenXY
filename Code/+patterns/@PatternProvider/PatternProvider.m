@@ -54,6 +54,8 @@ classdef (Abstract) PatternProvider
                     pattern = obj_two.filter.filterImage(pattern);
                 end
             else
+%                 out = obj.getPatternData(ind);
+%                 ind
                 pattern=single(obj.getPatternData(ind));
                 if obj.doCropSquare
                     pattern = obj.cropIm(pattern);

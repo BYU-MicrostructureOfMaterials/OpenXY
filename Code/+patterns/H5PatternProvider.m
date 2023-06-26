@@ -70,10 +70,16 @@ classdef H5PatternProvider < patterns.PatternProvider
     
     methods (Access = protected)
         function pattern = getPatternData(obj, ind)
+%             ind
             start = ones(size(obj.patternSize));
             start(obj.patternSize == 1) = ind + obj.hexOffset(ind);
             count = obj.patternSize;
+            a = size(obj.hexOffset);
+            if start(end) > a(end)
+                start(end) = a(end);
+            end
             pattern = h5read(obj.fileName, obj.patternPath, start, count)';
+%             pattern = h5read(obj.fileName, obj.patternPath);
         end
     end
     
