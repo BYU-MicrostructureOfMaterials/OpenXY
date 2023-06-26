@@ -73,6 +73,10 @@ classdef H5PatternProvider < patterns.PatternProvider
             start = ones(size(obj.patternSize));
             start(obj.patternSize == 1) = ind + obj.hexOffset(ind);
             count = obj.patternSize;
+            a = size(obj.hexOffset);
+            if start(end) > a (end)
+                start(end) = a(end);
+            end
             pattern = h5read(obj.fileName, obj.patternPath, start, count)';
         end
     end

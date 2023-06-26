@@ -83,7 +83,11 @@ for i = 1:NumPhase
     Mat(i).beta = double(h5read(filepath, [Phases{i} '/' 'Lattice Constant beta']));
     Mat(i).gamma = double(h5read(filepath, [Phases{i} '/' 'Lattice Constant gamma']));
     Mat(i).MaterialName = deblank(char(h5read(filepath, [Phases{i} '/' 'MaterialName'])));
-    Mat(i).Symmetry = double(h5read(filepath, [Phases{i} '/' 'Symmetry']));
+    try
+        Mat(i).Symmetry = double(h5read(filepath, [Phases{i} '/' 'Symmetry']));
+    catch
+        Mat(i).Symmetry = double(h5read(filepath, [Phases{i} '/' 'PGsymID']));
+    end
 end
 
 % Get Grain Vals
