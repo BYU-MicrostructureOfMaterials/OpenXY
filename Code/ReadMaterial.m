@@ -13,6 +13,14 @@ end
 if strcmpi(Material,'aluminium')
     Material = 'aluminum';
 end
+if contains(Material, 'titanium', 'IgnoreCase', IGNORE)
+    if contains(Material, 'alpha', 'IgnoreCase', IGNORE)
+        Material = 'titanium(alpha)';
+    end
+    if contains(Material, 'beta', 'IgnoreCase', IGNORE)
+        Material = 'titanium(beta)';
+    end
+end
 
 filename = fullfile(pwd,'Materials',[Material '.txt']);
 
