@@ -13,6 +13,7 @@ end
 if strcmpi(Material,'aluminium')
     Material = 'aluminum';
 end
+IGNORE = true;
 if contains(Material, 'titanium', 'IgnoreCase', IGNORE)
     if contains(Material, 'alpha', 'IgnoreCase', IGNORE)
         Material = 'titanium(alpha)';

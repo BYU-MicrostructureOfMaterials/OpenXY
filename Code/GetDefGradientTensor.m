@@ -182,10 +182,12 @@ switch Settings.HROIMMethod
                     gr=rr'*gr; % correct the rotation component of the deformation so that it doesn't affect strain calc
                     RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,sampletilt,curMaterial,Av,ImageInd);
                     
+
+%%%%%%%%%%%%%%%%%%%%UNCOMMENT TO SAVE DYNAMIC IMAGES%%%%%%%%%%%%%%%%%%%%%%%%%%%                    
 %                     RefImage2 = single(RefImage)/255;
-%                     scanNum = 3; %change this too
+%                     scanNum = 5; %change this too
 %                     scanMat = 'silicon'; %can change this
-%                     folderName = ['Scan_', num2str(scanNum), scanMat];
+%                     folderName = ['Scan_', num2str(scanNum), '_', scanMat];
 %                     mkdir(folderName);%make a new folder for every scan
 %                     cd(folderName);%go to the folder to save for all the data
 %                     imageName = ['pattern_', num2str(ImageInd), '.jpeg'];
@@ -214,12 +216,50 @@ switch Settings.HROIMMethod
         RefImage = genEBSDPatternHybrid(gr,paramspat,eye(3),Material.lattice,Material.a1,Material.b1,Material.c1,Material.axs);
         %          RefImage = genEBSDPatternHybridMexHat(gr,paramspat,eye(3),lattice,al,bl,cl,axs);
         
+%%%%%%%%%%%%%%%%%%%%UNCOMMENT TO SAVE UNFILTERED KINEMATIC IMAGES%%%%%%%%%%%%%%%%%%%%%%%%%%%                    
+%                     RefImage2 = single(RefImage)/255;
+% %                     scanNum = 6; %change this too
+% %                     scanMat = 'silicon'; %can change this
+% %                     folderName = ['Scan_', num2str(scanNum), '_', scanMat];
+%                     orientation = 'ori1'; %change this every 6 times?
+%                     file = 'A6'; %change this every time. Should only have 2 images
+%                     folderName = ['e:/Namit/BethanySims/' orientation '/' file];
+%                     mkdir(folderName);%make a new folder for every scan
+%                     cd(folderName);%go to the folder to save for all the data
+%                     imageName = ['automation_', num2str(ImageInd), '.jpeg'];
+%                     imwrite(RefImage2(:, :)', imageName);
+%                     cd('c:/Users/Bethany/Documents/GitHub/OpenXY/Code');
+
+
+
+
         %use following line only for optical distortion correction
         %    RefImage = RefImage(crpl:crpu,crpl:crpu);
         %         RefImage = genEBSDPattern(gr,paramspat,eye(3),lattice,al,bl,cl,axs);
         
         RefImage = custimfilt(RefImage,Settings.ImageFilter(1), ...
             Settings.PixelSize,Settings.ImageFilter(3),Settings.ImageFilter(4));
+
+
+        %%%%%%%%%%%%%%%%%%%%if you want to control the F uncomment this one
+%         strainedImagesKinematic(gr, paramspat, Material, Settings, ImageInd); 
+
+
+        %%%%%%%%%%%%%%%%%%%%UNCOMMENT TO SAVE KINEMATIC IMAGES%%%%%%%%%%%%%%%%%%%%%%%%%%%                    
+%                     RefImage2 = double(RefImage)/255;
+% %                     scanNum = 6; %change this too
+% %                     scanMat = 'silicon'; %can change this
+% %                     folderName = ['Scan_', num2str(scanNum), '_', scanMat];
+%                     orientation = 'ori3'; %change this every 6 times?
+%                     file = 'A6_unstrained'; %change this every time. Should only have 2 images
+%                     folderName = ['e:/Namit/BethanySims/' orientation '/' file];
+%                     mkdir(folderName);%make a new folder for every scan
+%                     cd(folderName);%go to the folder to save for all the data
+%                     imageName = ['automation_', num2str(ImageInd), '.jpeg'];
+%                     imwrite(RefImage2(:, :), imageName);
+%                     cd('c:/Users/Bethany/Documents/GitHub/OpenXY/Code');
+
+        
 
         %Initialize
         clear global rs cs Gs
@@ -336,7 +376,7 @@ switch Settings.HROIMMethod
 %         disp(RefImagePath);
         gr = euler2gmat(Settings.Angles(RefImageInd,:));
         
-        [F1,fitMetrics1,XX,sigma] = CalcFShift(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,RefImageInd);
+        [F1,fitMetrics1,XX,sigma] = SwitchF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,RefImageInd);
 
     case 'Hybrid'
         %Use simulated pattern method on one reference image then use
@@ -344,7 +384,7 @@ switch Settings.HROIMMethod
     
     case 'Remapping'
         RefImageInd = Settings.RefInd(ImageInd);
-        RefImage = Settings.patterns.getPattern(RefImageInd);
+        RefImage = Settings.patterns.getPattern(Settings, RefImageInd);
         %{
         % Uncomment to compare unrotated refference to rotated one
         clear global rs cs Gs
@@ -361,7 +401,7 @@ switch Settings.HROIMMethod
              Material.lattice, sampletilt, elevang);
         
         clear global rs cs Gs
-        [F1,fitMetrics1,XX,sigma] = CalcFShift(RefImage, ScanImage, gr, eye(3),...
+        [F1,fitMetrics1,XX,sigma] = SwitchF(RefImage, ScanImage, gr, eye(3),...
             ImageInd, Settings, curMaterial, RefImageInd);
         clear global rs cs Gs
         

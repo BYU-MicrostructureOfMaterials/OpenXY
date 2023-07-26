@@ -141,6 +141,10 @@ if ~strcmp(Settings.ScanType,'L')
     elseif strcmp(Settings.ScanType,'Square')
         FullLength = prod(Oldsize);
     end
+
+    
+    %FullLength = 10;
+    %uncomment this^^ line if you want it to run less images
     
     %Get Material Info
     for p=1:FullLength

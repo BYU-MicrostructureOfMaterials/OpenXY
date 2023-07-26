@@ -65,7 +65,8 @@ if Settings.DoParallel > 1
     
     disp('Running strain cross-correlation...')
     parfor(ImageInd = indVect,NumberOfCores)
-%         disp(ImageInd)
+        disp(ImageInd)
+
         %Returns F as either a cell array of deformation gradient tensors
         %or a structure F.a F.b F.c of deformation gradient tensors for
         %each point in the L grid
@@ -73,8 +74,14 @@ if Settings.DoParallel > 1
 %         [F(:,:,ImageInd), g(:,:,ImageInd), U(:,:,ImageInd), fitMetrics(ImageInd), XX(:,:,ImageInd), sigma(:,:,ImageInd)] = ...
 %             GetDefGradientTensor(Inds(ImageInd),Settings,Settings.Phase{ImageInd});
 
-        [F(:,:,ImageInd), g(:,:,ImageInd), U(:,:,ImageInd), fitMetrics(ImageInd), XX(:,:,ImageInd), sigma(:,:,ImageInd)] = ...
+        [F(:,:,ImageInd), g(:,:,ImageInd), U(:,:,ImageInd), fitMetrics(ImageInd), XX(:,:,ImageInd), sigma(:,:,ImageInd), PCnew] = ...
             SwitchGetDefGrad(Inds(ImageInd),Settings,Settings.Phase{ImageInd});
+
+        newPCx(ImageInd) = PCnew(1);
+        newPCy(ImageInd) = PCnew(2);
+        newPCz(ImageInd) = PCnew(3);
+
+
 
         %{
         commented out this (outputs strain matrix - I think - DTF 5/15/14)
@@ -87,6 +94,12 @@ if Settings.DoParallel > 1
         
         if Settings.DisplayGUI; ppm.increment(); end;
     end
+
+    Settings.newPCx = newPCx;
+    Settings.newPCy = newPCy;
+    Settings.newPCz = newPCz;
+
+
     if Settings.DisplayGUI; ppm.delete(); end;
     
 else
@@ -95,10 +108,10 @@ else
     end
     
     disp('Running strain cross-correlation...')
-%     for ImageInd = indVect;
-        testMatrix = (164011:164040); 
-    for ImageInd = testMatrix
-       % disp(indVect)
+    for ImageInd = indVect;
+%         testMatrix = (1:10); 
+%     for ImageInd = testMatrix
+       disp(ImageInd)
 
         %[F(:,:,ImageInd), g(:,:,ImageInd), U(:,:,ImageInd), fitMetrics(ImageInd), XX(:,:,ImageInd), sigma(:,:,ImageInd)] = ...
 %GetDefGradientTensor(Inds(ImageInd),Settings,Settings.Phase{ImageInd});  
@@ -107,11 +120,16 @@ else
 % [F(:,:,ImageInd), g(:,:,ImageInd), U(:,:,ImageInd), ~, XX(:,:,ImageInd), sigma(:,:,ImageInd)] = ...
 % GetDefGradientTensor(Inds(ImageInd),Settings,Settings.Phase{ImageInd});
 
+        if ImageInd == 997 || ImageInd == 998
+            break;
+        end
 
-[F(:,:,ImageInd), g(:,:,ImageInd), U(:,:,ImageInd), fitMetrics(ImageInd), XX(:,:,ImageInd), sigma(:,:,ImageInd)] = ...
+[F(:,:,ImageInd), g(:,:,ImageInd), U(:,:,ImageInd), fitMetrics(ImageInd), XX(:,:,ImageInd), sigma(:,:,ImageInd), PCnew] = ...
 SwitchGetDefGrad(Inds(ImageInd),Settings,Settings.Phase{ImageInd});
 
-
+Settings.newPCx(ImageInd) = PCnew(1);
+Settings.newPCy(ImageInd) = PCnew(2);
+Settings.newPCz(ImageInd) = PCnew(3);
 
         % commented out this (outputs strain matrix - I think - DTF 5/15/14)
 %         if strcmp(Settings.ScanType,'L')

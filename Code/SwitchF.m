@@ -7,7 +7,7 @@ function [F, fitMetrics, XX, sigma] = SwitchF(RefImage, ScanImage, g, Fo, Ind, S
 %F_file = 'CalcF';
 
 % disp(nargin)
-%disp(Settings.calcMethod)
+% disp(Settings.calcMethod)
 if nargin > 8
     check = true; % yes PC
 else
@@ -16,19 +16,29 @@ end
 
 switch Settings.calcMethod 
     case 'CalcF'
-        if check
-            %disp('PC')
-            [F, fitMetrics, XX, sigma] = CalcF(RefImage, ScanImage, g, Fo, Ind, Settings, curMaterial, RefInd, PC);
+        isReal = strcmp(Settings.HROIMMethod, 'Real');
+        isRemap = strcmp(Settings.HROIMMethod, 'Remapping');
+        if isReal || isRemap
+            [F,fitMetrics,XX,sigma] = CalcFShift(RefImage,ScanImage,g,Fo,Ind,Settings,curMaterial,RefInd);
         else
-            %disp('NO PC')
-            [F, fitMetrics, XX, sigma] = CalcF(RefImage, ScanImage, g, Fo, Ind, Settings, curMaterial, RefInd);
+            if check
+                %disp('PC')
+                [F, fitMetrics, XX, sigma] = CalcF(RefImage, ScanImage, g, Fo, Ind, Settings, curMaterial, RefInd, PC);
+            else
+                %disp('NO PC')
+                [F, fitMetrics, XX, sigma] = CalcF(RefImage, ScanImage, g, Fo, Ind, Settings, curMaterial, RefInd);
+            end
         end
-        
 %         disp(fitMetrics)
 
 
     case 'XASGO'
-        F = CalcF_XASGO(RefImage, ScanImage, RefInd, Ind, Settings);
+        isFdelta = strcmp(Settings.convMethod, 'Fdelta');
+        if isFdelta
+            F = CalcF_XASGO(RefImage, ScanImage, 0, Ind, Settings);
+        else
+            F = CalcF_XASGO(RefImage, ScanImage, RefInd, Ind, Settings);
+        end
         fitMetrics.SSE = 999;
         fitMetrics.rsqX = 0;
         fitMetrics.rsqY = 0;

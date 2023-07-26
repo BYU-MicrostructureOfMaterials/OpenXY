@@ -27,7 +27,7 @@ imagesc(RefImage);
 % mkdir(folderName);%make a new folder for every scan
 % cd(folderName);%go to the folder to save for all the data
 % imageName = ['pattern', num2str(Ind), '.jpeg'];
-% imwrite(RefImage2(:, :)', imageName);
+% imwrite(RefImage2(:, :), imageName);
 % cd('..');
 
 

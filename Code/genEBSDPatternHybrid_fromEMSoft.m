@@ -310,6 +310,8 @@ cd(EMdataPath);
 %setenv('DYLD_LIBRARY_PATH',['/opt/local/lib/libgcc/']);
 %[status,cmdout] = system(['"' fullfile(EMsoftPath,'EMEBSD') '" ' inputfile]);  %this is the real line
 %EMsoftPathNew = strcat(EMsoftPath, 'bin/'); %some hard coding to get it to look where I need it to for EMsoft -- Bethany Syphus
+% a = ['"' fullfile(EMsoftPath,'EMEBSD') '" ' inputfile]
+
 [status, cmdout] = system(['"' fullfile(EMsoftPath,'EMEBSD') '" ' inputfile]);
 cd(OpenXYPath);
 

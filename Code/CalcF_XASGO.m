@@ -179,6 +179,11 @@ function p_old = RunIcgnPatternDistortion(G, F_coeff, df_ddp, pad_size, f, f_m, 
                 break
             end
             g_m = mean(g);
+            %I added this but it did NOTHING grrrrrrrrrrrrrrrrrrrrrr
+            if g_m == -1
+                break;
+            end
+            %%%%%%%%%%%%%%%%%%%%%%%%%
             grad_new = ComputeGradient_Fast(f, f_m, g, g_m, df_ddp);
             if ShowPlot
                 gradmap = ComputeGradientMap(f, f_m, g, g_m, df_ddp);
@@ -199,7 +204,7 @@ function p_old = RunIcgnPatternDistortion(G, F_coeff, df_ddp, pad_size, f, f_m, 
 %       end
       pprog(:,num_iterations+1) = p_old - [1 0 0 0 1 0 0 0 1];
       if failtoconverge || ~converged
-          [failtoconverge converged]
+          [failtoconverge converged];
           p_old = [2 1 1 1 2 1 1 1 2];
       end
   else

@@ -1,7 +1,7 @@
 function fitMetrics = fitMetrics(cx, cy, Cshift, Rshift, keepInds)
 
 if nargin == 0 || (nargin == 1 && strcmp(cx, 'bad'))
-    %If no arguments, return defalt 'null' values
+    %If no arguments, return default 'null' values
     fitMetrics.SSE = inf;
     fitMetrics.rsqX = 0;
     fitMetrics.rsqY = 0;

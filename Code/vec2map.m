@@ -7,7 +7,7 @@ switch Type
         isInteger =~ mod(height, 1); %added for issues
 
         if ~isInteger
-            height = cast(height, 'uint64'); %added this line to hopefully truncate random decimals
+            height = cast(floor(height), 'uint64'); %added this line to hopefully truncate random decimals
             %map = permute(reshape(vec(:),width,height,sze),[2 1 3]);
             len = height * width;
             vec = vec(1:len,:);

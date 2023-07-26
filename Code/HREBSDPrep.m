@@ -132,15 +132,16 @@ if ~strcmp(Settings.HROIMMethod,'Simulated')&& ~isfield(Settings,'RefInd')
                 {Settings.Angles;Settings.IQ;Settings.CI;Settings.Fit}, Settings.grainID);
         end
     end  
-    for i = 1:length(Settings.RefInd) %added this for zeros in the grain reference things
-        if Settings.RefInd(i) <= 0
-            if i == 1
-                Settings.RefInd(i) = Settings.RefInd(i + 5); %five because then maybe it will for sure work but still be close
-            else
-            Settings.RefInd(i) = Settings.RefInd(i - 1);
-            end
-        end
+    
+end
 
+for i = 1:length(Settings.RefInd) %added this for zeros in the grain reference things
+    if Settings.RefInd(i) <= 0
+        if i == 1
+            Settings.RefInd(i) = Settings.RefInd(i + 5); %five because then maybe it will for sure work but still be close
+        else
+            Settings.RefInd(i) = Settings.RefInd(i - 1);
+        end
     end
 end
 

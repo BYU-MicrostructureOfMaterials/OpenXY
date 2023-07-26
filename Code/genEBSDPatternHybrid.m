@@ -22,6 +22,9 @@ function simpat = genEBSDPatternHybrid(g,params,F,lattice,alattice,blattice,clat
 %           
 %           
 %   
+
+
+
 xstar = params{1};
 ystar = params{2};
 zstar = params{3};
