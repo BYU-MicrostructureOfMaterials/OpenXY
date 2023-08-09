@@ -270,10 +270,21 @@ wd = pwd;
 if ~strcmp(handles.FileDir,pwd)
     cd(handles.FileDir);
 end
+
+if ispc
 [name, path, filterind] = uigetfile({
     '*.ang;*.ctf', 'Scan Files (*.ang,*.ctf)'
     '*.h5', 'OIM HDF5 Files (*.h5)'
     },'Select a Scan File');
+else
+
+[name] = uigetfile_with_preview({ ...
+    '*.ang;*.ctf', 'Scan Files Check'; ...
+    '*.h5', 'OIM HDF5 Files (*.h5)';}, 'Select a Scan File');
+path = fullfile(name);
+filterind = 1; %CHANGE THIS!!!
+end
+
 cd(wd);
 SetScanFields(handles,name,path,filterind);
 

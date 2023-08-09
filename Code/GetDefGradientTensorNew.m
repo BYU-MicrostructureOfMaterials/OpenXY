@@ -32,6 +32,7 @@ DoLGrid = strcmp(Settings.ScanType,'L');
 % fftw('wisdom',Settings.largefftmeth);
 % disp(curMaterial)
 
+disp('Fdelta')
 
 if DoLGrid
     % This is depricated, and has been for as long as I have worked here,
@@ -204,8 +205,8 @@ switch Settings.HROIMMethod
         ys(1) = ystar;
         zs(1) = zstar;
         count = 1;
-        xstar = xstar - Delta(1)*zstar;
-        ystar = ystar + Delta(2)*zstar;
+        xstar = xstar - Delta(1)*xstar;
+        ystar = ystar + Delta(2)*ystar;
         zstar = zstar + Delta(3)*zstar;
         
         while ~goodtogo

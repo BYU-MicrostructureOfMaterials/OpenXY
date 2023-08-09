@@ -50,7 +50,7 @@ applyDeformation = 'n';
 Ftensor = '1.D0, 0.D0, 0.D0, 0.D0, 1.D0, 0.D0, 0.D0, 0.D0, 1.D0,';
 scalingmode = 'not';
 gammavalue = .4;   %Make variable later
-maskpattern = 'y';
+maskpattern = 'n';
 nthreads = 1;
 
 [phi1,PHI,phi2] = gmat2euler(g); % in radians

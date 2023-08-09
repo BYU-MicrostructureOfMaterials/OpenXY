@@ -157,16 +157,18 @@ switch Settings.HROIMMethod
                 RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,sampletilt,curMaterial,Av,ImageInd);
                 
 
-                %%%%%%%%%%%%%try to save some
-                %%%%%%%%%%%%%.jpegs%%%%%%%%%%%
-%                 scanNum = 1; %change this too
-%                 scanType = '.jpeg'; %can change this to .tiff or whatever
-%                 folderName = ['Scan_', num2str(scanNum), scanType];
-%                 mkdir(folderName);%make a new folder for every scan
-%                 cd(folderName);%go to the folder to save for all the data
-%                 imageName = ['pattern', num2str(ImageInd), '.jpeg'];
-%                 imwrite(RefImage, imageName);
-%                 cd('..');
+%%%%%%%%%%%%%%%%%%%%UNCOMMENT TO SAVE UNFILTERED DYNAMIC IMAGES%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+
+                    RefImage2 = single(RefImage)/255;
+%                     scanNum = 3; %change this too
+%                     scanMat = ['silicon']; %can change this
+%                     folderName = ['Scan_', num2str(scanNum), '_', scanMat];
+                    folderName = '/Users/Bethany/Documents/GitHub/dataSets/austenite_4Scan1_dynamic';
+                    mkdir(folderName);%make a new folder for every scan
+                    cd(folderName);%go to the folder to save for all the data
+                    imageName = ['pattern_', num2str(ImageInd), '.jpeg'];
+                    imwrite(RefImage2(:, :), imageName);
+                    cd('/Users/Bethany/Documents/GitHub/OpenXY/code')
 
 
                 clear global rs cs Gs
@@ -182,17 +184,18 @@ switch Settings.HROIMMethod
                     gr=rr'*gr; % correct the rotation component of the deformation so that it doesn't affect strain calc
                     RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,sampletilt,curMaterial,Av,ImageInd);
                     
+%%%%%%%%%%%%%%%%%%%%UNCOMMENT TO SAVE FILTERED DYNAMIC IMAGES%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
-%%%%%%%%%%%%%%%%%%%%UNCOMMENT TO SAVE DYNAMIC IMAGES%%%%%%%%%%%%%%%%%%%%%%%%%%%                    
 %                     RefImage2 = single(RefImage)/255;
-%                     scanNum = 5; %change this too
-%                     scanMat = 'silicon'; %can change this
-%                     folderName = ['Scan_', num2str(scanNum), '_', scanMat];
+% %                     scanNum = 3; %change this too
+% %                     scanMat = ['silicon']; %can change this
+% %                     folderName = ['Scan_', num2str(scanNum), '_', scanMat];
+%                     folderName = '/Users/Bethany/Documents/GitHub/dataSets/silicon_SarahScan3_dynamic3';
 %                     mkdir(folderName);%make a new folder for every scan
 %                     cd(folderName);%go to the folder to save for all the data
 %                     imageName = ['pattern_', num2str(ImageInd), '.jpeg'];
-%                     imwrite(RefImage2(:, :)', imageName);
-%                     cd('..');
+%                     imwrite(RefImage2(:, :), imageName);
+%                     cd('/Users/Bethany/Documents/GitHub/OpenXY/code');
 
 
                     clear global rs cs Gs
@@ -218,16 +221,17 @@ switch Settings.HROIMMethod
         
 %%%%%%%%%%%%%%%%%%%%UNCOMMENT TO SAVE UNFILTERED KINEMATIC IMAGES%%%%%%%%%%%%%%%%%%%%%%%%%%%                    
 %                     RefImage2 = single(RefImage)/255;
-% %                     scanNum = 6; %change this too
-% %                     scanMat = 'silicon'; %can change this
+% %                     scanNum = 8; %change this too
+% %                     scanMat = 'ferriteUnfiltered'; %can change this
 % %                     folderName = ['Scan_', num2str(scanNum), '_', scanMat];
-%                     orientation = 'ori1'; %change this every 6 times?
-%                     file = 'A6'; %change this every time. Should only have 2 images
-%                     folderName = ['e:/Namit/BethanySims/' orientation '/' file];
+% %                     orientation = 'ori1'; %change this every 6 times?
+% %                     file = 'A6'; %change this every time. Should only have 2 images
+% %                     folderName = ['e:/Namit/BethanySims/' orientation '/' file];
+%                     folderName = '/Users/Bethany/Documents/GitHub/dataSets/silicon_smallOxford_kinematicUnfiltered';
 %                     mkdir(folderName);%make a new folder for every scan
 %                     cd(folderName);%go to the folder to save for all the data
-%                     imageName = ['automation_', num2str(ImageInd), '.jpeg'];
-%                     imwrite(RefImage2(:, :)', imageName);
+%                     imageName = ['pattern_', num2str(ImageInd), '.jpeg'];
+%                     imwrite(RefImage2(:, :), imageName);
 %                     cd('c:/Users/Bethany/Documents/GitHub/OpenXY/Code');
 
 
@@ -247,15 +251,16 @@ switch Settings.HROIMMethod
 
         %%%%%%%%%%%%%%%%%%%%UNCOMMENT TO SAVE KINEMATIC IMAGES%%%%%%%%%%%%%%%%%%%%%%%%%%%                    
 %                     RefImage2 = double(RefImage)/255;
-% %                     scanNum = 6; %change this too
-% %                     scanMat = 'silicon'; %can change this
+% %                     scanNum = 8; %change this too
+% %                     scanMat = 'ferriteFiltered'; %can change this
 % %                     folderName = ['Scan_', num2str(scanNum), '_', scanMat];
-%                     orientation = 'ori3'; %change this every 6 times?
-%                     file = 'A6_unstrained'; %change this every time. Should only have 2 images
-%                     folderName = ['e:/Namit/BethanySims/' orientation '/' file];
+% %                     orientation = 'ori3'; %change this every 6 times?
+% %                     file = 'A6_unstrained'; %change this every time. Should only have 2 images
+% %                     folderName = ['e:/Namit/BethanySims/' orientation '/' file];
+%                     folderName = '/Users/Bethany/Documents/GitHub/dataSets/silicon_smallOxford_kinematicFiltered';
 %                     mkdir(folderName);%make a new folder for every scan
 %                     cd(folderName);%go to the folder to save for all the data
-%                     imageName = ['automation_', num2str(ImageInd), '.jpeg'];
+%                     imageName = ['pattern_', num2str(ImageInd), '.jpeg'];
 %                     imwrite(RefImage2(:, :), imageName);
 %                     cd('c:/Users/Bethany/Documents/GitHub/OpenXY/Code');
 

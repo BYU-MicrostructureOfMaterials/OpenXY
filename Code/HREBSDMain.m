@@ -108,9 +108,9 @@ else
     end
     
     disp('Running strain cross-correlation...')
-    for ImageInd = indVect;
-%         testMatrix = (1:10); 
-%     for ImageInd = testMatrix
+%     for ImageInd = indVect;
+        testMatrix = (1:10); 
+    for ImageInd = testMatrix
        disp(ImageInd)
 
         %[F(:,:,ImageInd), g(:,:,ImageInd), U(:,:,ImageInd), fitMetrics(ImageInd), XX(:,:,ImageInd), sigma(:,:,ImageInd)] = ...
@@ -120,9 +120,9 @@ else
 % [F(:,:,ImageInd), g(:,:,ImageInd), U(:,:,ImageInd), ~, XX(:,:,ImageInd), sigma(:,:,ImageInd)] = ...
 % GetDefGradientTensor(Inds(ImageInd),Settings,Settings.Phase{ImageInd});
 
-        if ImageInd == 997 || ImageInd == 998
-            break;
-        end
+%         if ImageInd == 997 || ImageInd == 998 || ImageInd == 581
+%             break;
+%         end
 
 [F(:,:,ImageInd), g(:,:,ImageInd), U(:,:,ImageInd), fitMetrics(ImageInd), XX(:,:,ImageInd), sigma(:,:,ImageInd), PCnew] = ...
 SwitchGetDefGrad(Inds(ImageInd),Settings,Settings.Phase{ImageInd});
