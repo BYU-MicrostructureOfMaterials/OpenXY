@@ -159,17 +159,19 @@ switch Settings.HROIMMethod
 
 %%%%%%%%%%%%%%%%%%%%UNCOMMENT TO SAVE UNFILTERED DYNAMIC IMAGES%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
+if Settings.dynamic
+
                     RefImage2 = single(RefImage)/255;
 %                     scanNum = 3; %change this too
 %                     scanMat = ['silicon']; %can change this
 %                     folderName = ['Scan_', num2str(scanNum), '_', scanMat];
-                    folderName = '/Users/Bethany/Documents/GitHub/dataSets/austenite_4Scan1_dynamic';
+                    folderName = 'E:/dataSets/sims/test';
                     mkdir(folderName);%make a new folder for every scan
                     cd(folderName);%go to the folder to save for all the data
                     imageName = ['pattern_', num2str(ImageInd), '.jpeg'];
                     imwrite(RefImage2(:, :), imageName);
-                    cd('/Users/Bethany/Documents/GitHub/OpenXY/code')
-
+                    cd('C:/Users/Bethany/Documents/GitHub/OpenXY/code')
+end
 
                 clear global rs cs Gs
 
@@ -184,19 +186,20 @@ switch Settings.HROIMMethod
                     gr=rr'*gr; % correct the rotation component of the deformation so that it doesn't affect strain calc
                     RefImage = genEBSDPatternHybrid_fromEMSoft(gr,xstar,ystar,zstar,pixsize,mperpix,elevang,sampletilt,curMaterial,Av,ImageInd);
                     
-%%%%%%%%%%%%%%%%%%%%UNCOMMENT TO SAVE FILTERED DYNAMIC IMAGES%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+%%%%%%%%%%%%%%%%%%%%UNCOMMENT TO SAVE Rotated DYNAMIC IMAGES%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
-%                     RefImage2 = single(RefImage)/255;
-% %                     scanNum = 3; %change this too
-% %                     scanMat = ['silicon']; %can change this
-% %                     folderName = ['Scan_', num2str(scanNum), '_', scanMat];
-%                     folderName = '/Users/Bethany/Documents/GitHub/dataSets/silicon_SarahScan3_dynamic3';
-%                     mkdir(folderName);%make a new folder for every scan
-%                     cd(folderName);%go to the folder to save for all the data
-%                     imageName = ['pattern_', num2str(ImageInd), '.jpeg'];
-%                     imwrite(RefImage2(:, :), imageName);
-%                     cd('/Users/Bethany/Documents/GitHub/OpenXY/code');
-
+if Settings.dynRotated
+                    RefImage2 = single(RefImage)/255;
+%                     scanNum = 3; %change this too
+%                     scanMat = ['silicon']; %can change this
+%                     folderName = ['Scan_', num2str(scanNum), '_', scanMat];
+                    folderName = '/Users/Bethany/Documents/GitHub/dataSets/silicon_SarahScan3_dynamic3';
+                    mkdir(folderName);%make a new folder for every scan
+                    cd(folderName);%go to the folder to save for all the data
+                    imageName = ['pattern_', num2str(ImageInd), '.jpeg'];
+                    imwrite(RefImage2(:, :), imageName);
+                    cd('/Users/Bethany/Documents/GitHub/OpenXY/code');
+end
 
                     clear global rs cs Gs
 %                     [F1,fitMetrics1,XX,sigma] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
@@ -219,20 +222,22 @@ switch Settings.HROIMMethod
         RefImage = genEBSDPatternHybrid(gr,paramspat,eye(3),Material.lattice,Material.a1,Material.b1,Material.c1,Material.axs);
         %          RefImage = genEBSDPatternHybridMexHat(gr,paramspat,eye(3),lattice,al,bl,cl,axs);
         
-%%%%%%%%%%%%%%%%%%%%UNCOMMENT TO SAVE UNFILTERED KINEMATIC IMAGES%%%%%%%%%%%%%%%%%%%%%%%%%%%                    
-%                     RefImage2 = single(RefImage)/255;
-% %                     scanNum = 8; %change this too
-% %                     scanMat = 'ferriteUnfiltered'; %can change this
-% %                     folderName = ['Scan_', num2str(scanNum), '_', scanMat];
-% %                     orientation = 'ori1'; %change this every 6 times?
-% %                     file = 'A6'; %change this every time. Should only have 2 images
-% %                     folderName = ['e:/Namit/BethanySims/' orientation '/' file];
-%                     folderName = '/Users/Bethany/Documents/GitHub/dataSets/silicon_smallOxford_kinematicUnfiltered';
-%                     mkdir(folderName);%make a new folder for every scan
-%                     cd(folderName);%go to the folder to save for all the data
-%                     imageName = ['pattern_', num2str(ImageInd), '.jpeg'];
-%                     imwrite(RefImage2(:, :), imageName);
-%                     cd('c:/Users/Bethany/Documents/GitHub/OpenXY/Code');
+%%%%%%%%%%%%%%%%%%%%UNCOMMENT TO SAVE UNFILTERED KINEMATIC IMAGES%%%%%%%%%%%%%%%%%%%%%%%%%%%    
+if Settings.kinUnfiltered
+                    RefImage2 = single(RefImage)/255;
+%                     scanNum = 8; %change this too
+%                     scanMat = 'ferriteUnfiltered'; %can change this
+%                     folderName = ['Scan_', num2str(scanNum), '_', scanMat];
+%                     orientation = 'ori1'; %change this every 6 times?
+%                     file = 'A6'; %change this every time. Should only have 2 images
+%                     folderName = ['e:/Namit/BethanySims/' orientation '/' file];
+                    folderName = '/Users/Bethany/Documents/GitHub/dataSets/silicon_forStuNonOriginal_kinematicUnfiltered_2';
+                    mkdir(folderName);%make a new folder for every scan
+                    cd(folderName);%go to the folder to save for all the data
+                    imageName = ['pattern_', num2str(ImageInd), '.jpeg'];
+                    imwrite(RefImage2(:, :), imageName);
+                    cd('c:/Users/Bethany/Documents/GitHub/OpenXY/Code');
+end
 
 
 
@@ -249,21 +254,22 @@ switch Settings.HROIMMethod
 %         strainedImagesKinematic(gr, paramspat, Material, Settings, ImageInd); 
 
 
-        %%%%%%%%%%%%%%%%%%%%UNCOMMENT TO SAVE KINEMATIC IMAGES%%%%%%%%%%%%%%%%%%%%%%%%%%%                    
-%                     RefImage2 = double(RefImage)/255;
-% %                     scanNum = 8; %change this too
-% %                     scanMat = 'ferriteFiltered'; %can change this
-% %                     folderName = ['Scan_', num2str(scanNum), '_', scanMat];
-% %                     orientation = 'ori3'; %change this every 6 times?
-% %                     file = 'A6_unstrained'; %change this every time. Should only have 2 images
-% %                     folderName = ['e:/Namit/BethanySims/' orientation '/' file];
-%                     folderName = '/Users/Bethany/Documents/GitHub/dataSets/silicon_smallOxford_kinematicFiltered';
-%                     mkdir(folderName);%make a new folder for every scan
-%                     cd(folderName);%go to the folder to save for all the data
-%                     imageName = ['pattern_', num2str(ImageInd), '.jpeg'];
-%                     imwrite(RefImage2(:, :), imageName);
-%                     cd('c:/Users/Bethany/Documents/GitHub/OpenXY/Code');
-
+        %%%%%%%%%%%%%%%%%%%%UNCOMMENT TO SAVE KINEMATIC IMAGES%%%%%%%%%%%%%%%%%%%%%%%%%%%    
+        if Settings.kinFiltered
+                    RefImage2 = double(RefImage)/255;
+%                     scanNum = 8; %change this too
+%                     scanMat = 'ferriteFiltered'; %can change this
+%                     folderName = ['Scan_', num2str(scanNum), '_', scanMat];
+%                     orientation = 'ori3'; %change this every 6 times?
+%                     file = 'A6_unstrained'; %change this every time. Should only have 2 images
+%                     folderName = ['e:/Namit/BethanySims/' orientation '/' file];
+                    folderName = '/Users/Bethany/Documents/GitHub/dataSets/silicon_forStuNonOriginal_kinematicFiltered_2';
+                    mkdir(folderName);%make a new folder for every scan
+                    cd(folderName);%go to the folder to save for all the data
+                    imageName = ['pattern_', num2str(ImageInd), '.jpeg'];
+                    imwrite(RefImage2(:, :), imageName);
+                    cd('c:/Users/Bethany/Documents/GitHub/OpenXY/Code');
+        end
         
 
         %Initialize

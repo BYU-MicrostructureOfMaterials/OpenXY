@@ -22,7 +22,7 @@ function varargout = AdvancedSettingsGUI(varargin)
 
 % Edit the above text to modify the response to help AdvancedSettingsGUI
 
-% Last Modified by GUIDE v2.5 03-Apr-2023 14:53:11
+% Last Modified by GUIDE v2.5 17-Aug-2023 14:23:26
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -81,6 +81,10 @@ end
 Settings.calcMethod = 'CalcF'; %default value settting for the calculation method
 Settings.convMethod = 'Original'; %default value setting for the convergence method
 Settings.singleRefInd = false; %boolean is true if using single reference pattern, false otherwise
+Settings.kinUnfiltered = 0;%set all the values for saving images as FALSE
+Settings.kinFiltered = 0;
+Settings.dynamic = 0;
+Settings.dynRotated = 0;
 % disp(['test the flag in ASGui: ', num2str(Settings.singleRefInd)])%the flag is set here correctly, but idk if it saves to settings right
 
 
@@ -1387,7 +1391,7 @@ convPref = contents{get(hObject,'Value')};
         %handles = guidata(hObject);
     end
 
-     guidata(hObject, handles);
+    guidata(hObject, handles);
 
 % --- Executes during object creation, after setting all properties.
 function calcOptions_CreateFcn(hObject, eventdata, handles)
@@ -1401,3 +1405,57 @@ function calcOptions_CreateFcn(hObject, eventdata, handles)
     set(hObject,'BackgroundColor','white');
     end
 
+
+
+% --- Executes on button press in checkbox8.
+function checkbox8_Callback(hObject, eventdata, handles)
+% hObject    handle to checkbox8 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of checkbox8
+handles.Settings.kinFiltered = get(hObject, 'Value');
+handles = updateGrainMap(handles);
+guidata(hObject, handles);
+
+% --- Executes on button press in checkbox9.
+function checkbox9_Callback(hObject, eventdata, handles)
+% hObject    handle to checkbox9 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of checkbox9
+handles.Settings.dynamic = get(hObject, 'Value');
+handles = updateGrainMap(handles);
+guidata(hObject, handles);
+
+% --- Executes on button press in checkbox10.
+function checkbox10_Callback(hObject, eventdata, handles)
+% hObject    handle to checkbox10 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of checkbox10
+
+
+% --- Executes on button press in checkbox11.
+function checkbox11_Callback(hObject, eventdata, handles)
+% hObject    handle to checkbox11 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of checkbox11
+handles.Settings.kinUnfiltered = get(hObject, 'Value');
+handles = updateGrainMap(handles);
+guidata(hObject, handles);
+
+% --- Executes on button press in checkbox12.
+function checkbox12_Callback(hObject, eventdata, handles)
+% hObject    handle to checkbox12 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of checkbox12
+handles.Settings.dynRotated = get(hObject, 'Value');
+handles = updateGrainMap(handles);
+guidata(hObject, handles);
