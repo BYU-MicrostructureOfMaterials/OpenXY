@@ -273,98 +273,116 @@ switch Settings.HROIMMethod
 
         
     case 'Simulated'
+        disp('here')
+        Material = ReadMaterial(curMaterial);
+        mperpix = Settings.mperpix;
+        C1111=Material.C11*1e9;
+        C2323=Material.C44*1e9;
+        C1122=Material.C12*1e9;
+        delta=eye(3);
+        Cc=zeros(3,3,3,3);
         
-        %         RefImage = genEBSDPatternHybrid(gr,paramspat,eye(3),lattice,al,bl,cl,axs); % testing next line instead *****
-        RefImage = genEBSDPatternHybrid(gr,paramspat,eye(3),Material.lattice,Material.a1,Material.b1,Material.c1,Material.axs);
-        %          RefImage = genEBSDPatternHybridMexHat(gr,paramspat,eye(3),lattice,al,bl,cl,axs);
-        
-        %use following line only for optical distortion correction
-        %    RefImage = RefImage(crpl:crpu,crpl:crpu);
-        %         RefImage = genEBSDPattern(gr,paramspat,eye(3),lattice,al,bl,cl,axs);
-        
-        RefImage = custimfilt(RefImage,Settings.ImageFilter(1), ...
-            Settings.PixelSize,Settings.ImageFilter(3),Settings.ImageFilter(4));
+        for i=1:3
+            for j=1:3
+                for k=1:3
+                    for ls=1:3
+                        Cc(i,j,k,ls)=C1122*delta(i,j)*delta(k,ls)+C2323*(delta(i,k)*delta(j,ls)+delta(i,ls)*delta(j,k))...
+                            +(C1111-C1122-2*C2323)*(delta(1,i)*delta(1,j)*delta(1,k)*delta(1,ls)+delta(2,i)*delta(2,j)*delta(2,k)*delta(2,ls)+delta(3,i)*delta(3,j)*delta(3,k)*delta(3,ls));
 
-        %Initialize
+                    end
+                end
+            end
+        end
+        
+%         try
+        
+        Qps = frameTransforms.phosphorToSample(Settings);
+        damper = 1;
+        goodtogo = 0;
+        
+        Settings.IterationOptions.numimax = 20;
+        Settings.IterationOptions.Hupdate = true;
+        Settings.IterationOptions.F_guess = eye(3);
+        Settings.IterationOptions.steptolerance = 10.0e-6;
+
+
+        RefImage = genEBSDPatternHybrid(gr,paramspat,eye(3),Material.lattice,Material.a1,Material.b1,Material.c1,Material.axs);
+        
         clear global rs cs Gs
         [F1,fitMetrics1,XX] = SwitchF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
         
-        %.gif recording stuff
-        if isfield(Settings,'doGif') && Settings.doGif
-            f = getframe(figure(100));
-            [im,map] = rgb2ind(f.cdata,256,'nodither');
-            im(1,1,1,Settings.IterationLimit+5) = 0;
-            frame = 2;
-        end
-%{a
-        %%%%New stuff to remove rotation error from strain measurement DTF  7/14/14
-        for iq=1:4
-            [rr,uu]=poldec(F1); % extract the rotation part of the deformation, rr
-            gr=rr'*gr; % correct the rotation component of the deformation so that it doesn't affect strain calc
-            RefImage = genEBSDPatternHybrid(gr,paramspat,eye(3),Material.lattice,Material.a1,Material.b1,Material.c1,Material.axs);
-            RefImage = custimfilt(RefImage,Settings.ImageFilter(1), ...
-                Settings.PixelSize,Settings.ImageFilter(3),Settings.ImageFilter(4));
-            
-            clear global rs cs Gs
-            [F1,fitMetrics1,XX,sigma] = SwitchF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
-            if isfield(Settings,'doGif') && Settings.doGif
-                f = getframe(figure(100));
-                im(:,:,1,frame) = rgb2ind(f.cdata,map,'nodither');
-                frame = frame + 1;
-            end
-        end
-        %%%%%
-%}a
-        %Improved convergence routine should replace this loop:
         
-        for ii = 1:Settings.IterationLimit
-            if fitMetrics1.SSE > 25 % need to make this a variable in the AdvancedSettings GUI
-                if ii == 1
-                    display(['Didn''t make it in to the iteration loop for point ', num2str(ImageInd)])
-                end
-                g = euler2gmat(Settings.Angles(ImageInd,1),Settings.Angles(ImageInd,2),Settings.Angles(ImageInd,3)); 
-                F = -eye(3);
-                %fitMetrics.SSE = computations.metrics.fitMetrics;
-                U = -eye(3);
-                fitMetrics = fitMetrics1;
-                fitMetrics.SSE = 999;
-                PCnew = [xstar;ystar;zstar];
-                return;
+        [F1,Delta] = ResolveFandDelta(F1, gr, Qps, Cc);
+        xs = zeros(Settings.IterationLimit,1);
+        ys = xs;
+        zs = xs;
+        xs(1) = xstar;
+        ys(1) = ystar;
+        zs(1) = zstar;
+        count = 1;
+        xstar = xstar - Delta(1)*xstar;
+        ystar = ystar + Delta(2)*ystar;
+        zstar = zstar + Delta(3)*zstar;
+        
+        while ~goodtogo
+            for iq=1:Settings.IterationLimit-1
+                count = count + 1
+                xs(count) = xstar;
+                ys(count) = ystar;
+                zs(count) = zstar;
+                [rr,uu]=poldec(F1); % extract the rotation part of the deformation, rr
+                gr=rr'*gr; % correct the rotation component of the deformation so that it doesn't affect strain calc
+                RefImage = genEBSDPatternHybrid(gr,paramspat,eye(3),Material.lattice,Material.a1,Material.b1,Material.c1,Material.axs);
+%                 clear global rs cs Gs
+%                 [F1,fitMetrics1,XX,sigma] = CalcF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
+                
+%                 if iq>0
+%                     Settings.IterationOptions.F_guess = (Qps')*(gr')*F1*gr*Qps;
+%                 end
+%                 Settings.ROIinfo = [.5 .5 .0 .40];
+%                 F1 = CalcF_XASGO(RefImage,ScanImage, 0, ImageInd, Settings);
+%                 sigma = eye(3);
+%                 XX = -1 * ones(Settings.NumROIs, 3);
+%                 fitMetrics1 = computations.metrics.fitMetrics;
+                
+                clear global rs cs Gs
+                [F1,fitMetrics1,XX,sigma] = SwitchF(RefImage,ScanImage,gr,eye(3),ImageInd,Settings,curMaterial,0);
+                
+                [F1,Delta] = ResolveFandDelta(F1, gr, Qps, Cc);
+                xstar = xstar - damper*Delta(1)*zstar;
+                ystar = ystar + damper*Delta(2)*zstar;
+                zstar = zstar + damper*Delta(3)*zstar;
+                F1 = eye(3) + damper*(F1-eye(3));
             end
-            [r1,u1]=poldec(F1);
-            U1=u1;
-            R1=r1;
-            FTemp=R1*U1; %**** isn't this just F1 - why did we bother doing this????
+            taillen = 4;
+            p = polyfit(1:taillen,xs(end-taillen+1:end)',1);
+            mx = p(1);
+            stdx = std(xs(end-taillen+1:end));
             
+            p = polyfit(1:taillen,ys(end-taillen+1:end)',1);
+            my = p(1);
+            stdy = std(ys(end-taillen+1:end));
             
-            NewRefImage = genEBSDPatternHybrid(gr,paramspat,FTemp,Material.lattice,Material.a1,Material.b1,Material.c1,Material.axs);% correct method ******DTF changed to test new profiles             pattern *****
-            %  NewRefImage = genEBSDPatternHybridmult(gr,paramspat,FTemp,lattice,al,bl,cl,axs);  % multiplied simulated approach
-            %   NewRefImage = genEBSDPatternHybridMexHat(gr,paramspat,eye(3),lattice,al,bl,cl,axs);
-            %             NewRefImage = genEBSDPatternProfileFnew(gr,paramspat,FTemp,lattice,al,bl,cl,axs,ScanImage);
-            %              NewRefImage = genEBSDPatternHybridOwnWave(gr,paramspat,FTemp,lattice,al,bl,cl,axs);
-            %             keyboard
-            %Comment in this line only for optical distortion test: NewRefImage = NewRefImage(crpl:crpu,crpl:crpu);
+            p = polyfit(1:taillen,zs(end-taillen+1:end)',1);
+            mz = p(1);
+            stdz = std(zs(end-taillen+1:end));
             
-            NewRefImage = custimfilt(NewRefImage, Settings.ImageFilter(1), Settings.PixelSize, ...
-                Settings.ImageFilter(3), Settings.ImageFilter(4));
-            %         keyboard
-            clear global rs cs Gs
-            [F1,fitMetrics1,XX,sigma] = SwitchF(NewRefImage,ScanImage,gr,FTemp,ImageInd,Settings,curMaterial,0);
-            if isfield(Settings,'doGif') && Settings.doGif
-                f = getframe(figure(100));
-                im(:,:,1,frame) = rgb2ind(f.cdata,map,'nodither');
-                frame = frame + 1;
-            end
+            goodtogo = 1;
+        
         end
-        if isfield(Settings,'doGif') && Settings.doGif
-            button = questdlg('Keep this as a gif?');
-            if strcmp(button,'Yes')
-                [~,gifName,~] = fileparts(ImagePath);
-                gifName = ['D:\Katherine\GIFS\' gifName '.gif'];
-                imwrite(im,map,gifName,'DelayTime',0.5,'LoopCount',inf)
-            end
-        end
-
+%         fitMetrics1.mx = mx;
+%         fitMetrics1.my = my;
+%         fitMetrics1.mz = mz;
+%         fitMetrics1.fdcount = count;
+        
+%         figure; plot(xs);
+%         figure; plot(ys);
+%         figure; plot(zs);
+        
+        [rr,uu]=poldec(F1); % extract the rotation part of the deformation, rr
+        gr=rr'*gr;
+        RefImage = genEBSDPatternHybrid(gr,paramspat,eye(3),Material.lattice,Material.a1,Material.b1,Material.c1,Material.axs);
+        RefImage = custimfilt(RefImage,9,90,0,0);
 end
 
 %Calculate Mutual Information over entire Image
