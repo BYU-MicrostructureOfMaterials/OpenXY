@@ -22,6 +22,7 @@
 
 load(fullfile(PATHNAME, FILENAME));
 
+
 IQ = reshape(Settings.IQ(Settings.Inds),Settings.data.cols,Settings.data.rows)';
 CI = reshape(Settings.CI(Settings.Inds),Settings.data.cols,Settings.data.rows)';
 gid = reshape(Settings.grainID(Settings.Inds),Settings.data.cols,Settings.data.rows)';

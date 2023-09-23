@@ -16,7 +16,7 @@ omega = 0;
 alphaBD = 0;
 energymin = 5.0;
 energymax = 20.0;
-includebackground = 'y';
+includebackground = 'n';
 anglefile = ['OpenXY_euler' num2str(ImageInd) '.txt'];  %fullfile(OpenXYPath,'temp','testeuler.txt');%['temp' filesep 'testeuler.txt'];
 eulerconvention = 'tsl';
 
