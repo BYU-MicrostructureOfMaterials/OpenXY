@@ -81,6 +81,8 @@ switch lower(Material)
         M.SplitDD = {'Fe'};
     case 'zirconium (alpha)'
         M.SplitDD = {'Zr'};
+    case 'titanium(alpha)'
+        M.SplitDD = {'Ti'}
 end
 
 
