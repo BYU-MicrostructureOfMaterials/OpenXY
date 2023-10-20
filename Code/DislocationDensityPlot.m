@@ -15,8 +15,8 @@ crange = cmax - cmin;
 cOffset = crange / length(cmap);
 colorAxis = [cmin - cOffset, cmax];
 
-r = data.rows;%
-c = data.cols;%
+r = Settings.Ny;%
+c = Settings.Nx;%
 
 isLineScan = r == 1;
 

@@ -7,8 +7,8 @@ function StrainOutput(Settings,Components,DoShowGB,smin,smax,MaxMisorientation,I
 %modified for use with HROIM GUI code, Jay Basinger 4/20/2011
 
 data = Settings.data;
-r = data.rows;
-c = data.cols;
+r = Settings.Ny;
+c = Settings.Nx;
 
 %%
 if iscell(data.g)

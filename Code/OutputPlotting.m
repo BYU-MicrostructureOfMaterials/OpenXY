@@ -491,9 +491,9 @@ Matches = intersect('Split Dislocation Density',Calculations);
 if ~isempty(Matches)
     if exist('alpha_data','var') && exist('rhos','var')
         if exist('DDSettings','var')
-            plotrhosplusminus(Settings,alpha_data,rhos,DDSettings)
+            avscaplots(Settings, alpha_data, rhos, DDSettings)
         else
-            plotrhosplusminus(Settings,alpha_data,rhos)
+            avscaplots(Settings, alpha_data, rhos)
         end
     else
         warndlg(['Warning, the file: ' FilePath ', does not contain alpha_data and rhos files'],'Warning');
