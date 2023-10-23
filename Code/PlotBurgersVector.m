@@ -336,9 +336,9 @@ SS=[SDSP(SDSP(:,1)>1e-4,1),SDSP(SDSP(:,1)>1e-4,2)];
 [H,N]=densityplot(SS(:,1),SS(:,2),'nbins',[50,50]);
 hold on
 TM = max(SS, [], 'all');
-XM=[0.01 0.01 TM]
-YM=[0.01 TM TM]
-fill(XM, YM, [.9412 .9412 .9412])
+XM=[0.01 0.01 TM];
+YM=[0.01 TM TM];
+fill(XM, YM, [.9412 .9412 .9412]);
 title('Crystallographic directions of Burgers vectors')
 hold off
 
