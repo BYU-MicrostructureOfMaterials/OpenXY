@@ -93,7 +93,7 @@ for i=1:nd
             
         end
     else
-        i=i-nscrew
+        i=i-nscrew;
         if type(i)==1
             tot_basal=tot_basal+abs(ri);
         elseif type(i)==2
@@ -144,20 +144,14 @@ colorbar
 
 % weighted Burgers Vector plot...
 %normb=alpha_data.b(1,1); % Burger's vector size
-normb=5.89000000000000e-10
+normb=5.89000000000000e-10;
 thisvec=zeros(L,3);
 for i=1:L
     thisvec(i,:)=alpha_data.alpha(:,3,i)*normb;
-end
-for i=1:L
     if thisvec(i,3)<0
         thisvec(i,:)=-thisvec(i,:);
     end
-end
-
-for i=1:L
-    thisvecnorm=norm(thisvec);
-thisvec(i,:)=thisvec(i,:)/thisvecnorm(i,:);
+    thisvec(i,:)=thisvec(i,:)/vecnorm(thisvec(i,:));
 end
 thisvec=reshape(thisvec,[n,m,3]);
 % figure
@@ -206,7 +200,7 @@ quiver(a13,a23)
 wbv=cat(3,a13,a23,a33);
 for i=1:m
     for j=1:n
-        wbv(i,j,:)=wbv(i,j,:)/norm(squeeze(wbv(i,j,:)));
+        wbv(i,j,:)=wbv(i,j,:)/vecnorm(squeeze(wbv(i,j,:)));
         %         if wbv(i,j,3)<0
         %             wbv(i,j,:)=-wbv(i,j,:);
         %         end
@@ -219,7 +213,7 @@ end
 
 
 
-grainnum=Settings.GrainVals.grainID;
+grainnum=Settings.grainID;
 grainnum=reshape(grainnum,[n,m])';
 a=mean(tot_basal(grainnum==30));
 

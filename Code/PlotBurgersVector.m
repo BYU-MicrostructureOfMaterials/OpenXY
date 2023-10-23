@@ -19,12 +19,6 @@ function PlotBurgersVector(Settings, alpha_data)
 % clear
 % close all
 
-cmap = [0 0 0; parula];
-
-
-cOffset = .000000000000000001;
-colorAxis = [cOffset, inf];
-
 
 IQ = reshape(Settings.IQ(Settings.Inds),Settings.Nx,Settings.Ny)';
 CI = reshape(Settings.CI(Settings.Inds),Settings.Nx,Settings.Ny)';
@@ -340,10 +334,13 @@ SS=[SDSP(SDSP(:,1)>1e-4,1),SDSP(SDSP(:,1)>1e-4,2)];
 
 % find local density
 [H,N]=densityplot(SS(:,1),SS(:,2),'nbins',[50,50]);
-colormap(cmap)
-colorbar
-caxis(colorAxis)
+hold on
+TM = max(SS, [], 'all');
+XM=[0.01 0.01 TM]
+YM=[0.01 TM TM]
+fill(XM, YM, [.9412 .9412 .9412])
 title('Crystallographic directions of Burgers vectors')
+hold off
 
 % cd('/Users/fullwood/Documents/GitHub/OpenXY/Code/')
 figure;
