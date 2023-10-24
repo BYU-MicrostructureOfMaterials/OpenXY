@@ -339,6 +339,7 @@ TM = max(SS, [], 'all');
 XM=[0.01 0.01 TM];
 YM=[0.01 TM TM];
 fill(XM, YM, [.9412 .9412 .9412]);
+%axis([0 TM 0 TM])
 title('Crystallographic directions of Burgers vectors')
 hold off
 
