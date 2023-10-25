@@ -10,7 +10,7 @@ crsspris = 0.75; %factor for crss prismatic times that for basal% T.O. Erinosho,
 crsspyram =3.02; % is pyram a equal to pyramid ca?
 crsscapyram = 3.02;
 crssfactor=[ones(3,1);ones(3,1)*crsspris;ones(6,1)*crsspyram;ones(12,1)*crsscapyram]; %does pyramidal-a have same CRSS as pyramidal-ca??****
-type=[ones(1,12) zeros(1,12)];   %one for a-type, zero for ca-type
+type=[ones(1,3) ones(1,3)*2 ones(1,6)*3 zeros(1,12)]; %one for a-type, zero for ca-type
 
 
 
