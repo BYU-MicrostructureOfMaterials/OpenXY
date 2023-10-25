@@ -23,15 +23,15 @@
 load(fullfile(PATHNAME, FILENAME));
 
 
-IQ = reshape(Settings.IQ(Settings.Inds),Settings.data.cols,Settings.data.rows)';
-CI = reshape(Settings.CI(Settings.Inds),Settings.data.cols,Settings.data.rows)';
-gid = reshape(Settings.grainID(Settings.Inds),Settings.data.cols,Settings.data.rows)';
-a3=reshape(alpha_data.alpha_total3,Settings.data.cols,Settings.data.rows)';
+IQ = reshape(Settings.IQ(Settings.Inds),Settings.Nx,Settings.Ny)';
+CI = reshape(Settings.CI(Settings.Inds),Settings.Nx,Settings.Ny)';
+gid = reshape(Settings.grainID(Settings.Inds),Settings.Nx,Settings.Ny)';
+a3=reshape(alpha_data.alpha_total3,Settings.Nx,Settings.Ny)';
 
 % burg = 287 * 1e-12;
 % burg=3.3026e-10; % Tantalum
-burg=reshape(alpha_data.b(Settings.Inds),Settings.data.cols,Settings.data.rows)';
-grains=reshape(Settings.grainID,Settings.data.cols,Settings.data.rows)';
+burg=reshape(alpha_data.b(Settings.Inds),Settings.Nx,Settings.Ny)';
+grains=reshape(Settings.grainID,Settings.Nx,Settings.Ny)';
 [nx,ny]=size(grains);
 BOUND=zeros(nx,ny);
 temp1=abs(circshift(grains,[-1,0])-circshift(grains,[1,0])); % look for any points within 2 steps of GB
@@ -90,9 +90,9 @@ else
         0   sin(alphaRotation) -cos(alphaRotation)];
 end
 
-B = tensorvector2map(Settings.data.F, Settings.data.rows, Settings.data.cols) - eyefield(3,Settings.data.rows, Settings.data.cols);
-sigma = tensorvector2map(Settings.data.sigma, Settings.data.rows, Settings.data.cols);
-g = tensorvector2map(euler2gmat(Settings.NewAngles), Settings.data.rows, Settings.data.cols);
+B = tensorvector2map(Settings.data.F, Settings.Ny, Settings.Nx) - eyefield(3,Settings.Ny, Settings.Nx);
+sigma = tensorvector2map(Settings.data.sigma, Settings.Ny, Settings.Nx);
+g = tensorvector2map(euler2gmat(Settings.NewAngles), Settings.Ny, Settings.Nx);
 g_ctos = permute(g,[2,1,3,4]);
 
 E = (B + permute(B,[2,1,3,4]))/2;
@@ -113,11 +113,11 @@ E_p = .5*(B_p + permute(B_p,[2,1,3,4]));
 
 
 if exist('alpha_data') && isfield(alpha_data, 'Fa')
-    Ba = tensorvector2map(alpha_data.Fa, Settings.data.rows, Settings.data.cols);
-    Bc = tensorvector2map(alpha_data.Fc, Settings.data.rows, Settings.data.cols);
+    Ba = tensorvector2map(alpha_data.Fa, Settings.Ny, Settings.Nx);
+    Bc = tensorvector2map(alpha_data.Fc, Settings.Ny, Settings.Nx);
 
-    Ba = Ba - eyefield(3,Settings.data.rows, Settings.data.cols);
-    Bc = -(Bc - eyefield(3,Settings.data.rows, Settings.data.cols));
+    Ba = Ba - eyefield(3,Settings.Ny, Settings.Nx);
+    Bc = -(Bc - eyefield(3,Settings.Ny, Settings.Nx));
 
     Ba_p = rotatetensorfield(Ba, Qps');
     Bc_p = rotatetensorfield(Bc, Qps');
@@ -158,20 +158,20 @@ alpha = partialcurl(Ba_fix/(Settings.XData(2)*1e-6),Bc_fix_smooth/(Settings.XDat
 % delete boundary points
 alpha(:,BOUND==1)=0;
 
-% triplemask = zeros(Settings.data.rows,Settings.data.cols);
+% triplemask = zeros(Settings.Ny,Settings.Nx);
 % thresh = 40;
-% for i=2:Settings.data.rows-1
-%     for j=2:Settings.data.cols-1
+% for i=2:Settings.Ny-1
+%     for j=2:Settings.Nx-1
 %         if IQ(i,j)>thresh && IQ(i-1,j)>40 && IQ(i,j+1)>40
 %             triplemask(i,j) = 1;
 %         end
 %     end
 % end
 % 
-% gidmask = zeros(Settings.data.rows,Settings.data.cols);
+% gidmask = zeros(Settings.Ny,Settings.Nx);
 % thresh = 75;
-% for i=2:Settings.data.rows-1
-%     for j=2:Settings.data.cols-1
+% for i=2:Settings.Ny-1
+%     for j=2:Settings.Nx-1
 %         if (CI(i,j))>thresh && (gid(i-1,j)==gid(i,j)) && (gid(i,j+1)==gid(i,j))
 %             gidmask(i,j) = 1;
 %         end
@@ -217,8 +217,8 @@ b2(normb<cutoff/8)=0;
 b1(normb>cutoff)=0;
 b2(normb>cutoff)=0;
 
-Xq = 1:Settings.data.cols;
-Yq = 1:Settings.data.rows;
+Xq = 1:Settings.Nx;
+Yq = 1:Settings.Ny;
 %[Xq,Yq] = meshgrid(1:1:121);
 mp=size(b1)
 o1 = mp(1);
@@ -304,8 +304,8 @@ symops=permute(gensymops, [2, 3, 1]); % I would not need to permute these if I r
 % get the direction (in the crystal frame) that is in the correct FZ of the
 % sphere
 
-n = Settings.data.cols;
-m = Settings.data.rows;
+n = Settings.Nx;
+m = Settings.Ny;
 SD=zeros(n*m,3);
 f=waitbar(0,'working');
 count=0;
@@ -337,11 +337,18 @@ SS=[SDSP(SDSP(:,1)>1e-4,1),SDSP(SDSP(:,1)>1e-4,2)];
 
 % find local density
 [H,N]=densityplot(SS(:,1),SS(:,2),'nbins',[50,50]);
+hold on
+TM = max(SS, [], 'all');
+XM=[0.01 0.01 TM];
+YM=[0.01 TM TM];
+fill(XM, YM, [.9412 .9412 .9412]);
+%axis([0 TM 0 TM])
 title('Crystallographic directions of Burgers vectors')
+hold off
 
 % cd('/Users/fullwood/Documents/GitHub/OpenXY/Code/')
 figure;
-IPF_map = PlotIPF(euler2gmat(Settings.Angles),[Settings.data.cols,Settings.data.rows],'Square',1);
+IPF_map = PlotIPF(euler2gmat(Settings.Angles),[Settings.Nx,Settings.Ny],'Square',1);
 axis image
 hold on
 quiver(-b1,-b2,'color',[1 1 1], 'AutoScale','on',AutoScaleFactor=4/3) % negative in order to go from Euler reference frame to Imagesc plotting frame

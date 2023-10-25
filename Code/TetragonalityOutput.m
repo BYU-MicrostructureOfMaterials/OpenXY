@@ -6,8 +6,8 @@ function TetragonalityOutput(Settings,doShowGB)
 % low IQ in file that this came from: Rotate_and_Tetragonality_Overlay7_30_14.m
 % also the ability to plot c-axis direction, but that needs fixing
 % DTF Mar 25 2016 (happy Good Friday!)
-n = Settings.data.cols;
-m = Settings.data.rows;
+n = Settings.Nx;
+m = Settings.Ny;
 
 % F = reshape((Settings.data.F),n,m)';
 F = Settings.data.F;

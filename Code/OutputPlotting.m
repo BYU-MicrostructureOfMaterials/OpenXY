@@ -474,7 +474,7 @@ if ~isempty(Matches)
 end
 
 %Check for Burgers Vectors Components
-BurgVectComponentsList = {'IPF';'Dislocation_Density'; 'Crystallographic_Directions'};
+BurgVectComponentsList = {'IPF';'Dislocation_Density'}; % 'Crystallographic_Directions' used ot be a plot
 Matches = [];
 Matches = intersect(BurgVectComponentsList,Components);
 
@@ -593,7 +593,7 @@ function AddDislocationDensityComponents(handles)
     end
 
 function AddBurgersVectorsComponents(handles)
-    BurgVectComponentsList = {'IPF';'Dislocation_Density'; 'Crystallographic_Directions'};
+    BurgVectComponentsList = {'IPF';'Dislocation_Density'}; % 'Crystallographic_Directions' used ot be a plot
     CurrentComponentsList = get(handles.ComponentsListBox,'String');
     if isempty(CurrentComponentsList)
         set(handles.ComponentsListBox,'String',BurgVectComponentsList);
@@ -633,7 +633,7 @@ function RemoveDislocationDensityComponents(handles)
 
 function RemoveBurgersVectorComponents(handles)
     CurrentComponentsList = get(handles.ComponentsListBox,'String');
-    BurgVectComponentsList = {'IPF';'Dislocation_Density'; 'Crystallographic_Directions'};
+    BurgVectComponentsList = {'IPF';'Dislocation_Density';}; % 'Crystallographic_Directions' used ot be a plot
     [Matches CurrentInd] = setdiff(CurrentComponentsList,BurgVectComponentsList);
     CurrentComponentsList = CurrentComponentsList(CurrentInd);
     set(handles.ComponentsListBox,'String',CurrentComponentsList);

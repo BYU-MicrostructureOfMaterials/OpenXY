@@ -325,23 +325,23 @@ for j=1:n
 end
 close(f)
 
-%stereographic projections
-SDSP=zeros(length(SD(:,1)),2);
-SDSP(:,1)=SD(:,1)./(1+SD(:,3));
-SDSP(:,2)=SD(:,2)./(1+SD(:,3));
-
-SS=[SDSP(SDSP(:,1)>1e-4,1),SDSP(SDSP(:,1)>1e-4,2)];
-
-% find local density
-[H,N]=densityplot(SS(:,1),SS(:,2),'nbins',[50,50]);
-hold on
-TM = max(SS, [], 'all');
-XM=[0.01 0.01 TM];
-YM=[0.01 TM TM];
-fill(XM, YM, [.9412 .9412 .9412]);
-%axis([0 TM 0 TM])
-title('Crystallographic directions of Burgers vectors')
-hold off
+% %stereographic projections
+% SDSP=zeros(length(SD(:,1)),2);
+% SDSP(:,1)=SD(:,1)./(1+SD(:,3));
+% SDSP(:,2)=SD(:,2)./(1+SD(:,3));
+% 
+% SS=[SDSP(SDSP(:,1)>1e-4,1),SDSP(SDSP(:,1)>1e-4,2)];
+% 
+% % find local density
+% [H,N]=densityplot(SS(:,1),SS(:,2),'nbins',[50,50]);
+% hold on
+% TM = max(SS, [], 'all');
+% XM=[0.01 0.01 TM];
+% YM=[0.01 TM TM];
+% fill(XM, YM, [.9412 .9412 .9412]);
+% %axis([0 TM 0 TM])
+% title('Crystallographic directions of Burgers vectors')
+% hold off
 
 % cd('/Users/fullwood/Documents/GitHub/OpenXY/Code/')
 figure;
@@ -352,5 +352,6 @@ quiver(-b1,-b2,'color',[1 1 1], 'AutoScale','on',AutoScaleFactor=4/3) % negative
 quiver(Xd,Yd,Ud1,Vd1,'color',[1 1 1], 'linewidth', m1/3, 'AutoScale','on',AutoScaleFactor=4/3) % negative in order to go from Euler reference frame to Imagesc plotting frame
 % cd('/Users/fullwood/Dropbox/SyncFolder/Collaborators/Tim Ruggles')
 set(gca,'FontSize',16)
+
 
 
