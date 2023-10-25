@@ -189,90 +189,90 @@ title('Alpha total')
 colorbar
 
 
-% put all WBVs in the same hemisphere
-a13(a33<0)=-a13(a33<0);
-a23(a33<0)=-a23(a33<0);
-a33(a33<0)=-a33(a33<0);
-
-figure
-quiver(a13,a23)
-
-wbv=cat(3,a13,a23,a33);
-for i=1:m
-    for j=1:n
-        wbv(i,j,:)=wbv(i,j,:)/vecnorm(squeeze(wbv(i,j,:)));
-        %         if wbv(i,j,3)<0
-        %             wbv(i,j,:)=-wbv(i,j,:);
-        %         end
-    end
-end
+% % put all WBVs in the same hemisphere
+% a13(a33<0)=-a13(a33<0);
+% a23(a33<0)=-a23(a33<0);
+% a33(a33<0)=-a33(a33<0);
+% 
+% figure
+% quiver(a13,a23)
+% 
+% wbv=cat(3,a13,a23,a33);
+% for i=1:m
+%     for j=1:n
+%         wbv(i,j,:)=wbv(i,j,:)/vecnorm(squeeze(wbv(i,j,:)));
+%         %         if wbv(i,j,3)<0
+%         %             wbv(i,j,:)=-wbv(i,j,:);
+%         %         end
+%     end
+% end
 
 % figure
 % imagesc(wbv)
 % title('Weighted Burgers Vector Direction')
 
+return
 
-
-grainnum=Settings.grainID;
-grainnum=reshape(grainnum,[n,m])';
-a=mean(tot_basal(grainnum==30));
-
-mmmm=msgbox('Click on 6 grains to investigate them; press return if nothing happens');
-[xgg, ygg]=ginput(6); % gets user input to select grains from the figures
-xgg=floor(xgg);
-ygg=floor(ygg);
-index=(n*(ygg))+xgg;
-
-grainID=Settings.grainID;
-grains=grainID(index);
-grainID=reshape(grainID,[n,m])';
-
-valtot_basal=0
-valtot_prism=0
-valtot_pyramidalca=0
-valtotrho=0
-norm=0
-% tot_basal=log10(tot_basal);
-% totp=log10(totp);
-% totca=log10(totca);
-
-tot_basal(tot_basal==-Inf)=0;
-tot_prism(tot_prism==-Inf)=0;
-tot_pyramidalca(tot_pyramidalca==-Inf)=0;
-
-for f=1:6;
-    norm=0
-    for row=1:m
-        for col=1:n
-            if grainID(row,col)==grains(f);
-                if tot_basal(row,col)~=0
-                    norm=norm+1; % counts number of pixels in selected grain to normalize the total counted GND from individual system
-                end
-                valtot_basal=tot_basal(row,col)+valtot_basal; 
-                valtot_prism=tot_prism(row,col)+valtot_prism;
-                valtot_pyramidalca=tot_pyramidalca(row,col)+valtot_pyramidalca;
-                %valtotrho=atot(row,col)+valtotrho;
-                
-            end
-        end
-        
-    end
-    valtot_basal_1(f)=valtot_basal/norm;
-    valtotprism_1(f)=valtot_prism/norm;
-    valtotpyramidal_1(f)=valtot_pyramidalca/norm;
-    valtot_rho1(f)=valtot_basal_1(f)+valtotprism_1(f)+valtotpyramidal_1(f);
-    
-    fracbasal(f)=valtot_basal_1(f)/valtot_rho1(f); %Normalising by total Dislocation density of that grain
-    fracprism(f)=valtotprism_1(f)/valtot_rho1(f); %Normalising by total Dislocation density of that grain
-    fracpyramidal(f)=valtotpyramidal_1(f)/valtot_rho1(f); %Normalising by total Dislocation density of that grain
-    
-end
-
-fracbasal=fracbasal.'; %fraction
-fracprism=fracprism.';
-fracpyramidal=fracpyramidal.';
-
-end
+% % grainnum=Settings.grainID;
+% % grainnum=reshape(grainnum,[n,m])';
+% % a=mean(tot_basal(grainnum==30));
+% % 
+% % mmmm=msgbox('Click on 6 grains to investigate them; press return if nothing happens');
+% % [xgg, ygg]=ginput(6); % gets user input to select grains from the figures
+% % xgg=floor(xgg);
+% % ygg=floor(ygg);
+% % index=(n*(ygg))+xgg;
+% % 
+% % grainID=Settings.grainID;
+% % grains=grainID(index);
+% % grainID=reshape(grainID,[n,m])';
+% % 
+% % valtot_basal=0
+% % valtot_prism=0
+% % valtot_pyramidalca=0
+% % valtotrho=0
+% % norm=0
+% % % tot_basal=log10(tot_basal);
+% % % totp=log10(totp);
+% % % totca=log10(totca);
+% % 
+% % tot_basal(tot_basal==-Inf)=0;
+% % tot_prism(tot_prism==-Inf)=0;
+% % tot_pyramidalca(tot_pyramidalca==-Inf)=0;
+% % 
+% % for f=1:6;
+% %     norm=0
+% %     for row=1:m
+% %         for col=1:n
+% %             if grainID(row,col)==grains(f);
+% %                 if tot_basal(row,col)~=0
+% %                     norm=norm+1; % counts number of pixels in selected grain to normalize the total counted GND from individual system
+% %                 end
+% %                 valtot_basal=tot_basal(row,col)+valtot_basal; 
+% %                 valtot_prism=tot_prism(row,col)+valtot_prism;
+% %                 valtot_pyramidalca=tot_pyramidalca(row,col)+valtot_pyramidalca;
+% %                 %valtotrho=atot(row,col)+valtotrho;
+% %                 
+% %             end
+% %         end
+% %         
+% %     end
+% %     valtot_basal_1(f)=valtot_basal/norm;
+% %     valtotprism_1(f)=valtot_prism/norm;
+% %     valtotpyramidal_1(f)=valtot_pyramidalca/norm;
+% %     valtot_rho1(f)=valtot_basal_1(f)+valtotprism_1(f)+valtotpyramidal_1(f);
+% %     
+% %     fracbasal(f)=valtot_basal_1(f)/valtot_rho1(f); %Normalising by total Dislocation density of that grain
+% %     fracprism(f)=valtotprism_1(f)/valtot_rho1(f); %Normalising by total Dislocation density of that grain
+% %     fracpyramidal(f)=valtotpyramidal_1(f)/valtot_rho1(f); %Normalising by total Dislocation density of that grain
+% %     
+% % end
+% % 
+% % fracbasal=fracbasal.'; %fraction
+% % fracprism=fracprism.';
+% % fracpyramidal=fracpyramidal.';
+% % 
+% % end
 
 % valtot_basal1=valtot_basal1.'
 % valtotp1=valtotp1.'
