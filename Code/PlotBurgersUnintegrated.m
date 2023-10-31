@@ -1,4 +1,4 @@
-% Copyright 2021 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
+%Copyright 2021 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
 % Under the terms of Contract DE-NA0003525 with NTESS, the U.S. Government retains certain rights in this software.
 % Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
 % (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge,
@@ -21,6 +21,7 @@
 [FILENAME, PATHNAME, FILTERINDEX] = uigetfile('*.mat', 'Select an AnalysisParams file');
 
 load(fullfile(PATHNAME, FILENAME));
+
 
 IQ = reshape(Settings.IQ(Settings.Inds),Settings.Nx,Settings.Ny)';
 CI = reshape(Settings.CI(Settings.Inds),Settings.Nx,Settings.Ny)';
@@ -182,8 +183,8 @@ alphasum = squeeze(sum(abs(alpha),1));
 % alphasum(gidmask==0) = 1;
 alphasum(IQ<100) = 0/0;
 % figure; imagesc(log10(alphasum(:,:)./burg)); axis image; colormap('jet'); caxis([13 15])
-%figure; imagesc(log10(a3)); axis image; colormap('jet'); caxis([13 15])
-%title('Dislocation Density')
+figure; imagesc(log10(a3)); axis image; colormap('jet'); caxis([13 15])
+title('Dislocation Density')
 % hold on
 
 alphatensor = zeros(size(Ba_fix_smooth));
@@ -215,16 +216,58 @@ b1(normb<cutoff/8)=0;
 b2(normb<cutoff/8)=0;
 b1(normb>cutoff)=0;
 b2(normb>cutoff)=0;
+
+Xq = 1:Settings.Nx;
+Yq = 1:Settings.Ny;
+%[Xq,Yq] = meshgrid(1:1:121);
+mp=size(b1)
+o1 = mp(1);
+p1 = mp(2);
+
+if o1>=120
+m1=round(o1/24);
+elseif o1>=100 && o1<120
+m1=4;
+elseif o1>=80 && o1<100
+m1=3;
+elseif o1>=60 && o1<80
+m1=2
+else
+m1=1
+end
+
+if p1>=120
+n1=round(p1/24);
+elseif p1>=100 && p1<120
+n1=4;
+elseif p1>=80 && p1<100
+n1=3;
+elseif p1>=60 && p1<80
+n1=2
+else
+n1=1
+end
+
+f = @(D,m1,n1) blockproc(D,[m1 n1],@(block_struct) mean(block_struct.data,'all'));
+Xd = f(Xq,m1,n1);
+Yd = f(Yq,m1,n1);
+Ud = f(-b1,m1,n1);
+Vd = f(-b2,m1,n1);
+[Ud1,TF,L,U,C] = filloutliers(Ud,"center");
+[Vd1,TF,L,U,C] = filloutliers(Vd,"center");
 % Plot dislocation density and quiver map of Burgers directions
 figure; imagesc(log10((rhob./burg))); axis image; colormap('jet'); caxis([12 15])
 hold on
-quiver(-b1,-b2,'color',[1 1 1],'AutoScale','on',AutoScaleFactor=4/3) % negative in order to go from Euler reference frame to Imagesc plotting frame
+quiver(-b1,-b2,'color',[1 1 1], 'AutoScale','on',AutoScaleFactor=4/3) % negative in order to go from Euler reference frame to Imagesc plotting frame
+quiver(Xd,Yd,Ud1,Vd1,'color',[0 0 0], 'linewidth', m1/3, 'AutoScale','on',AutoScaleFactor=4/3) % negative in order to go from Euler reference frame to Imagesc plotting frame
 title('Log10 of Dislocation density, and projected net Burgers vector')
 
 cl = rotatevectorfield(l,g); %in crystal frame
 cb = rotatevectorfield(b,g);
 
 cbhat = rotatevectorfield(bhat,g);
+
+
 
 %alternative GND plot
 % figure
@@ -294,13 +337,21 @@ SS=[SDSP(SDSP(:,1)>1e-4,1),SDSP(SDSP(:,1)>1e-4,2)];
 
 % find local density
 [H,N]=densityplot(SS(:,1),SS(:,2),'nbins',[50,50]);
+hold on
+TM = max(SS, [], 'all');
+XM=[0.01 0.01 TM];
+YM=[0.01 TM TM];
+fill(XM, YM, [.9412 .9412 .9412]);
+%axis([0 TM 0 TM])
 title('Crystallographic directions of Burgers vectors')
+hold off
 
 % cd('/Users/fullwood/Documents/GitHub/OpenXY/Code/')
 figure;
 IPF_map = PlotIPF(euler2gmat(Settings.Angles),[Settings.Nx,Settings.Ny],'Square',1);
 axis image
 hold on
-quiver(-b1,-b2,'color',[1 1 1],'AutoScale','on',AutoScaleFactor=4/3) % negative in order to go from Euler reference frame to Imagesc plotting frame
+quiver(-b1,-b2,'color',[1 1 1], 'AutoScale','on',AutoScaleFactor=4/3) % negative in order to go from Euler reference frame to Imagesc plotting frame
+quiver(Xd,Yd,Ud1,Vd1,'color',[0 0 0], 'linewidth', m1/3, 'AutoScale','on',AutoScaleFactor=4/3) % negative in order to go from Euler reference frame to Imagesc plotting frame
 % cd('/Users/fullwood/Dropbox/SyncFolder/Collaborators/Tim Ruggles')
 set(gca,'FontSize',16)
