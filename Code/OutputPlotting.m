@@ -73,7 +73,7 @@ if length(varargin) >= 1
         if length(varargin) > 2
             handles.DDSettings = varargin{3};
         end
-        OutputTypesList = {'Strain','Dislocation Density','Split Dislocation Density','Tetragonality'};
+                OutputTypesList = {'Strain','Dislocation Density','Split Dislocation Density','Tetragonality','Burgers Vectors'};
         if handles.Settings.Ny == 1
             OutputTypesList = [OutputTypesList 'Line Scan Plot'];
         end
@@ -223,7 +223,7 @@ if Settings.DoStrain
     plotOptions = [plotOptions,'Strain','Tetragonality','Stress'];
 end
 if Settings.CalcDerivatives
-    plotOptions = [plotOptions,'Dislocation Density'];
+    plotOptions = [plotOptions,'Dislocation Density', 'Burgers Vectors'];
     handles.DisloMinEdit.Enable = 'On';
     handles.DisloMaxEdit.Enable = 'On';
     handles.SetDislocationDefaultsButton.Enable = 'On';
@@ -270,6 +270,9 @@ if strcmp(SelectionType,'open')
     end
     if strcmp(OldList(clickedIndex),'Dislocation Density')
         RemoveDislocationDensityComponents(handles);
+    end
+    if strcmp(OldList(clickedIndex),'Burgers Vectors')
+        RemoveBurgersVectorComponents(handles);
     end
     if strcmp(OldList(clickedIndex), 'Stress')
        RemoveStressComponents(handles); 
@@ -470,6 +473,19 @@ if ~isempty(Matches)
     end
 end
 
+%Check for Burgers Vectors Components
+BurgVectComponentsList = {'IPF';'Dislocation_Density'}; % 'Crystallographic_Directions' used ot be a plot
+Matches = [];
+Matches = intersect(BurgVectComponentsList,Components);
+
+if ~isempty(Matches)
+    if exist('alpha_data','var')
+        PlotBurgersVector(Settings, alpha_data);
+    else
+        warndlg(['Warning, the file: ' FilePath ', does not contain an alpha_data file'],'Warning');
+    end
+end
+
 %Check for Split Dislocation Density
 Matches = intersect('Split Dislocation Density',Calculations);
 if ~isempty(Matches)
@@ -524,6 +540,9 @@ if isempty(ToCalculateList)
     if strcmp(SelectedOption,'Stress')
         AddStressComponents(handles);
     end
+    if strcmp(SelectedOption,'Burgers Vectors')
+        AddBurgersVectorsComponents(handles);
+    end
 else
    %Add to whatever is already in there. Remove duplicates. 
    CalcList = get(handles.CalculatedListBox,'String');
@@ -538,6 +557,9 @@ else
         end
         if strcmp(SelectedOption,'Stress')
             AddStressComponents(handles);
+        end
+        if strcmp(SelectedOption,'Burgers Vectors')
+            AddBurgersVectorsComponents(handles);
         end
    end
 end
@@ -562,7 +584,17 @@ function AddDislocationDensityComponents(handles)
         CurrentComponentsList = cat(1,CurrentComponentsList,DisloComponentsList);
         set(handles.ComponentsListBox,'String',CurrentComponentsList);
     end
- 
+    
+function AddBurgersVectorsComponents(handles)
+    BurgVectComponentsList = {'IPF';'Dislocation_Density'}; % 'Crystallographic_Directions' used ot be a plot
+    CurrentComponentsList = get(handles.ComponentsListBox,'String');
+    if isempty(CurrentComponentsList)
+        set(handles.ComponentsListBox,'String',BurgVectComponentsList);
+    else
+        CurrentComponentsList = cat(1,CurrentComponentsList,BurgVectComponentsList);
+        set(handles.ComponentsListBox,'String',CurrentComponentsList);
+    end
+    
 function AddStressComponents(handles)
     StressComponentsList= {'VM';'σ1';'σ2';'σ3'};
     CurrentComponentsList= get(handles.ComponentsListBox,'String');
@@ -592,9 +624,17 @@ function RemoveDislocationDensityComponents(handles)
     set(handles.ComponentsListBox,'String',CurrentComponentsList);
     set(handles.ComponentsListBox,'Value',1);
 
+function RemoveBurgersVectorComponents(handles)
+    CurrentComponentsList = get(handles.ComponentsListBox,'String');
+    BurgVectComponentsList = {'IPF';'Dislocation_Density';}; % 'Crystallographic_Directions' used ot be a plot
+    [Matches CurrentInd] = setdiff(CurrentComponentsList,BurgVectComponentsList);
+    CurrentComponentsList = CurrentComponentsList(CurrentInd);
+    set(handles.ComponentsListBox,'String',CurrentComponentsList);
+    set(handles.ComponentsListBox,'Value',1);
+
 function RemoveStressComponents(handles)
     CurrentComponentsList = get(handles.ComponentsListBox,'String');
-    StressComponentsList = {'VM','σ1','σ2','σ3'};
+    StressComponentsList = {'VM';'σ1';'σ2';'σ3'};
     [Matches CurrentInd] = setdiff(CurrentComponentsList,StressComponentsList);
     CurrentComponentsList = CurrentComponentsList(CurrentInd);
     set(handles.ComponentsListBox,'String',CurrentComponentsList);
