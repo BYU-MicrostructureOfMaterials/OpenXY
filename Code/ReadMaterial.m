@@ -13,6 +13,16 @@ end
 if strcmpi(Material,'aluminium')
     Material = 'aluminum';
 end
+IGNORE = true;
+if contains(Material, 'titanium', 'IgnoreCase', IGNORE)
+    if contains(Material, 'alpha', 'IgnoreCase', IGNORE)
+        Material = 'titanium(alpha)';
+    end
+    if contains(Material, 'beta', 'IgnoreCase', IGNORE)
+        Material = 'titanium(beta)';
+    end
+end
+
 
 filename = fullfile(pwd,'Materials',[Material '.txt']);
 
@@ -71,9 +81,6 @@ switch lower(Material)
         M.SplitDD = {'Fe'};
     case 'zirconium (alpha)'
         M.SplitDD = {'Zr'};
+    case 'titanium(alpha)'
+        M.SplitDD = {'Ti'};
 end
-
-
-
-
-

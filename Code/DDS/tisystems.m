@@ -6,10 +6,10 @@ a = 2.95e-10; % lattice parameter
 ctoa = c / a; % ratio of c lattice parameter to a
 v = 0.34; % Poisson's ratio
 
-% Relative CRSS values - J. Wang et al: http://dx.doi.org/10.1016/j.actamat.2017.05.015
-crsspris = 1 / 1.9; % factor for crss prismatic times that for basal
-crsspyram = mean([1.2 1.4 1.8 1.6]) / 1.9;
-crsscapyram = 2.4 / 1.9;
+% Relative CRSS values - CP-Ti Grade 1 - Hama et al: doi:10.1088/1742-6596/734/3/032071
+crsspris = 62 / 133; % factor for crss prismatic times that for basal
+crsspyram = 81 / 133;
+crsscapyram = 145 / 133;
 crssfactor = [ones(3,1);ones(3,1)*crsspris;ones(6,1)*crsspyram;ones(6,1)*crsscapyram]; %does pyramidal-a have same CRSS as pyramidal-ca??****
 type = [ones(1,3) ones(1,3)*2 ones(1,6)*3 zeros(1,6)];   % one for a-type, zero for ca-type
 
