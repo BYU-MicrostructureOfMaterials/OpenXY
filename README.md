@@ -3,6 +3,9 @@ OpenXY
 Matlab tool for performing cross-correlation analysis of EBSD patterns using real and simulated patterns.
 Calculates dislocation density.
 
+ANNOUNCEMENT:
+OpenXY is changing ownership. The new maintainer is KacherLab at Georgia Tech. Future updates will be posted there. The new location is: https://github.com/KacherLab/OpenXY
+
 Files Needed:
 Scan Files (.ang and .txt, or .ctf and .cpr)
 EBSD scan images
@@ -19,7 +22,7 @@ OR clone the whole repository at once with the --recursive argument
 git clone --recursive https://github.com/BYU-MicrostructureOfMaterials/OpenXY.git
 
 In case of an error:
-Please open an issue on this repository detailing your error, or write an email to BYUOpenXY@gmail.com with "Error Report" in subject. 
+Please open an issue on this repository detailing your error, or write an email to josh.kacher@mse.gatech.edu with "OpenXY support" in subject. 
 Be specific and copy the error message into the body of the email or issue report, including any applicable screenshots.
 Attach the Settings.mat file immediately after the error has occured to include the settings used for the analysis.
 
