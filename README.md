@@ -24,7 +24,7 @@ git clone --recursive https://github.com/BYU-MicrostructureOfMaterials/OpenXY.gi
 In case of an error:
 Please open an issue on this repository detailing your error, or write an email to josh.kacher@mse.gatech.edu with "OpenXY support" in subject. 
 Be specific and copy the error message into the body of the email or issue report, including any applicable screenshots.
-Attach the Settings.mat file immediately after the error has occured to include the settings used for the analysis.
+Attach the Settings.mat file immediately after the error has occurred to include the settings used for the analysis.
 
 Acknowledgement:
 
